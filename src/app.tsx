@@ -8,12 +8,13 @@ import {
   flexRender,
   getCoreRowModel,
   Header,
+  Row,
   Table,
   useReactTable,
 } from "@tanstack/react-table";
 import { CSSProperties, useState } from "react";
 import "./App.css";
-import { generateTableData, Row } from "./generate_table_data";
+import { generateTableData, User } from "./generate_table_data";
 import React from "react";
 import {
   DndContext,
@@ -24,15 +25,21 @@ import {
   type DragEndEvent,
   useSensor,
   useSensors,
+  closestCorners,
+  pointerWithin,
+  rectIntersection,
+  DragOverlay,
 } from "@dnd-kit/core";
 import {
   restrictToHorizontalAxis,
   restrictToParentElement,
+  restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
   horizontalListSortingStrategy,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
 // needed for row & cell level scope DnD setup
@@ -44,16 +51,39 @@ import {
   observeElementOffset,
   observeElementRect,
   useVirtualizer,
+  VirtualItem,
   Virtualizer,
   VirtualizerOptions,
 } from "@tanstack/react-virtual";
 import { flushSync } from "react-dom";
 
+// Cell Component
+const RowDragHandleCell = ({ rowId }: { rowId: string }) => {
+  const { attributes, listeners } = useSortable({
+    id: rowId,
+    data: {
+      type: "row",
+    },
+  });
+  return (
+    // Alternatively, you could set these attributes on the rows themselves
+    <button {...attributes} {...listeners}>
+      🟰
+    </button>
+  );
+};
+
 const tableRowHeight = 32;
 
-const columnHelper = createColumnHelper<Row>();
+const columnHelper = createColumnHelper<User>();
 
-const columns = [
+const columns: ColumnDef<User, any>[] = [
+  {
+    id: "drag-handle",
+    header: "Move",
+    cell: ({ row }) => <RowDragHandleCell rowId={row.id} />,
+    size: 60,
+  },
   columnHelper.accessor("id", {
     header: "ID",
     cell: (info) => info.getValue(),
@@ -163,8 +193,8 @@ const DraggableTableHeader = ({
   header,
   table,
 }: {
-  header: Header<Row, unknown>;
-  table: Table<Row>;
+  header: Header<User, unknown>;
+  table: Table<User>;
 }) => {
   const {
     attributes,
@@ -172,19 +202,26 @@ const DraggableTableHeader = ({
     listeners,
     setNodeRef,
     transform: _transform,
+    transition,
   } = useSortable({
     id: header.column.id,
+    data: {
+      type: "col",
+    },
   });
 
-  const transform: Transform | null = _transform
-    ? { ..._transform, y: 0 }
-    : null;
+  const dragTransform = _transform ? ` + ${_transform.x}px` : "";
+
+  const transform = header.column.getIsPinned()
+    ? CSS.Translate.toString(_transform ? { ..._transform, y: 0 } : null)
+    : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
 
   const style: CSSProperties = {
     opacity: isDragging ? 0.8 : 1,
     position: "relative",
-    transform: CSS.Translate.toString(transform), // translate instead of transform to avoid squishing
-    transition: "width transform 0.2s ease-in-out",
+    // transform: CSS.Translate.toString(transform), // translate instead of transform to avoid squishing
+    transform,
+    transition,
     whiteSpace: "nowrap",
     zIndex: isDragging ? 1 : 0,
     display: "flex",
@@ -270,7 +307,7 @@ const DraggableTableHeader = ({
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
-const getCommonPinningStyles = (column: Column<Row>): CSSProperties => {
+const getCommonPinningStyles = (column: Column<User>): CSSProperties => {
   const isPinned = column.getIsPinned();
   const isLastLeftPinnedColumn =
     isPinned === "left" && column.getIsLastColumn("left");
@@ -297,24 +334,35 @@ const getCommonPinningStyles = (column: Column<Row>): CSSProperties => {
   return style;
 };
 
-const DragAlongCell = ({ cell }: { cell: Cell<Row, unknown> }) => {
+const DragAlongCell = ({ cell }: { cell: Cell<User, unknown> }) => {
   const {
     isDragging,
     setNodeRef,
     transform: _transform,
+    transition,
   } = useSortable({
     id: cell.column.id,
+    data: {
+      type: "col",
+    },
   });
 
-  const transform: Transform | null = _transform
-    ? { ..._transform, y: 0 }
-    : null;
+  // const transform: Transform | null = _transform
+  //   ? { ..._transform, y: 0 }
+  //   : null;
+
+  const dragTransform = _transform ? ` + ${_transform.x}px` : "";
+
+  const transform = cell.column.getIsPinned()
+    ? CSS.Translate.toString(_transform ? { ..._transform, y: 0 } : null)
+    : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
 
   const style: CSSProperties = {
     opacity: isDragging ? 0.8 : 1,
     position: "relative",
-    transform: CSS.Translate.toString(transform), // translate instead of transform to avoid squishing
-    transition: "width transform 0.2s ease-in-out",
+    // transform: CSS.Translate.toString(transform), // translate instead of transform to avoid squishing
+    transform,
+    transition,
     width: cell.column.getSize(),
     zIndex: isDragging ? 1 : 0,
     height: "32px",
@@ -347,11 +395,10 @@ const DragAlongCell = ({ cell }: { cell: Cell<Row, unknown> }) => {
   );
 };
 
-const data = generateTableData(10000);
-
 function App() {
+  const [data, setData] = React.useState<User[]>(() => generateTableData(1000));
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
-    const iterateOverColumns = (columns: ColumnDef<Row, any>[]): string[] => {
+    const iterateOverColumns = (columns: ColumnDef<User, any>[]): string[] => {
       return columns.flatMap((column): string[] => {
         if ("columns" in column && column.columns) {
           return iterateOverColumns(column.columns);
@@ -371,6 +418,9 @@ function App() {
     columns,
     state: {
       columnOrder,
+    },
+    getRowId(originalRow, index, parent) {
+      return String(originalRow.id);
     },
     onColumnOrderChange: setColumnOrder,
     defaultColumn: {
@@ -398,16 +448,29 @@ function App() {
   ]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
+  const { rows } = table.getRowModel();
+  const rowIds = React.useMemo(() => rows.map((row) => row.id), [rows]);
+
   // reorder columns after drag & drop
-  function handleDragEnd(event: DragEndEvent) {
+  function handleColDragEnd(event: DragEndEvent) {
     setIsDragging(false);
-    updateAllDraggedIndexes(null);
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
       setColumnOrder((columnOrder) => {
-        const oldIndex = columnOrder.indexOf(active.id as string);
-        const newIndex = columnOrder.indexOf(over.id as string);
+        const oldIndex = columnOrder.indexOf(String(active.id));
+        const newIndex = columnOrder.indexOf(String(over.id));
         return arrayMove(columnOrder, oldIndex, newIndex); //this is just a splice util
+      });
+    }
+  }
+
+  function handleRowDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      setData((data) => {
+        const oldIndex = rowIds.indexOf(String(active.id));
+        const newIndex = rowIds.indexOf(String(over.id));
+        return arrayMove(data, oldIndex, newIndex); //this is just a splice util
       });
     }
   }
@@ -422,8 +485,6 @@ function App() {
   const height = 640;
 
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
-
-  const { rows } = table.getRowModel();
 
   const _draggedIndexRef = React.useRef<(number | null)[]>(
     table.getHeaderGroups().map(() => null),
@@ -465,10 +526,14 @@ function App() {
             visibleColsOutsideVirtualRange.current[headerIndex].add(
               draggedIndex,
             );
+          } else {
+            visibleColsOutsideVirtualRange.current[headerIndex].delete(
+              draggedIndex,
+            );
           }
         }
-        const pinnedHeaders: Header<Row, unknown>[] = [];
-        const unpinnedHeaders: Header<Row, unknown>[] = [];
+        const pinnedHeaders: Header<User, unknown>[] = [];
+        const unpinnedHeaders: Header<User, unknown>[] = [];
         for (let i = 0; i < headers.length; i++) {
           const header = headers[i];
           if (header.column.getIsPinned()) {
@@ -554,6 +619,8 @@ function App() {
     });
   });
 
+  const draggedRowRef = React.useRef<string | null>(null);
+
   //dynamic row height virtualization - alternatively you could use a simpler fixed row height strategy without the need for `measureElement`
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -566,6 +633,14 @@ function App() {
     //     ? (element) => element?.getBoundingClientRect().height
     //     : undefined,
     overscan: 5,
+    rangeExtractor(range) {
+      const next = new Set(defaultRangeExtractor(range));
+      if (draggedRowRef.current !== null) {
+        next.add(rowIds.indexOf(draggedRowRef.current));
+      }
+      const n = [...next].sort((a, b) => a - b);
+      return n;
+    },
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -622,38 +697,79 @@ function App() {
     }
   });
 
+  const tableVars: { [key: string]: number } = {
+    "--virtual-offset-top":
+      virtualRows.find((row) =>
+        draggedRowRef.current
+          ? row.index !== rowIds.indexOf(draggedRowRef.current)
+          : true,
+      )?.start ?? 0,
+  };
+
   // for the last col and the rest of the table body
   const getBodyVirtualCols = () => {
     return getVirtualCols(headerGroups.length - 1);
   };
 
+  const [activeDrag, setActiveDrag] = React.useState<"row" | "col">("col");
+
   return (
     <DndContext
       collisionDetection={closestCenter}
-      modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
+      modifiers={[
+        activeDrag === "col"
+          ? restrictToHorizontalAxis
+          : restrictToVerticalAxis,
+        restrictToParentElement,
+      ]}
       autoScroll={{
-        threshold: { x: 0.2, y: 0 },
+        threshold: activeDrag === "col" ? { x: 0.2, y: 0 } : { x: 0, y: 0.2 },
       }}
-      onDragEnd={handleDragEnd}
+      onDragEnd={(ev) => {
+        if (activeDrag === "col") {
+          handleColDragEnd(ev);
+        } else {
+          handleRowDragEnd(ev);
+        }
+        updateAllDraggedIndexes(null);
+        setActiveDrag("col");
+        draggedRowRef.current = null;
+      }}
       onDragAbort={() => {
         updateAllDraggedIndexes(null);
         setIsDragging(false);
+        draggedRowRef.current = null;
       }}
       onDragCancel={() => {
         updateAllDraggedIndexes(null);
         setIsDragging(false);
+        draggedRowRef.current = null;
       }}
       onDragStart={(ev) => {
+        if (ev.active.data.current?.type === "row") {
+          setActiveDrag("row");
+          const id = ev.active.id;
+          if (id && typeof id === "string") {
+            draggedRowRef.current = id;
+          }
+          return;
+        } else {
+          setActiveDrag("col");
+        }
+        if (activeDrag === "row") {
+          return;
+        }
         setIsDragging(true);
         const id = ev.active.id;
         if (id && typeof id === "string") {
-          const col = table.getColumn(id);
-          if (col) {
-            const index = col.getIndex();
-            if (index !== -1) {
-              updateAllDraggedIndexes(null);
+          headerGroups.forEach((headerGroup, headerIndex) => {
+            const col = headerGroup.headers.findIndex(
+              (header) => header.id === id,
+            );
+            if (col && col !== -1) {
+              updateDraggedIndex(headerIndex, col);
             }
-          }
+          });
         }
       }}
       sensors={sensors}
@@ -667,6 +783,7 @@ function App() {
           position: "relative",
           ...columnSizeVars,
           ...colScrollVars,
+          ...tableVars,
         }}
       >
         <div
@@ -684,7 +801,7 @@ function App() {
             position: "sticky",
             top: 0,
             background: "black",
-            width: "fit-content",
+            width: table.getTotalSize(),
             zIndex: 1,
           }}
         >
@@ -697,55 +814,24 @@ function App() {
                 {...{
                   className: "tr",
                 }}
-                style={{ display: "flex", height: tableRowHeight }}
+                style={{
+                  display: "flex",
+                  height: tableRowHeight,
+                  // transform: `translate3d(calc(var(--virtual-padding-left-${headerIndex}, 0) * 1px), 0, 0)`,
+                }}
               >
                 {headerIndex !== arr.length - 1 ? (
                   isDragging ? null : (
                     <>
                       {virtualColumns
                         .map((vc) => headerGroup.headers[vc.index])
-                        .filter(
-                          (header) => header.column.getIsPinned() === "left",
-                        )
                         .map((header) => {
                           return (
-                            <DisplayHeader key={header.id} header={header} />
-                          );
-                        })}
-                      {virtualPaddingLeft ? (
-                        //fake empty column to the left for virtualization scroll padding
-                        <div
-                          style={{
-                            display: "flex",
-                            width: `calc(var(--virtual-padding-left-${headerIndex}, 0) * 1px)`,
-                          }}
-                        />
-                      ) : null}
-                      {virtualColumns
-                        .map((vc) => headerGroup.headers[vc.index])
-                        .filter((header) => !header.column.getIsPinned())
-                        .map((header) => {
-                          return (
-                            <DisplayHeader key={header.id} header={header} />
-                          );
-                        })}
-                      {virtualPaddingRight ? (
-                        //fake empty column to the left for virtualization scroll padding
-                        <div
-                          style={{
-                            display: "flex",
-                            width: `calc(var(--virtual-padding-right-${headerIndex}, 0) * 1px)`,
-                          }}
-                        />
-                      ) : null}
-                      {virtualColumns
-                        .map((vc) => headerGroup.headers[vc.index])
-                        .filter(
-                          (header) => header.column.getIsPinned() === "right",
-                        )
-                        .map((header) => {
-                          return (
-                            <DisplayHeader key={header.id} header={header} />
+                            <DisplayHeader
+                              key={header.id}
+                              header={header}
+                              headerIndex={headerIndex}
+                            />
                           );
                         })}
                     </>
@@ -757,53 +843,6 @@ function App() {
                   >
                     {virtualColumns
                       .map((vc) => headerGroup.headers[vc.index])
-                      .filter(
-                        (header) => header.column.getIsPinned() === "left",
-                      )
-                      .map((header) => {
-                        return (
-                          <DraggableTableHeader
-                            key={header.id}
-                            header={header}
-                            table={table}
-                          />
-                        );
-                      })}
-                    {virtualPaddingLeft ? (
-                      //fake empty column to the left for virtualization scroll padding
-                      <div
-                        style={{
-                          display: "flex",
-                          width: `calc(var(--virtual-padding-left-${headerIndex}, 0) * 1px)`,
-                        }}
-                      />
-                    ) : null}
-                    {virtualColumns
-                      .map((vc) => headerGroup.headers[vc.index])
-                      .filter((header) => !header.column.getIsPinned())
-                      .map((header) => {
-                        return (
-                          <DraggableTableHeader
-                            key={header.id}
-                            header={header}
-                            table={table}
-                          />
-                        );
-                      })}
-                    {virtualPaddingRight ? (
-                      //fake empty column to the right for virtualization scroll padding
-                      <div
-                        style={{
-                          display: "flex",
-                          width: `calc(var(--virtual-padding-right-${headerIndex}, 0) * 1px)`,
-                        }}
-                      />
-                    ) : null}
-                    {virtualColumns
-                      .map((vc) => headerGroup.headers[vc.index])
-                      .filter(
-                        (header) => header.column.getIsPinned() === "right",
-                      )
                       .map((header) => {
                         return (
                           <DraggableTableHeader
@@ -824,119 +863,45 @@ function App() {
           {...{
             className: "tbody",
           }}
-          style={
-            {
-              // maxWidth: table.getTotalSize(),
-            }
-          }
-        >
-          {virtualRows.map((virtualRow) => {
-            const row = rows[virtualRow.index];
-            const visibileCells = row.getVisibleCells();
-            const { virtualPaddingLeft, virtualPaddingRight, virtualColumns } =
-              getBodyVirtualCols();
-            return (
-              <div
-                key={row.id}
-                style={{
-                  position: "absolute",
-                  // transform: `translate3d(calc(var(--virtual-padding-left, 0) * 1px), ${virtualRow.start}px, 0)`,
-                  transform: `translate3d(0, ${virtualRow.start}px, 0)`,
-                }}
-                {...{
-                  className: "tr",
-                }}
-              >
-                {visibileCells
-                  .filter((cell) => cell.column.getIsPinned() === "left")
-                  .map((cell) => {
-                    return (
-                      <SortableContext
-                        key={cell.id}
-                        items={columnOrder}
-                        strategy={horizontalListSortingStrategy}
-                      >
-                        <DragAlongCell key={cell.id} cell={cell} />
-                      </SortableContext>
-                    );
-                  })}
-                {virtualPaddingLeft ? (
-                  //fake empty column to the left for virtualization scroll padding
-                  <div
-                    style={{
-                      display: "flex",
-                      width: `calc(var(--virtual-padding-left, 0) * 1px)`,
-                    }}
-                  />
-                ) : null}
-                {virtualColumns
-                  .map((virtualColumn) => visibileCells[virtualColumn.index])
-                  .filter((cell) => !cell.column.getIsPinned())
-                  .map((cell) => {
-                    return (
-                      <SortableContext
-                        key={cell.id}
-                        items={columnOrder}
-                        strategy={horizontalListSortingStrategy}
-                      >
-                        <DragAlongCell key={cell.id} cell={cell} />
-                      </SortableContext>
-                    );
-                  })}
-                {virtualPaddingRight ? (
-                  //fake empty column to the right for virtualization scroll padding
-                  <div
-                    style={{
-                      display: "flex",
-                      width: `calc(var(--virtual-padding-right, 0) * 1px)`,
-                    }}
-                  />
-                ) : null}
-                {visibileCells
-                  .filter((cell) => cell.column.getIsPinned() === "right")
-                  .map((cell) => {
-                    return (
-                      <SortableContext
-                        key={cell.id}
-                        items={columnOrder}
-                        strategy={horizontalListSortingStrategy}
-                      >
-                        <DragAlongCell key={cell.id} cell={cell} />
-                      </SortableContext>
-                    );
-                  })}
-                {/* {row.getVisibleCells().map((cell) => {
-                  return (
-                    <SortableContext
-                      key={cell.id}
-                      items={columnOrder}
-                      strategy={horizontalListSortingStrategy}
-                    >
-                      <DragAlongCell key={cell.id} cell={cell} />
-                    </SortableContext>
-                  );
-                })} */}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* <div
-          {...{
-            className: "divTable",
-            style: {
-              width: table.getTotalSize(),
-            },
+          style={{
+            // maxWidth: table.getTotalSize(),
+            position: "relative",
+            transform: `translate3d(0, calc(var(--virtual-offset-top, 0) * 1px), 0)`,
+            // top: virtualRows[0].start,
           }}
-        > 
-        <MemoizedTableBody table={table} columnOrder={columnOrder} />
-        </div> */}
+        >
+          <SortableContext
+            items={rowIds}
+            strategy={verticalListSortingStrategy}
+          >
+            {virtualRows.map((virtualRow) => {
+              const row = rows[virtualRow.index];
+
+              const { virtualColumns } = getBodyVirtualCols();
+              return (
+                <TableRow
+                  key={row.id}
+                  row={row}
+                  virtualOffsetTop={virtualRow.start}
+                  columnOrder={columnOrder}
+                  virtualColumns={virtualColumns}
+                />
+              );
+            })}
+          </SortableContext>
+        </div>
       </div>
     </DndContext>
   );
 }
 
-function DisplayHeader({ header }: { header: Header<Row, unknown> }) {
+function DisplayHeader({
+  header,
+  headerIndex,
+}: {
+  header: Header<User, unknown>;
+  headerIndex: number;
+}) {
   return (
     <div
       key={header.id}
@@ -944,6 +909,9 @@ function DisplayHeader({ header }: { header: Header<Row, unknown> }) {
         className: "th",
         style: {
           ...getCommonPinningStyles(header.column),
+          transform: header.column.getIsPinned()
+            ? "none"
+            : `translate3d(calc(var(--virtual-padding-left-${headerIndex}, 0) * 1px), 0, 0)`,
           transition: "width transform 0.2s ease-in-out",
           whiteSpace: "nowrap",
           display: "flex",
@@ -975,23 +943,68 @@ function DisplayHeader({ header }: { header: Header<Row, unknown> }) {
   );
 }
 
-// function TableBody({
-//   table,
-//   columnOrder,
-// }: {
-//   table: Table<Row>;
-//   columnOrder: string[];
-// }) {
-//   return (
+function TableRow({
+  row,
+  virtualOffsetTop,
+  columnOrder,
+  virtualColumns,
+}: {
+  row: Row<User>;
+  virtualOffsetTop: number;
+  columnOrder: ColumnOrderState;
+  virtualColumns: VirtualItem[];
+}) {
+  const visibileCells = row.getVisibleCells();
 
-//   );
-// }
+  const {
+    transform: _transform,
+    transition,
+    setNodeRef,
+    isDragging,
+  } = useSortable({
+    id: row.id,
+    data: {
+      type: "row",
+    },
+  });
 
-// export const MemoizedTableBody = React.memo(
-//   TableBody,
-//   (prev, next) =>
-//     prev.table.options.data === next.table.options.data &&
-//     prev.columnOrder === next.columnOrder,
-// ) as typeof TableBody;
+  const transform: Transform | null = _transform
+    ? { ..._transform, x: 0 }
+    : null;
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        // transform: `translate3d(calc(var(--virtual-padding-left, 0) * 1px), ${virtualRow.start}px, 0)`,
+        // transform: `translate3d(0, ${virtualOffsetTop}px, 0)`,
+        // transform: transform
+        //   ? CSS.Transform.toString(transform)
+        //   : `translate3d(0, ${virtualOffsetTop}px, 0)`,
+        transform: CSS.Transform.toString(transform),
+        // top: virtualOffsetTop,
+        transition: transition,
+        opacity: isDragging ? 0.8 : 1,
+        zIndex: isDragging ? 1 : 0,
+      }}
+      ref={setNodeRef}
+      className="tr"
+    >
+      {virtualColumns
+        .map((virtualColumn) => visibileCells[virtualColumn.index])
+        .map((cell) => {
+          return (
+            <SortableContext
+              key={cell.id}
+              items={columnOrder}
+              strategy={horizontalListSortingStrategy}
+            >
+              <DragAlongCell key={cell.id} cell={cell} />
+            </SortableContext>
+          );
+        })}
+    </div>
+  );
+}
 
 export default App;
