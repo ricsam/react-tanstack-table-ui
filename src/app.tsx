@@ -8,6 +8,7 @@ import {
   getCoreRowModel,
   Header,
   Row,
+  RowSelectionState,
   Table,
   useReactTable,
 } from "@tanstack/react-table";
@@ -31,20 +32,15 @@ import {
 import { flushSync } from "react-dom";
 import { arrayMove } from "@dnd-kit/sortable";
 
-// Cell Component
 const RowDragHandleCell = ({
   rowId,
   rowIndex,
+  table,
 }: {
   rowId: string;
   rowIndex: number;
+  table: Table<User>;
 }) => {
-  // const { attributes, listeners } = useSortable({
-  //   id: rowId,
-  //   data: {
-  //     type: "row",
-  //   },
-  // });
   const { attributes, listeners } = useAnoDrag(
     AnoDndRowContext,
     rowId,
@@ -66,10 +62,34 @@ const columnHelper = createColumnHelper<User>();
 
 const columns: ColumnDef<User, any>[] = [
   {
+    id: "select",
+    header: ({ table }) => (
+      <IndeterminateCheckbox
+        {...{
+          checked: table.getIsAllRowsSelected(),
+          indeterminate: table.getIsSomeRowsSelected(),
+          onChange: table.getToggleAllRowsSelectedHandler(),
+        }}
+      />
+    ),
+    cell: ({ row }) => (
+      <div className="px-1">
+        <IndeterminateCheckbox
+          {...{
+            checked: row.getIsSelected(),
+            disabled: !row.getCanSelect(),
+            indeterminate: row.getIsSomeSelected(),
+            onChange: row.getToggleSelectedHandler(),
+          }}
+        />
+      </div>
+    ),
+  },
+  {
     id: "drag-handle",
     header: "Move",
-    cell: ({ row }) => (
-      <RowDragHandleCell rowId={row.id} rowIndex={row.index} />
+    cell: ({ row, table }) => (
+      <RowDragHandleCell rowId={row.id} rowIndex={row.index} table={table} />
     ),
     size: 60,
   },
@@ -491,8 +511,8 @@ const initialDelta: Delta = {
 const totalDelta = (delta: Delta, dimension: "x" | "y") =>
   delta.mouseDelta[dimension] + delta.scrollDelta[dimension];
 type AnoDndEvent = {
-  active: { id: string | number };
-  over: { id: string | number } | null;
+  active: { id: string };
+  over: { id: string } | null;
 };
 const AnoDndProvider = ({
   children,
@@ -733,10 +753,6 @@ function useGetStyle(
   if (isDraggingThis) {
     transition = "none";
   }
-
-  // if (!ctx.isDragging) {
-  //   transition = "none";
-  // }
 
   //#region handle-drop-animation
   const prevTransformRef = React.useRef(transform);
@@ -997,8 +1013,8 @@ function App() {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
       setColumnOrder((columnOrder) => {
-        const oldIndex = columnOrder.indexOf(String(active.id));
-        const newIndex = columnOrder.indexOf(String(over.id));
+        const oldIndex = columnOrder.indexOf(active.id);
+        const newIndex = columnOrder.indexOf(over.id);
         return arrayMove(columnOrder, oldIndex, newIndex); //this is just a splice util
       });
     }
@@ -1008,15 +1024,12 @@ function App() {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
       setData((data) => {
-        const oldIndex = rowIds.indexOf(String(active.id));
-        const newIndex = rowIds.indexOf(String(over.id));
+        const oldIndex = rowIds.indexOf(active.id);
+        const newIndex = rowIds.indexOf(over.id);
         return arrayMove(data, oldIndex, newIndex); //this is just a splice util
       });
     }
   }
-
-  const width = 640;
-  const height = 640;
 
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -1583,6 +1596,29 @@ const TableRow = React.memo(function TableRow({
           return <DragAlongCell key={cell.id} cell={cell} />;
         })}
     </div>
+  );
+});
+
+const IndeterminateCheckbox = React.memo(function IndeterminateCheckbox({
+  indeterminate,
+  className = "",
+  ...rest
+}: { indeterminate?: boolean } & React.HTMLProps<HTMLInputElement>) {
+  const ref = React.useRef<HTMLInputElement>(null!);
+
+  React.useEffect(() => {
+    if (typeof indeterminate === "boolean") {
+      ref.current.indeterminate = !rest.checked && indeterminate;
+    }
+  }, [ref, indeterminate, rest.checked]);
+
+  return (
+    <input
+      type="checkbox"
+      ref={ref}
+      className={className + " cursor-pointer"}
+      {...rest}
+    />
   );
 });
 
