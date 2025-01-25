@@ -3,7 +3,6 @@ import {
   Column,
   ColumnDef,
   ColumnOrderState,
-  ColumnSizingState,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -16,35 +15,7 @@ import { CSSProperties, useState } from "react";
 import "./App.css";
 import { generateTableData, User } from "./generate_table_data";
 import React from "react";
-import {
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  closestCenter,
-  type DragEndEvent,
-  useSensor,
-  useSensors,
-  closestCorners,
-  pointerWithin,
-  rectIntersection,
-  DragOverlay,
-} from "@dnd-kit/core";
-import {
-  restrictToHorizontalAxis,
-  restrictToParentElement,
-  restrictToVerticalAxis,
-} from "@dnd-kit/modifiers";
-import {
-  arrayMove,
-  SortableContext,
-  horizontalListSortingStrategy,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 
-// needed for row & cell level scope DnD setup
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS, Transform } from "@dnd-kit/utilities";
 import {
   defaultRangeExtractor,
   elementScroll,
@@ -53,18 +24,34 @@ import {
   useVirtualizer,
   VirtualItem,
   Virtualizer,
+  Range,
   VirtualizerOptions,
-} from "@tanstack/react-virtual";
+  // } from "@tanstack/react-virtual";
+} from "./react-virtual";
 import { flushSync } from "react-dom";
+import { arrayMove } from "@dnd-kit/sortable";
 
 // Cell Component
-const RowDragHandleCell = ({ rowId }: { rowId: string }) => {
-  const { attributes, listeners } = useSortable({
-    id: rowId,
-    data: {
-      type: "row",
-    },
-  });
+const RowDragHandleCell = ({
+  rowId,
+  rowIndex,
+}: {
+  rowId: string;
+  rowIndex: number;
+}) => {
+  // const { attributes, listeners } = useSortable({
+  //   id: rowId,
+  //   data: {
+  //     type: "row",
+  //   },
+  // });
+  const { attributes, listeners } = useAnoDrag(
+    AnoDndRowContext,
+    rowId,
+    tableRowHeight,
+    rowIndex,
+    rowIndex * tableRowHeight,
+  );
   return (
     // Alternatively, you could set these attributes on the rows themselves
     <button {...attributes} {...listeners}>
@@ -81,7 +68,9 @@ const columns: ColumnDef<User, any>[] = [
   {
     id: "drag-handle",
     header: "Move",
-    cell: ({ row }) => <RowDragHandleCell rowId={row.id} />,
+    cell: ({ row }) => (
+      <RowDragHandleCell rowId={row.id} rowIndex={row.index} />
+    ),
     size: 60,
   },
   columnHelper.accessor("id", {
@@ -188,6 +177,16 @@ const columns: ColumnDef<User, any>[] = [
     size: 200,
   }),
 ];
+for (let i = 0; i < 80; i += 1) {
+  columns.push(
+    columnHelper.accessor("department", {
+      header: `Extra ${i}`,
+      cell: (info) => info.getValue(),
+      id: `extra-${i}`,
+      size: 200,
+    }),
+  );
+}
 
 const DraggableTableHeader = ({
   header,
@@ -196,29 +195,44 @@ const DraggableTableHeader = ({
   header: Header<User, unknown>;
   table: Table<User>;
 }) => {
+  // const {
+  //   attributes,
+  //   isDragging,
+  //   listeners,
+  //   setNodeRef,
+  //   transform: _transform,
+  //   transition,
+  // } = useSortable({
+  //   id: header.column.id,
+  //   data: {
+  //     type: "col",
+  //   },
+  // });
+
   const {
-    attributes,
-    isDragging,
-    listeners,
-    setNodeRef,
     transform: _transform,
+    isDragging,
     transition,
-  } = useSortable({
-    id: header.column.id,
-    data: {
-      type: "col",
-    },
-  });
+    setNodeRef,
+    listeners,
+    attributes,
+  } = useAnoDrag(
+    AnoDndColContext,
+    header.column.id,
+    header.column.getSize(),
+    header.column.getIndex(),
+    header.column.getStart(),
+  );
 
   const dragTransform = _transform ? ` + ${_transform.x}px` : "";
 
   const transform = header.column.getIsPinned()
-    ? CSS.Translate.toString(_transform ? { ..._transform, y: 0 } : null)
-    : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
+    ? "none"
+    : `translate3d(calc(0px${dragTransform}), 0, 0)`;
+  // : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
 
   const style: CSSProperties = {
     opacity: isDragging ? 0.8 : 1,
-    position: "relative",
     // transform: CSS.Translate.toString(transform), // translate instead of transform to avoid squishing
     transform,
     transition,
@@ -231,6 +245,8 @@ const DraggableTableHeader = ({
     height: "32px",
     ...getCommonPinningStyles(header.column),
     width: `calc(var(--header-${header?.id}-size) * 1px)`,
+    left: header.column.getStart(),
+    position: "absolute",
   };
 
   return (
@@ -334,18 +350,537 @@ const getCommonPinningStyles = (column: Column<User>): CSSProperties => {
   return style;
 };
 
-const DragAlongCell = ({ cell }: { cell: Cell<User, unknown> }) => {
+type AnoDndActive = {
+  id: string;
+  mouseStart: { x: number; y: number };
+  scrollStart: { x: number; y: number };
+  handleOffset: { x: number; y: number };
+  size: number;
+  start: number;
+  index: number;
+};
+
+type AnoDndContextType = {
+  setIsDragging: React.Dispatch<React.SetStateAction<AnoDndActive | null>>;
+  isDragging: AnoDndActive | null;
+  delta: Delta;
+  // cols: { size: number; id: string }[];
+  closestCol: { size: number; id: string; index: number } | null;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  onDragStart: (event: AnoDndEvent) => void;
+  getNodeRef: (id: string) => HTMLElement | null;
+  setNodeRef: (id: string, el: HTMLElement | null) => void;
+  dimension: "x" | "y";
+};
+
+const createAnoDndContext = () =>
+  React.createContext<AnoDndContextType | undefined>(undefined);
+const AnoDndColContext = createAnoDndContext();
+const AnoDndRowContext = createAnoDndContext();
+
+type ColRow = { size: number; id: string };
+type ClosestResult = { size: number; id: string; index: number };
+
+/**
+ * Finds the column/row closest to `pos`.
+ *
+ * @param i           The start index to search from.
+ * @param pos         The position to find the closest column/row to.
+ * @param items       Array of items (columns/rows), each having a 'size'.
+ *
+ * @returns An object containing `{ size, id, index }` for the closest item.
+ */
+function findClosestColOrRow(
+  i: number,
+  pos: number,
+  items: ColRow[],
+): ClosestResult {
+  if (!items.length) {
+    throw new Error("No items provided.");
+  }
+
+  // 2) Compute the offset to the *start* of item[i].
+  //    aggregator will hold the left/top edge of the current item[i].
+  //    We'll sum sizes up to i.
+  let aggregator = 0;
+  for (let j = 0; j < i; j++) {
+    aggregator += items[j].size;
+  }
+
+  // 3) Calculate the initial "best" distance and item
+  let bestIndex = i;
+  let bestDist = Math.abs(pos - (aggregator + items[i].size / 2));
+  let bestItem = items[i];
+
+  // We'll keep separate aggregators for left and right searches.
+  // aggregatorLeft = position of the start of the current "left" item,
+  // aggregatorRight = position of the start of the current "right" item.
+  let aggregatorLeft = aggregator;
+  let aggregatorRight = aggregator;
+
+  // Set up left/right indices
+  let left = i - 1;
+  let right = i + 1;
+
+  // We'll expand in both directions until the distance doesn't get better.
+  let searchLeft = true;
+  let searchRight = true;
+
+  while (searchLeft || searchRight) {
+    // ---- Search Left ----
+    if (searchLeft) {
+      if (left < 0) {
+        // No more items on the left
+        searchLeft = false;
+      } else {
+        // Before computing the center for item at 'left',
+        // adjust aggregatorLeft to the start of that item.
+        aggregatorLeft -= items[left].size;
+        const centerLeft = aggregatorLeft + items[left].size / 2;
+        const distLeft = Math.abs(pos - centerLeft);
+
+        if (distLeft < bestDist) {
+          bestDist = distLeft;
+          bestIndex = left;
+          bestItem = items[left];
+          left--;
+        } else {
+          // If we didn't improve, no point continuing left
+          searchLeft = false;
+        }
+      }
+    }
+
+    // ---- Search Right ----
+    if (searchRight) {
+      if (right >= items.length) {
+        // No more items on the right
+        searchRight = false;
+      } else {
+        // aggregatorRight is currently at the start of item i (or last visited on the right).
+        // Move it forward by the size of the item to the immediate left of `right`
+        // so that aggregatorRight points to the start of items[right].
+        aggregatorRight += items[right - 1]?.size ?? 0;
+        const centerRight = aggregatorRight + items[right].size / 2;
+        const distRight = Math.abs(pos - centerRight);
+
+        if (distRight < bestDist) {
+          bestDist = distRight;
+          bestIndex = right;
+          bestItem = items[right];
+          right++;
+        } else {
+          // If we didn't improve, no point continuing right
+          searchRight = false;
+        }
+      }
+    }
+  }
+
+  return { ...bestItem, index: bestIndex };
+}
+
+type Delta = {
+  mouseDelta: { x: number; y: number };
+  scrollDelta: { x: number; y: number };
+};
+const initialDelta: Delta = {
+  mouseDelta: { x: 0, y: 0 },
+  scrollDelta: { x: 0, y: 0 },
+};
+const totalDelta = (delta: Delta, dimension: "x" | "y") =>
+  delta.mouseDelta[dimension] + delta.scrollDelta[dimension];
+type AnoDndEvent = {
+  active: { id: string | number };
+  over: { id: string | number } | null;
+};
+const AnoDndProvider = ({
+  children,
+  cols,
+  scrollRef,
+  onDragEnd,
+  onDragStart,
+  onDragCancel,
+  AnoDndContext,
+  dimension,
+  getAverageSize,
+}: {
+  children: React.ReactNode;
+  cols: { size: number; id: string }[];
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  onDragEnd: (event: AnoDndEvent) => void;
+  onDragStart: (event: AnoDndEvent) => void;
+  onDragCancel: () => void;
+  AnoDndContext: React.Context<AnoDndContextType | undefined>;
+  dimension: "x" | "y";
+  getAverageSize: () => number;
+}) => {
+  const [isDragging, setIsDragging] = useState<AnoDndActive | null>(null);
+  const [delta, setDelta] = useState<Delta>(initialDelta);
+  const [closestCol, setClosestCol] = useState<{
+    size: number;
+    id: string;
+    index: number;
+  } | null>(null);
+
+  const _refs = {
+    isDragging,
+    delta,
+    closestCol,
+    onDragEnd,
+    cols,
+    onDragCancel,
+    getAverageSize,
+  };
+  const refs = React.useRef(_refs);
+  refs.current = _refs;
+
+  const getClosestCol = (delta: Delta) => {
+    if (!isDragging) {
+      return null;
+    }
+    const cols = refs.current.cols;
+
+    // let xAgg = 0;
+    // for (let i = 0; i < cols.length; i++) {
+    //   const col = cols[i];
+    //   if (col.id === isDragging.id) {
+    //     break;
+    //   }
+    //   xAgg += col.size;
+    // }
+    const pos =
+      isDragging.start + totalDelta(delta, dimension) + isDragging.size / 2;
+
+    // let dAgg = 0;
+    // let distance = Infinity;
+    // let closestCol: null | { size: number; id: string; index: number } = null;
+    // for (let i = 0; i < cols.length; i++) {
+    //   const col = cols[i];
+    //   const center = dAgg + col.size / 2;
+
+    //   const dist = Math.abs(pos - center);
+
+    //   if (dist <= distance) {
+    //     distance = dist;
+    //     closestCol = { ...col, index: i };
+    //   }
+    //   dAgg += col.size;
+    // }
+
+    // 1) Estimate the initial index using averageSize
+    let i = Math.floor(
+      (isDragging.start + totalDelta(delta, dimension)) /
+        refs.current.getAverageSize(),
+    );
+    // Clamp i to valid range
+    i = Math.max(0, Math.min(i, cols.length - 1));
+
+    return findClosestColOrRow(i, pos, cols);
+    // return closestCol;
+  };
+
+  const getClosestColRef = React.useRef(getClosestCol);
+  getClosestColRef.current = getClosestCol;
+
+  React.useEffect(() => {
+    if (!isDragging) {
+      return;
+    }
+
+    const reset = () => {
+      setIsDragging(null);
+      setDelta(initialDelta);
+      setClosestCol(null);
+    };
+    const mouseMove = (ev: MouseEvent) => {
+      const newDelta: Delta = {
+        ...refs.current.delta,
+        mouseDelta: {
+          x: ev.clientX - isDragging.mouseStart.x,
+          y: ev.clientY - isDragging.mouseStart.y,
+        },
+      };
+      const closestCol = getClosestColRef.current(newDelta);
+      setDelta(newDelta);
+      setClosestCol(closestCol);
+    };
+    const onScroll = () => {
+      const el = scrollRef.current;
+      if (!el) {
+        throw new Error("No scrollEl");
+      }
+      const newDelta = {
+        ...refs.current.delta,
+        scrollDelta: {
+          x: el.scrollLeft - isDragging.scrollStart.x,
+          y: el.scrollTop - isDragging.scrollStart.y,
+        },
+      };
+      const closestCol = getClosestColRef.current(newDelta);
+      getClosestColRef.current(newDelta);
+      setDelta(newDelta);
+      setClosestCol(closestCol);
+    };
+
+    const onMouseUp = () => {
+      refs.current.onDragEnd({
+        active: { id: isDragging.id },
+        over: refs.current.closestCol,
+      });
+      reset();
+    };
+
+    const cancel = () => {
+      refs.current.onDragCancel();
+      reset();
+    };
+
+    const keydown = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        cancel();
+      }
+    };
+
+    window.addEventListener("mousemove", mouseMove, true);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("mouseup", onMouseUp, true);
+    window.addEventListener("keydown", keydown, true);
+    return () => {
+      window.removeEventListener("mousemove", mouseMove, true);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("mouseup", onMouseUp, true);
+      window.removeEventListener("keydown", keydown, true);
+    };
+  }, [isDragging, scrollRef]);
+
+  const nodeRef = React.useRef<Record<string, HTMLElement | null>>({});
+
+  return (
+    <AnoDndContext.Provider
+      value={{
+        setIsDragging,
+        isDragging,
+        delta,
+        // cols,
+        closestCol,
+        scrollRef,
+        onDragStart,
+        dimension,
+        setNodeRef(id, el) {
+          nodeRef.current[id] = el;
+          return () => {
+            delete nodeRef.current[id];
+          };
+        },
+        getNodeRef(id) {
+          return nodeRef.current[id] ?? null;
+        },
+      }}
+    >
+      {children}
+    </AnoDndContext.Provider>
+  );
+};
+
+type AnoTransform = {
+  [x: string]: number;
+};
+
+function useGetStyle(
+  AnoDndContext: React.Context<AnoDndContextType | undefined>,
+  id: string,
+  thisIndex: number,
+  start: number,
+) {
+  const ctx = React.useContext(AnoDndContext);
+  if (!ctx) {
+    throw new Error("useAnoDrag must be used within AnoDndProvider");
+  }
+  const dimension = ctx.dimension;
+  const antiDimesion = dimension === "x" ? "y" : "x";
+
+  const isDraggingThis = ctx.isDragging && ctx.isDragging.id === id;
+
+  let transform: AnoTransform = { x: 0, y: 0 };
+  if (isDraggingThis) {
+    transform = {
+      [dimension]: totalDelta(ctx.delta, dimension),
+      [antiDimesion]: 0,
+    };
+  }
+
+  let transition = "transform 200ms ease";
+
+  const prevIndexRef = React.useRef(thisIndex);
+  const updatedIndex = prevIndexRef.current !== thisIndex;
+  const overrideRet = React.useRef<{
+    transform: AnoTransform;
+    transition: string;
+  } | null>(null);
+
+  if (ctx.closestCol && ctx.isDragging && !isDraggingThis) {
+    if (thisIndex > ctx.isDragging.index && thisIndex <= ctx.closestCol.index) {
+      transform = { [dimension]: -1 * ctx.isDragging.size, [antiDimesion]: 0 };
+    } else if (
+      thisIndex < ctx.isDragging.index &&
+      thisIndex >= ctx.closestCol.index
+    ) {
+      transform = { [dimension]: ctx.isDragging.size, [antiDimesion]: 0 };
+    }
+  }
+
+  if (isDraggingThis) {
+    transition = "none";
+  }
+
+  // if (!ctx.isDragging) {
+  //   transition = "none";
+  // }
+
+  //#region handle-drop-animation
+  const prevTransformRef = React.useRef(transform);
+  const prevTransform = prevTransformRef.current;
+
+  const prevDRef = React.useRef(start);
+  const prevD = prevDRef.current;
+
+  if (updatedIndex) {
+    const totalPreviousD = prevD + prevTransform[dimension];
+    const newTransformD = totalPreviousD - start;
+    // console.log(
+    //   `Updating index from ${prevIndexRef.current} to ${thisIndex} and x from ${prevX} to ${thisX} and transform from ${prevTransform.x} to ${transform.x}. New transform x: ${newTransformX}`,
+    // );
+    overrideRet.current = {
+      transform: { ...transform, [dimension]: newTransformD },
+      transition: "none",
+    };
+  }
+
+  const rerender = React.useReducer(() => ({}), {})[1];
+
+  React.useEffect(() => {
+    const t = requestAnimationFrame(() => {
+      if (overrideRet.current?.transition === "none") {
+        overrideRet.current.transition = "transform 200ms ease";
+        overrideRet.current.transform[dimension] = 0;
+        rerender();
+      } else if (overrideRet.current?.transition === "transform 200ms ease") {
+        overrideRet.current = null;
+        rerender();
+      }
+    });
+    return () => {
+      cancelAnimationFrame(t);
+    };
+  });
+
+  prevIndexRef.current = thisIndex;
+  prevTransformRef.current = transform;
+  prevDRef.current = start;
+  //#endregion
+
+  const ret = overrideRet.current ?? { transform, transition };
+
+  // if (dimension === "y" && ret.transform.y !== 0) {
+  //   console.log("transform.y", overrideRet.current);
+  // }
+
+  return ret;
+}
+
+const useAnoDrag = (
+  AnoDndContext: React.Context<AnoDndContextType | undefined>,
+  id: string,
+  size: number,
+  thisIndex: number,
+  start: number,
+) => {
+  const ctx = React.useContext(AnoDndContext);
+  if (!ctx) {
+    throw new Error("useAnoDrag must be used within AnoDndProvider");
+  }
+
+  const isDraggingThis = ctx.isDragging && ctx.isDragging.id === id;
+
+  const { transition, transform } = useGetStyle(
+    AnoDndContext,
+    id,
+    thisIndex,
+    start,
+  );
+
+  return {
+    transform,
+    transition,
+    isDragging: isDraggingThis,
+    listeners: {
+      onMouseDown: (ev: React.MouseEvent) => {
+        const rect = ctx.getNodeRef(id)?.getBoundingClientRect();
+        if (!rect) {
+          throw new Error("No rect");
+        }
+        const scrollEl = ctx.scrollRef.current;
+        if (!scrollEl) {
+          throw new Error("No scrollEl");
+        }
+        ctx.onDragStart({
+          active: { id },
+          over: null,
+        });
+        ctx.setIsDragging({
+          id,
+          mouseStart: { x: ev.clientX, y: ev.clientY },
+          handleOffset: {
+            x: ev.clientX - rect.left,
+            y: ev.clientY - rect.top,
+          },
+          scrollStart: {
+            x: scrollEl.scrollLeft,
+            y: scrollEl.scrollTop,
+          },
+          size: size,
+          index: thisIndex,
+          start,
+        });
+      },
+    },
+    setNodeRef: (el: HTMLElement | null) => {
+      ctx.setNodeRef(id, el);
+    },
+    attributes: {},
+  };
+};
+
+const DragAlongCell = React.memo(function DragAlongCell({
+  cell,
+}: {
+  cell: Cell<User, unknown>;
+}) {
+  // const {
+  //   isDragging,
+  //   setNodeRef,
+  //   transform: _transform,
+  //   transition,
+  // } = useSortable({
+  //   id: cell.column.id,
+  //   data: {
+  //     type: "col",
+  //   },
+  // });
+
   const {
     isDragging,
     setNodeRef,
     transform: _transform,
     transition,
-  } = useSortable({
-    id: cell.column.id,
-    data: {
-      type: "col",
-    },
-  });
+  } = useAnoDrag(
+    AnoDndColContext,
+    cell.column.id,
+    cell.column.getSize(),
+    cell.column.getIndex(),
+    cell.column.getStart(),
+  );
 
   // const transform: Transform | null = _transform
   //   ? { ..._transform, y: 0 }
@@ -354,8 +889,9 @@ const DragAlongCell = ({ cell }: { cell: Cell<User, unknown> }) => {
   const dragTransform = _transform ? ` + ${_transform.x}px` : "";
 
   const transform = cell.column.getIsPinned()
-    ? CSS.Translate.toString(_transform ? { ..._transform, y: 0 } : null)
-    : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
+    ? "none"
+    : // : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
+      `translate3d(calc(0px${dragTransform}), 0, 0)`;
 
   const style: CSSProperties = {
     opacity: isDragging ? 0.8 : 1,
@@ -369,7 +905,7 @@ const DragAlongCell = ({ cell }: { cell: Cell<User, unknown> }) => {
   };
 
   // let u = 0;
-  // for (let i = 0; i < 10000; i += 1) {
+  // for (let i = 0; i < 1e4; i += 1) {
   //   // slow
   //   u += Math.random();
   // }
@@ -387,16 +923,18 @@ const DragAlongCell = ({ cell }: { cell: Cell<User, unknown> }) => {
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
+          position: "absolute",
+          left: cell.column.getStart(),
         },
       }}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
     </div>
   );
-};
+});
 
 function App() {
-  const [data, setData] = React.useState<User[]>(() => generateTableData(1000));
+  const [data, setData] = React.useState<User[]>(() => generateTableData(1e5));
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     const iterateOverColumns = (columns: ColumnDef<User, any>[]): string[] => {
       return columns.flatMap((column): string[] => {
@@ -449,10 +987,12 @@ function App() {
   /* eslint-enable react-hooks/exhaustive-deps */
 
   const { rows } = table.getRowModel();
-  const rowIds = React.useMemo(() => rows.map((row) => row.id), [rows]);
+  const rowIds = React.useMemo(() => {
+    return rows.map((row) => row.id);
+  }, [rows]);
 
   // reorder columns after drag & drop
-  function handleColDragEnd(event: DragEndEvent) {
+  function handleColDragEnd(event: AnoDndEvent) {
     setIsDragging(false);
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
@@ -464,7 +1004,7 @@ function App() {
     }
   }
 
-  function handleRowDragEnd(event: DragEndEvent) {
+  function handleRowDragEnd(event: AnoDndEvent) {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
       setData((data) => {
@@ -474,12 +1014,6 @@ function App() {
       });
     }
   }
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, {}),
-    useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {}),
-  );
 
   const width = 640;
   const height = 640;
@@ -506,66 +1040,83 @@ function App() {
     _draggedIndexRef.current[headerIndex];
 
   const [isDragging, setIsDragging] = useState(false);
-  const baseColVirtOpts = (
-    headerIndex: number,
-  ): Pick<
-    VirtualizerOptions<HTMLDivElement, Element>,
-    "getScrollElement" | "horizontal" | "overscan" | "rangeExtractor"
-  > => {
-    const headers = table.getHeaderGroups()[headerIndex].headers;
-    return {
-      getScrollElement: () => tableContainerRef.current,
-      horizontal: true,
-      overscan: 3, //how many columns to render on each side off screen each way (adjust this for performance)
-      rangeExtractor: (range) => {
-        const draggedIndex = getDraggedIndex(headerIndex);
-        const next = new Set(defaultRangeExtractor(range));
-        if (draggedIndex !== null) {
-          if (!next.has(draggedIndex)) {
-            next.add(draggedIndex);
-            visibleColsOutsideVirtualRange.current[headerIndex].add(
-              draggedIndex,
-            );
-          } else {
-            visibleColsOutsideVirtualRange.current[headerIndex].delete(
-              draggedIndex,
-            );
-          }
-        }
-        const pinnedHeaders: Header<User, unknown>[] = [];
-        const unpinnedHeaders: Header<User, unknown>[] = [];
-        for (let i = 0; i < headers.length; i++) {
-          const header = headers[i];
-          if (header.column.getIsPinned()) {
-            pinnedHeaders.push(header);
-          } else {
-            unpinnedHeaders.push(header);
-          }
-        }
-        pinnedHeaders.forEach((col) => {
-          const index = col.index;
-          if (index !== -1) {
-            if (!next.has(index)) {
-              next.add(index);
-              visibleColsOutsideVirtualRange.current[headerIndex].add(index);
+  const baseColVirtOpts = React.useCallback(
+    (
+      headerIndex: number,
+    ): Pick<
+      VirtualizerOptions<HTMLDivElement, Element>,
+      | "getScrollElement"
+      | "horizontal"
+      | "overscan"
+      | "rangeExtractor"
+      | "debug"
+    > => {
+      const headers = table.getHeaderGroups()[headerIndex].headers;
+      return {
+        getScrollElement: () => tableContainerRef.current,
+        horizontal: true,
+        // debug: true,
+        overscan: 1, //how many columns to render on each side off screen each way (adjust this for performance)
+        rangeExtractor: (range) => {
+          const draggedIndex = getDraggedIndex(headerIndex);
+          const next = new Set(defaultRangeExtractor(range));
+          if (draggedIndex !== null) {
+            if (!next.has(draggedIndex)) {
+              next.add(draggedIndex);
+              visibleColsOutsideVirtualRange.current[headerIndex].add(
+                draggedIndex,
+              );
             } else {
-              visibleColsOutsideVirtualRange.current[headerIndex].delete(index);
+              visibleColsOutsideVirtualRange.current[headerIndex].delete(
+                draggedIndex,
+              );
             }
           }
-        });
-        unpinnedHeaders.forEach((col) => {
-          const index = col.index;
-          if (index === draggedIndex) {
-            return;
+          const pinnedHeaders: Header<User, unknown>[] = [];
+          const unpinnedHeaders: Header<User, unknown>[] = [];
+          for (let i = 0; i < headers.length; i++) {
+            const header = headers[i];
+            if (header.column.getIsPinned()) {
+              pinnedHeaders.push(header);
+            } else {
+              unpinnedHeaders.push(header);
+            }
           }
-          if (visibleColsOutsideVirtualRange.current[headerIndex].has(index)) {
-            visibleColsOutsideVirtualRange.current[headerIndex].delete(index);
-          }
-        });
-        return [...next].sort((a, b) => a - b);
-      },
-    };
-  };
+          pinnedHeaders.forEach((col) => {
+            const index = col.index;
+            if (index !== -1) {
+              if (!next.has(index)) {
+                next.add(index);
+                visibleColsOutsideVirtualRange.current[headerIndex].add(index);
+              } else {
+                visibleColsOutsideVirtualRange.current[headerIndex].delete(
+                  index,
+                );
+              }
+            }
+          });
+          unpinnedHeaders.forEach((col) => {
+            const index = col.index;
+            if (index === draggedIndex) {
+              return;
+            }
+            if (
+              visibleColsOutsideVirtualRange.current[headerIndex].has(index)
+            ) {
+              visibleColsOutsideVirtualRange.current[headerIndex].delete(index);
+            }
+          });
+          // console.log(
+          //   "range",
+          //   draggedIndex,
+          //   [...next].sort((a, b) => a - b),
+          // );
+          return [...next].sort((a, b) => a - b);
+        },
+      };
+    },
+    [table],
+  );
 
   const headerGroups = table.getHeaderGroups();
   const rerender = React.useReducer(() => ({}), {})[1];
@@ -576,25 +1127,30 @@ function App() {
     });
   };
 
-  const headerColVirtualizerOptions = headerGroups.map(
-    (headerGroup, headerIndex): VirtualizerOptions<HTMLDivElement, Element> => {
-      return {
-        ...baseColVirtOpts(headerIndex),
-        count: headerGroup.headers.length,
-        estimateSize: (index) => headerGroup.headers[index].getSize(),
-        observeElementRect,
-        observeElementOffset,
-        scrollToFn: elementScroll,
-        onChange: (instance, sync) => {
-          if (sync) {
-            flushSync(rerender);
-          } else {
-            rerender();
-          }
-        },
-      };
-    },
-  );
+  const headerColVirtualizerOptions = React.useMemo(() => {
+    return headerGroups.map(
+      (
+        headerGroup,
+        headerIndex,
+      ): VirtualizerOptions<HTMLDivElement, Element> => {
+        return {
+          ...baseColVirtOpts(headerIndex),
+          count: headerGroup.headers.length,
+          estimateSize: (index) => headerGroup.headers[index].getSize(),
+          observeElementRect,
+          observeElementOffset,
+          scrollToFn: elementScroll,
+          onChange: (instance, sync) => {
+            if (sync) {
+              flushSync(rerender);
+            } else {
+              rerender();
+            }
+          },
+        };
+      },
+    );
+  }, [baseColVirtOpts, headerGroups, rerender]);
 
   const [headerColVirtualizers] = React.useState(() => {
     return headerColVirtualizerOptions.map((options) => {
@@ -621,26 +1177,22 @@ function App() {
 
   const draggedRowRef = React.useRef<string | null>(null);
 
-  //dynamic row height virtualization - alternatively you could use a simpler fixed row height strategy without the need for `measureElement`
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
-    estimateSize: () => tableRowHeight, //estimate row height for accurate scrollbar dragging
+    estimateSize: () => tableRowHeight,
     getScrollElement: () => tableContainerRef.current,
-    //measure dynamic row height, except in firefox because it measures table border height incorrectly
-    // measureElement:
-    //   typeof window !== "undefined" &&
-    //   navigator.userAgent.indexOf("Firefox") === -1
-    //     ? (element) => element?.getBoundingClientRect().height
-    //     : undefined,
     overscan: 5,
-    rangeExtractor(range) {
-      const next = new Set(defaultRangeExtractor(range));
-      if (draggedRowRef.current !== null) {
-        next.add(rowIds.indexOf(draggedRowRef.current));
-      }
-      const n = [...next].sort((a, b) => a - b);
-      return n;
-    },
+    rangeExtractor: React.useCallback(
+      (range: Range): number[] => {
+        const next = new Set(defaultRangeExtractor(range));
+        if (draggedRowRef.current !== null) {
+          next.add(rowIds.indexOf(draggedRowRef.current));
+        }
+        const n = [...next].sort((a, b) => a - b);
+        return n;
+      },
+      [rowIds],
+    ),
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -671,6 +1223,8 @@ function App() {
           (vc) =>
             !visibleColsOutsideVirtualRange.current[headerIndex].has(vc.index),
         );
+      // const virtualColumnsStart = virtualColumns[0];
+      // const virtualColumnsEnd = [...virtualColumns].reverse()[0];
 
       virtualPaddingLeft = virtualColumnsStart?.start ?? 0;
       virtualPaddingRight =
@@ -711,54 +1265,39 @@ function App() {
     return getVirtualCols(headerGroups.length - 1);
   };
 
+  const bodyCols = getBodyVirtualCols().virtualColumns;
+
   const [activeDrag, setActiveDrag] = React.useState<"row" | "col">("col");
 
+  const allCols = table.getAllLeafColumns();
+
+  const averageColSize = React.useMemo(() => {
+    return (
+      allCols.reduce((acc, col) => {
+        return acc + col.getSize();
+      }, 0) / allCols.length
+    );
+  }, [allCols]);
+
   return (
-    <DndContext
-      collisionDetection={closestCenter}
-      modifiers={[
-        activeDrag === "col"
-          ? restrictToHorizontalAxis
-          : restrictToVerticalAxis,
-        restrictToParentElement,
-      ]}
-      autoScroll={{
-        threshold: activeDrag === "col" ? { x: 0.2, y: 0 } : { x: 0, y: 0.2 },
-      }}
+    <AnoDndProvider
+      cols={React.useMemo(() => {
+        return allCols.map((col) => {
+          return { id: col.id, size: col.getSize() };
+        });
+      }, [allCols])}
+      getAverageSize={() => averageColSize}
+      dimension="x"
+      scrollRef={tableContainerRef}
       onDragEnd={(ev) => {
-        if (activeDrag === "col") {
-          handleColDragEnd(ev);
-        } else {
-          handleRowDragEnd(ev);
-        }
+        handleColDragEnd(ev);
         updateAllDraggedIndexes(null);
-        setActiveDrag("col");
-        draggedRowRef.current = null;
-      }}
-      onDragAbort={() => {
-        updateAllDraggedIndexes(null);
-        setIsDragging(false);
-        draggedRowRef.current = null;
       }}
       onDragCancel={() => {
         updateAllDraggedIndexes(null);
         setIsDragging(false);
-        draggedRowRef.current = null;
       }}
       onDragStart={(ev) => {
-        if (ev.active.data.current?.type === "row") {
-          setActiveDrag("row");
-          const id = ev.active.id;
-          if (id && typeof id === "string") {
-            draggedRowRef.current = id;
-          }
-          return;
-        } else {
-          setActiveDrag("col");
-        }
-        if (activeDrag === "row") {
-          return;
-        }
         setIsDragging(true);
         const id = ev.active.id;
         if (id && typeof id === "string") {
@@ -766,134 +1305,190 @@ function App() {
             const col = headerGroup.headers.findIndex(
               (header) => header.id === id,
             );
-            if (col && col !== -1) {
+            if (col !== -1) {
               updateDraggedIndex(headerIndex, col);
             }
           });
         }
       }}
-      sensors={sensors}
+      AnoDndContext={AnoDndColContext}
     >
-      <div
-        ref={tableContainerRef}
-        style={{
-          overflow: "auto",
-          width: "640px",
-          height: "640px",
-          position: "relative",
-          ...columnSizeVars,
-          ...colScrollVars,
-          ...tableVars,
+      <AnoDndProvider
+        dimension="y"
+        getAverageSize={() => tableRowHeight}
+        AnoDndContext={AnoDndRowContext}
+        scrollRef={tableContainerRef}
+        onDragEnd={(ev) => {
+          handleRowDragEnd(ev);
+          draggedRowRef.current = null;
         }}
+        onDragCancel={() => {
+          draggedRowRef.current = null;
+        }}
+        onDragStart={(ev) => {
+          const id = ev.active.id;
+          if (id && typeof id === "string") {
+            draggedRowRef.current = id;
+          }
+        }}
+        cols={rowIds.map((id) => {
+          return { id, size: tableRowHeight };
+        })}
       >
         <div
-          className="table-scroller"
+          ref={tableContainerRef}
           style={{
-            width: table.getTotalSize(),
-            height: data.length * tableRowHeight,
-            position: "absolute",
-          }}
-        ></div>
-
-        <div
-          className="thead"
-          style={{
-            position: "sticky",
-            top: 0,
-            background: "black",
-            width: table.getTotalSize(),
-            zIndex: 1,
+            overflow: "auto",
+            width: "1920px",
+            height: "1200px",
+            position: "relative",
+            contain: "paint",
+            willChange: "transform",
+            ...columnSizeVars,
+            ...colScrollVars,
+            ...tableVars,
           }}
         >
-          {table.getHeaderGroups().map((headerGroup, headerIndex, arr) => {
-            const { virtualPaddingLeft, virtualPaddingRight, virtualColumns } =
-              getVirtualCols(headerIndex);
-            return (
-              <div
-                key={headerGroup.id}
-                {...{
-                  className: "tr",
-                }}
-                style={{
-                  display: "flex",
-                  height: tableRowHeight,
-                  // transform: `translate3d(calc(var(--virtual-padding-left-${headerIndex}, 0) * 1px), 0, 0)`,
-                }}
-              >
-                {headerIndex !== arr.length - 1 ? (
-                  isDragging ? null : (
+          <div
+            className="table-scroller"
+            style={{
+              width: table.getTotalSize(),
+              height: data.length * tableRowHeight,
+              position: "absolute",
+            }}
+          ></div>
+
+          <div
+            className="thead"
+            style={{
+              position: "sticky",
+              top: 0,
+              background: "black",
+              width: table.getTotalSize(),
+              zIndex: 1,
+            }}
+          >
+            {table.getHeaderGroups().map((headerGroup, headerIndex, arr) => {
+              const {
+                virtualPaddingLeft,
+                virtualPaddingRight,
+                virtualColumns,
+              } = getVirtualCols(headerIndex);
+              return (
+                <div
+                  key={headerGroup.id}
+                  {...{
+                    className: "tr",
+                  }}
+                  style={{
+                    display: "flex",
+                    height: tableRowHeight,
+                  }}
+                >
+                  {headerIndex !== arr.length - 1 ? (
+                    isDragging ? null : (
+                      <>
+                        {virtualColumns
+                          .map((vc) => headerGroup.headers[vc.index])
+                          .map((header) => {
+                            return (
+                              <DisplayHeader
+                                key={header.id}
+                                header={header}
+                                headerIndex={headerIndex}
+                              />
+                            );
+                          })}
+                      </>
+                    )
+                  ) : (
                     <>
                       {virtualColumns
                         .map((vc) => headerGroup.headers[vc.index])
                         .map((header) => {
                           return (
-                            <DisplayHeader
+                            <DraggableTableHeader
                               key={header.id}
                               header={header}
-                              headerIndex={headerIndex}
+                              table={table}
                             />
                           );
                         })}
                     </>
-                  )
-                ) : (
-                  <SortableContext
-                    items={columnOrder}
-                    strategy={horizontalListSortingStrategy}
-                  >
-                    {virtualColumns
-                      .map((vc) => headerGroup.headers[vc.index])
-                      .map((header) => {
-                        return (
-                          <DraggableTableHeader
-                            key={header.id}
-                            header={header}
-                            table={table}
-                          />
-                        );
-                      })}
-                  </SortableContext>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div
-          {...{
-            className: "tbody",
-          }}
-          style={{
-            // maxWidth: table.getTotalSize(),
-            position: "relative",
-            transform: `translate3d(0, calc(var(--virtual-offset-top, 0) * 1px), 0)`,
-            // top: virtualRows[0].start,
-          }}
-        >
-          <SortableContext
-            items={rowIds}
-            strategy={verticalListSortingStrategy}
-          >
-            {virtualRows.map((virtualRow) => {
-              const row = rows[virtualRow.index];
-
-              const { virtualColumns } = getBodyVirtualCols();
-              return (
-                <TableRow
-                  key={row.id}
-                  row={row}
-                  virtualOffsetTop={virtualRow.start}
-                  columnOrder={columnOrder}
-                  virtualColumns={virtualColumns}
-                />
+                  )}
+                </div>
               );
             })}
-          </SortableContext>
+          </div>
+
+          <TableBody
+            virtualColumns={bodyCols}
+            virtualRows={virtualRows}
+            rows={rows}
+          ></TableBody>
         </div>
-      </div>
-    </DndContext>
+      </AnoDndProvider>
+    </AnoDndProvider>
   );
 }
+
+function tuple<A, B, C, D>(a: A, b: B, c: C, d: D): [A, B, C, D];
+function tuple<A, B, C>(a: A, b: B, c: C): [A, B, C];
+function tuple<A, B>(a: A, b: B): [A, B];
+function tuple(...args: any[]) {
+  return args;
+}
+
+const initial = Symbol();
+const useDebugDeps = (...deps: unknown[]) => {
+  const previousDeps = React.useRef<unknown[]>(deps.map(() => initial));
+  const diffingDeps: unknown[] = [];
+  deps.forEach((dep, index) => {
+    const prev = previousDeps.current[index];
+    if (prev === initial) {
+      diffingDeps.push(tuple("initial_render", index, dep));
+    } else if (prev !== dep) {
+      diffingDeps.push(tuple(index, prev, dep));
+    }
+  });
+  previousDeps.current = deps;
+  return diffingDeps;
+};
+
+const TableBody = ({
+  virtualColumns,
+  virtualRows,
+  rows,
+}: {
+  virtualColumns: VirtualItem[];
+  virtualRows: VirtualItem[];
+  rows: Row<User>[];
+}) => {
+  return (
+    <div
+      className="tbody"
+      style={{
+        // maxWidth: table.getTotalSize(),
+        position: "relative",
+        // transform: `translate3d(0, calc(var(--virtual-offset-top, 0) * 1px), 0)`,
+        // top: virtualRows[0].start,
+      }}
+    >
+      {virtualRows.map((virtualRow) => {
+        const row = rows[virtualRow.index];
+
+        return (
+          <TableRow
+            key={row.id}
+            row={row}
+            virtualOffsetTop={virtualRow.start}
+            virtualColumns={virtualColumns}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 function DisplayHeader({
   header,
@@ -943,46 +1538,38 @@ function DisplayHeader({
   );
 }
 
-function TableRow({
+const TableRow = React.memo(function TableRow({
   row,
   virtualOffsetTop,
-  columnOrder,
   virtualColumns,
 }: {
   row: Row<User>;
   virtualOffsetTop: number;
-  columnOrder: ColumnOrderState;
   virtualColumns: VirtualItem[];
 }) {
   const visibileCells = row.getVisibleCells();
 
-  const {
-    transform: _transform,
-    transition,
-    setNodeRef,
-    isDragging,
-  } = useSortable({
-    id: row.id,
-    data: {
-      type: "row",
-    },
-  });
+  const { transform, transition, setNodeRef, isDragging } = useAnoDrag(
+    AnoDndRowContext,
+    row.id,
+    tableRowHeight,
+    row.index,
+    row.index * tableRowHeight,
+  );
 
-  const transform: Transform | null = _transform
-    ? { ..._transform, x: 0 }
-    : null;
+  // console.log("@transform?.y ?? 0", transform?.y ?? 0);
 
   return (
     <div
       style={{
-        position: "relative",
+        position: "absolute",
         // transform: `translate3d(calc(var(--virtual-padding-left, 0) * 1px), ${virtualRow.start}px, 0)`,
         // transform: `translate3d(0, ${virtualOffsetTop}px, 0)`,
         // transform: transform
         //   ? CSS.Transform.toString(transform)
         //   : `translate3d(0, ${virtualOffsetTop}px, 0)`,
-        transform: CSS.Transform.toString(transform),
-        // top: virtualOffsetTop,
+        transform: `translate3d(0, ${transform?.y ?? 0}px, 0)`,
+        top: virtualOffsetTop,
         transition: transition,
         opacity: isDragging ? 0.8 : 1,
         zIndex: isDragging ? 1 : 0,
@@ -993,18 +1580,10 @@ function TableRow({
       {virtualColumns
         .map((virtualColumn) => visibileCells[virtualColumn.index])
         .map((cell) => {
-          return (
-            <SortableContext
-              key={cell.id}
-              items={columnOrder}
-              strategy={horizontalListSortingStrategy}
-            >
-              <DragAlongCell key={cell.id} cell={cell} />
-            </SortableContext>
-          );
+          return <DragAlongCell key={cell.id} cell={cell} />;
         })}
     </div>
   );
-}
+});
 
 export default App;
