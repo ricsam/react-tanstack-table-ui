@@ -33,6 +33,7 @@ import {
 } from "./react-virtual";
 import { flushSync } from "react-dom";
 import { arrayMove, arraySwap } from "@dnd-kit/sortable";
+import { closestCorners } from "@dnd-kit/core";
 
 const RowDragHandleCell = ({
   rowId,
@@ -46,9 +47,7 @@ const RowDragHandleCell = ({
   const { attributes, listeners } = useAnoDrag(
     AnoDndRowContext,
     rowId,
-    tableRowHeight,
     rowIndex,
-    rowIndex * tableRowHeight,
   );
   return (
     // Alternatively, you could set these attributes on the rows themselves
@@ -256,13 +255,7 @@ const DraggableTableHeader = ({
     setNodeRef,
     listeners,
     attributes,
-  } = useAnoDrag(
-    AnoDndColContext,
-    header.column.id,
-    header.column.getSize(),
-    header.column.getIndex(),
-    header.column.getStart(),
-  );
+  } = useAnoDrag(AnoDndColContext, header.column.id, header.column.getIndex());
 
   const dragTransform = _transform ? ` + ${_transform.x}px` : "";
 
@@ -395,8 +388,6 @@ type AnoDndActive = {
   mouseStart: { x: number; y: number };
   scrollStart: { x: number; y: number };
   handleOffset: { x: number; y: number };
-  size: number;
-  start: number;
   index: number;
 };
 
@@ -405,7 +396,7 @@ type AnoDndContextType = {
   isDragging: AnoDndActive | null;
   delta: Delta;
   // cols: { size: number; id: string }[];
-  closestCol: { size: number; id: string; index: number } | null;
+  closestCol: { id: string; index: number } | null;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   onDragStart: (event: AnoDndEvent) => void;
   getNodeRef: (id: string) => HTMLElement | null;
@@ -413,6 +404,8 @@ type AnoDndContextType = {
   dimension: "x" | "y";
   getSelected?: () => RowSelectionState;
   getRenderedRange: () => string[];
+  getSize: (id: string) => number;
+  getStart: (id: string) => number;
 };
 
 const createAnoDndContext = () =>
@@ -420,8 +413,8 @@ const createAnoDndContext = () =>
 const AnoDndColContext = createAnoDndContext();
 const AnoDndRowContext = createAnoDndContext();
 
-type ColRow = { size: number; id: string };
-type ClosestResult = { size: number; id: string; index: number };
+type ColRow = { id: string };
+type ClosestResult = { id: string; index: number };
 
 /**
  * Finds the column/row closest to `pos`.
@@ -434,31 +427,50 @@ type ClosestResult = { size: number; id: string; index: number };
  */
 function findClosestColOrRow(
   i: number,
-  pos: number,
+  posStart: number,
+  id: string,
   items: ColRow[],
+  getSize: (id: string) => number,
+  getStart: (id: string) => number,
 ): ClosestResult {
   if (!items.length) {
     throw new Error("No items provided.");
   }
+  const size = getSize(id);
+  const posEnd = posStart + size;
+  const posCenter = posStart + size / 2;
 
-  // 2) Compute the offset to the *start* of item[i].
-  //    aggregator will hold the left/top edge of the current item[i].
-  //    We'll sum sizes up to i.
-  let aggregator = 0;
-  for (let j = 0; j < i; j++) {
-    aggregator += items[j].size;
-  }
+  const closestCenter = (index: number) => {
+    const itemStart = getStart(items[index].id);
+    const itemSize = getSize(items[index].id);
+    const itemEnd = itemStart + itemSize;
+    const itemCenter = itemStart + itemSize / 2;
+    return Math.abs(posCenter - itemCenter);
+  };
+  const custom = (index: number) => {
+    const itemStart = getStart(items[index].id);
+    const itemSize = getSize(items[index].id);
+    const itemEnd = itemStart + itemSize;
+    const itemCenter = itemStart + itemSize / 2;
+
+    const startDistance = Math.abs(posStart - itemStart);
+    const endDistance = Math.abs(posEnd - itemEnd);
+
+    // return startDistance + endDistance;
+    return Math.min(
+      Math.abs(posStart - itemStart),
+      Math.abs(posCenter - itemCenter),
+      Math.abs(posEnd - itemEnd),
+    );
+  };
+
+  // const getDistance = closestCenter;
+  const getDistance = custom;
 
   // 3) Calculate the initial "best" distance and item
   let bestIndex = i;
-  let bestDist = Math.abs(pos - (aggregator + items[i].size / 2));
+  let bestDist = getDistance(i);
   let bestItem = items[i];
-
-  // We'll keep separate aggregators for left and right searches.
-  // aggregatorLeft = position of the start of the current "left" item,
-  // aggregatorRight = position of the start of the current "right" item.
-  let aggregatorLeft = aggregator;
-  let aggregatorRight = aggregator;
 
   // Set up left/right indices
   let left = i - 1;
@@ -468,26 +480,25 @@ function findClosestColOrRow(
   let searchLeft = true;
   let searchRight = true;
 
+  let numIter = 0;
   while (searchLeft || searchRight) {
+    numIter += 1;
     // ---- Search Left ----
     if (searchLeft) {
       if (left < 0) {
         // No more items on the left
         searchLeft = false;
       } else {
-        // Before computing the center for item at 'left',
-        // adjust aggregatorLeft to the start of that item.
-        aggregatorLeft -= items[left].size;
-        const centerLeft = aggregatorLeft + items[left].size / 2;
-        const distLeft = Math.abs(pos - centerLeft);
+        const distLeft = getDistance(left);
 
-        if (distLeft < bestDist) {
+        if (distLeft <= bestDist) {
           bestDist = distLeft;
           bestIndex = left;
           bestItem = items[left];
           left--;
         } else {
           // If we didn't improve, no point continuing left
+          console.log("left", left, distLeft, bestDist);
           searchLeft = false;
         }
       }
@@ -499,27 +510,24 @@ function findClosestColOrRow(
         // No more items on the right
         searchRight = false;
       } else {
-        // aggregatorRight is currently at the start of item i (or last visited on the right).
-        // Move it forward by the size of the item to the immediate left of `right`
-        // so that aggregatorRight points to the start of items[right].
-        aggregatorRight += items[right - 1]?.size ?? 0;
-        const centerRight = aggregatorRight + items[right].size / 2;
-        const distRight = Math.abs(pos - centerRight);
+        const distRight = getDistance(right);
 
-        if (distRight < bestDist) {
+        if (distRight <= bestDist) {
           bestDist = distRight;
           bestIndex = right;
           bestItem = items[right];
           right++;
         } else {
           // If we didn't improve, no point continuing right
+          console.log("right", right, distRight, bestDist);
           searchRight = false;
         }
       }
     }
   }
 
-  return { ...bestItem, index: bestIndex };
+  console.log("@bestItem.id,", bestItem.id, bestDist, "guess:", items[i].id, 'iterations:', numIter);
+  return { id: bestItem.id, index: bestIndex };
 }
 
 type Delta = {
@@ -536,6 +544,50 @@ type AnoDndEvent = {
   active: { id: string };
   over: { id: string } | null;
 };
+
+const checkAdjacentForOverlap = (
+  items: { id: string }[],
+  bestIndex: number,
+  dragStart: number,
+  dragEnd: number,
+  getSize: (id: string) => number,
+  getStart: (id: string) => number,
+) => {
+  const checkOverlapping = (index: number) => {
+    if (!items[index]) {
+      return 0;
+    }
+    const itemStart = getStart(items[index].id);
+    const itemSize = getSize(items[index].id);
+    const itemEnd = itemStart + itemSize;
+
+    const overlapStart = Math.max(dragStart, itemStart);
+    const overlapEnd = Math.min(dragEnd, itemEnd);
+    const overlapSize = Math.max(0, overlapEnd - overlapStart);
+
+    // Fraction of the *candidate item* that is overlapped
+    const overlapFraction = overlapSize / itemSize;
+
+    return overlapFraction;
+  };
+
+  // we are not moving
+  // check if adjacent items are overlapping
+  let bestOverlap = 0;
+  for (const index of [bestIndex - 1, bestIndex + 1]) {
+    const overlap = checkOverlapping(index);
+    if (overlap > bestOverlap) {
+      bestOverlap = overlap;
+      if (overlap > 0.5) {
+        return { id: items[index].id, index };
+      }
+    } else {
+      continue;
+    }
+  }
+  return null;
+};
+
 const AnoDndProvider = ({
   children,
   cols,
@@ -548,6 +600,8 @@ const AnoDndProvider = ({
   getAverageSize,
   getSelected,
   getRenderedRange,
+  getSize,
+  getStart,
 }: {
   children: React.ReactNode;
   cols: { size: number; id: string }[];
@@ -560,11 +614,12 @@ const AnoDndProvider = ({
   getAverageSize: () => number;
   getSelected?: () => RowSelectionState;
   getRenderedRange: () => string[];
+  getSize: (id: string) => number;
+  getStart: (id: string) => number;
 }) => {
   const [isDragging, setIsDragging] = useState<AnoDndActive | null>(null);
   const [delta, setDelta] = useState<Delta>(initialDelta);
   const [closestCol, setClosestCol] = useState<{
-    size: number;
     id: string;
     index: number;
   } | null>(null);
@@ -582,19 +637,22 @@ const AnoDndProvider = ({
   refs.current = _refs;
 
   /**
-   * get the closest col to the taret col (size, start(index))
+   * get the closest col to the dragged col
    */
   const getClosestCol = (
     delta: Delta,
-    target: { size: number; start: number },
+    dragged: { id: string },
+    currentClosestCol: { id: string; index: number } | null,
   ) => {
     const cols = refs.current.cols;
 
-    const pos = target.start + totalDelta(delta, dimension) + target.size / 2;
+    const d = totalDelta(delta, dimension);
+
+    const pos = getStart(dragged.id) + d;
 
     // 1) Estimate the initial index using averageSize
     let estimatedClosestIndex = Math.floor(
-      (target.start + totalDelta(delta, dimension)) /
+      (getStart(dragged.id) + d + (d >= 0 ? getSize(dragged.id) : 0)) /
         refs.current.getAverageSize(),
     );
     // Clamp i to valid range
@@ -603,7 +661,16 @@ const AnoDndProvider = ({
       Math.min(estimatedClosestIndex, cols.length - 1),
     );
 
-    return findClosestColOrRow(estimatedClosestIndex, pos, cols);
+    const centerResult = findClosestColOrRow(
+      estimatedClosestIndex,
+      pos,
+      dragged.id,
+      cols,
+      getSize,
+      getStart,
+    );
+
+    return centerResult;
   };
 
   const getClosestColRef = React.useRef(getClosestCol);
@@ -627,7 +694,11 @@ const AnoDndProvider = ({
           y: ev.clientY - isDragging.mouseStart.y,
         },
       };
-      const closestCol = getClosestColRef.current(newDelta, isDragging);
+      const closestCol = getClosestColRef.current(
+        newDelta,
+        isDragging,
+        refs.current.closestCol,
+      );
       setDelta(newDelta);
       setClosestCol(closestCol);
     };
@@ -643,7 +714,11 @@ const AnoDndProvider = ({
           y: el.scrollTop - isDragging.scrollStart.y,
         },
       };
-      const closestCol = getClosestColRef.current(newDelta, isDragging);
+      const closestCol = getClosestColRef.current(
+        newDelta,
+        isDragging,
+        refs.current.closestCol,
+      );
       setDelta(newDelta);
       setClosestCol(closestCol);
     };
@@ -701,8 +776,10 @@ const AnoDndProvider = ({
         getNodeRef(id) {
           return nodeRef.current[id] ?? null;
         },
+        getSize,
         getRenderedRange,
         getSelected,
+        getStart,
       }}
     >
       {children}
@@ -716,8 +793,8 @@ type AnoTransform = {
 
 function useGetStyle(
   AnoDndContext: React.Context<AnoDndContextType | undefined>,
+  id: string,
   thisIndex: number,
-  start: number,
   isDraggingThis: boolean,
 ) {
   const ctx = React.useContext(AnoDndContext);
@@ -747,9 +824,15 @@ function useGetStyle(
   if (ctx.closestCol && ctx.isDragging && !isDraggingThis) {
     const draggingIndex = ctx.isDragging.index;
     if (thisIndex > draggingIndex && thisIndex <= ctx.closestCol.index) {
-      transform = { [dimension]: -1 * ctx.isDragging.size, [antiDimesion]: 0 };
+      transform = {
+        [dimension]: -1 * ctx.getSize(ctx.isDragging.id),
+        [antiDimesion]: 0,
+      };
     } else if (thisIndex < draggingIndex && thisIndex >= ctx.closestCol.index) {
-      transform = { [dimension]: ctx.isDragging.size, [antiDimesion]: 0 };
+      transform = {
+        [dimension]: ctx.getSize(ctx.isDragging.id),
+        [antiDimesion]: 0,
+      };
     }
   }
 
@@ -761,42 +844,49 @@ function useGetStyle(
   const prevTransformRef = React.useRef(transform);
   const prevTransform = prevTransformRef.current;
 
-  const prevDRef = React.useRef(start);
-  const prevD = prevDRef.current;
+  const start = ctx.getStart(id);
+
+  const prevStartRef = React.useRef(start);
+  const prevStart = prevStartRef.current;
+
+  const prevId = React.useRef(id);
 
   if (updatedIndex) {
-    const totalPreviousD = prevD + prevTransform[dimension];
+    const totalPreviousD = prevStart + prevTransform[dimension];
     const newTransformD = totalPreviousD - start;
-    // console.log(
-    //   `Updating index from ${prevIndexRef.current} to ${thisIndex} and x from ${prevX} to ${thisX} and transform from ${prevTransform.x} to ${transform.x}. New transform x: ${newTransformX}`,
-    // );
+    console.log(
+      `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
+    );
     overrideRet.current = {
       transform: { ...transform, [dimension]: newTransformD },
       transition: "none",
     };
   }
+  // if (id === "2") {
+  //   console.log("start for id 2", start);
+  // }
 
   const rerender = React.useReducer(() => ({}), {})[1];
 
   React.useEffect(() => {
-    const t = requestAnimationFrame(() => {
+    const t = setTimeout(() => {
       if (overrideRet.current?.transition === "none") {
         overrideRet.current.transition = "transform 200ms ease";
         overrideRet.current.transform[dimension] = 0;
-        rerender();
+        flushSync(rerender);
       } else if (overrideRet.current?.transition === "transform 200ms ease") {
         overrideRet.current = null;
-        rerender();
+        flushSync(rerender);
       }
-    });
+    }, 200);
     return () => {
-      cancelAnimationFrame(t);
+      clearTimeout(t);
     };
   });
 
   prevIndexRef.current = thisIndex;
   prevTransformRef.current = transform;
-  prevDRef.current = start;
+  prevStartRef.current = start;
   //#endregion
 
   const ret = overrideRet.current ?? { transform, transition };
@@ -811,9 +901,7 @@ function useGetStyle(
 const useAnoDrag = (
   AnoDndContext: React.Context<AnoDndContextType | undefined>,
   id: string,
-  size: number,
   thisIndex: number,
-  start: number,
 ) => {
   const ctx = React.useContext(AnoDndContext);
   if (!ctx) {
@@ -830,8 +918,8 @@ const useAnoDrag = (
 
   const { transition, transform } = useGetStyle(
     AnoDndContext,
+    id,
     thisIndex,
-    start,
     isDraggingThis,
   );
 
@@ -864,9 +952,7 @@ const useAnoDrag = (
             x: scrollEl.scrollLeft,
             y: scrollEl.scrollTop,
           },
-          size: size,
           index: thisIndex,
-          start,
         });
       },
     },
@@ -899,13 +985,7 @@ const DragAlongCell = React.memo(function DragAlongCell({
     setNodeRef,
     transform: _transform,
     transition,
-  } = useAnoDrag(
-    AnoDndColContext,
-    cell.column.id,
-    cell.column.getSize(),
-    cell.column.getIndex(),
-    cell.column.getStart(),
-  );
+  } = useAnoDrag(AnoDndColContext, cell.column.id, cell.column.getIndex());
 
   // const transform: Transform | null = _transform
   //   ? { ..._transform, y: 0 }
@@ -960,7 +1040,7 @@ const DragAlongCell = React.memo(function DragAlongCell({
 });
 
 function App() {
-  const [data, setData] = React.useState<User[]>(() => generateTableData(1e5));
+  const [data, setData] = React.useState<User[]>(() => generateTableData(1e2));
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     const iterateOverColumns = (columns: ColumnDef<User, any>[]): string[] => {
       return columns.flatMap((column): string[] => {
@@ -1270,16 +1350,24 @@ function App() {
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
-    estimateSize: () => tableRowHeight,
+    estimateSize: React.useCallback(() => tableRowHeight, []),
+    getItemKey: React.useCallback((index: number) => rowIds[index], [rowIds]),
     getScrollElement: () => tableContainerRef.current,
-    measureElement(element, entry, instance) {
-      const defaultSize = measureElement(element, entry, instance);
-      // console.log(element.attributes["data-index"]);
-      if (((element.attributes as any)["data-index"] as any).value === "0") {
-        // console.log("measuring el", defaultSize, element);
-      }
-      return Math.max(defaultSize, tableRowHeight);
-    },
+    measureElement: React.useCallback(
+      (
+        element: any,
+        entry: ResizeObserverEntry | undefined,
+        instance: Virtualizer<HTMLDivElement, any>,
+      ) => {
+        const defaultSize = measureElement(element, entry, instance);
+        // console.log(element.attributes["data-index"]);
+        if (((element.attributes as any)["data-index"] as any).value === "0") {
+          // console.log("measuring el", defaultSize, element);
+        }
+        return Math.max(defaultSize, tableRowHeight);
+      },
+      [],
+    ),
     overscan: 5,
     rangeExtractor: React.useCallback((range: Range): number[] => {
       const table = refs.current.table;
@@ -1384,6 +1472,7 @@ function App() {
 
   return (
     <AnoDndProvider
+      /* eslint-disable react-hooks/exhaustive-deps */
       getRenderedRange={React.useCallback(
         () =>
           bodyCols.map(
@@ -1395,14 +1484,41 @@ function App() {
         return allCols.map((col) => {
           return { id: col.id, size: col.getSize() };
         });
-        /* eslint-disable react-hooks/exhaustive-deps */
       }, [
         allCols,
         table.getState().columnSizingInfo,
         table.getState().columnSizing,
         columnOrder,
       ])}
-      /* eslint-enable */
+      getSize={React.useCallback(
+        (id: string) => {
+          const col = table.getColumn(id);
+          if (!col) {
+            throw new Error("No column");
+          }
+          return col.getSize();
+        },
+        [
+          table.getState().columnSizingInfo,
+          table.getState().columnSizing,
+          columnOrder,
+        ],
+      )}
+      getStart={React.useCallback(
+        (id: string) => {
+          const col = table.getColumn(id);
+          if (!col) {
+            throw new Error("No column");
+          }
+          return bodyCols.find((vc) => vc.index === col.getIndex())?.start ?? 0;
+        },
+        [
+          bodyCols,
+          table.getState().columnSizingInfo,
+          table.getState().columnSizing,
+          columnOrder,
+        ],
+      )}
       getAverageSize={() => averageColSize}
       dimension="x"
       scrollRef={tableContainerRef}
@@ -1429,6 +1545,7 @@ function App() {
         }
       }}
       AnoDndContext={AnoDndColContext}
+      /* eslint-enable react-hooks/exhaustive-deps */
     >
       <AnoDndProvider
         dimension="y"
@@ -1439,6 +1556,27 @@ function App() {
         getSelected={React.useCallback(
           () => table.getState().rowSelection,
           [table],
+        )}
+        getSize={React.useCallback(
+          (id) => {
+            const row = table.getRow(id);
+            if (!row) {
+              throw new Error("No row");
+            }
+            const size = rowVirtualizer.measurementsCache[row.index].size;
+            return size ?? tableRowHeight;
+          },
+          [rowVirtualizer.measurementsCache, table],
+        )}
+        getStart={React.useCallback(
+          (id) => {
+            const row = table.getRow(id);
+            if (!row) {
+              throw new Error("No row");
+            }
+            return virtualRows.find((vc) => vc.index === row.index)?.start ?? 0;
+          },
+          [table, virtualRows],
         )}
         getAverageSize={() => tableRowHeight}
         AnoDndContext={AnoDndRowContext}
@@ -1590,7 +1728,7 @@ const TableBody = ({
   virtualRows: VirtualItem[];
   rows: Row<User>[];
   measureElement: (el?: HTMLElement | null) => void;
-  width: number,
+  width: number;
 }) => {
   return (
     <div
@@ -1674,22 +1812,20 @@ const TableRow = React.memo(function TableRow({
   virtualOffsetTop,
   virtualColumns,
   measureElement,
-  width
+  width,
 }: {
   row: Row<User>;
   virtualOffsetTop: number;
   virtualColumns: VirtualItem[];
   measureElement: (el?: HTMLElement | null) => void;
-  width: number,
+  width: number;
 }) {
   const visibileCells = row.getVisibleCells();
 
   const { transform, transition, setNodeRef, isDragging } = useAnoDrag(
     AnoDndRowContext,
     row.id,
-    tableRowHeight,
     row.index,
-    row.index * tableRowHeight,
   );
 
   // console.log("@transform?.y ?? 0", transform?.y ?? 0);
@@ -1707,6 +1843,7 @@ const TableRow = React.memo(function TableRow({
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 1 : 0,
     width,
+    backgroundColor: "black",
   };
 
   return (
@@ -1726,7 +1863,7 @@ const TableRow = React.memo(function TableRow({
             position: "relative",
             display: "flex",
             width,
-            height: tableRowHeight
+            height: tableRowHeight,
           }}
         >
           {virtualColumns
@@ -1745,7 +1882,7 @@ const TableRow = React.memo(function TableRow({
 
 const renderSubComponent = ({ row }: { row: Row<User> }) => {
   return (
-    <pre style={{ fontSize: "10px", textAlign: 'left' }}>
+    <pre style={{ fontSize: "10px", textAlign: "left" }}>
       <code>{JSON.stringify(row.original, null, 2)}</code>
     </pre>
   );
