@@ -427,7 +427,7 @@ type ClosestResult = { id: string; index: number };
  */
 function findClosestColOrRow(
   i: number,
-  posStart: number,
+  dragStart: number,
   id: string,
   items: ColRow[],
   getSize: (id: string) => number,
@@ -436,31 +436,42 @@ function findClosestColOrRow(
   if (!items.length) {
     throw new Error("No items provided.");
   }
-  const size = getSize(id);
-  const posEnd = posStart + size;
-  const posCenter = posStart + size / 2;
+  const dragSize = getSize(id);
+  const dragEnd = dragStart + dragSize;
+  const dragCenter = dragStart + dragSize / 2;
 
   const closestCenter = (index: number) => {
     const itemStart = getStart(items[index].id);
     const itemSize = getSize(items[index].id);
     const itemEnd = itemStart + itemSize;
     const itemCenter = itemStart + itemSize / 2;
-    return Math.abs(posCenter - itemCenter);
+    return Math.abs(dragCenter - itemCenter);
   };
   const custom = (index: number) => {
     const itemStart = getStart(items[index].id);
     const itemSize = getSize(items[index].id);
+    // console.log("custom", itemStart, itemSize);
     const itemEnd = itemStart + itemSize;
     const itemCenter = itemStart + itemSize / 2;
 
-    const startDistance = Math.abs(posStart - itemStart);
-    const endDistance = Math.abs(posEnd - itemEnd);
+    const startDistance = Math.abs(dragStart - itemStart);
+    const endDistance = Math.abs(dragEnd - itemEnd);
+
+    if (dragSize > itemSize) {
+      return Math.min(
+        Math.abs(dragStart - itemStart),
+        Math.abs(dragEnd - itemEnd),
+      );
+    }
 
     // return startDistance + endDistance;
     return Math.min(
-      Math.abs(posStart - itemStart),
-      Math.abs(posCenter - itemCenter),
-      Math.abs(posEnd - itemEnd),
+      // Math.abs(dragStart - itemStart),
+      Math.abs(dragCenter - itemCenter),
+      // Math.abs(dragEnd - itemEnd),
+      //
+      // Math.abs(dragEnd - itemStart),
+      // Math.abs(dragStart - itemEnd),
     );
   };
 
@@ -491,6 +502,7 @@ function findClosestColOrRow(
       } else {
         const distLeft = getDistance(left);
 
+        // console.log("left", distLeft, bestDist);
         if (distLeft <= bestDist) {
           bestDist = distLeft;
           bestIndex = left;
@@ -498,7 +510,7 @@ function findClosestColOrRow(
           left--;
         } else {
           // If we didn't improve, no point continuing left
-          console.log("left", left, distLeft, bestDist);
+          // console.log("left", left, distLeft, bestDist);
           searchLeft = false;
         }
       }
@@ -512,6 +524,7 @@ function findClosestColOrRow(
       } else {
         const distRight = getDistance(right);
 
+        // console.log("right", right, distRight, bestDist);
         if (distRight <= bestDist) {
           bestDist = distRight;
           bestIndex = right;
@@ -519,14 +532,22 @@ function findClosestColOrRow(
           right++;
         } else {
           // If we didn't improve, no point continuing right
-          console.log("right", right, distRight, bestDist);
+          // console.log("right", right, distRight, bestDist);
           searchRight = false;
         }
       }
     }
   }
 
-  console.log("@bestItem.id,", bestItem.id, bestDist, "guess:", items[i].id, 'iterations:', numIter);
+  // console.log(
+  //   "@bestItem.id,",
+  //   bestItem.id,
+  //   bestDist,
+  //   "guess:",
+  //   items[i].id,
+  //   "iterations:",
+  //   numIter,
+  // );
   return { id: bestItem.id, index: bestIndex };
 }
 
@@ -822,6 +843,15 @@ function useGetStyle(
   } | null>(null);
 
   if (ctx.closestCol && ctx.isDragging && !isDraggingThis) {
+
+    // let isDraggingThis = Boolean(ctx.isDragging && ctx.isDragging.id === id);
+    // if (!isDraggingThis && ctx.getSelected && ctx.isDragging) {
+    //   const selected = ctx.getSelected();
+    //   if (selected[ctx.isDragging.id]) {
+    //     isDraggingThis = Boolean(selected[id]);
+    //   }
+    // }
+
     const draggingIndex = ctx.isDragging.index;
     if (thisIndex > draggingIndex && thisIndex <= ctx.closestCol.index) {
       transform = {
@@ -854,9 +884,9 @@ function useGetStyle(
   if (updatedIndex) {
     const totalPreviousD = prevStart + prevTransform[dimension];
     const newTransformD = totalPreviousD - start;
-    console.log(
-      `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
-    );
+    // console.log(
+    //   `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
+    // );
     overrideRet.current = {
       transform: { ...transform, [dimension]: newTransformD },
       transition: "none",
@@ -1040,7 +1070,7 @@ const DragAlongCell = React.memo(function DragAlongCell({
 });
 
 function App() {
-  const [data, setData] = React.useState<User[]>(() => generateTableData(1e2));
+  const [data, setData] = React.useState<User[]>(() => generateTableData(1e5));
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     const iterateOverColumns = (columns: ColumnDef<User, any>[]): string[] => {
       return columns.flatMap((column): string[] => {
@@ -1574,9 +1604,20 @@ function App() {
             if (!row) {
               throw new Error("No row");
             }
-            return virtualRows.find((vc) => vc.index === row.index)?.start ?? 0;
+            const estimateStart = (index: number) => {
+              console.log(
+                "@rowVirtualizer.measurementsCache",
+                rowVirtualizer.measurementsCache,
+              );
+              return 0;
+            };
+            // console.log(rowVirtualizer.measurementsCache);
+            return (
+              rowVirtualizer.measurementsCache[row.index].start ??
+              estimateStart(row.index)
+            );
           },
-          [table, virtualRows],
+          [rowVirtualizer.measurementsCache, table],
         )}
         getAverageSize={() => tableRowHeight}
         AnoDndContext={AnoDndRowContext}
