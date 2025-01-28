@@ -13,27 +13,34 @@ import {
   Table,
   useReactTable,
 } from "@tanstack/react-table";
-import { CSSProperties, useState } from "react";
+import React, { CSSProperties, useState } from "react";
 import "./App.css";
 import { generateTableData, User } from "./generate_table_data";
-import React from "react";
 
+import { arrayMove } from "@dnd-kit/sortable";
+import { flushSync } from "react-dom";
+import { calculateDisplacement } from "./calculate_displacement";
 import {
   defaultRangeExtractor,
   elementScroll,
+  measureElement,
   observeElementOffset,
   observeElementRect,
+  Range,
   useVirtualizer,
   VirtualItem,
   Virtualizer,
-  Range,
   VirtualizerOptions,
-  measureElement,
-  // } from "@tanstack/react-virtual";
 } from "./react-virtual";
-import { flushSync } from "react-dom";
-import { arrayMove, arraySwap } from "@dnd-kit/sortable";
-import { closestCorners } from "@dnd-kit/core";
+
+let prevLog: any = null;
+const logDiff = (...values: any[]) => {
+  if (prevLog === values.join(", ")) {
+    return;
+  }
+  prevLog = values.join(", ");
+  console.log(...values);
+};
 
 const RowDragHandleCell = ({
   rowId,
@@ -402,7 +409,7 @@ type AnoDndContextType = {
   getNodeRef: (id: string) => HTMLElement | null;
   setNodeRef: (id: string, el: HTMLElement | null) => void;
   dimension: "x" | "y";
-  getSelected?: () => RowSelectionState;
+  selected?: AnoDndSelected;
   getRenderedRange: () => string[];
   getSize: (id: string) => number;
   getStart: (id: string) => number;
@@ -609,6 +616,11 @@ const checkAdjacentForOverlap = (
   return null;
 };
 
+type AnoDndSelected = {
+  state: RowSelectionState;
+  displacements: (delta: number) => Record<string, number>;
+};
+
 const AnoDndProvider = ({
   children,
   cols,
@@ -619,7 +631,7 @@ const AnoDndProvider = ({
   AnoDndContext,
   dimension,
   getAverageSize,
-  getSelected,
+  selected,
   getRenderedRange,
   getSize,
   getStart,
@@ -633,7 +645,7 @@ const AnoDndProvider = ({
   AnoDndContext: React.Context<AnoDndContextType | undefined>;
   dimension: "x" | "y";
   getAverageSize: () => number;
-  getSelected?: () => RowSelectionState;
+  selected?: AnoDndSelected;
   getRenderedRange: () => string[];
   getSize: (id: string) => number;
   getStart: (id: string) => number;
@@ -799,7 +811,7 @@ const AnoDndProvider = ({
         },
         getSize,
         getRenderedRange,
-        getSelected,
+        selected,
         getStart,
       }}
     >
@@ -843,27 +855,32 @@ function useGetStyle(
   } | null>(null);
 
   if (ctx.closestCol && ctx.isDragging && !isDraggingThis) {
+    const indexDiff = ctx.closestCol.index - ctx.isDragging.index;
 
-    // let isDraggingThis = Boolean(ctx.isDragging && ctx.isDragging.id === id);
-    // if (!isDraggingThis && ctx.getSelected && ctx.isDragging) {
-    //   const selected = ctx.getSelected();
-    //   if (selected[ctx.isDragging.id]) {
-    //     isDraggingThis = Boolean(selected[id]);
-    //   }
-    // }
+    const getSingleTransform = (
+      indexDiff: number,
+      index: number,
+      size: number,
+    ) => {
+      if (thisIndex > index && thisIndex <= index + indexDiff) {
+        return -1 * size;
+      } else if (thisIndex < index && thisIndex >= index + indexDiff) {
+        return size;
+      }
+      return 0;
+    };
 
-    const draggingIndex = ctx.isDragging.index;
-    if (thisIndex > draggingIndex && thisIndex <= ctx.closestCol.index) {
-      transform = {
-        [dimension]: -1 * ctx.getSize(ctx.isDragging.id),
-        [antiDimesion]: 0,
-      };
-    } else if (thisIndex < draggingIndex && thisIndex >= ctx.closestCol.index) {
-      transform = {
-        [dimension]: ctx.getSize(ctx.isDragging.id),
-        [antiDimesion]: 0,
-      };
-    }
+    transform = {
+      [dimension]:
+        ctx.selected && ctx.selected.state[ctx.isDragging.id]
+          ? ctx.selected.displacements(indexDiff)[id]
+          : getSingleTransform(
+              indexDiff,
+              ctx.isDragging.index,
+              ctx.getSize(ctx.isDragging.id),
+            ),
+      [antiDimesion]: 0,
+    };
   }
 
   if (isDraggingThis) {
@@ -939,10 +956,10 @@ const useAnoDrag = (
   }
 
   let isDraggingThis = Boolean(ctx.isDragging && ctx.isDragging.id === id);
-  if (!isDraggingThis && ctx.getSelected && ctx.isDragging) {
-    const selected = ctx.getSelected();
-    if (selected[ctx.isDragging.id]) {
-      isDraggingThis = Boolean(selected[id]);
+  if (!isDraggingThis && ctx.selected && ctx.isDragging) {
+    const selected = ctx.selected;
+    if (selected.state[ctx.isDragging.id]) {
+      isDraggingThis = Boolean(selected.state[id]);
     }
   }
 
@@ -1148,14 +1165,15 @@ function App() {
     if (!active || !over || active.id === over.id) return;
 
     setData((oldData) => {
-      const rowIds = oldData.map((r) => String(r.id));
-      const oldIndex = rowIds.indexOf(String(active.id));
-      const newIndex = rowIds.indexOf(String(over.id));
+      const oldRow = table.getRow(active.id);
+      const newRow = table.getRow(over.id);
 
-      // If for some reason we can't find either index, bail out
-      if (oldIndex < 0 || newIndex < 0) {
+      if (!oldRow || !newRow) {
         return oldData;
       }
+
+      const oldIndex = oldRow.index;
+      const newIndex = newRow.index;
 
       const selection = table.getState().rowSelection;
       // The difference in positions for the "active" row
@@ -1172,15 +1190,9 @@ function App() {
       }
 
       // Otherwise, move ALL selected rows by the same delta
-      const selectedRowIds = table
+      const selectedIndexes = table
         .getSelectedRowModel()
-        .rows.map((row) => row.id);
-
-      // Convert selected IDs to indexes in ascending order
-      const selectedIndexes = selectedRowIds
-        .map((id) => rowIds.indexOf(id))
-        .filter((i) => i >= 0)
-        .sort((a, b) => a - b);
+        .rows.map((row) => row.index);
 
       // Make a working copy of the data
       const newData = [...oldData];
@@ -1390,10 +1402,6 @@ function App() {
         instance: Virtualizer<HTMLDivElement, any>,
       ) => {
         const defaultSize = measureElement(element, entry, instance);
-        // console.log(element.attributes["data-index"]);
-        if (((element.attributes as any)["data-index"] as any).value === "0") {
-          // console.log("measuring el", defaultSize, element);
-        }
         return Math.max(defaultSize, tableRowHeight);
       },
       [],
@@ -1405,6 +1413,7 @@ function App() {
       if (draggedRowRef.current !== null) {
         next.add(refs.current.rowIds.indexOf(draggedRowRef.current));
         if (table.getState().rowSelection[draggedRowRef.current]) {
+          // @slow
           const selected = table.getSelectedRowModel().rows.map((r) => r.index);
           selected.forEach((i) => {
             next.add(i);
@@ -1575,7 +1584,6 @@ function App() {
         }
       }}
       AnoDndContext={AnoDndColContext}
-      /* eslint-enable react-hooks/exhaustive-deps */
     >
       <AnoDndProvider
         dimension="y"
@@ -1583,10 +1591,32 @@ function App() {
           () => virtualRows.map((vc) => rows[vc.index].id),
           [rows, virtualRows],
         )}
-        getSelected={React.useCallback(
-          () => table.getState().rowSelection,
-          [table],
-        )}
+        selected={React.useMemo(() => {
+          const r = virtualRows.map((vc) => ({
+            id: rows[vc.index].id,
+            index: vc.index,
+            size: vc.size,
+          }));
+
+          const selected = table.getState().rowSelection;
+          let displacements: Record<string, number> | null = null;
+          let cacheDelta: number | null = null;
+          return {
+            state: table.getState().rowSelection,
+            displacements: (delta: number) => {
+              if (cacheDelta === delta && displacements) {
+                return displacements;
+              }
+              displacements = calculateDisplacement(
+                r,
+                r.filter((r) => selected[r.id]),
+                delta,
+              );
+              cacheDelta = delta;
+              return displacements;
+            },
+          };
+        }, [rows, table, virtualRows, table.getSelectedRowModel()])}
         getSize={React.useCallback(
           (id) => {
             const row = table.getRow(id);
@@ -1638,6 +1668,7 @@ function App() {
         cols={rowIds.map((id) => {
           return { id, size: tableRowHeight };
         })}
+        /* eslint-enable react-hooks/exhaustive-deps */
       >
         <div
           ref={tableContainerRef}
