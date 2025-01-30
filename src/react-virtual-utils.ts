@@ -1,4 +1,4 @@
-export type NoInfer<A extends any> = [A][A extends any ? 0 : never];
+export type NoInfer<A> = [A][A extends any ? 0 : never];
 
 export type PartialKeys<T, K extends keyof T> = Omit<T, K> &
   Partial<Pick<T, K>>;
