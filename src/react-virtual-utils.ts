@@ -81,6 +81,7 @@ export const approxEqual = (a: number, b: number) => Math.abs(a - b) < 1;
 
 export const debounce = (
   targetWindow: Window & typeof globalThis,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   fn: Function,
   ms: number,
 ) => {

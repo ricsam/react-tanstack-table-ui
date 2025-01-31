@@ -20,7 +20,10 @@ import { generateTableData, User } from "./generate_table_data";
 import { arrayMove } from "@dnd-kit/sortable";
 import { flushSync } from "react-dom";
 import { calculateDisplacement } from "./calculate_displacement";
-import { calculateDisplacements as calculateDisplacement2 } from "./Item";
+import {
+  calculateDisplacements as calculateDisplacement2,
+  findDeltaAtPosition,
+} from "./Item";
 import {
   defaultRangeExtractor,
   elementScroll,
@@ -517,7 +520,17 @@ const AnoDndProvider = ({
   getSize: (id: string) => number;
   getStart: (id: string) => number;
   getVirtualItemForOffset: (offset: number) => VirtualItem | undefined;
-  displacements: (delta: number, draggedId: string) => Record<string, number>;
+  displacements: {
+    calculateDisplacements: (
+      delta: number,
+      draggedId: string,
+    ) => Record<string, number>;
+    findDeltaAtPosition: (
+      estimatedDelta: number,
+      position: number,
+      draggedId: string,
+    ) => number;
+  };
 }) => {
   const [isDragging, setIsDragging] = useState<AnoDndActive | null>(null);
   const [delta, setDelta] = useState<Delta>(initialDelta);
@@ -535,6 +548,7 @@ const AnoDndProvider = ({
     onDragCancel,
     getAverageSize,
     getVirtualItemForOffset,
+    displacements,
   };
   const refs = React.useRef(_refs);
   refs.current = _refs;
@@ -548,11 +562,30 @@ const AnoDndProvider = ({
   ) => {
     const cols = refs.current.cols;
 
-    const d = totalDelta(delta, dimension);
+    let d = totalDelta(delta, dimension);
 
-    const pos = getStart(dragged.id) + d;
+    if (d < 0) {
+    } else {
+      // d +=
+      //   getSize(dragged.id) / 2 -
+      //   (refs.current.isDragging?.handleOffset[dimension] ?? 0);
+    }
+
+    const pos =
+      getStart(dragged.id) +
+      // (refs.current.isDragging?.handleOffset[dimension] ?? 0) +
+      d +
+      getSize(dragged.id) / 2;
+
     // const virtualItem = getVirtualItemForOffset(pos + getSize(dragged.id) / 2);
-    const virtualItem = getVirtualItemForOffset(pos + getSize(dragged.id));
+    let virtualItem = getVirtualItemForOffset(pos);
+    if (virtualItem && d >= 0) {
+      // virtualItem = getVirtualItemForOffset(pos - virtualItem.size / 2);
+    }
+    if (virtualItem && d < 0) {
+      // virtualItem = getVirtualItemForOffset(pos + virtualItem.size / 2);
+    }
+
     // if (!virtualItem) {
     //   return null;
     // }
@@ -571,6 +604,24 @@ const AnoDndProvider = ({
 
     const estimatedClosestIndex =
       virtualItem?.index ?? poorEstimatedClosestIndex;
+
+    const estimatedDelta = estimatedClosestIndex - dragged.index;
+
+    const locatedDelta = refs.current.displacements.findDeltaAtPosition(
+      estimatedDelta,
+      pos,
+      dragged.id,
+    );
+
+    const closestIndex = Math.max(
+      Math.min(dragged.index + locatedDelta, cols.length - 1),
+      0,
+    );
+
+    return {
+      id: cols[closestIndex].id,
+      index: closestIndex,
+    };
 
     let changed = true;
     let result = findClosestColOrRow(
@@ -698,7 +749,7 @@ const AnoDndProvider = ({
         getRenderedRange,
         selected,
         getStart,
-        displacements,
+        displacements: displacements.calculateDisplacements,
       }}
     >
       {children}
@@ -1279,7 +1330,8 @@ function App() {
     });
   });
 
-  const draggedRowRef = React.useRef<string | null>(null);
+  // const draggedRowRef = React.useRef<string | null>(null);
+  const [draggedRowId, setDraggedRowId] = React.useState<string | null>(null);
 
   const _refs = { table, rowIds };
   const refs = React.useRef(_refs);
@@ -1304,23 +1356,65 @@ function App() {
       [],
     ),
     overscan: 5,
-    rangeExtractor: React.useCallback((range: Range): number[] => {
-      const table = refs.current.table;
-      defaultWindowRef.current = defaultRangeExtractor(range);
-      const next = new Set(defaultWindowRef.current);
-      if (draggedRowRef.current !== null) {
-        next.add(refs.current.rowIds.indexOf(draggedRowRef.current));
-        if (table.getState().rowSelection[draggedRowRef.current]) {
-          // @slow
-          const selected = table.getSelectedRowModel().rows.map((r) => r.index);
-          selected.forEach((i) => {
-            next.add(i);
-          });
+    rangeExtractor: React.useCallback(
+      (range: Range, instance: Virtualizer<HTMLDivElement, any>): number[] => {
+        const table = refs.current.table;
+        const defaultRange = defaultRangeExtractor(range);
+        const defaultRangeSet = new Set(defaultRange);
+        const next = new Set(defaultRange);
+        let draggedHeight = 0;
+        if (draggedRowId !== null) {
+          const draggedRow = table.getRow(draggedRowId);
+          const draggedIndex = draggedRow.index;
+          next.add(draggedIndex);
+          if (table.getState().rowSelection[draggedRowId]) {
+            // @slow
+            table.getSelectedRowModel().rows.forEach((r) => {
+              next.add(r.index);
+              draggedHeight +=
+                instance.measurementsCache[r.index].size ?? tableRowHeight;
+            });
+          } else {
+            draggedHeight +=
+              instance.measurementsCache[draggedIndex].size ?? tableRowHeight;
+          }
         }
-      }
-      const n = [...next].sort((a, b) => a - b);
-      return n;
-    }, []),
+
+        const rowsToAdd = Math.floor(draggedHeight / tableRowHeight);
+        console.log(draggedHeight, rowsToAdd);
+        if (rowsToAdd > 0) {
+          const firstIndex = defaultRange[0];
+          const lastIndex = defaultRange[defaultRange.length - 1];
+
+          let tailPush = Math.floor(rowsToAdd / 2);
+          const headPush = Math.floor(rowsToAdd / 2);
+
+          for (let i = 0; i < headPush; i += 1) {
+            if (firstIndex - i < 0) {
+              tailPush += headPush - i;
+              break;
+            }
+            next.add(firstIndex - i);
+            defaultRangeSet.add(firstIndex - i);
+          }
+
+          for (let i = 0; i < tailPush; i += 1) {
+            const newIndex = lastIndex + i;
+            if (newIndex >= rows.length) {
+              break;
+            }
+            next.add(lastIndex + i);
+            defaultRangeSet.add(lastIndex + i);
+          }
+        }
+        defaultWindowRef.current = [...defaultRangeSet];
+        const n = [...next].sort((a, b) => a - b);
+        console.log(n);
+        // console.log(n);
+        return n;
+      },
+      [rows.length, draggedRowId],
+    ),
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -1382,9 +1476,7 @@ function App() {
   const tableVars: { [key: string]: number } = {
     "--virtual-offset-top":
       virtualRows.find((row) =>
-        draggedRowRef.current
-          ? row.index !== rowIds.indexOf(draggedRowRef.current)
-          : true,
+        draggedRowId ? row.index !== rowIds.indexOf(draggedRowId) : true,
       )?.start ?? 0,
   };
 
@@ -1556,19 +1648,40 @@ function App() {
               rows[currentWindow[currentWindow.length - 1]].index,
             ]);
           }
-          return (delta: number, draggedId: string) => {
-            const sel =
-              table.getIsSomeRowsSelected() && selected[draggedId]
-                ? r.filter((r) => selected[r.id])
-                : r.filter((r) => r.id === draggedId);
-            return calculateDisplacement2(
-              r.filter(
-                (r) => r.index >= range.index[0] && r.index <= range.index[1],
-              ),
-              sel,
-              delta,
-            );
-            // return calculateDisplacement(r, sel, delta, range);
+          return {
+            calculateDisplacements: (delta: number, draggedId: string) => {
+              const sel =
+                table.getIsSomeRowsSelected() && selected[draggedId]
+                  ? r.filter((r) => selected[r.id])
+                  : r.filter((r) => r.id === draggedId);
+              return calculateDisplacement2(
+                r.filter(
+                  (r) => r.index >= range.index[0] && r.index <= range.index[1],
+                ),
+                sel,
+                delta,
+              ).displacements;
+              // return calculateDisplacement(r, sel, delta, range);
+            },
+            findDeltaAtPosition(
+              estimatedDelta: number,
+              position: number,
+              draggedId: string,
+            ) {
+              const sel =
+                table.getIsSomeRowsSelected() && selected[draggedId]
+                  ? r.filter((r) => selected[r.id])
+                  : r.filter((r) => r.id === draggedId);
+              return findDeltaAtPosition(
+                draggedId,
+                r.filter(
+                  (r) => r.index >= range.index[0] && r.index <= range.index[1],
+                ),
+                sel,
+                position,
+                estimatedDelta,
+              );
+            },
           };
         }, [rows, table, virtualRows, table.getSelectedRowModel()])}
         selected={React.useMemo(() => {
@@ -1613,15 +1726,15 @@ function App() {
         scrollRef={tableContainerRef}
         onDragEnd={(ev) => {
           handleRowDragEnd(ev);
-          draggedRowRef.current = null;
+          setDraggedRowId(null);
         }}
         onDragCancel={() => {
-          draggedRowRef.current = null;
+          setDraggedRowId(null);
         }}
         onDragStart={(ev) => {
           const id = ev.active.id;
           if (id && typeof id === "string") {
-            draggedRowRef.current = id;
+            setDraggedRowId(id);
           }
         }}
         cols={rowIds.map((id) => {

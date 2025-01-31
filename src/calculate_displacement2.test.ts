@@ -60,7 +60,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = 3;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ a: 3, c: -1, d: -1, e: 0, f: 0 });
+    expect(result.displacements).toEqual({ a: 3, c: -1, d: -1, e: 0, f: 0 });
   });
 
   it("Should move 2 items down", () => {
@@ -83,7 +83,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = 3;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ a: 3, c: 3, d: -2, e: -2, f: -1 });
+    expect(result.displacements).toEqual({ a: 3, c: 3, d: -2, e: -2, f: -1 });
   });
 
   it("Should move 3 items down", () => {
@@ -106,7 +106,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = 2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ a: 2, c: 2, d: 2, e: -3, f: -2 });
+    expect(result.displacements).toEqual({ a: 2, c: 2, d: 2, e: -3, f: -2 });
   });
 
   it("Should move a single item up", () => {
@@ -126,7 +126,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = -4;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ h: -4, c: 0, d: 1, e: 1, f: 1 });
+    expect(result.displacements).toEqual({ h: -4, c: 0, d: 1, e: 1, f: 1 });
   });
 
   it("Should move a single item down within the window", () => {
@@ -139,7 +139,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = 2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ c: 2, d: -1, e: -1, f: 0 });
+    expect(result.displacements).toEqual({ c: 2, d: -1, e: -1, f: 0 });
   });
 
   it("Should move a single item up within the window", () => {
@@ -152,7 +152,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = -2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ e: -2, c: 1, d: 1, f: 0 });
+    expect(result.displacements).toEqual({ e: -2, c: 1, d: 1, f: 0 });
   });
 
   it("Should move multiple items down within the window", () => {
@@ -172,7 +172,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = 2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ c: 2, d: 2, e: -2, f: -2 });
+    expect(result.displacements).toEqual({ c: 2, d: 2, e: -2, f: -2 });
   });
 
   it("Should move multiple items up within the window", () => {
@@ -185,7 +185,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = -1;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ d: -1, e: -1, c: 2, f: 0 });
+    expect(result.displacements).toEqual({ d: -1, e: -1, c: 2, f: 0 });
   });
 
   it("Should move multiple items down where one item is in the window", () => {
@@ -198,7 +198,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = 3;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ b: 3, c: 3, d: -2, e: -2, f: -2 });
+    expect(result.displacements).toEqual({ b: 3, c: 3, d: -2, e: -2, f: -2 });
   });
 
   it("Should move multiple items up where one item is in the window", () => {
@@ -211,7 +211,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     const delta = -2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ e: -2, g: -2, c: 1, d: 2, f: 1 });
+    expect(result.displacements).toEqual({ e: -2, g: -2, c: 1, d: 2, f: 1 });
   });
 
   it("Should move a single item from within the window up out of it", () => {
@@ -236,7 +236,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     // Example expectation (modify to match your actual logic)
     const result = calculateDisplacements(inRange, selected, delta);
 
-    expect(result).toEqual({
+    expect(result.displacements).toEqual({
       c: -1, // move it out of the window
       d: 0,
       e: 0,
@@ -272,7 +272,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     // Example expectation (adjust as needed)
     const result = calculateDisplacements(inRange, selected, delta);
 
-    expect(result).toEqual({
+    expect(result.displacements).toEqual({
       f: 1,
       c: 0,
       d: 0,
@@ -344,7 +344,7 @@ describe("calculateDisplacements with different item sizes", () => {
 
     // Placeholder expectation—likely different in your real logic:
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ a: 6, c: -1, d: -1, e: 0, f: 0 });
+    expect(result.displacements).toEqual({ a: 6, c: -1, d: -1, e: 0, f: 0 });
   });
 
   it("Should move multiple items down (sizes vary)", () => {
@@ -380,7 +380,7 @@ describe("calculateDisplacements with different item sizes", () => {
 
     // Placeholder
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ a: 5, c: 7, d: -4, e: -4, f: -3 });
+    expect(result.displacements).toEqual({ a: 5, c: 7, d: -4, e: -4, f: -3 });
   });
 
   it("Should move a single item up (sizes vary)", () => {
@@ -410,7 +410,7 @@ describe("calculateDisplacements with different item sizes", () => {
 
     // Placeholder
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ h: -8, c: 0, d: 2, e: 2, f: 2 });
+    expect(result.displacements).toEqual({ h: -8, c: 0, d: 2, e: 2, f: 2 });
   });
 
   it("Should move a single item down within the window (sizes vary)", () => {
@@ -442,7 +442,7 @@ describe("calculateDisplacements with different item sizes", () => {
     const delta = 2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ c: 3, d: -3, e: -3, f: 0 });
+    expect(result.displacements).toEqual({ c: 3, d: -3, e: -3, f: 0 });
   });
 
   it("Should move a single item up within the window (sizes vary)", () => {
@@ -473,7 +473,7 @@ describe("calculateDisplacements with different item sizes", () => {
     const delta = -2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ c: 2, d: 2, e: -4, f: 0 });
+    expect(result.displacements).toEqual({ c: 2, d: 2, e: -4, f: 0 });
   });
 
   it("Should move multiple items down within the window (sizes vary)", () => {
@@ -504,7 +504,7 @@ describe("calculateDisplacements with different item sizes", () => {
     const delta = 2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ c: 6, d: 6, e: -4, f: -4 });
+    expect(result.displacements).toEqual({ c: 6, d: 6, e: -4, f: -4 });
   });
 
   it("Should move multiple items up within the window (sizes vary)", () => {
@@ -535,7 +535,7 @@ describe("calculateDisplacements with different item sizes", () => {
     const delta = -1;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ c: 3, d: -3, e: -3, f: 0 });
+    expect(result.displacements).toEqual({ c: 3, d: -3, e: -3, f: 0 });
   });
 
   it("Should move multiple items down, one in window (sizes vary)", () => {
@@ -580,7 +580,7 @@ describe("calculateDisplacements with different item sizes", () => {
     const delta = 3;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result).toEqual({ b: 7, c: 7, d: -5, e: -5, f: -5 });
+    expect(result.displacements).toEqual({ b: 7, c: 7, d: -5, e: -5, f: -5 });
   });
 
   // it('Should move multiple items up, one in window (sizes vary)', () => {
@@ -599,7 +599,7 @@ describe("calculateDisplacements with different item sizes", () => {
   //     delta,
   //     rangePositionsDefault,
   //   );
-  //   expect(result).toEqual({ e: -2, g: -2, c: 1, d: 2, f: 1 });
+  //   expect(result.displacements).toEqual({ e: -2, g: -2, c: 1, d: 2, f: 1 });
   // });
 });
 
@@ -654,7 +654,7 @@ describe("calculateDisplacements with different item sizes", () => {
 //     );
 
 //     // Possibly c,e,g get -2, everything else is +1 or 0 depending on logic
-//     expect(result).toEqual({
+//     expect(result.displacements).toEqual({
 //       a: 0,
 //       b: 0,
 //       c: -2,

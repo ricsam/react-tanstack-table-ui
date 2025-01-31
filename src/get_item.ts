@@ -9,7 +9,7 @@ export function calculateDisplacements(
   inRangeItems: Item[],
   selectedItems: Item[],
   delta: number,
-) {
+): Record<string, number> {
   const selectedIds = new Set(selectedItems.map((r) => r.id));
 
   const displacements: Record<string, number> = {};
@@ -67,11 +67,30 @@ export function calculateDisplacements(
     return undefined;
   };
 
+  const getIndexForStart = (position: number) => {
+    let minDistance = Infinity;
+    let bestIndex = 0;
+    Object.entries(newItemIndices).forEach(([id, index]) => {
+      const item = itemRecord[id];
+      const itemStart = item.start + displacements[id];
+      const itemSize = item.size;
+      const itemEnd = itemStart + itemSize;
+      const itemCenter = itemStart + itemSize / 2;
+      const distance = Math.abs(position - itemCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        bestIndex = index;
+      }
+    });
+    return bestIndex;
+  };
+
   // "inject" the items
   // first inject a selected item and then displace the items after it
   for (const sel of selectedItems) {
-    const newItemIndex = sel.index + delta;
+    // const newItemIndex = sel.index + delta;
     // get the start for the index where we will inject the dragged item
+    const newItemIndex = getIndexForStart(sel.start + delta);
     const newItemStart = getStartForIndex(newItemIndex);
 
     if (typeof newItemStart === "number") {
@@ -105,97 +124,5 @@ export function calculateDisplacements(
     });
   }
 
-  return { displacements, newItemIndices };
+  return displacements;
 }
-
-const getIndexForStart = (
-  draggedId: string,
-  position: number,
-  itemRecord: Record<string, Item>,
-  displacements: Record<string, number>,
-  newItemIndices: Record<string, number>,
-) => {
-  // const entries = Object.entries(newItemIndices);
-  // let minDistance = Infinity;
-  // let bestIndex = 0;
-  // let bestId = entries[0][0];
-  const index = newItemIndices[draggedId];
-  const item = itemRecord[draggedId];
-  const itemStart = item.start + displacements[draggedId];
-  const itemSize = item.size;
-  const itemEnd = itemStart + itemSize;
-  const itemCenter = itemStart + itemSize / 2;
-
-  return {
-    bestIndex: index,
-    bestId: draggedId,
-    minDistance: Math.abs(position - itemCenter),
-  }
-
-  // entries.forEach(([id, index]) => {
-  //   const item = itemRecord[id];
-  //   const itemStart = item.start + displacements[id];
-  //   const itemSize = item.size;
-  //   const itemEnd = itemStart + itemSize;
-  //   const itemCenter = itemStart + itemSize / 2;
-  //   const distance = Math.abs(position - itemCenter);
-  //   if (distance < minDistance) {
-  //     minDistance = distance;
-  //     bestIndex = index;
-  //     bestId = id;
-  //   }
-  // });
-  // return { bestIndex, bestId, minDistance };
-};
-
-export const findDeltaAtPosition = (
-  draggedId: string,
-  inRangeItems: Item[],
-  selectedItems: Item[],
-  position: number,
-  estimatedDelta: number,
-) => {
-  const selectedIds = new Set(selectedItems.map((r) => r.id));
-  const itemRecord: Record<string, Item> = {};
-  inRangeItems.forEach((item) => {
-    if (selectedIds.has(item.id)) {
-      return;
-    }
-    itemRecord[item.id] = item;
-  });
-  for (const sel of selectedItems) {
-    itemRecord[sel.id] = sel;
-  }
-
-  let distance = Infinity;
-
-  let bestDelta = estimatedDelta;
-
-  const calculate = (delta: number) => {
-    const { displacements, newItemIndices } = calculateDisplacements(
-      inRangeItems,
-      selectedItems,
-      delta,
-    );
-    const result = getIndexForStart(
-      draggedId,
-      position,
-      itemRecord,
-      displacements,
-      newItemIndices,
-    );
-    if (result.minDistance < distance) {
-      distance = result.minDistance;
-      bestDelta = delta;
-    }
-  };
-
-  // console.log("@estimatedDelta", estimatedDelta);
-
-  calculate(estimatedDelta);
-
-  for (let delta = estimatedDelta - 5; delta < estimatedDelta + 5; delta++) {
-    calculate(delta);
-  }
-  return bestDelta;
-};

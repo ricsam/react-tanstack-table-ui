@@ -324,7 +324,10 @@ export interface VirtualizerOptions<
   scrollPaddingEnd?: number;
   initialOffset?: number | (() => number);
   getItemKey?: (index: number) => Key;
-  rangeExtractor?: (range: Range) => Array<number>;
+  rangeExtractor?: (
+    range: Range,
+    instance: Virtualizer<TScrollElement, TItemElement>,
+  ) => Array<number>;
   scrollMargin?: number;
   gap?: number;
   indexAttribute?: string;
@@ -723,12 +726,15 @@ export class Virtualizer<
     (rangeExtractor, overscan, count, startIndex, endIndex) => {
       return startIndex === null || endIndex === null
         ? []
-        : rangeExtractor({
-            startIndex,
-            endIndex,
-            overscan,
-            count,
-          });
+        : rangeExtractor(
+            {
+              startIndex,
+              endIndex,
+              overscan,
+              count,
+            },
+            this,
+          );
     },
     {
       key: import.meta.env.NODE_ENV !== "production" && "getIndexes",
