@@ -108,53 +108,60 @@ export function calculateDisplacements(
   return { displacements, newItemIndices };
 }
 
-const getIndexForStart = (
+/**
+ * The distance between the cursor and the center of the dragged item.
+ */
+const getDroppedPosToCursorDistance = (
   draggedId: string,
-  position: number,
+  pointerPosition: number,
   itemRecord: Record<string, Item>,
   displacements: Record<string, number>,
   newItemIndices: Record<string, number>,
 ) => {
-  // const entries = Object.entries(newItemIndices);
-  // let minDistance = Infinity;
-  // let bestIndex = 0;
-  // let bestId = entries[0][0];
   const index = newItemIndices[draggedId];
   const item = itemRecord[draggedId];
   const itemStart = item.start + displacements[draggedId];
   const itemSize = item.size;
-  const itemEnd = itemStart + itemSize;
   const itemCenter = itemStart + itemSize / 2;
 
   return {
     bestIndex: index,
     bestId: draggedId,
-    minDistance: Math.abs(position - itemCenter),
-  }
-
-  // entries.forEach(([id, index]) => {
-  //   const item = itemRecord[id];
-  //   const itemStart = item.start + displacements[id];
-  //   const itemSize = item.size;
-  //   const itemEnd = itemStart + itemSize;
-  //   const itemCenter = itemStart + itemSize / 2;
-  //   const distance = Math.abs(position - itemCenter);
-  //   if (distance < minDistance) {
-  //     minDistance = distance;
-  //     bestIndex = index;
-  //     bestId = id;
-  //   }
-  // });
-  // return { bestIndex, bestId, minDistance };
+    minDistance: Math.abs(pointerPosition - itemCenter),
+  };
 };
 
-export const findDeltaAtPosition = (
-  draggedId: string,
-  inRangeItems: Item[],
-  selectedItems: Item[],
-  position: number,
-  estimatedDelta: number,
-) => {
+/**
+ * Displace all items by different deltas and find the delta that minimizes
+ * the distance between the cursor and the center of the dragged item.
+ */
+export const findDeltaAtPosition = ({
+  lastIndex,
+  draggedId,
+  inRangeItems,
+  selectedItems,
+  cursorPosition,
+  estimatedDelta,
+}: {
+  /**
+   * last index of the all rows
+   */
+  lastIndex: number;
+  draggedId: string;
+  inRangeItems: Item[];
+  /**
+   * The selected items that are being dragged
+   */
+  selectedItems: Item[];
+  /**
+   * The center of the dragged item + the distance the mouse has moved while dragging
+   */
+  cursorPosition: number;
+  /**
+   * An approximation of how many indices the dragged item has moved
+   */
+  estimatedDelta: number;
+}) => {
   const selectedIds = new Set(selectedItems.map((r) => r.id));
   const itemRecord: Record<string, Item> = {};
   inRangeItems.forEach((item) => {
@@ -168,18 +175,17 @@ export const findDeltaAtPosition = (
   }
 
   let distance = Infinity;
-
   let bestDelta = estimatedDelta;
 
-  const calculate = (delta: number) => {
+  const checkDelta = (delta: number) => {
     const { displacements, newItemIndices } = calculateDisplacements(
       inRangeItems,
       selectedItems,
       delta,
     );
-    const result = getIndexForStart(
+    const result = getDroppedPosToCursorDistance(
       draggedId,
-      position,
+      cursorPosition,
       itemRecord,
       displacements,
       newItemIndices,
@@ -190,12 +196,89 @@ export const findDeltaAtPosition = (
     }
   };
 
-  // console.log("@estimatedDelta", estimatedDelta);
+  const deltaRange = deltaScanRange({
+    selected: selectedItems,
+    delta: estimatedDelta,
+    numToScan: 10,
+    lastIndex,
+  });
 
-  calculate(estimatedDelta);
-
-  for (let delta = estimatedDelta - 5; delta < estimatedDelta + 5; delta++) {
-    calculate(delta);
+  if (
+    estimatedDelta >= deltaRange.min + estimatedDelta &&
+    estimatedDelta <= estimatedDelta + deltaRange.max
+  ) {
+    checkDelta(estimatedDelta);
   }
+
+  for (
+    let delta = deltaRange.min + estimatedDelta;
+    delta <= estimatedDelta + deltaRange.max;
+    delta++
+  ) {
+    if (delta === estimatedDelta) {
+      continue;
+    }
+    checkDelta(delta);
+  }
+
   return bestDelta;
+};
+
+/**
+ * by default min = -5, max = +5
+ */
+export const deltaScanRange = ({
+  selected,
+  delta,
+  numToScan,
+  lastIndex,
+}: {
+  selected: Item[];
+  /**
+   * An approximation of how many indices the dragged item has moved
+   */
+  delta: number;
+  numToScan: number;
+  lastIndex: number;
+}) => {
+  const mid = Math.floor(numToScan / 2);
+  let minDeltaScan = -mid;
+  let maxDeltaScan = mid;
+
+  const minSelected = selected[0].index;
+  const maxSelected = selected[selected.length - 1].index;
+  const maxIndex = lastIndex;
+  const minIndex = 0;
+
+  let negativeScan = minSelected + delta + minDeltaScan;
+  let positiveScan = maxSelected + delta + maxDeltaScan;
+
+  const limitMoveLeft = negativeScan < minIndex;
+  const limitMoveRight = positiveScan > maxIndex;
+
+  if (limitMoveLeft && limitMoveRight) {
+    // we can't add extras to min nor max
+  } else if (limitMoveLeft) {
+    // add extra to right scan
+    maxDeltaScan += minIndex - negativeScan;
+  } else if (limitMoveRight) {
+    // add extra to left scan
+    minDeltaScan -= positiveScan - maxIndex;
+  }
+
+  negativeScan = minSelected + delta + minDeltaScan;
+  // we can't move the minSelected below 0
+  if (negativeScan < minIndex) {
+    const positionsToAppend = minIndex - negativeScan;
+    minDeltaScan += positionsToAppend;
+  }
+
+  positiveScan = maxSelected + delta + maxDeltaScan;
+  // we can't move the maxSelected beyond the last row index
+  if (positiveScan > maxIndex) {
+    const positionsToRemove = positiveScan - maxIndex;
+    maxDeltaScan -= positionsToRemove;
+  }
+
+  return { min: minDeltaScan, max: maxDeltaScan };
 };

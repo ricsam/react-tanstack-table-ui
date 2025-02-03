@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { Item, calculateDisplacements } from "./Item";
+import { Item, calculateDisplacements, deltaScanRange } from "./Item";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) Helpers for Our Standard 8 Items (Indices 0..7):
@@ -9,7 +9,7 @@ import { Item, calculateDisplacements } from "./Item";
 /**
  * All 8 items, each with size=1 (the "classic" scenario).
  */
-function getAllItemsSize1(): Item[] {
+function getAllItemsSize(): Item[] {
   return [
     { index: 0, id: "a", start: 0, size: 1 },
     { index: 1, id: "b", start: 1, size: 1 },
@@ -29,17 +29,7 @@ function getInRangeItemsSize1(all: Item[]): Item[] {
   return all.filter((item) => item.index >= 2 && item.index <= 5);
 }
 
-// The normal "window" boundary is [2..5], with positions aligned to indices.
-const rangePositionsDefault: [{ index: number }, { index: number }] = [
-  { index: 2 }, // start of window
-  { index: 5 }, // end of window
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 3) Original Nine Tests (Size=1) for Reference
-//    (Identical to your main suite; included here for completeness.)
-// ─────────────────────────────────────────────────────────────────────────────
-describe("calculateDisplacements (original 9 tests, size=1)", () => {
+describe("calculateDisplacements", () => {
   it("Should move a single item down", () => {
     /**
      * Before Movement:
@@ -54,7 +44,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
      * Displacements:
      *   a: +3, c: -1, d: -1, e: 0, f: 0
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => i.id === "a");
     const delta = 3;
@@ -77,7 +67,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
      * Displacements:
      *   a: +3, c: +3, d: -2, e: -2, f: -1
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => ["a", "c"].includes(i.id));
     const delta = 3;
@@ -100,7 +90,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
      * Displacements:
      *   a: +2, c: +2, d: 2, e: -3, f: -2
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => ["a", "c", "d"].includes(i.id));
     const delta = 2;
@@ -120,7 +110,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
      * Displacements:
      *   h: -4, c: 0, d: +1, e: +1, f: +1
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => i.id === "h");
     const delta = -4;
@@ -133,7 +123,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     /**
      * c => +2, d => -1, e => -1, f => 0
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => i.id === "c");
     const delta = 2;
@@ -146,7 +136,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     /**
      * e => -2, c => +1, d => +1, f => 0
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => i.id === "e");
     const delta = -2;
@@ -166,7 +156,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
      * Displacements:
      *   c: +2, d: +2, e: -2, f: -2
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => ["c", "d"].includes(i.id));
     const delta = 2;
@@ -179,7 +169,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     /**
      * d => -1, e => -1, c => +2, f => 0
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => ["d", "e"].includes(i.id));
     const delta = -1;
@@ -192,7 +182,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     /**
      * b => +3, c => +3, d => -2, e => -2, f => -2
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => ["b", "c"].includes(i.id));
     const delta = 3;
@@ -203,15 +193,48 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
 
   it("Should move multiple items up where one item is in the window", () => {
     /**
-     * e => -2, g => -2, c => +1, d => +2, f => +1
+     * Before Movement:
+     *   a, b, |c, d, e, f|, g, h
+     *   a, b, |c, d,  , f|,  , h
+     *   a, b, |c, d, f, h|,  ,
+     *   a, b, |e, c, g, d|, f, h
+     * Delta: -2
+     * selected = [e, g]
+     * After Movement:
+     *   a, b, |e, c, g, d|, f, h
+     * Displacements:
+     *   c: 1, d: 2, e: -2, f: 1, g: -2
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     const selected = all.filter((i) => ["e", "g"].includes(i.id));
     const delta = -2;
 
     const result = calculateDisplacements(inRange, selected, delta);
-    expect(result.displacements).toEqual({ e: -2, g: -2, c: 1, d: 2, f: 1 });
+    expect(result.displacements).toEqual({ c: 1, d: 2, e: -2, f: 1, g: -2 });
+  });
+
+  it("Should move multiple items up where one item is in the window and the other one will never enter", () => {
+    /**
+     * Before Movement:
+     *   a, b, |c, d, e, f|, g, h
+     *   a, b, |c, d,  , f|, g,
+     *   a, b, |c, d, f, g|,  ,
+     *   a, b, |c, e, d, f|, h, g
+     * Delta: -1
+     * selected = [e, h]
+     * After Movement:
+     *   a, b, |e, c, g, d|, f, h
+     * Displacements:
+     *   c: 0, d: 1, e: -1, f: 0, h: -1
+     */
+    const all = getAllItemsSize();
+    const inRange = getInRangeItemsSize1(all);
+    const selected = all.filter((i) => ["e", "h"].includes(i.id));
+    const delta = -1;
+
+    const result = calculateDisplacements(inRange, selected, delta);
+    expect(result.displacements).toEqual({ c: 0, d: 1, e: -1, f: 0, h: -1 });
   });
 
   it("Should move a single item from within the window up out of it", () => {
@@ -227,7 +250,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
      * Displacements:
      *   a: +1, b: +1, c: -2, d: 0, e: 0, f: 0
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     // "c" is inside the window
     const selected = all.filter((i) => i.id === "c");
@@ -263,7 +286,7 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
      *   d:  0
      *   e:  0
      */
-    const all = getAllItemsSize1();
+    const all = getAllItemsSize();
     const inRange = getInRangeItemsSize1(all);
     // "f" is inside the window
     const selected = all.filter((i) => i.id === "f");
@@ -280,14 +303,6 @@ describe("calculateDisplacements (original 9 tests, size=1)", () => {
     });
   });
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 4) Same Tests but with DIFFERENT ITEM SIZES
-//    "All tests again" demonstrates how you'd handle size-based logic.
-//
-//    The final expected displacements *will change* if your logic depends on
-//    actual item sizes. Below are placeholders; please adjust accordingly!
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Example of items with varying sizes:
@@ -321,7 +336,7 @@ describe("calculateDisplacements with different item sizes", () => {
      * Delta: 3
      * selected = [a]
      *
-     * Because "a" is only 1px, etc. the actual logic might shift c, d, e, f
+     * Because "a" is 1px, etc. the actual logic might shift c, d, e, f
      * differently. The final expectation depends on your size logic.
      *
      * Example placeholder result => { a: 6, c: -1, d: -1, e: 0, f: 0 }
@@ -583,86 +598,279 @@ describe("calculateDisplacements with different item sizes", () => {
     expect(result.displacements).toEqual({ b: 7, c: 7, d: -5, e: -5, f: -5 });
   });
 
-  // it('Should move multiple items up, one in window (sizes vary)', () => {
-  //   /**
-  //    * selected = [e, g]
-  //    * delta = -2
-  //    */
-  //   const all = getAllItemsVaryingSizes();
-  //   const inRange = getInRangeItemsVaryingSizes(all);
-  //   const selected = all.filter((i) => ["e", "g"].includes(i.id));
-  //   const delta = -2;
+  it("Should move multiple items up, one in window (sizes vary)", () => {
+    // { index: 0, id: "a", start: 0, size: 1 },
+    // { index: 1, id: "b", start: 1, size: 2 },
+    // { index: 2, id: "c", start: 3, size: 3 },
+    // { index: 3, id: "d", start: 6, size: 1 },
+    // { index: 4, id: "e", start: 7, size: 2 },
+    // { index: 5, id: "f", start: 9, size: 4 },
+    // { index: 6, id: "g", start: 13, size: 1 },
+    // { index: 7, id: "h", start: 14, size: 2 },
 
-  //   const result = calculateDisplacements(
-  //     inRange,
-  //     selected,
-  //     delta,
-  //     rangePositionsDefault,
-  //   );
-  //   expect(result.displacements).toEqual({ e: -2, g: -2, c: 1, d: 2, f: 1 });
-  // });
+    /**
+     * Movement:
+     *   a, b, |c, d, e, f|, g, h
+     *   a, b, |c, d,  , f|,  , h
+     *   a, b, |c, d, f, h|,  ,
+     *   a, b, |e, c, g, d|, f, h
+     * Delta: -2
+     * selected = [e, g]
+     * Before Movement:
+     *   a, b, |c, d, e, f|, g, h
+     * After Movement:
+     *   a, b, |e, c, g, d|, f, h
+     * Displacements:
+     *   g: -5, c: 2, d: 3, e: -4, f: 1
+     */
+    // before: c.start = 3
+    // after: c.start = 5
+    // before: d.start = 6
+    // after: d.start = 9
+    // before: e.start = 7
+    // after: e.start = 3
+    // before: f.start = 9
+    // after: f.start = 10
+    // before: g.start = 13
+    // after: g.start = 8
+
+    const all = getAllItemsVaryingSizes();
+    const inRange = getInRangeItemsVaryingSizes(all);
+    const selected = all.filter((i) => ["e", "g"].includes(i.id));
+    const delta = -2;
+
+    const result = calculateDisplacements(inRange, selected, delta);
+    expect(result.displacements).toEqual({ g: -5, c: 2, d: 3, e: -4, f: 1 });
+  });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 5) A Test Where the Window is the Entire Table [0..7]
-// ─────────────────────────────────────────────────────────────────────────────
-// describe("calculateDisplacements with range = entire table [0..7]", () => {
-//   it('Case: "Should move multiple items up across entire table"', () => {
-//     /**
-//      * Suppose the range is the entire set of rows, [0..7].
-//      * That means inRangeItems = all 8 items: a,b,c,d,e,f,g,h
-//      *
-//      * For example:
-//      *   - selected = [c, e, g]
-//      *   - delta = -2
-//      *
-//      * "Before Movement" (the entire 8 in the window):
-//      *   a, b, c, d, e, f, g, h
-//      *
-//      * "After Movement" example, if we shift c,e,g upward by 2 pixels or indexes:
-//      *   a, b, c, d, e, f, g, h  (the actual final arrangement depends on your logic)
-//      *
-//      * We'll just do a hypothetical displacement set:
-//      *   c => -2
-//      *   e => -2
-//      *   g => -2
-//      *   a,b,d,f,h => possibly +1 or 0, etc.
-//      *
-//      * Adjust as necessary for your real logic.
-//      */
-//     const all = getAllItemsSize1();
-//     // The range is now [0..7], so inRangeItems = entire array.
-//     const inRange = all; // all 8
-//     const entireTableRange: [
-//       { index: number; pos: number },
-//       { index: number; pos: number },
-//     ] = [
-//       { index: 0, pos: 0 },
-//       { index: 7, pos: 7 },
-//     ];
+describe("calculateDisplacements with range = entire table [0..7]", () => {
+  it("Should move multiple items up across entire table", () => {
+    /**
+     * Suppose the range is the entire set of rows, [0..7].
+     * That means inRangeItems = all 8 items: a,b,c,d,e,f,g,h
+     *
+     * For example:
+     *   - selected = [c, e, g]
+     *   - delta = -2
+     *
+     * "Before Movement" (the entire 8 in the window):
+     *   a, b, c, d, e, f, g, h
+     *   a, b,  , d,  , f,  , h
+     *   a, b, d, f, h,  ,  ,
+     *   c, a, e, b, g, d, f, h
+     *
+     * "After Movement" example, if we shift c,e,g upward by 2 pixels or indexes:
+     *   c, a, e, b, g, d, f, h
+     *
+     * Adjust as necessary for your real logic.
+     */
+    const all = getAllItemsSize();
+    // The range is now [0..7], so inRangeItems = entire array.
+    const inRange = all; // all 8
 
-//     // Let's pick c,e,g as selected
-//     const selected = all.filter((i) => ["c", "e", "g"].includes(i.id));
-//     const delta = -2;
+    // Let's pick c,e,g as selected
+    const selected = all.filter((i) => ["c", "e", "g"].includes(i.id));
+    const delta = -2;
 
-//     // Example placeholder outcome:
-//     const result = calculateDisplacements(
-//       inRange,
-//       selected,
-//       delta,
-//       entireTableRange,
-//     );
+    // Example placeholder outcome:
+    const result = calculateDisplacements(inRange, selected, delta);
 
-//     // Possibly c,e,g get -2, everything else is +1 or 0 depending on logic
-//     expect(result.displacements).toEqual({
-//       a: 0,
-//       b: 0,
-//       c: -2,
-//       d: 0,
-//       e: -2,
-//       f: 0,
-//       g: -2,
-//       h: 0,
-//     });
-//   });
-// });
+    // Possibly c,e,g get -2, everything else is +1 or 0 depending on logic
+    expect(result.displacements).toEqual({
+      a: 1,
+      b: 2,
+      c: -2,
+      d: 2,
+      e: -2,
+      f: 1,
+      g: -2,
+      h: 0,
+    });
+  });
+});
+
+describe("deltaScanRange", () => {
+  it("a should not return deltas that go below 0 with positive delta", () => {
+    /**
+     * a, b, |c, d, e, f|, g, h
+     *
+     * selected = [a]
+     * delta = 3
+     */
+    const all = getAllItemsSize();
+    const inRange = getInRangeItemsSize1(all);
+    const selected = all.filter((i) => i.id === "a");
+    const delta = 3;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(-3); // 0 // a cant be moved left
+    expect(result.max).toBe(4); // 6 (g) -> one pos after range
+  });
+  it("a should not return deltas that go below 0 with negative delta", () => {
+    /**
+     * a, b, |c, d, e, f|, g, h
+     *
+     * selected = [a]
+     * delta = -3
+     */
+    const all = getAllItemsSize();
+    const inRange = getInRangeItemsSize1(all);
+    const selected = all.filter((i) => i.id === "a");
+    const delta = -3;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(3);
+    expect(result.max).toBe(10);
+  });
+  it("b should not return deltas that go below 0 with positive delta", () => {
+    /**
+     * a, b, |c, d, e, f|, g, h
+     *
+     * selected = [b]
+     * delta = 3
+     */
+    const all = getAllItemsSize();
+    const selected = all.filter((i) => i.id === "b");
+    const delta = 3;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(-4);
+    expect(result.max).toBe(3);
+  });
+  it("a and b should not go below 0", () => {
+    /**
+     * | a, b, c, d, e, f|, g, h
+     *
+     * selected = [a, b]
+     * delta = 0
+     */
+    const all = getAllItemsSize();
+    const selected = all.filter((i) => ["a", "b"].includes(i.id));
+    const delta = -1;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(1);
+    expect(result.max).toBe(7);
+  });
+  it("a and b should not go below 0", () => {
+    /**
+     * | a, b, c, d, e, f|, g, h
+     *
+     * selected = [a, b]
+     * delta = -1
+     */
+    const all = getAllItemsSize();
+    const selected = all.filter((i) => ["a", "b"].includes(i.id));
+    const delta = -1;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(1);
+    expect(result.max).toBe(7);
+  });
+  it("a and b should not go below 0", () => {
+    /**
+     * | a, b, c, d, e, f|, g, h
+     *
+     * selected = [a, b]
+     * delta = -2
+     */
+    const all = getAllItemsSize();
+    const selected = all.filter((i) => ["a", "b"].includes(i.id));
+    const delta = -2;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(2);
+    expect(result.max).toBe(8);
+  });
+  it("c and e should not return deltas that go below 0 with positive delta", () => {
+    /**
+     * a, b, |c, d, e, f|, g, h
+     *
+     * selected = [c, e]
+     * delta = 1
+     */
+    const all = getAllItemsSize();
+    const selected = all.filter((i) => ["c", "e"].includes(i.id));
+    const delta = 1;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(-3);
+    expect(result.max).toBe(2);
+  });
+  it("moving 2 should not go below 0", () => {
+    /**
+     * a, b, |c, d, e, f|, g, h
+     *
+     * selected = [c, e]
+     * delta = -4
+     */
+    const all = getAllItemsSize();
+    const selected = all.filter((i) => ["c", "e"].includes(i.id));
+    const delta = -4;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min).toBe(2);
+    expect(result.max).toBe(7);
+  });
+  it("should move from right to left", () => {
+    /**
+     * a, b, |c, d, e, f|, g, h
+     *
+     * selected = [h]
+     * delta = -3
+     */
+    const all = getAllItemsSize();
+    const selected = all.filter((i) => i.id === "h");
+    const delta = -3;
+
+    const result = deltaScanRange({
+      selected,
+      delta,
+      numToScan: 10,
+      lastIndex: all.length - 1,
+    });
+    expect(result.min + delta).toBe(-7);
+    expect(result.max).toBe(3); // move -3 and then move +3 and we can't go more to the right
+  });
+});

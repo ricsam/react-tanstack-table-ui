@@ -57,14 +57,18 @@ const RowDragHandleCell = ({
   rowIndex: number;
   table: Table<User>;
 }) => {
-  const { attributes, listeners } = useAnoDrag(
+  const { attributes, listeners, hidden } = useAnoDrag(
     AnoDndRowContext,
     rowId,
     rowIndex,
   );
   return (
     // Alternatively, you could set these attributes on the rows themselves
-    <button {...attributes} {...listeners}>
+    <button
+      {...attributes}
+      {...listeners}
+      style={{ display: hidden ? "none" : "inline" }}
+    >
       🟰
     </button>
   );
@@ -419,7 +423,14 @@ type AnoDndContextType = {
   getRenderedRange: () => string[];
   getSize: (id: string) => number;
   getStart: (id: string) => number;
-  displacements: (delta: number, draggedId: string) => Record<string, number>;
+  displacements: (
+    delta: number,
+    draggedId: string,
+  ) => {
+    displacements: Record<string, number>;
+    newItemIndices: Record<string, number>;
+    displacedDisplayedRange: Set<string>;
+  };
 };
 
 const createAnoDndContext = () =>
@@ -524,7 +535,11 @@ const AnoDndProvider = ({
     calculateDisplacements: (
       delta: number,
       draggedId: string,
-    ) => Record<string, number>;
+    ) => {
+      displacements: Record<string, number>;
+      newItemIndices: Record<string, number>;
+      displacedDisplayedRange: Set<string>;
+    };
     findDeltaAtPosition: (
       estimatedDelta: number,
       position: number,
@@ -758,7 +773,8 @@ const AnoDndProvider = ({
 };
 
 type AnoTransform = {
-  [x: string]: number;
+  x?: number;
+  y?: number;
 };
 
 function useGetStyle(
@@ -769,6 +785,7 @@ function useGetStyle(
 ) {
   const dimension = ctx.dimension;
   const antiDimesion = dimension === "x" ? "y" : "x";
+  let hidden = false;
 
   let transform: AnoTransform = { x: 0, y: 0 };
   if (isDraggingThis) {
@@ -806,8 +823,10 @@ function useGetStyle(
     const d = totalDelta(ctx.delta, dimension);
     const delta = ctx.getStart(ctx.isDragging.id) + d;
 
+    const displacements = ctx.displacements(indexDiff, ctx.isDragging.id);
+    hidden = !displacements.displacedDisplayedRange.has(id);
     transform = {
-      [dimension]: ctx.displacements(indexDiff, ctx.isDragging.id)[id],
+      [dimension]: displacements.displacements[id],
       // ctx.selected && ctx.selected.state[ctx.isDragging.id]
       //   ? // ? ctx.selected.displacements(delta)[id]
       //   : getSingleTransform(
@@ -835,7 +854,7 @@ function useGetStyle(
   const prevId = React.useRef(id);
 
   if (updatedIndex) {
-    const totalPreviousD = prevStart + prevTransform[dimension];
+    const totalPreviousD = prevStart + (prevTransform[dimension] ?? 0);
     const newTransformD = totalPreviousD - start;
     // console.log(
     //   `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
@@ -878,7 +897,7 @@ function useGetStyle(
   //   console.log("transform.y", overrideRet.current);
   // }
 
-  return ret;
+  return { ...ret, hidden };
 }
 
 const useAnoDrag = (
@@ -902,7 +921,12 @@ const useAnoDrag = (
     }
   }
 
-  const { transition, transform } = useGetStyle(ctx, id, thisIndex, false);
+  const { transition, transform, hidden } = useGetStyle(
+    ctx,
+    id,
+    thisIndex,
+    false,
+  );
   if (isDraggingThis) {
     // logDiff(id, thisIndex, transform);
   }
@@ -919,6 +943,7 @@ const useAnoDrag = (
     transition,
     isDragging: isDraggingThis,
     isDragHandle,
+    hidden,
     // dragHandleStyle,
     listeners: {
       onMouseDown: (ev: React.MouseEvent) => {
@@ -1672,13 +1697,26 @@ function App() {
                 table.getIsSomeRowsSelected() && selected[draggedId]
                   ? r.filter((r) => selected[r.id])
                   : r.filter((r) => r.id === draggedId);
-              return calculateDisplacement2(
-                r.filter(
-                  (r) => r.index >= range.index[0] && r.index <= range.index[1],
-                ),
+
+              const displayedRange = r.filter(
+                (r) => r.index >= range.index[0] && r.index <= range.index[1],
+              );
+              const displacements = calculateDisplacement2(
+                displayedRange,
                 sel,
                 delta,
-              ).displacements;
+              );
+              const displacedDisplayedRange = r.filter(
+                (r) =>
+                  displacements.newItemIndices[r.id] >= range.index[0] &&
+                  displacements.newItemIndices[r.id] <= range.index[1],
+              );
+              return {
+                ...displacements,
+                displacedDisplayedRange: new Set(
+                  displacedDisplayedRange.map((r) => r.id),
+                ),
+              };
               // return calculateDisplacement(r, sel, delta, range);
             },
             findDeltaAtPosition(
@@ -1690,15 +1728,16 @@ function App() {
                 table.getIsSomeRowsSelected() && selected[draggedId]
                   ? r.filter((r) => selected[r.id])
                   : r.filter((r) => r.id === draggedId);
-              return findDeltaAtPosition(
+              return findDeltaAtPosition({
+                lastIndex: rows.length - 1,
                 draggedId,
-                r.filter(
+                inRangeItems: r.filter(
                   (r) => r.index >= range.index[0] && r.index <= range.index[1],
                 ),
-                sel,
-                position,
+                selectedItems: sel,
+                cursorPosition: position,
                 estimatedDelta,
-              );
+              });
             },
           };
         }, [rows, table, virtualRows, table.getSelectedRowModel()])}
@@ -1984,7 +2023,7 @@ const TableRow = React.memo(function TableRow({
 }) {
   const visibileCells = row.getVisibleCells();
 
-  const { transform, transition, setNodeRef, isDragging } = useAnoDrag(
+  const { transform, transition, setNodeRef, isDragging, hidden } = useAnoDrag(
     AnoDndRowContext,
     row.id,
     row.index,
@@ -2006,7 +2045,11 @@ const TableRow = React.memo(function TableRow({
     zIndex: isDragging ? 1 : 0,
     width,
     backgroundColor: "black",
+    display: hidden ? "none" : "block",
   };
+  // if (hidden) {
+  //   console.log("hidden");
+  // }
 
   return (
     <>

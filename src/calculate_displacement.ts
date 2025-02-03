@@ -71,7 +71,6 @@ export function calculateDisplacement(
           displacement[sel.id] += crossed.size;
           displacement[crossed.id] -= sel.size;
         }
-        console.log(displacement);
       }
       continue;
     }
