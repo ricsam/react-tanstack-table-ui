@@ -294,20 +294,14 @@ const DraggableTableHeader = ({
     overflow: "hidden",
     height: "32px",
     ...getCommonPinningStyles(header.column),
-    width: `calc(var(--header-${header?.id}-size) * 1px)`,
+    // width: `calc(var(--header-${header?.id}-size) * 1px)`,
+    width: header.getSize(),
     left: header.column.getStart(),
     position: "absolute",
   };
 
   return (
-    <div
-      key={header.id}
-      ref={setNodeRef}
-      {...{
-        className: "th",
-        style,
-      }}
-    >
+    <div key={header.id} ref={setNodeRef} className="th" style={style}>
       <div style={{ textAlign: "center", flex: 1 }}>
         {header.isPlaceholder
           ? null
@@ -1018,7 +1012,6 @@ const DragAlongCell = React.memo(function DragAlongCell({
 
   const style: CSSProperties = {
     opacity: isDragging ? 0.8 : 1,
-    position: "relative",
     // transform: CSS.Translate.toString(transform), // translate instead of transform to avoid squishing
     transform,
     transition,
@@ -1042,7 +1035,8 @@ const DragAlongCell = React.memo(function DragAlongCell({
         style: {
           ...style,
           ...getCommonPinningStyles(cell.column),
-          width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+          // width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+          width: cell.column.getSize(),
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -1100,8 +1094,8 @@ function App() {
     const colSizes: { [key: string]: number } = {};
     for (let i = 0; i < headers.length; i++) {
       const header = headers[i]!;
-      colSizes[`--header-${header.id}-size`] = header.getSize();
-      colSizes[`--col-${header.column.id}-size`] = header.column.getSize();
+      // colSizes[`--header-${header.id}-size`] = header.getSize();
+      // colSizes[`--col-${header.column.id}-size`] = header.column.getSize();
     }
     return colSizes;
 
@@ -1239,7 +1233,15 @@ function App() {
         overscan: 1, //how many columns to render on each side off screen each way (adjust this for performance)
         rangeExtractor: (range) => {
           const draggedIndex = getDraggedIndex(headerIndex);
-          const next = new Set(defaultRangeExtractor(range));
+          const defaultRange = defaultRangeExtractor(range);
+          const next = new Set(defaultRange);
+
+          const defaultRangeSet = new Set(defaultRange);
+
+          defaultColWindowRef.current = [...defaultRangeSet].sort(
+            (a, b) => a - b,
+          );
+
           if (draggedIndex !== null) {
             if (!next.has(draggedIndex)) {
               next.add(draggedIndex);
@@ -1338,6 +1340,17 @@ function App() {
     });
   });
 
+  headerColVirtualizers[
+    headerColVirtualizers.length - 1
+  ].shouldAdjustScrollPositionOnItemSizeChange =
+    // when moving columns we want to adjust the scroll position
+    // when resizing columns we don't want to adjust the scroll position
+    table.getState().columnSizingInfo.isResizingColumn === false
+      ? (item, delta, instance) => {
+          return true;
+        }
+      : undefined;
+
   useIsomorphicLayoutEffect(() => {
     const cleanups = headerColVirtualizers.map((cv) => {
       return cv._didMount();
@@ -1362,7 +1375,8 @@ function App() {
   const refs = React.useRef(_refs);
   refs.current = _refs;
 
-  const defaultWindowRef = React.useRef<number[] | null>(null);
+  const defaultRowWindowRef = React.useRef<number[] | null>(null);
+  const defaultColWindowRef = React.useRef<number[] | null>(null);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -1450,7 +1464,9 @@ function App() {
         }
 
         // Store the expanded range for reference
-        defaultWindowRef.current = [...defaultRangeSet].sort((a, b) => a - b);
+        defaultRowWindowRef.current = [...defaultRangeSet].sort(
+          (a, b) => a - b,
+        );
 
         // Return the final range, sorted for consistent rendering
         const n = [...next].sort((a, b) => a - b);
@@ -1630,23 +1646,72 @@ function App() {
           start: vc.start,
         }));
 
-        let displacements: Record<string, number> | null = null;
-        let cacheDelta: number | null = null;
-        let cacheDraggedId: string | null = null;
-        return (delta: number, draggedId: string) => {
-          if (
-            cacheDelta === delta &&
-            cacheDraggedId === draggedId &&
-            displacements
+        const getRange = (
+          indexRange: [number, number],
+        ): { index: [number, number]; start: [number, number] } => {
+          const end = r.find(
+            (vc) => vc.index === indexRange[indexRange.length - 1],
+          );
+          return {
+            index: indexRange,
+            start: [
+              r.find((vc) => vc.index === indexRange[0])?.start ?? 0,
+              (end?.start ?? r.length - 1) + (end?.size ?? tableRowHeight),
+            ],
+          };
+        };
+        let range = getRange([0, r.length - 1]);
+
+        if (defaultColWindowRef.current) {
+          const currentWindow = defaultColWindowRef.current;
+          range = getRange([
+            rows[currentWindow[0]].index,
+            rows[currentWindow[currentWindow.length - 1]].index,
+          ]);
+        }
+
+        return {
+          calculateDisplacements: (delta: number, draggedId: string) => {
+            const sel = r.filter((r) => r.id === draggedId);
+
+            const displayedRange = r.filter(
+              (r) => r.index >= range.index[0] && r.index <= range.index[1],
+            );
+            const displacements = calculateDisplacement2(
+              displayedRange,
+              sel,
+              delta,
+            );
+            const displacedDisplayedRange = r.filter(
+              (r) =>
+                displacements.newItemIndices[r.id] >= range.index[0] &&
+                displacements.newItemIndices[r.id] <= range.index[1],
+            );
+            return {
+              ...displacements,
+              displacedDisplayedRange: new Set(
+                displacedDisplayedRange.map((r) => r.id),
+              ),
+            };
+            // return calculateDisplacement(r, sel, delta, range);
+          },
+          findDeltaAtPosition(
+            estimatedDelta: number,
+            position: number,
+            draggedId: string,
           ) {
-            return displacements;
-          }
-          const sel = r.filter((r) => r.id === draggedId);
-          displacements = calculateDisplacement(r, sel, delta);
-          // displacements = calculateDisplacement2(r.filter((r) => r.index > ), sel, delta);
-          cacheDelta = delta;
-          cacheDraggedId = draggedId;
-          return displacements;
+            const sel = r.filter((r) => r.id === draggedId);
+            return findDeltaAtPosition({
+              lastIndex: rows.length - 1,
+              draggedId,
+              inRangeItems: r.filter(
+                (r) => r.index >= range.index[0] && r.index <= range.index[1],
+              ),
+              selectedItems: sel,
+              cursorPosition: position,
+              estimatedDelta,
+            });
+          },
         };
       }, [bodyCols, headerGroups])}
     >
@@ -1684,8 +1749,8 @@ function App() {
           };
           let range = getRange([0, r.length - 1]);
 
-          if (defaultWindowRef.current) {
-            const currentWindow = defaultWindowRef.current;
+          if (defaultRowWindowRef.current) {
+            const currentWindow = defaultRowWindowRef.current;
             range = getRange([
               rows[currentWindow[0]].index,
               rows[currentWindow[currentWindow.length - 1]].index,
@@ -1984,7 +2049,8 @@ function DisplayHeader({
           paddingLeft: "8px",
           overflow: "hidden",
           height: "32px",
-          width: `calc(var(--header-${header?.id}-size) * 1px)`,
+          // width: `calc(var(--header-${header?.id}-size) * 1px)`,
+          width: header.getSize(),
         },
       }}
     >
