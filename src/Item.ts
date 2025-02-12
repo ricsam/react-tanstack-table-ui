@@ -1,3 +1,5 @@
+import { ColumnPinningPosition } from "@tanstack/table-core";
+
 export interface Item {
   index: number;
   id: string;
@@ -162,6 +164,7 @@ export const findDeltaAtPosition = ({
    */
   estimatedDelta: number;
 }) => {
+  // console.log(itemTablePos, pinnedLeft);
   const selectedIds = new Set(selectedItems.map((r) => r.id));
   const itemRecord: Record<string, Item> = {};
   inRangeItems.forEach((item) => {
@@ -203,6 +206,13 @@ export const findDeltaAtPosition = ({
     lastIndex,
   });
 
+  console.log("@deltaRange", {
+    inRangeItems,
+    estimatedDelta,
+    selectedItems,
+    deltaRange,
+  });
+
   if (
     estimatedDelta >= deltaRange.min + estimatedDelta &&
     estimatedDelta <= estimatedDelta + deltaRange.max
@@ -221,7 +231,18 @@ export const findDeltaAtPosition = ({
     checkDelta(delta);
   }
 
-  return bestDelta;
+  // if (pinned) {
+  //   return {
+  //     delta: bestDelta,
+  //     pinned,
+  //     index: bestPinnedIndex,
+  //   };
+  // }
+
+  return {
+    delta: bestDelta,
+    distance,
+  };
 };
 
 /**

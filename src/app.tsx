@@ -3,6 +3,7 @@ import {
   Column,
   ColumnDef,
   ColumnOrderState,
+  ColumnPinningPosition,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -23,6 +24,7 @@ import { calculateDisplacement } from "./calculate_displacement";
 import {
   calculateDisplacements as calculateDisplacement2,
   findDeltaAtPosition,
+  Item,
 } from "./Item";
 import {
   defaultRangeExtractor,
@@ -247,9 +249,11 @@ for (let i = 0; i < 80; i += 1) {
 const DraggableTableHeader = ({
   header,
   table,
+  start,
 }: {
   header: Header<User, unknown>;
   table: Table<User>;
+  start: number;
 }) => {
   // const {
   //   attributes,
@@ -272,11 +276,14 @@ const DraggableTableHeader = ({
     setNodeRef,
     listeners,
     attributes,
+    pinned,
   } = useAnoDrag(AnoDndColContext, header.column.id, header.column.getIndex());
 
   const dragTransform = _transform ? ` + ${_transform.x}px` : "";
 
-  const transform = header.column.getIsPinned()
+  const isPinned = pinned ?? header.column.getIsPinned();
+
+  const transform = isPinned
     ? "none"
     : `translate3d(calc(0px${dragTransform}), 0, 0)`;
   // : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
@@ -287,17 +294,18 @@ const DraggableTableHeader = ({
     transform,
     transition,
     whiteSpace: "nowrap",
-    zIndex: isDragging ? 1 : 0,
+    zIndex: isDragging || isPinned ? 1 : 0,
     display: "flex",
     paddingRight: "8px",
     paddingLeft: "8px",
     overflow: "hidden",
     height: "32px",
-    ...getCommonPinningStyles(header.column),
+    // ...getCommonPinningStyles(header.column),
     // width: `calc(var(--header-${header?.id}-size) * 1px)`,
     width: header.getSize(),
-    left: header.column.getStart(),
-    position: "absolute",
+    left: isPinned ? header.getStart("left") : start,
+    position: isPinned ? "sticky" : "absolute",
+    backgroundColor: isPinned ? "black" : "transparent",
   };
 
   return (
@@ -308,7 +316,7 @@ const DraggableTableHeader = ({
           : flexRender(header.column.columnDef.header, header.getContext())}
         <div style={{ width: "4px" }}></div>
       </div>
-      {header.subHeaders.length === 0 && !header.column.getIsPinned() && (
+      {header.subHeaders.length === 0 && (
         <button {...attributes} {...listeners}>
           🟰
         </button>
@@ -380,8 +388,8 @@ const getCommonPinningStyles = (column: Column<User>): CSSProperties => {
       : isFirstRightPinnedColumn
         ? "4px 0 4px -4px gray inset"
         : undefined,
-    left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
-    right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
+    // left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
+    // right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
     opacity: isPinned ? 0.95 : 1,
     position: isPinned ? "sticky" : "relative",
     width: column.getSize(),
@@ -396,18 +404,35 @@ const getCommonPinningStyles = (column: Column<User>): CSSProperties => {
 
 type AnoDndActive = {
   id: string;
+  /**
+   * from the bounding rect, relative to the screen
+   */
+  itemPos: { x: number; y: number };
   mouseStart: { x: number; y: number };
   scrollStart: { x: number; y: number };
   handleOffset: { x: number; y: number };
   index: number;
-};
+  tablePos: { x: number; y: number };
+} & (
+  | {
+      pinned: false;
+    }
+  | {
+      pinned: "left" | "right";
+      pinnedIndex: number;
+    }
+);
 
 type AnoDndContextType = {
   setIsDragging: React.Dispatch<React.SetStateAction<AnoDndActive | null>>;
   isDragging: AnoDndActive | null;
   delta: Delta;
   // cols: { size: number; id: string }[];
-  closestCol: { id: string; index: number } | null;
+  closestCol: {
+    id: string;
+    index: number; // non-pinned index
+    pinned: ColumnPinningPosition;
+  } | null;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   onDragStart: (event: AnoDndEvent) => void;
   getNodeRef: (id: string) => HTMLElement | null;
@@ -417,6 +442,14 @@ type AnoDndContextType = {
   getRenderedRange: () => string[];
   getSize: (id: string) => number;
   getStart: (id: string) => number;
+  getPinned: (id: string) =>
+    | {
+        pinned: false;
+      }
+    | {
+        pinned: "left" | "right";
+        pinnedIndex: number;
+      };
   displacements: (
     delta: number,
     draggedId: string,
@@ -510,6 +543,8 @@ const AnoDndProvider = ({
   getStart,
   getVirtualItemForOffset,
   displacements,
+  getPinned,
+  table,
 }: {
   children: React.ReactNode;
   cols: { size: number; id: string }[];
@@ -524,7 +559,16 @@ const AnoDndProvider = ({
   getRenderedRange: () => string[];
   getSize: (id: string) => number;
   getStart: (id: string) => number;
+  getPinned: (id: string) =>
+    | {
+        pinned: false;
+      }
+    | {
+        pinned: "left" | "right";
+        pinnedIndex: number;
+      };
   getVirtualItemForOffset: (offset: number) => VirtualItem | undefined;
+  table: Table<User>;
   displacements: {
     calculateDisplacements: (
       delta: number,
@@ -537,15 +581,21 @@ const AnoDndProvider = ({
     findDeltaAtPosition: (
       estimatedDelta: number,
       position: number,
-      draggedId: string,
-    ) => number;
+      dragged: AnoDndActive,
+    ) => ReturnType<typeof findDeltaAtPosition>;
+    pinnedLeft: Item[];
+    pinnedRight: Item[];
   };
 }) => {
   const [isDragging, setIsDragging] = useState<AnoDndActive | null>(null);
   const [delta, setDelta] = useState<Delta>(initialDelta);
   const [closestCol, setClosestCol] = useState<{
     id: string;
+    /**
+     * non pinned index
+     */
     index: number;
+    pinned: false | "left" | "right";
   } | null>(null);
 
   const _refs = {
@@ -567,45 +617,60 @@ const AnoDndProvider = ({
    */
   const getClosestCol = (
     delta: Delta,
-    dragged: { id: string; index: number },
-  ) => {
+    dragged: AnoDndActive,
+  ):
+    | {
+        id: string;
+        index: number;
+        pinned: "left" | "right";
+        pinnedIndex: number;
+      }
+    | {
+        id: string;
+        index: number;
+        pinned: false;
+      } => {
     const cols = refs.current.cols;
 
-    let d = totalDelta(delta, dimension);
+    const d = totalDelta(delta, dimension);
 
-    if (d < 0) {
-    } else {
-      // d +=
-      //   getSize(dragged.id) / 2 -
-      //   (refs.current.isDragging?.handleOffset[dimension] ?? 0);
+    let pos = getStart(dragged.id) + d + getSize(dragged.id) / 2;
+
+    if (getPinned(dragged.id).pinned) {
+      // pretend we have already moved the item from its non-pinned position to the pinned position
+      const absoluteToTable =
+        getStart(dragged.id) -
+        (scrollRef.current?.scrollLeft ?? 0) -
+        table.getColumn(dragged.id)!.getStart("left");
+
+      // we say that the position is as if it is pinned
+      const pinnedPos =
+        table.getColumn(dragged.id)!.getStart("left") +
+        (scrollRef.current?.scrollLeft ?? 0);
+
+      pos = pinnedPos + d + getSize(dragged.id) / 2;
+      // console.log("@pinnedpos", {
+      //   pos,
+      // });
+      // console.log("@absoluteToTable", absoluteToTable);
+      // d -= absoluteToTable;
+      // let pos = getStart(dragged.id) + d + getSize(dragged.id) / 2;
+      // let pos = getStart(dragged.id) + d + getSize(dragged.id) / 2;
+      // pos += getStart(dragged.id) - table.getColumn(dragged.id)!.getStart("left")
+      // table.getColumn(dragged.id)!.getStart("left") +
+      // (scrollRef.current?.scrollLeft ?? 0) +
+      // d +
+      // getSize(dragged.id) / 2 -
+      // absoluteToTable;
     }
 
-    const pos =
-      getStart(dragged.id) +
-      // (refs.current.isDragging?.handleOffset[dimension] ?? 0) +
-      d +
-      getSize(dragged.id) / 2;
+    const virtualItem = getVirtualItemForOffset(pos);
 
-    // const virtualItem = getVirtualItemForOffset(pos + getSize(dragged.id) / 2);
-    let virtualItem = getVirtualItemForOffset(pos);
-    if (virtualItem && d >= 0) {
-      // virtualItem = getVirtualItemForOffset(pos - virtualItem.size / 2);
-    }
-    if (virtualItem && d < 0) {
-      // virtualItem = getVirtualItemForOffset(pos + virtualItem.size / 2);
-    }
-
-    // if (!virtualItem) {
-    //   return null;
-    // }
-    // return { id: cols[virtualItem.index].id, index: virtualItem.index };
-
-    // 1) Estimate the initial index using averageSize
     let poorEstimatedClosestIndex = Math.floor(
       (getStart(dragged.id) + d + (d >= 0 ? getSize(dragged.id) : 0)) /
         refs.current.getAverageSize(),
     );
-    // Clamp i to valid range
+
     poorEstimatedClosestIndex = Math.max(
       0,
       Math.min(poorEstimatedClosestIndex, cols.length - 1),
@@ -616,46 +681,97 @@ const AnoDndProvider = ({
 
     const estimatedDelta = estimatedClosestIndex - dragged.index;
 
+    /**
+     * @TODO also add the ancestor scroll delta: https://github.com/clauderic/dnd-kit/blob/master/packages/core/src/utilities/scroll/getScrollableAncestors.ts#L11
+     */
+    const itemTablePos =
+      dragged.itemPos[dimension] +
+      delta.mouseDelta[dimension] -
+      dragged.tablePos[dimension] +
+      getSize(dragged.id) / 2;
+
     const locatedDelta = refs.current.displacements.findDeltaAtPosition(
       estimatedDelta,
       pos,
-      dragged.id,
+      dragged,
     );
 
-    const closestIndex = Math.max(
-      Math.min(dragged.index + locatedDelta, cols.length - 1),
-      0,
-    );
+    let distance = locatedDelta.distance;
+    const draggedIndex = dragged.index;
 
-    return {
-      id: cols[closestIndex].id,
-      index: closestIndex,
+    let pinned: ColumnPinningPosition = false;
+    let pinnedIndex = 0;
+
+    const loopPinned = (side: "left" | "right", items: Item[]) => {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const itemCenter = item.start + item.size / 2;
+        const distanceToPinned = Math.abs(itemTablePos - itemCenter);
+        if (distanceToPinned < distance) {
+          distance = distanceToPinned;
+          pinned = side;
+          pinnedIndex = i;
+        }
+      }
     };
 
-    let changed = true;
-    let result = findClosestColOrRow(
-      estimatedClosestIndex,
-      pos,
-      dragged.id,
-      cols,
-      getSize,
-      getStart,
+    loopPinned("left", displacements.pinnedLeft);
+    loopPinned("right", displacements.pinnedRight);
+
+    // moving to pinned position
+    if (pinned) {
+      const items =
+        pinned === "left"
+          ? refs.current.displacements.pinnedLeft
+          : refs.current.displacements.pinnedRight;
+
+      const result = {
+        id: items[pinnedIndex].id,
+        index: items[pinnedIndex].index,
+        pinnedIndex,
+        pinned,
+      };
+      return result;
+    }
+
+    // moving from pinned position
+    if (dragged.pinned) {
+      const closestIndex = Math.max(
+        Math.min(draggedIndex + locatedDelta.delta, cols.length - 1),
+        0,
+      );
+      const items =
+        dragged.pinned === "left"
+          ? refs.current.displacements.pinnedLeft
+          : refs.current.displacements.pinnedRight;
+
+      const id = cols[closestIndex].id;
+      const indexDiff = closestIndex - draggedIndex;
+      // console.log("@getclosestcol", {
+      //   closestIndex,
+      //   delta: locatedDelta.delta,
+      //   draggedIndex,
+      //   indexDiff,
+      //   id,
+      // });
+      return {
+        id,
+        index: closestIndex,
+        pinned: false as const,
+      };
+    }
+
+    // moving in center
+    const closestIndex = Math.max(
+      Math.min(draggedIndex + locatedDelta.delta, cols.length - 1),
+      0,
     );
-    // let i = 0;
-    // while (i < 1) {
-    //   const indexDiff = result.index - dragged.index;
-    //   const displacement = displacements(indexDiff, dragged.id);
-    //   result = findClosestColOrRow(
-    //     estimatedClosestIndex,
-    //     pos,
-    //     dragged.id,
-    //     cols,
-    //     getSize,
-    //     getStart,
-    //     displacement,
-    //   );
-    //   i++;
-    // }
+    const result = {
+      id: cols[closestIndex].id,
+      index: closestIndex,
+      pinned: false as const,
+    };
+
     return result;
   };
 
@@ -737,6 +853,7 @@ const AnoDndProvider = ({
   return (
     <AnoDndContext.Provider
       value={{
+        getPinned,
         setIsDragging,
         isDragging,
         delta,
@@ -783,6 +900,15 @@ function useGetStyle(
 
   let transform: AnoTransform = { x: 0, y: 0 };
   if (isDraggingThis) {
+    // dragging from left pinned to center
+    // if (
+    //   ctx.getPinned(ctx.isDragging.id) === "left" &&
+    //   ctx.getPinned(ctx.closestCol.id) === false
+    // ) {
+    //   pinned = false;
+    //   console.log("YES");
+    // }
+
     transform = {
       [dimension]: totalDelta(ctx.delta, dimension),
       [antiDimesion]: 0,
@@ -801,33 +927,18 @@ function useGetStyle(
   if (ctx.closestCol && ctx.isDragging && !isDraggingThis) {
     const indexDiff = ctx.closestCol.index - ctx.isDragging.index;
 
-    const getSingleTransform = (
-      indexDiff: number,
-      index: number,
-      size: number,
-    ) => {
-      if (thisIndex > index && thisIndex <= index + indexDiff) {
-        return -1 * size;
-      } else if (thisIndex < index && thisIndex >= index + indexDiff) {
-        return size;
-      }
-      return 0;
-    };
-
-    const d = totalDelta(ctx.delta, dimension);
-    const delta = ctx.getStart(ctx.isDragging.id) + d;
+    // console.log(
+    //   "@indexDiff",
+    //   ctx.closestCol.id,
+    //   ctx.closestCol.index,
+    //   ctx.isDragging.index,
+    // );
 
     const displacements = ctx.displacements(indexDiff, ctx.isDragging.id);
     hidden = !displacements.displacedDisplayedRange.has(id);
+
     transform = {
       [dimension]: displacements.displacements[id],
-      // ctx.selected && ctx.selected.state[ctx.isDragging.id]
-      //   ? // ? ctx.selected.displacements(delta)[id]
-      //   : getSingleTransform(
-      //       indexDiff,
-      //       ctx.isDragging.index,
-      //       ctx.getSize(ctx.isDragging.id),
-      //     ),
       [antiDimesion]: 0,
     };
   }
@@ -921,9 +1032,6 @@ const useAnoDrag = (
     thisIndex,
     false,
   );
-  if (isDraggingThis) {
-    // logDiff(id, thisIndex, transform);
-  }
 
   // const dragHandleStyle = useGetStyle(
   //   ctx,
@@ -933,6 +1041,7 @@ const useAnoDrag = (
   // );
 
   return {
+    pinned: ctx.closestCol?.pinned,
     transform,
     transition,
     isDragging: isDraggingThis,
@@ -953,6 +1062,7 @@ const useAnoDrag = (
           active: { id },
           over: null,
         });
+        const tableRect = scrollEl.getBoundingClientRect();
         ctx.setIsDragging({
           id,
           mouseStart: { x: ev.clientX, y: ev.clientY },
@@ -960,11 +1070,20 @@ const useAnoDrag = (
             x: ev.clientX - rect.left,
             y: ev.clientY - rect.top,
           },
+          itemPos: {
+            x: rect.left,
+            y: rect.top,
+          },
           scrollStart: {
             x: scrollEl.scrollLeft,
             y: scrollEl.scrollTop,
           },
           index: thisIndex,
+          tablePos: {
+            x: tableRect.left,
+            y: tableRect.top,
+          },
+          ...ctx.getPinned(id),
         });
       },
     },
@@ -977,8 +1096,10 @@ const useAnoDrag = (
 
 const DragAlongCell = React.memo(function DragAlongCell({
   cell,
+  start,
 }: {
   cell: Cell<User, unknown>;
+  start: number;
 }) {
   // const {
   //   isDragging,
@@ -997,7 +1118,10 @@ const DragAlongCell = React.memo(function DragAlongCell({
     setNodeRef,
     transform: _transform,
     transition,
+    pinned,
   } = useAnoDrag(AnoDndColContext, cell.column.id, cell.column.getIndex());
+
+  const isPinned = pinned ?? cell.column.getIsPinned();
 
   // const transform: Transform | null = _transform
   //   ? { ..._transform, y: 0 }
@@ -1005,7 +1129,7 @@ const DragAlongCell = React.memo(function DragAlongCell({
 
   const dragTransform = _transform ? ` + ${_transform.x}px` : "";
 
-  const transform = cell.column.getIsPinned()
+  const transform = isPinned
     ? "none"
     : // : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
       `translate3d(calc(0px${dragTransform}), 0, 0)`;
@@ -1034,15 +1158,16 @@ const DragAlongCell = React.memo(function DragAlongCell({
         className: "td",
         style: {
           ...style,
-          ...getCommonPinningStyles(cell.column),
+          // ...getCommonPinningStyles(cell.column),
           // width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
           width: cell.column.getSize(),
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
-          position: "absolute",
-          left: cell.column.getStart(),
-          zIndex: isDragging ? 5 : 0,
+          position: isPinned ? "sticky" : "absolute",
+          left: isPinned ? cell.column.getStart("left") : start,
+          zIndex: isDragging || isPinned ? 5 : 0,
+          backgroundColor: isPinned ? "black" : "transparent",
         },
       }}
     >
@@ -1117,9 +1242,20 @@ function App() {
     setIsDragging(false);
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
+      const overCol = table.getColumn(over.id);
+      if (!overCol) {
+        throw new Error("No column found");
+      }
+      const activeCol = table.getColumn(active.id);
+      if (!activeCol) {
+        throw new Error("No column found");
+      }
+      const pinned = overCol.getIsPinned();
+      activeCol.pin(pinned);
       setColumnOrder((columnOrder) => {
         const oldIndex = columnOrder.indexOf(active.id);
         const newIndex = columnOrder.indexOf(over.id);
+        console.log("@pinned", oldIndex, newIndex, pinned, active.id, over.id);
         return arrayMove(columnOrder, oldIndex, newIndex); //this is just a splice util
       });
     }
@@ -1293,7 +1429,10 @@ function App() {
           //   draggedIndex,
           //   [...next].sort((a, b) => a - b),
           // );
-          return [...next].sort((a, b) => a - b);
+          const sortedRange = [...next].sort((a, b) => {
+            return a - b;
+          });
+          return sortedRange;
         },
       };
     },
@@ -1560,6 +1699,20 @@ function App() {
 
   return (
     <AnoDndProvider
+      table={table}
+      getPinned={(id) => {
+        const col = table.getColumn(id);
+        if (!col) {
+          throw new Error("No column");
+        }
+        const pinned = col.getIsPinned();
+        if (pinned) {
+          return { pinned, pinnedIndex: col.getPinnedIndex() };
+        }
+        return {
+          pinned: false,
+        };
+      }}
       /* eslint-disable react-hooks/exhaustive-deps */
       getVirtualItemForOffset={(offset) => {
         return headerColVirtualizers[
@@ -1639,12 +1792,19 @@ function App() {
       }}
       AnoDndContext={AnoDndColContext}
       displacements={React.useMemo(() => {
+        const state = table.getState();
         const r = bodyCols.map((vc) => ({
           id: headerGroups[headerGroups.length - 1].headers[vc.index].id,
           index: vc.index,
           size: vc.size,
           start: vc.start,
+          end: vc.end,
+          extra:
+            headerGroups[headerGroups.length - 1].headers[vc.index].column.getAfter(
+              "right",
+            ),
         }));
+        console.log("@r", r);
 
         const getRange = (
           indexRange: [number, number],
@@ -1669,8 +1829,30 @@ function App() {
             rows[currentWindow[currentWindow.length - 1]].index,
           ]);
         }
+        const mapPinnedItem = (id: string): Item => {
+          const item = table.getColumn(id);
+          if (!item) {
+            throw new Error("No item");
+          }
+          const pinned = item.getIsPinned();
+
+          return {
+            id,
+            index: item.getIndex(), // real index
+            size: item.getSize(),
+            start: item.getStart(pinned),
+          };
+        };
+
+        const pinnedLeft = (state.columnPinning.left ?? []).map(mapPinnedItem);
+        const pinnedRight = (state.columnPinning.right ?? []).map(
+          mapPinnedItem,
+        );
+        // console.log("@pinnedLeft", pinnedLeft, r);
 
         return {
+          pinnedLeft,
+          pinnedRight,
           calculateDisplacements: (delta: number, draggedId: string) => {
             const sel = r.filter((r) => r.id === draggedId);
 
@@ -1698,24 +1880,49 @@ function App() {
           findDeltaAtPosition(
             estimatedDelta: number,
             position: number,
-            draggedId: string,
+            dragged: AnoDndActive,
           ) {
-            const sel = r.filter((r) => r.id === draggedId);
-            return findDeltaAtPosition({
+            console.log("@dragged", dragged);
+            const sel = r.find((r) => r.id === dragged.id);
+            const delta = findDeltaAtPosition({
               lastIndex: rows.length - 1,
-              draggedId,
+              draggedId: dragged.id,
               inRangeItems: r.filter(
                 (r) => r.index >= range.index[0] && r.index <= range.index[1],
               ),
-              selectedItems: sel,
+              selectedItems: [
+                {
+                  id: dragged.id,
+                  index: dragged.index,
+                  size: sel?.size ?? 0,
+                  start: sel?.start ?? 0,
+                },
+              ],
               cursorPosition: position,
               estimatedDelta,
             });
+            // console.log("@delta", delta, position);
+            return delta;
           },
         };
       }, [bodyCols, headerGroups])}
     >
       <AnoDndProvider
+        table={table}
+        getPinned={(id) => {
+          const row = table.getRow(id);
+          if (!row) {
+            throw new Error("No row");
+          }
+          const pin = row.getIsPinned();
+          if (pin === "bottom") {
+            return { pinned: "right", pinnedIndex: row.getPinnedIndex() };
+          }
+          if (pin === "top") {
+            return { pinned: "left", pinnedIndex: row.getPinnedIndex() };
+          }
+          return { pinned: false };
+        }}
         dimension="y"
         getVirtualItemForOffset={(offset) => {
           return rowVirtualizer.getVirtualItemForOffset(offset);
@@ -1787,15 +1994,17 @@ function App() {
             findDeltaAtPosition(
               estimatedDelta: number,
               position: number,
-              draggedId: string,
+              dragged: AnoDndActive,
             ) {
+              const draggedId = dragged.id;
+              const draggedIndex = dragged.index;
               const sel =
                 table.getIsSomeRowsSelected() && selected[draggedId]
                   ? r.filter((r) => selected[r.id])
                   : r.filter((r) => r.id === draggedId);
               return findDeltaAtPosition({
-                lastIndex: rows.length - 1,
                 draggedId,
+                lastIndex: rows.length - 1,
                 inRangeItems: r.filter(
                   (r) => r.index >= range.index[0] && r.index <= range.index[1],
                 ),
@@ -1804,6 +2013,8 @@ function App() {
                 estimatedDelta,
               });
             },
+            pinnedLeft: [],
+            pinnedRight: [],
           };
         }, [rows, table, virtualRows, table.getSelectedRowModel()])}
         selected={React.useMemo(() => {
@@ -1915,13 +2126,17 @@ function App() {
                     isDragging ? null : (
                       <>
                         {virtualColumns
-                          .map((vc) => headerGroup.headers[vc.index])
-                          .map((header) => {
+                          .map((vc) => ({
+                            header: headerGroup.headers[vc.index],
+                            start: vc.start,
+                          }))
+                          .map(({ header, start }) => {
                             return (
                               <DisplayHeader
                                 key={header.id}
                                 header={header}
                                 headerIndex={headerIndex}
+                                start={start}
                               />
                             );
                           })}
@@ -1930,13 +2145,17 @@ function App() {
                   ) : (
                     <>
                       {virtualColumns
-                        .map((vc) => headerGroup.headers[vc.index])
-                        .map((header) => {
+                        .map((vc) => ({
+                          header: headerGroup.headers[vc.index],
+                          start: vc.start,
+                        }))
+                        .map(({ header, start }) => {
                           return (
                             <DraggableTableHeader
                               key={header.id}
                               header={header}
                               table={table}
+                              start={start}
                             />
                           );
                         })}
@@ -2028,20 +2247,23 @@ const TableBody = ({
 function DisplayHeader({
   header,
   headerIndex,
+  start,
 }: {
   header: Header<User, unknown>;
   headerIndex: number;
+  start: number;
 }) {
+  const isPinned = header.column.getIsPinned();
   return (
     <div
       key={header.id}
       {...{
         className: "th",
         style: {
-          ...getCommonPinningStyles(header.column),
-          transform: header.column.getIsPinned()
-            ? "none"
-            : `translate3d(calc(var(--virtual-padding-left-${headerIndex}, 0) * 1px), 0, 0)`,
+          // ...getCommonPinningStyles(header.column),
+          // transform: header.column.getIsPinned()
+          //   ? "none"
+          //   : `translate3d(calc(var(--virtual-padding-left-${headerIndex}, 0) * 1px), 0, 0)`,
           transition: "width transform 0.2s ease-in-out",
           whiteSpace: "nowrap",
           display: "flex",
@@ -2051,6 +2273,10 @@ function DisplayHeader({
           height: "32px",
           // width: `calc(var(--header-${header?.id}-size) * 1px)`,
           width: header.getSize(),
+          left: isPinned ? header.getStart("left") : start,
+          position: isPinned ? "sticky" : "absolute",
+          backgroundColor: isPinned ? "black" : "transparent",
+          zIndex: isPinned ? 2 : 1,
         },
       }}
     >
@@ -2138,9 +2364,12 @@ const TableRow = React.memo(function TableRow({
           }}
         >
           {virtualColumns
-            .map((virtualColumn) => visibileCells[virtualColumn.index])
-            .map((cell) => {
-              return <DragAlongCell key={cell.id} cell={cell} />;
+            .map((virtualColumn) => ({
+              cell: visibileCells[virtualColumn.index],
+              start: virtualColumn.start,
+            }))
+            .map(({ cell, start }) => {
+              return <DragAlongCell key={cell.id} cell={cell} start={start} />;
             })}
         </div>
         <div>
