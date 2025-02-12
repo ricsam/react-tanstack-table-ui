@@ -380,67 +380,73 @@ function displace({
     if (pinned[item.id] !== false) {
       // from right to left it is technically the next item
       const nextItem = reversePinnedLinkedList[item.id];
+      let gap = itemIndices[item.id];
       if (nextItem) {
-        const gap = itemIndices[item.id] - itemIndices[nextItem];
-        // gap to the next item is too big, let's move it
-        if (gap > 1) {
-          // remove item
-          // a,x,x,b,c,d,x,x / gap between b and a is 3
-          // a,x,x,b,c,d,x,x / remove b and move c,d, one step to the left
-          // a,x,x,x,x
+        gap = itemIndices[item.id] - itemIndices[nextItem];
+      }
 
-          // size of b,c,d
-          let size = 0;
-          let numItems = 0;
-          let lastIndex = 0;
-          iterateOverLinkedList(pinnedLinkedList, item.id, (item) => {
-            size += item.size;
-            numItems += 1;
-            lastIndex = itemIndices[item.id];
-            // FINAL STEP
-            displacements[item.id] -=
-              item.start +
-              displacements[item.id] -
-              (itemLookup[nextItem].start +
-                displacements[nextItem] +
-                itemLookup[nextItem].size);
-            itemIndices[item.id] -= gap - 1;
-          });
-          // move x,x after the d
-          sortedItems.forEach((item) => {
-            if (itemIndices[item.id] > lastIndex) {
-              displacements[item.id] -= size;
-              itemIndices[item.id] -= numItems;
-            }
-          });
-          // now we have the following:
-          // a,x,x,x,x
-          //  ,b,c,d // with final step
-          //      ,b,c,d
-          // lets move everything after a to the right
-          sortedItems.forEach((item) => {
-            if (pinnedLinkedList[item.id] !== undefined) {
-              return;
-            }
-            if (itemIndices[item.id] > itemIndices[nextItem]) {
-              displacements[item.id] += size;
-              itemIndices[item.id] += numItems;
-            }
-          });
-          // now we have the following:
-          // a, , , ,x,x,x,x
-          //  ,b,c,d // with final step
-          //      ,b,c,d
-          // lets move b,c,d down
-          // a, , , ,x,x,x,x / we now have the following, with space for b,c,d
-          // let's "inject" b,c,d after a
+      // gap to the next item is too big, let's move it
+      if (gap > 1) {
+        // remove item
+        // a,x,x,b,c,d,x,x / gap between b and a is 3
+        // a,x,x,b,c,d,x,x / remove b and move c,d, one step to the left
+        // a,x,x,x,x
+
+        // size of b,c,d
+        let size = 0;
+        let numItems = 0;
+        let lastIndex = 0;
+
+        const posBeforeGap = !nextItem
+          ? 0
+          : itemLookup[nextItem].start +
+            itemLookup[nextItem].size +
+            displacements[nextItem];
+
+
+        iterateOverLinkedList(pinnedLinkedList, item.id, (item) => {
+          size += item.size;
+          numItems += 1;
+          lastIndex = itemIndices[item.id];
           // FINAL STEP
-        }
+          displacements[item.id] -=
+            item.start + displacements[item.id] - posBeforeGap;
+          itemIndices[item.id] -= gap - 1;
+        });
+        // move x,x after the d
+        sortedItems.forEach((item) => {
+          if (itemIndices[item.id] > lastIndex) {
+            displacements[item.id] -= size;
+            itemIndices[item.id] -= numItems;
+          }
+        });
+        // now we have the following:
+        // a,x,x,x,x
+        //  ,b,c,d // with final step
+        //      ,b,c,d
+        // lets move everything after a to the right
+        sortedItems.forEach((item) => {
+          if (pinnedLinkedList[item.id] !== undefined) {
+            return;
+          }
+          if (!nextItem || (itemIndices[item.id] > itemIndices[nextItem])) {
+            displacements[item.id] += size;
+            itemIndices[item.id] += numItems;
+          }
+        });
+        // now we have the following:
+        // a, , , ,x,x,x,x
+        //  ,b,c,d // with final step
+        //      ,b,c,d
+        // lets move b,c,d down
+        // a, , , ,x,x,x,x / we now have the following, with space for b,c,d
+        // let's "inject" b,c,d after a
+        // FINAL STEP
       }
     }
   }
   //#endregion
-  return { newIndex };
+  return { newIndex, newPinned: targetPinned };
 }
 
 function getDisplacements({
@@ -466,7 +472,7 @@ function getDisplacements({
 }) {
   // should move non-pinned to non-pinned
   if (!dragged.pinned && !pinned[minDistance.id]) {
-    const { newIndex } = displace({
+    const { newIndex, newPinned } = displace({
       dragged,
       selected,
       items,
@@ -482,7 +488,7 @@ function getDisplacements({
       itemIndices,
       dragged: {
         targetIndex: newIndex,
-        pinned: false,
+        pinned: newPinned,
       },
       pinned,
     };
@@ -513,7 +519,7 @@ function getDisplacements({
     // }
     // displacements[drag.id] = itemLookup[minDistance.id].start - dragged.start;
     // itemIndices[drag.id] = newIndex;
-    const { newIndex } = displace({
+    const { newIndex, newPinned } = displace({
       dragged,
       selected,
       items,
@@ -529,7 +535,7 @@ function getDisplacements({
       itemIndices,
       dragged: {
         targetIndex: newIndex,
-        pinned: false,
+        pinned: newPinned,
       },
     };
   }
@@ -567,7 +573,7 @@ function getDisplacements({
       // displacements[drag.id] = itemLookup[minDistance.id].start - dragged.start;
       // itemIndices[drag.id] = newIndex;
 
-      const { newIndex } = displace({
+      const { newIndex, newPinned } = displace({
         dragged,
         selected,
         items,
@@ -584,7 +590,7 @@ function getDisplacements({
         itemIndices,
         dragged: {
           targetIndex: newIndex,
-          pinned: true,
+          pinned: newPinned,
         },
       };
     }
@@ -593,43 +599,68 @@ function getDisplacements({
   // should move non-pinned to pinned
   if (!dragged.pinned && pinned[minDistance.id] !== false) {
     // we are moving non-pinned to pinned
-    const newIndex = itemLookup[minDistance.id].index;
-    selected.forEach((id) => {
-      pinned[id] = pinned[minDistance.id];
+    // const newIndex = itemLookup[minDistance.id].index;
+    // selected.forEach((id) => {
+    //   pinned[id] = pinned[minDistance.id];
+    // });
+    // const prevIndex = dragged.index;
+    // if (newIndex < prevIndex) {
+    //   for (const item of items) {
+    //     if (item.pinned !== pinned[minDistance.id]) {
+    //       continue;
+    //     }
+    //     if (item.index >= newIndex && item.index < prevIndex) {
+    //       displacements[item.id] += dragged.size;
+    //       itemIndices[item.id] += 1;
+    //     }
+    //   }
+    // } else {
+    //   for (const item of items) {
+    //     if (item.pinned !== pinned[minDistance.id]) {
+    //       continue;
+    //     }
+    //     if (item.index <= newIndex) {
+    //       displacements[item.id] -= dragged.size;
+    //       itemIndices[item.id] -= 1;
+    //     }
+    //   }
+    // }
+    // displacements[drag.id] = itemLookup[minDistance.id].start - dragged.start;
+    // itemIndices[drag.id] = newIndex;
+
+    // return {
+    //   pinned,
+    //   displacements,
+    //   itemIndices,
+    //   dragged: {
+    //     targetIndex: newIndex,
+    //     pinned: pinned[minDistance.id],
+    //   },
+    // };
+
+
+    const { newIndex, newPinned } = displace({
+      dragged,
+      selected,
+      items,
+      displacements,
+      itemIndices,
+      itemLookup,
+      minDistance,
+      pinned,
     });
-    const prevIndex = dragged.index;
-    if (newIndex < prevIndex) {
-      for (const item of items) {
-        if (item.pinned !== pinned[minDistance.id]) {
-          continue;
-        }
-        if (item.index >= newIndex && item.index < prevIndex) {
-          displacements[item.id] += dragged.size;
-          itemIndices[item.id] += 1;
-        }
-      }
-    } else {
-      for (const item of items) {
-        if (item.pinned !== pinned[minDistance.id]) {
-          continue;
-        }
-        if (item.index <= newIndex) {
-          displacements[item.id] -= dragged.size;
-          itemIndices[item.id] -= 1;
-        }
-      }
-    }
-    displacements[drag.id] = itemLookup[minDistance.id].start - dragged.start;
-    itemIndices[drag.id] = newIndex;
+
     return {
       pinned,
       displacements,
       itemIndices,
       dragged: {
         targetIndex: newIndex,
-        pinned: pinned[minDistance.id],
+        pinned: newPinned,
       },
     };
+
+   
   }
 
   throw new Error("Not implemented");
