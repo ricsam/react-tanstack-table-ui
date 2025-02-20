@@ -14,41 +14,80 @@ interface Item {
 type MinDistance = {
   id: string;
   distance: number;
+  pinned: PinPos;
 };
 
-function testDisplacements({
+function getMinDistance({
   displacements,
   items,
   draggedPos,
   positions,
   sizes,
+  pinned,
+  dragged,
 }: {
   draggedPos: number;
   items: Item[];
   displacements: Record<string, number>;
   positions: Record<string, number>;
   sizes: Record<string, number>;
+  pinned: Record<string, PinPos>;
+  dragged: Item;
 }): MinDistance {
   let itemId: undefined | string;
   let distance = Infinity;
-  items.forEach((item) => {
-    const d = Math.abs(
+  const itemIndexMap: Record<string, number> = {};
+  const indexItemMap: Record<string, string> = {};
+  items.forEach((item, itemIndex) => {
+    const d =
       draggedPos -
-        (positions[item.id] + sizes[item.id] / 2 + displacements[item.id]),
-    );
-    if (d < distance) {
+      (positions[item.id] + sizes[item.id] / 2 + displacements[item.id]);
+
+    const absD = Math.abs(d);
+    if (absD < Math.abs(distance)) {
       distance = d;
       itemId = item.id;
     }
+    itemIndexMap[item.id] = itemIndex;
+    indexItemMap[itemIndex] = item.id;
   });
 
   if (!itemId) {
     throw new Error("No item found");
   }
 
+  const toPin = pinned[itemId];
+
+  // // if we are moving a new item into the pinned space
+  // if (toPin !== false && dragged.pinned !== toPin) {
+  //   // when moving an item into a pinned space we are NOT doing the remove and inject algo, instead we are just injecting. Therefore we can inject before or after the minDistanceItem
+  //   if (toPin === "start") {
+  //     // we are pinning a col to the start
+  //     // if minItemId is the 0 index, default it will inject before 0 index, but if the distance is positive we can inject after the 0 index
+  //     if (distance > 0) {
+  //       const itemToTheRight = itemIndexMap[itemId] + 1;
+  //       const rightId = indexItemMap[itemToTheRight];
+  //       if (rightId) {
+  //         itemId = rightId;
+  //       }
+  //     }
+  //   } else if (toPin === "end") {
+  //     // we are pinning a col to the end
+  //     // if minItemId is on right side, it will by default inject to the right of the minItem. But if the distance is negative we can inject to the left of the minItem
+  //     if (distance < 0) {
+  //       const itemToTheLeft = itemIndexMap[itemId] - 1;
+  //       const leftId = indexItemMap[itemToTheLeft];
+  //       if (leftId) {
+  //         itemId = leftId;
+  //       }
+  //     }
+  //   }
+  // }
+
   return {
     id: itemId,
     distance,
+    pinned: toPin,
   };
 }
 
@@ -134,8 +173,9 @@ export const move = ({
     if (item.pinned === "start") {
       positions[item.id] = item.start + window.scroll;
     } else if (item.pinned === "end") {
-      const itemRight = window.totalSize - (item.start + item.size);
-      positions[item.id] = window.scroll + window.size - itemRight;
+      const itemLeftFromEnd = window.totalSize - item.start;
+      const windowRightPos = window.scroll + window.size;
+      positions[item.id] = windowRightPos - itemLeftFromEnd;
     } else {
       positions[item.id] = item.start;
     }
@@ -181,18 +221,22 @@ export const move = ({
     displacements,
     itemIndices,
     pinned,
+    positions,
   }: {
     dragged: Item;
     displacements: Record<string, number>;
     itemIndices: Record<string, number>;
     pinned: Record<string, PinPos | false>;
+    positions: Record<string, number>;
   }) => {
-    const minDistance = testDisplacements({
+    const minDistance = getMinDistance({
       draggedPos,
       items,
       positions,
       sizes,
       displacements,
+      dragged,
+      pinned,
     });
 
     if (minDistance.id === drag.id) {
@@ -209,6 +253,7 @@ export const move = ({
       selected,
       drag,
       items,
+      positions,
     });
   };
 
@@ -217,6 +262,7 @@ export const move = ({
     displacements: { ...displacements },
     pinned: { ...pinned },
     itemIndices: { ...itemIndices },
+    positions: { ...positions },
   });
   return result;
 };
@@ -230,6 +276,7 @@ function displace({
   minDistance,
   pinned,
   itemIndices,
+  positions,
 }: {
   dragged: Item;
   selected: string[];
@@ -239,8 +286,9 @@ function displace({
   itemLookup: Record<string, Item>;
   minDistance: MinDistance;
   pinned: Record<string, PinPos>;
+  positions: Record<string, number>;
 }) {
-  const getStartForIndex = (
+  const getPosForIndex = (
     index: number,
     injectedSize: number,
     selectedId: string,
@@ -254,15 +302,15 @@ function displace({
 
     id = newIndexMap[index];
     if (typeof id !== "undefined") {
-      return itemLookup[id].start + displacements[id];
+      return positions[id] + displacements[id];
     }
     id = newIndexMap[index - 1];
     if (typeof id !== "undefined") {
-      return itemLookup[id].start + itemLookup[id].size + displacements[id];
+      return positions[id] + itemLookup[id].size + displacements[id];
     }
     id = newIndexMap[index + 1];
     if (typeof id !== "undefined") {
-      return itemLookup[id].start + displacements[id] - injectedSize;
+      return positions[id] + displacements[id] - injectedSize;
     }
 
     return undefined;
@@ -297,19 +345,15 @@ function displace({
       }
     });
 
-    const newItemStart = getStartForIndex(
-      newItemIndex,
-      itemLookup[sel].size,
-      sel,
-    );
+    const newItemPos = getPosForIndex(newItemIndex, itemLookup[sel].size, sel);
 
     // inject the selected item
-    if (typeof newItemStart === "number") {
+    if (typeof newItemPos === "number") {
       // add the moved item to the newItemIndex object so adjacent moved items can reference it in getStartForIndex
       itemIndices[sel] = newItemIndex;
 
       // the item should be displaced by the delta between the new pos and the original pos
-      displacements[sel] = newItemStart - itemLookup[sel].start;
+      displacements[sel] = newItemPos - positions[sel];
     } else if (delta > 0) {
       // move item out from the range, exit bellow
       const endOfWindow =
@@ -325,6 +369,7 @@ function displace({
   }
 
   //#region fix pinned
+  // when multimoving items to pinned all should become pinned.
   selected.forEach((id) => {
     pinned[id] = targetPinned;
   });
@@ -399,10 +444,9 @@ function displace({
 
         const posBeforeGap = !nextItem
           ? 0
-          : itemLookup[nextItem].start +
+          : positions[nextItem] +
             itemLookup[nextItem].size +
             displacements[nextItem];
-
 
         iterateOverLinkedList(pinnedLinkedList, item.id, (item) => {
           size += item.size;
@@ -410,7 +454,7 @@ function displace({
           lastIndex = itemIndices[item.id];
           // FINAL STEP
           displacements[item.id] -=
-            item.start + displacements[item.id] - posBeforeGap;
+            positions[item.id] + displacements[item.id] - posBeforeGap;
           itemIndices[item.id] -= gap - 1;
         });
         // move x,x after the d
@@ -429,7 +473,7 @@ function displace({
           if (pinnedLinkedList[item.id] !== undefined) {
             return;
           }
-          if (!nextItem || (itemIndices[item.id] > itemIndices[nextItem])) {
+          if (!nextItem || itemIndices[item.id] > itemIndices[nextItem]) {
             displacements[item.id] += size;
             itemIndices[item.id] += numItems;
           }
@@ -446,6 +490,7 @@ function displace({
     }
   }
   //#endregion
+
   return { newIndex, newPinned: targetPinned };
 }
 
@@ -459,6 +504,7 @@ function getDisplacements({
   selected,
   items,
   drag,
+  positions,
 }: {
   minDistance: MinDistance;
   displacements: Record<string, number>;
@@ -469,6 +515,7 @@ function getDisplacements({
   selected: string[];
   items: Item[];
   drag: DragInfo;
+  positions: Record<string, number>;
 }) {
   // should move non-pinned to non-pinned
   if (!dragged.pinned && !pinned[minDistance.id]) {
@@ -481,6 +528,7 @@ function getDisplacements({
       itemLookup,
       minDistance,
       pinned,
+      positions,
     });
 
     return {
@@ -497,28 +545,6 @@ function getDisplacements({
   // should move pinned to non-pinned
   if (dragged.pinned !== false && !pinned[minDistance.id]) {
     // let's move all items
-    // const newIndex = itemLookup[minDistance.id].index;
-    // selected.forEach((id) => {
-    //   pinned[id] = false;
-    // });
-    // const prevIndex = dragged.index;
-    // if (newIndex < prevIndex) {
-    //   for (const item of items) {
-    //     if (item.index >= newIndex && item.index < prevIndex) {
-    //       displacements[item.id] += dragged.size;
-    //       itemIndices[item.id] += 1;
-    //     }
-    //   }
-    // } else {
-    //   for (const item of items) {
-    //     if (item.index <= newIndex) {
-    //       displacements[item.id] -= dragged.size;
-    //       itemIndices[item.id] -= 1;
-    //     }
-    //   }
-    // }
-    // displacements[drag.id] = itemLookup[minDistance.id].start - dragged.start;
-    // itemIndices[drag.id] = newIndex;
     const { newIndex, newPinned } = displace({
       dragged,
       selected,
@@ -528,6 +554,7 @@ function getDisplacements({
       itemLookup,
       minDistance,
       pinned,
+      positions,
     });
     return {
       pinned,
@@ -542,103 +569,8 @@ function getDisplacements({
 
   // should move pinned to pinned
   if (dragged.pinned !== false && pinned[minDistance.id] !== false) {
-    if (dragged.pinned === pinned[minDistance.id]) {
-      // we are just moving pinned within pinned
-      // selected.forEach((id) => {
-      //   pinned[id] = dragged.pinned;
-      // });
-      // const newIndex = itemLookup[minDistance.id].index;
-      // const prevIndex = dragged.index;
-      // if (newIndex < prevIndex) {
-      //   for (const item of items) {
-      //     if (item.pinned !== dragged.pinned) {
-      //       continue;
-      //     }
-      //     if (item.index >= newIndex && item.index < prevIndex) {
-      //       displacements[item.id] += dragged.size;
-      //       itemIndices[item.id] += 1;
-      //     }
-      //   }
-      // } else {
-      //   for (const item of items) {
-      //     if (item.pinned !== dragged.pinned) {
-      //       continue;
-      //     }
-      //     if (item.index <= newIndex) {
-      //       displacements[item.id] -= dragged.size;
-      //       itemIndices[item.id] -= 1;
-      //     }
-      //   }
-      // }
-      // displacements[drag.id] = itemLookup[minDistance.id].start - dragged.start;
-      // itemIndices[drag.id] = newIndex;
-
-      const { newIndex, newPinned } = displace({
-        dragged,
-        selected,
-        items,
-        displacements,
-        itemIndices,
-        itemLookup,
-        minDistance,
-        pinned,
-      });
-
-      return {
-        pinned,
-        displacements,
-        itemIndices,
-        dragged: {
-          targetIndex: newIndex,
-          pinned: newPinned,
-        },
-      };
-    }
-  }
-
-  // should move non-pinned to pinned
-  if (!dragged.pinned && pinned[minDistance.id] !== false) {
-    // we are moving non-pinned to pinned
-    // const newIndex = itemLookup[minDistance.id].index;
-    // selected.forEach((id) => {
-    //   pinned[id] = pinned[minDistance.id];
-    // });
-    // const prevIndex = dragged.index;
-    // if (newIndex < prevIndex) {
-    //   for (const item of items) {
-    //     if (item.pinned !== pinned[minDistance.id]) {
-    //       continue;
-    //     }
-    //     if (item.index >= newIndex && item.index < prevIndex) {
-    //       displacements[item.id] += dragged.size;
-    //       itemIndices[item.id] += 1;
-    //     }
-    //   }
-    // } else {
-    //   for (const item of items) {
-    //     if (item.pinned !== pinned[minDistance.id]) {
-    //       continue;
-    //     }
-    //     if (item.index <= newIndex) {
-    //       displacements[item.id] -= dragged.size;
-    //       itemIndices[item.id] -= 1;
-    //     }
-    //   }
-    // }
-    // displacements[drag.id] = itemLookup[minDistance.id].start - dragged.start;
-    // itemIndices[drag.id] = newIndex;
-
-    // return {
-    //   pinned,
-    //   displacements,
-    //   itemIndices,
-    //   dragged: {
-    //     targetIndex: newIndex,
-    //     pinned: pinned[minDistance.id],
-    //   },
-    // };
-
-
+    // if (dragged.pinned === pinned[minDistance.id]) {
+    // we are just moving pinned within pinned
     const { newIndex, newPinned } = displace({
       dragged,
       selected,
@@ -648,6 +580,7 @@ function getDisplacements({
       itemLookup,
       minDistance,
       pinned,
+      positions,
     });
 
     return {
@@ -659,8 +592,32 @@ function getDisplacements({
         pinned: newPinned,
       },
     };
+    // }
+  }
 
-   
+  // should move non-pinned to pinned
+  if (!dragged.pinned && pinned[minDistance.id] !== false) {
+    const { newIndex, newPinned } = displace({
+      dragged,
+      selected,
+      items,
+      displacements,
+      itemIndices,
+      itemLookup,
+      minDistance,
+      pinned,
+      positions,
+    });
+
+    return {
+      pinned,
+      displacements,
+      itemIndices,
+      dragged: {
+        targetIndex: newIndex,
+        pinned: newPinned,
+      },
+    };
   }
 
   throw new Error("Not implemented");

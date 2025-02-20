@@ -11,11 +11,13 @@ import { move } from "./move";
 // 3. should move multiple pinned to pinned
 // 4. should move multiple non-pinned to non-pinned
 
+// should move left-pinned to right-pinned
+// should unpin by moving to empty space
 // should move multiple non-pinned to pinned-right
 // should move multiple pinned to pinned-right
-// should move a mix of pinned and non-pinned to pinned-right
 
-// should move a mix of pinned and non-pinned to pinned
+// should move a mix of pinned and non-pinned to pinned-left
+// should move a mix of pinned and non-pinned to pinned-right
 // should move a mix of pinned and non-pinned to non-pinned
 
 // should be able to scroll the window and move
@@ -35,17 +37,15 @@ import { move } from "./move";
 // - move pinned-left to pinned-right
 // - only allow drag to items with the same groupId
 
-// if pinned items are dragged into empty table space, then unpin them
+// if pinned items are dragged into empty table space, then unpin them (to be calculated using the window prop)
+
 // if we are dragging some item with groupId "bla" then we can drop it onto items with groupId "bla".
-// if we are hoving over an item with childrenGroupId "bla"
-// then the items will be added as children and not dispace the parent - if the dragged items has groupId "bla"
 
-// If you drag on to the expand arrow, then add as a child, otherwise just displace the row.
-// It must be indicated on the mouse prop if we are dragging to the expand arrow or just the row.
-// An item could have an expander prop to be like: `expander: { enabled: true, groupId: "bla" }`
-// Drag could have a prop that says says expander: true / false depending on if there is a keyboard key pressed or something.
+// If you drag an item with groupId bla and places it below an expandable row that is expanded:
+// -> then add the dragged row a child.
+// An item could have an expander prop to be like: `expander: { state: 'expanded' | 'collapsed', groupId: "bla" }`
 
-describe("basic tests", () => {
+describe("scroll at initial position", () => {
   describe("move one", () => {
     it("1. should move one non-pinned to non-pinned", () => {
       const result = move({
@@ -647,9 +647,248 @@ describe("basic tests", () => {
           2: "start",
           3: false,
           4: false,
-          5: "start"
+          5: "start",
         },
       });
     });
+  });
+
+  describe("should work with pinned right", () => {
+    it("should move left-pinned to right-pinned", () => {
+      const result = move({
+        items: [
+          {
+            start: 0,
+            index: 0,
+            id: "1",
+            size: 1,
+            pinned: "start",
+          },
+          {
+            start: 1,
+            index: 1,
+            id: "2",
+            size: 1,
+            pinned: false,
+          },
+          {
+            start: 2,
+            index: 2,
+            id: "3",
+            size: 1,
+            pinned: "end",
+          },
+          {
+            start: 3,
+            index: 3,
+            id: "4",
+            size: 1,
+            pinned: "end",
+          },
+        ],
+        // 0,1,2,3,4,5,6,7,8,9
+        // 0               |
+        // ---------------->
+        window: {
+          scroll: 0,
+          size: 10,
+          totalSize: 4,
+          numItems: 4,
+        },
+        drag: {
+          id: "1",
+          deltaInnerScroll: 0,
+          deltaOuterScroll: 0,
+          deltaMouse: 8, // closest center is 8
+        },
+        selected: ["1"],
+      });
+      expect(result).toEqual({
+        displacements: {
+          1: 8,
+          2: -1,
+          3: -1,
+          4: 0,
+        },
+        itemIndices: {
+          1: 2,
+          2: 0,
+          3: 1,
+          4: 3,
+        },
+        dragged: {
+          targetIndex: 2,
+          pinned: "end",
+        },
+        pinned: {
+          1: "end",
+          2: false,
+          3: "end",
+          4: "end",
+        },
+      });
+    });
+    it("should unpin by moving to empty space", { todo: true }, () => {
+      const result = move({
+        items: [
+          {
+            start: 0,
+            index: 0,
+            id: "1",
+            size: 1,
+            pinned: "start",
+          },
+          {
+            start: 1,
+            index: 1,
+            id: "2",
+            size: 1,
+            pinned: false,
+          },
+          {
+            start: 2,
+            index: 2,
+            id: "3",
+            size: 1,
+            pinned: "end",
+          },
+          {
+            start: 3,
+            index: 3,
+            id: "4",
+            size: 1,
+            pinned: "end",
+          },
+        ],
+        // 0,1,2,3,4,5,6,7,8,9
+        // 0               |
+        // ---------------->
+        window: {
+          scroll: 0,
+          size: 10,
+          totalSize: 4,
+          numItems: 4,
+        },
+        drag: {
+          id: "1",
+          deltaInnerScroll: 0,
+          deltaOuterScroll: 0,
+          deltaMouse: 4, // closest center is middle
+        },
+        selected: ["1"],
+      });
+      expect(result).toEqual({
+        displacements: {
+          1: 8,
+          2: -1,
+          3: -1,
+          4: 0,
+        },
+        itemIndices: {
+          1: 2,
+          2: 0,
+          3: 1,
+          4: 3,
+        },
+        dragged: {
+          targetIndex: 2,
+          pinned: "end",
+        },
+        pinned: {
+          1: "end",
+          2: false,
+          3: "end",
+          4: "end",
+        },
+      });
+    });
+    it(
+      "should pin to the left of the pinned item when left is closer",
+      () => {
+        const result = move({
+          items: [
+            {
+              start: 0,
+              index: 0,
+              id: "1",
+              size: 1,
+              pinned: false,
+            },
+            {
+              start: 1,
+              index: 1,
+              id: "2",
+              size: 1,
+              pinned: false,
+            },
+            {
+              start: 2,
+              index: 2,
+              id: "3",
+              size: 1,
+              pinned: "end",
+            },
+            {
+              start: 3,
+              index: 3,
+              id: "4",
+              size: 1,
+              pinned: "end",
+            },
+          ],
+          // 0,1,2,3,4,5,6,7,8,9
+          // 0               |
+          // ---------------->
+          window: {
+            scroll: 0,
+            size: 10,
+            totalSize: 4,
+            numItems: 4,
+          },
+          drag: {
+            id: "1",
+            deltaInnerScroll: 0,
+            deltaOuterScroll: 0,
+            deltaMouse: 7, // closest center is 8
+          },
+          selected: ["1"],
+        });
+        expect(result).toEqual({
+          displacements: {
+            1: 7,
+            2: -1,
+            3: 0,
+            4: 0,
+          },
+          itemIndices: {
+            1: 1,
+            2: 0,
+            3: 2,
+            4: 3,
+          },
+          dragged: {
+            targetIndex: 1,
+            pinned: "end",
+          },
+          pinned: {
+            1: "end",
+            2: false,
+            3: "end",
+            4: "end",
+          },
+        });
+      },
+    );
+    it(
+      "should pin to the right of the pinned item when right is closer",
+      { todo: true },
+      () => {},
+    );
+    it(
+      "should move multiple non-pinned to pinned-right",
+      { todo: true },
+      () => {},
+    );
+    it("should move multiple pinned to pinned-right", { todo: true }, () => {});
   });
 });
