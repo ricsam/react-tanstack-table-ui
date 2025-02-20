@@ -25,6 +25,7 @@ function getMinDistance({
   sizes,
   pinned,
   dragged,
+  window,
 }: {
   draggedPos: number;
   items: Item[];
@@ -33,15 +34,24 @@ function getMinDistance({
   sizes: Record<string, number>;
   pinned: Record<string, PinPos>;
   dragged: Item;
+  window: VirtualizedWindow;
 }): MinDistance {
   let itemId: undefined | string;
   let distance = Infinity;
   const itemIndexMap: Record<string, number> = {};
   const indexItemMap: Record<string, string> = {};
   items.forEach((item, itemIndex) => {
-    const d =
-      draggedPos -
-      (positions[item.id] + sizes[item.id] / 2 + displacements[item.id]);
+    let pos = positions[item.id];
+
+    if (item.pinned === "start") {
+      pos = positions[item.id] + window.scroll;
+    } else if (item.pinned === "end") {
+      const itemLeftFromEnd = window.totalSize - positions[item.id];
+      const windowRightPos = window.scroll + window.size;
+      pos = windowRightPos - itemLeftFromEnd;
+    }
+
+    const d = draggedPos - (pos + sizes[item.id] / 2 + displacements[item.id]);
 
     const absD = Math.abs(d);
     if (absD < Math.abs(distance)) {
@@ -58,38 +68,32 @@ function getMinDistance({
 
   const toPin = pinned[itemId];
 
-  // // if we are moving a new item into the pinned space
-  // if (toPin !== false && dragged.pinned !== toPin) {
-  //   // when moving an item into a pinned space we are NOT doing the remove and inject algo, instead we are just injecting. Therefore we can inject before or after the minDistanceItem
-  //   if (toPin === "start") {
-  //     // we are pinning a col to the start
-  //     // if minItemId is the 0 index, default it will inject before 0 index, but if the distance is positive we can inject after the 0 index
-  //     if (distance > 0) {
-  //       const itemToTheRight = itemIndexMap[itemId] + 1;
-  //       const rightId = indexItemMap[itemToTheRight];
-  //       if (rightId) {
-  //         itemId = rightId;
-  //       }
-  //     }
-  //   } else if (toPin === "end") {
-  //     // we are pinning a col to the end
-  //     // if minItemId is on right side, it will by default inject to the right of the minItem. But if the distance is negative we can inject to the left of the minItem
-  //     if (distance < 0) {
-  //       const itemToTheLeft = itemIndexMap[itemId] - 1;
-  //       const leftId = indexItemMap[itemToTheLeft];
-  //       if (leftId) {
-  //         itemId = leftId;
-  //       }
-  //     }
-  //   }
-  // }
-
   return {
     id: itemId,
     distance,
     pinned: toPin,
   };
 }
+
+type VirtualizedWindow = {
+  /**
+   * How far have we scrolled inside the table
+   */
+  scroll: number;
+  /**
+   * what is the width / height of the table
+   */
+  size: number;
+  /**
+   * content size what is the total size of the content inside the table. The accumulated size of all items.
+   */
+  totalSize: number;
+
+  /**
+   * total number of items
+   */
+  numItems: number;
+};
 
 type DragInfo = {
   id: string;
@@ -124,25 +128,7 @@ export const move = ({
    * The selected items
    */
   selected: string[];
-  window: {
-    /**
-     * How far have we scrolled inside the table
-     */
-    scroll: number;
-    /**
-     * what is the width / height of the table
-     */
-    size: number;
-    /**
-     * content size what is the total size of the content inside the table. The accumulated size of all items.
-     */
-    totalSize: number;
-
-    /**
-     * total number of items
-     */
-    numItems: number;
-  };
+  window: VirtualizedWindow;
   drag: DragInfo;
 }) => {
   const displacements: Record<string, number> = {};
@@ -170,15 +156,7 @@ export const move = ({
       throw new Error(`Duplicate item (${item.id}) in items`);
     }
 
-    if (item.pinned === "start") {
-      positions[item.id] = item.start + window.scroll;
-    } else if (item.pinned === "end") {
-      const itemLeftFromEnd = window.totalSize - item.start;
-      const windowRightPos = window.scroll + window.size;
-      positions[item.id] = windowRightPos - itemLeftFromEnd;
-    } else {
-      positions[item.id] = item.start;
-    }
+    positions[item.id] = item.start;
 
     displacements[item.id] = 0;
     sizes[item.id] = item.size;
@@ -237,6 +215,7 @@ export const move = ({
       displacements,
       dragged,
       pinned,
+      window,
     });
 
     if (minDistance.id === drag.id) {
@@ -316,24 +295,39 @@ function displace({
     return undefined;
   };
   const targetPinned = pinned[minDistance.id];
+  let newIndex = itemLookup[minDistance.id].index;
 
-  const newIndex = itemLookup[minDistance.id].index;
-  selected.forEach((id) => {
-    pinned[id] = targetPinned;
-  });
+  // if we are moving a new item into the pinned space
+  if (targetPinned !== false && dragged.pinned !== targetPinned) {
+    // when moving an item into a pinned space we are NOT doing the remove and inject algo, instead we are just injecting. Therefore we can inject before or after the minDistanceItem
+    if (targetPinned === "start") {
+      // we are pinning a col to the start
+      // if minItemId is the 0 index, default it will inject before 0 index, but if the distance is positive we can inject after the 0 index
+      if (minDistance.distance > 0) {
+        newIndex += 1;
+      }
+    } else if (targetPinned === "end") {
+      // we are pinning a col to the end
+      // if minItemId is on right side, it will by default inject to the right of the minItem. But if the distance is negative we can inject to the left of the minItem
+      if (minDistance.distance < 0) {
+        newIndex -= 1;
+      }
+    }
+  }
+
   const prevIndex = dragged.index;
 
   const delta = newIndex - prevIndex;
 
-  for (let i = selected.length - 1; i >= 0; i--) {
-    const sel = selected[i];
-    const originalIndex = itemLookup[sel].index;
+  const displaceItems = (itemId: string) => {
+    const originalIndex = itemLookup[itemId].index;
     const newItemIndex = originalIndex + delta;
+
     // "remove" the item, and decrement the index of all items to the right
     items.forEach((item) => {
       if (itemIndices[item.id] >= originalIndex) {
         itemIndices[item.id] -= 1;
-        displacements[item.id] -= itemLookup[sel].size;
+        displacements[item.id] -= itemLookup[itemId].size;
       }
     });
 
@@ -341,34 +335,48 @@ function displace({
     items.forEach((item) => {
       if (itemIndices[item.id] >= newItemIndex) {
         itemIndices[item.id] += 1;
-        displacements[item.id] += itemLookup[sel].size;
+        displacements[item.id] += itemLookup[itemId].size;
       }
     });
+  };
+  const injectItem = (itemId: string) => {
+    const originalIndex = itemLookup[itemId].index;
+    const newItemIndex = originalIndex + delta;
 
-    const newItemPos = getPosForIndex(newItemIndex, itemLookup[sel].size, sel);
+    const newItemPos = getPosForIndex(
+      newItemIndex,
+      itemLookup[itemId].size,
+      itemId,
+    );
 
     // inject the selected item
     if (typeof newItemPos === "number") {
       // add the moved item to the newItemIndex object so adjacent moved items can reference it in getStartForIndex
-      itemIndices[sel] = newItemIndex;
+      itemIndices[itemId] = newItemIndex;
 
       // the item should be displaced by the delta between the new pos and the original pos
-      displacements[sel] = newItemPos - positions[sel];
+      displacements[itemId] = newItemPos - positions[itemId];
     } else if (delta > 0) {
       // move item out from the range, exit bellow
       const endOfWindow =
         items[items.length - 1].start + items[items.length - 1].size;
-      displacements[sel] = endOfWindow - itemLookup[sel].start;
+      displacements[itemId] = endOfWindow - itemLookup[itemId].start;
     } else {
       // delta < 0
       // move item out from the range, exit above
       const startOfWindow = items[0].start;
-      displacements[sel] =
-        startOfWindow - itemLookup[sel].start - itemLookup[sel].size;
+      displacements[itemId] =
+        startOfWindow - itemLookup[itemId].start - itemLookup[itemId].size;
     }
+  };
+
+  for (let i = selected.length - 1; i >= 0; i--) {
+    const sel = selected[i];
+    displaceItems(sel);
+    injectItem(sel);
   }
 
-  //#region fix pinned
+  //#region fix pinned indices
   // when multimoving items to pinned all should become pinned.
   selected.forEach((id) => {
     pinned[id] = targetPinned;
@@ -485,10 +493,29 @@ function displace({
         // lets move b,c,d down
         // a, , , ,x,x,x,x / we now have the following, with space for b,c,d
         // let's "inject" b,c,d after a
+        // a,b,c,d,x,x,x,x
         // FINAL STEP
       }
     }
   }
+  //#endregion
+
+  //#region fix pinned positions
+  // for (let i = 0; i < pinnedStart.length; i++) {
+  //   const pinned = pinnedStart[i];
+
+  //   const desiredPos =
+  //     i === 0
+  //       ? 0
+  //       : positions[pinnedStart[i - 1].id] +
+  //         displacements[pinnedStart[i - 1].id] +
+  //         itemLookup[pinnedStart[i - 1].id].size;
+
+  //   const delta =
+  //     desiredPos - (positions[pinned.id] + displacements[pinned.id]);
+
+  //   displacements[pinned.id] += delta;
+  // }
   //#endregion
 
   return { newIndex, newPinned: targetPinned };

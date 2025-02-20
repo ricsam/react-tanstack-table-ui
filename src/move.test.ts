@@ -705,7 +705,7 @@ describe("scroll at initial position", () => {
       });
       expect(result).toEqual({
         displacements: {
-          1: 8,
+          1: 2,
           2: -1,
           3: -1,
           4: 0,
@@ -849,13 +849,13 @@ describe("scroll at initial position", () => {
             id: "1",
             deltaInnerScroll: 0,
             deltaOuterScroll: 0,
-            deltaMouse: 7, // closest center is 8
+            deltaMouse: 6, // closest center is 8
           },
           selected: ["1"],
         });
         expect(result).toEqual({
           displacements: {
-            1: 7,
+            1: 1,
             2: -1,
             3: 0,
             4: 0,
