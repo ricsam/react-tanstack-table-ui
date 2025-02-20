@@ -1,9 +1,9 @@
-type PinPos = false | "start" | "end";
+export type PinPos = false | "start" | "end";
 
 /**
  * Virtualized Item
  */
-interface Item {
+export interface Item {
   index: number;
   id: string;
   start: number; // pixel position
@@ -75,7 +75,7 @@ function getMinDistance({
   };
 }
 
-type VirtualizedWindow = {
+export type VirtualizedWindow = {
   /**
    * How far have we scrolled inside the table
    */
@@ -112,12 +112,7 @@ type DragInfo = {
   deltaMouse: number;
 };
 
-export const move = ({
-  items,
-  selected,
-  window,
-  drag,
-}: {
+export const move = (moveInput: {
   /**
    * The virtualized items that are displayed in the table.
    * The pinned items should come first and last.
@@ -131,6 +126,8 @@ export const move = ({
   window: VirtualizedWindow;
   drag: DragInfo;
 }) => {
+  // console.log(structuredClone(moveInput));
+  const { items, selected, window, drag } = moveInput;
   const displacements: Record<string, number> = {};
   const pinned: Record<string, PinPos | false> = {};
   const positions: Record<string, number> = {};
@@ -219,10 +216,10 @@ export const move = ({
     });
 
     if (minDistance.id === drag.id) {
-      return defaultMove;
+      return { result: defaultMove, minDistance };
     }
 
-    return getDisplacements({
+    const result = getDisplacements({
       minDistance,
       pinned,
       displacements,
@@ -233,17 +230,26 @@ export const move = ({
       drag,
       items,
       positions,
+      window,
     });
+    return { result, minDistance };
   };
 
-  const result = iterate({
+  const iterateInput = {
     dragged,
     displacements: { ...displacements },
     pinned: { ...pinned },
     itemIndices: { ...itemIndices },
     positions: { ...positions },
-  });
-  return result;
+  };
+
+  // console.log(structuredClone(iterateInput), items);
+
+  const iterateOutput = iterate(iterateInput);
+
+  // console.log(structuredClone(iterateOutput.result));
+
+  return iterateOutput.result;
 };
 
 function displace({
@@ -256,6 +262,7 @@ function displace({
   pinned,
   itemIndices,
   positions,
+  window,
 }: {
   dragged: Item;
   selected: string[];
@@ -266,6 +273,7 @@ function displace({
   minDistance: MinDistance;
   pinned: Record<string, PinPos>;
   positions: Record<string, number>;
+  window: VirtualizedWindow;
 }) {
   const getPosForIndex = (
     index: number,
@@ -436,6 +444,15 @@ function displace({
       let gap = itemIndices[item.id];
       if (nextItem) {
         gap = itemIndices[item.id] - itemIndices[nextItem];
+      } else if (pinnedLinkedList[item.id]) {
+        // we are at the end of the chain
+        continue;
+      } else {
+        // we are operating on a single pinned item, but with a gap to the left / right of the window
+        // TODO test this
+        if (pinned[item.id] === "end") {
+          gap = window.numItems - 1 - gap;
+        }
       }
 
       // gap to the next item is too big, let's move it
@@ -450,7 +467,7 @@ function displace({
         let numItems = 0;
         let lastIndex = 0;
 
-        const posBeforeGap = !nextItem
+        const posLeftOfGap = !nextItem
           ? 0
           : positions[nextItem] +
             itemLookup[nextItem].size +
@@ -462,7 +479,7 @@ function displace({
           lastIndex = itemIndices[item.id];
           // FINAL STEP
           displacements[item.id] -=
-            positions[item.id] + displacements[item.id] - posBeforeGap;
+            positions[item.id] + displacements[item.id] - posLeftOfGap;
           itemIndices[item.id] -= gap - 1;
         });
         // move x,x after the d
@@ -532,6 +549,7 @@ function getDisplacements({
   items,
   drag,
   positions,
+  window,
 }: {
   minDistance: MinDistance;
   displacements: Record<string, number>;
@@ -543,6 +561,7 @@ function getDisplacements({
   items: Item[];
   drag: DragInfo;
   positions: Record<string, number>;
+  window: VirtualizedWindow;
 }) {
   // should move non-pinned to non-pinned
   if (!dragged.pinned && !pinned[minDistance.id]) {
@@ -556,6 +575,7 @@ function getDisplacements({
       minDistance,
       pinned,
       positions,
+      window,
     });
 
     return {
@@ -582,6 +602,7 @@ function getDisplacements({
       minDistance,
       pinned,
       positions,
+      window,
     });
     return {
       pinned,
@@ -608,6 +629,7 @@ function getDisplacements({
       minDistance,
       pinned,
       positions,
+      window,
     });
 
     return {
@@ -634,6 +656,7 @@ function getDisplacements({
       minDistance,
       pinned,
       positions,
+      window,
     });
 
     return {

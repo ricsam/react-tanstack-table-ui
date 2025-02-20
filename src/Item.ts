@@ -206,13 +206,6 @@ export const findDeltaAtPosition = ({
     lastIndex,
   });
 
-  console.log("@deltaRange", {
-    inRangeItems,
-    estimatedDelta,
-    selectedItems,
-    deltaRange,
-  });
-
   if (
     estimatedDelta >= deltaRange.min + estimatedDelta &&
     estimatedDelta <= estimatedDelta + deltaRange.max

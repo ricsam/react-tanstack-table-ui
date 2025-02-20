@@ -802,83 +802,80 @@ describe("scroll at initial position", () => {
         },
       });
     });
-    it(
-      "should pin to the left of the pinned item when left is closer",
-      () => {
-        const result = move({
-          items: [
-            {
-              start: 0,
-              index: 0,
-              id: "1",
-              size: 1,
-              pinned: false,
-            },
-            {
-              start: 1,
-              index: 1,
-              id: "2",
-              size: 1,
-              pinned: false,
-            },
-            {
-              start: 2,
-              index: 2,
-              id: "3",
-              size: 1,
-              pinned: "end",
-            },
-            {
-              start: 3,
-              index: 3,
-              id: "4",
-              size: 1,
-              pinned: "end",
-            },
-          ],
-          // 0,1,2,3,4,5,6,7,8,9
-          // 0               |
-          // ---------------->
-          window: {
-            scroll: 0,
-            size: 10,
-            totalSize: 4,
-            numItems: 4,
-          },
-          drag: {
+    it("should pin to the left of the pinned item when left is closer", () => {
+      const result = move({
+        items: [
+          {
+            start: 0,
+            index: 0,
             id: "1",
-            deltaInnerScroll: 0,
-            deltaOuterScroll: 0,
-            deltaMouse: 6, // closest center is 8
+            size: 1,
+            pinned: false,
           },
-          selected: ["1"],
-        });
-        expect(result).toEqual({
-          displacements: {
-            1: 1,
-            2: -1,
-            3: 0,
-            4: 0,
+          {
+            start: 1,
+            index: 1,
+            id: "2",
+            size: 1,
+            pinned: false,
           },
-          itemIndices: {
-            1: 1,
-            2: 0,
-            3: 2,
-            4: 3,
-          },
-          dragged: {
-            targetIndex: 1,
+          {
+            start: 2,
+            index: 2,
+            id: "3",
+            size: 1,
             pinned: "end",
           },
-          pinned: {
-            1: "end",
-            2: false,
-            3: "end",
-            4: "end",
+          {
+            start: 3,
+            index: 3,
+            id: "4",
+            size: 1,
+            pinned: "end",
           },
-        });
-      },
-    );
+        ],
+        // 0,1,2,3,4,5,6,7,8,9
+        // 0               |
+        // ---------------->
+        window: {
+          scroll: 0,
+          size: 10,
+          totalSize: 4,
+          numItems: 4,
+        },
+        drag: {
+          id: "1",
+          deltaInnerScroll: 0,
+          deltaOuterScroll: 0,
+          deltaMouse: 6, // closest center is 8
+        },
+        selected: ["1"],
+      });
+      expect(result).toEqual({
+        displacements: {
+          1: 1,
+          2: -1,
+          3: 0,
+          4: 0,
+        },
+        itemIndices: {
+          1: 1,
+          2: 0,
+          3: 2,
+          4: 3,
+        },
+        dragged: {
+          targetIndex: 1,
+          pinned: "end",
+        },
+        pinned: {
+          1: "end",
+          2: false,
+          3: "end",
+          4: "end",
+        },
+      });
+    });
     it(
       "should pin to the right of the pinned item when right is closer",
       { todo: true },
@@ -890,5 +887,179 @@ describe("scroll at initial position", () => {
       () => {},
     );
     it("should move multiple pinned to pinned-right", { todo: true }, () => {});
+  });
+
+  describe("should work when the items have actual sizes", () => {
+    it("should move one", () => {
+      const result = move({
+        items: [
+          {
+            id: "id",
+            index: 0,
+            pinned: "start",
+            start: 0,
+            size: 150,
+          },
+          {
+            id: "location",
+            index: 1,
+            pinned: "start",
+            start: 150,
+            size: 200,
+          },
+          {
+            id: "expander",
+            index: 2,
+            pinned: false,
+            start: 350,
+            size: 150,
+          },
+          {
+            id: "select",
+            index: 3,
+            pinned: false,
+            start: 500,
+            size: 150,
+          },
+          {
+            id: "drag-handle",
+            index: 4,
+            pinned: false,
+            start: 650,
+            size: 60,
+          },
+          {
+            id: "country-code",
+            index: 5,
+            pinned: false,
+            start: 710,
+            size: 200,
+          },
+          {
+            id: "country",
+            index: 6,
+            pinned: false,
+            start: 910,
+            size: 150,
+          },
+          {
+            id: "continent",
+            index: 7,
+            pinned: false,
+            start: 1060,
+            size: 200,
+          },
+          {
+            id: "language",
+            index: 8,
+            pinned: false,
+            start: 1260,
+            size: 200,
+          },
+          {
+            id: "favorite-game",
+            index: 9,
+            pinned: false,
+            start: 1460,
+            size: 200,
+          },
+          {
+            id: "birth-month",
+            index: 10,
+            pinned: false,
+            start: 1660,
+            size: 200,
+          },
+          {
+            id: "is-active",
+            index: 11,
+            pinned: false,
+            start: 1860,
+            size: 200,
+          },
+          {
+            id: "winnings-2021",
+            index: 12,
+            pinned: false,
+            start: 2060,
+            size: 150,
+          },
+          {
+            id: "full-name",
+            index: 99,
+            pinned: "end",
+            start: 19310,
+            size: 200,
+          },
+        ],
+        selected: ["continent"],
+        drag: {
+          deltaInnerScroll: 0,
+          deltaMouse: -144,
+          deltaOuterScroll: 0,
+          id: "continent",
+        },
+        window: {
+          numItems: 100,
+          scroll: 0,
+          size: 1920,
+          totalSize: 19510,
+        },
+      });
+      expect(result).toEqual({
+        displacements: {
+          id: 0,
+          location: 0,
+          expander: 0,
+          select: 0,
+          "drag-handle": 0,
+          "country-code": 0,
+          country: 200,
+          continent: -150,
+          language: 0,
+          "favorite-game": 0,
+          "birth-month": 0,
+          "is-active": 0,
+          "winnings-2021": 0,
+          "full-name": 0,
+        },
+        dragged: {
+          targetIndex: 6,
+          pinned: false,
+        },
+        itemIndices: {
+          id: 0,
+          location: 1,
+          expander: 2,
+          select: 3,
+          "drag-handle": 4,
+          "country-code": 5,
+          country: 7, // moved
+          continent: 6, // moved
+          language: 8,
+          "favorite-game": 9,
+          "birth-month": 10,
+          "is-active": 11,
+          "winnings-2021": 12,
+          "full-name": 99,
+        },
+        pinned: {
+          id: "start",
+          location: "start",
+          expander: false,
+          select: false,
+          "drag-handle": false,
+          "country-code": false,
+          country: false,
+          continent: false,
+          language: false,
+          "favorite-game": false,
+          "birth-month": false,
+          "is-active": false,
+          "winnings-2021": false,
+          "full-name": "end",
+        },
+      });
+    });
   });
 });
