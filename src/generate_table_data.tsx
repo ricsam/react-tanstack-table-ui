@@ -1,5 +1,5 @@
 export type User = {
-  id: number;
+  id: string;
   fullName: string;
   location: string;
   country: string;
@@ -21,9 +21,20 @@ export type User = {
   rating: number;
   completedProjects: number;
   department: string;
+  otherCountries: User[];
 };
 
-export function generateTableData(rowCount: number): User[] {
+let t = 0;
+export function generateTableData(
+  rowCount: number,
+  levels?: number,
+  parentId?: string,
+): User[] {
+  if (t > 1e4) {
+    console.log("to many");
+    return [];
+  }
+  t++;
   const locations = [
     "Station",
     "Railway",
@@ -120,8 +131,17 @@ export function generateTableData(rowCount: number): User[] {
   const data = [];
   for (let i = 0; i < rowCount; i++) {
     const countryInfo = getRandomElement(countries);
+    const id = `${parentId ? `${parentId}.` : ""}${i + 1}`;
+    const otherCountries =
+      levels === 0
+        ? []
+        : generateTableData(
+            getRandomNumber(0, 5),
+            levels ? levels - 1 : getRandomNumber(1, 3),
+            id,
+          );
     data.push({
-      id: i + 1,
+      id,
       fullName: `${getRandomElement(firstNames)} ${getRandomElement(lastNames)}`,
       location: `${getRandomElement(locations)} in ${countryInfo.country}`,
       country: countryInfo.country,
@@ -149,6 +169,7 @@ export function generateTableData(rowCount: number): User[] {
         "HR",
         "Sales",
       ]),
+      otherCountries,
     });
   }
 
