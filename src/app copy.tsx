@@ -294,7 +294,9 @@ const DragAlongCell = ({ cell }: { cell: Cell<User, unknown> }) => {
   );
 };
 
-const data = generateTableData(10000);
+const data = generateTableData({
+  maxRows: 10000,
+});
 
 function App() {
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {

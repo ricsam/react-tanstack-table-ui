@@ -16,7 +16,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React, { CSSProperties, useState } from "react";
-import "./App.css";
+import "./app.css";
 import { generateTableData, User } from "./generate_table_data";
 
 import { arrayMove } from "@dnd-kit/sortable";
@@ -42,6 +42,12 @@ import {
 } from "./react-virtual";
 import { findClosestColOrRow } from "./find_closest_col_or_row";
 import { move, VirtualizedWindow, Item as MoveItem, PinPos } from "./move";
+import { VirtualizedTable } from "./table/table";
+import { useDrag } from "./table/use_drag";
+import { DndRowContext } from "./table/dnd_provider";
+import { iterateOverColumns } from "./table/iterate_over_columns";
+import { useBigTable } from "./tests_data/use_big_table";
+import { useSmallTable } from "./tests_data/use_small_table";
 
 let prevLog: any = null;
 const logDiff = (...values: any[]) => {
@@ -61,8 +67,8 @@ const RowDragHandleCell = ({
   rowIndex: number;
   table: Table<User>;
 }) => {
-  const { attributes, listeners, hidden } = useAnoDrag(
-    AnoDndRowContext,
+  const { attributes, listeners, hidden } = useDrag(
+    DndRowContext,
     rowId,
     rowIndex,
   );
@@ -79,221 +85,6 @@ const RowDragHandleCell = ({
 };
 
 const tableRowHeight = 32;
-
-const columnHelper = createColumnHelper<User>();
-
-const columns: ColumnDef<User, any>[] = [
-  {
-    id: "expander",
-    header: () => null,
-    cell: ({ row }) => {
-      return row.getCanExpand() ? (
-        <button
-          {...{
-            onClick: row.getToggleExpandedHandler(),
-            style: { cursor: "pointer" },
-          }}
-        >
-          {row.getIsExpanded() ? "⬇️" : "➡️"}
-        </button>
-      ) : (
-        "🔵"
-      );
-    },
-  },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <IndeterminateCheckbox
-        {...{
-          checked: table.getIsAllRowsSelected(),
-          indeterminate: table.getIsSomeRowsSelected(),
-          onChange: table.getToggleAllRowsSelectedHandler(),
-        }}
-      />
-    ),
-    cell: ({ row }) => (
-      <div className="px-1">
-        <IndeterminateCheckbox
-          {...{
-            checked: row.getIsSelected(),
-            disabled: !row.getCanSelect(),
-            indeterminate: row.getIsSomeSelected(),
-            onChange: row.getToggleSelectedHandler(),
-          }}
-        />
-      </div>
-    ),
-  },
-  {
-    id: "drag-handle",
-    header: "Move",
-    cell: ({ row, table }) => (
-      <RowDragHandleCell
-        rowId={row.id}
-        rowIndex={getFlatIndex(row)}
-        table={table}
-      />
-    ),
-    size: 60,
-  },
-  columnHelper.accessor("id", {
-    header: "ID",
-    cell: (info) => info.getValue(),
-    id: "id",
-  }),
-  columnHelper.accessor("fullName", {
-    header: "Full Name",
-    cell: (info) => info.getValue(),
-    id: "full-name",
-    size: 200,
-  }),
-  columnHelper.accessor("location", {
-    header: ({ table }) => (
-      <>
-        <button
-          {...{
-            onClick: table.getToggleAllRowsExpandedHandler(),
-          }}
-        >
-          {table.getIsAllRowsExpanded() ? "👇" : "👉"}
-        </button>{" "}
-        Location
-      </>
-    ),
-    cell: ({ row, getValue }) => (
-      <div
-        style={{
-          // Since rows are flattened by default,
-          // we can use the row.depth property
-          // and paddingLeft to visually indicate the depth
-          // of the row
-          paddingLeft: `${row.depth * 2}rem`,
-        }}
-      >
-        <div>
-          {row.getCanExpand() ? (
-            <button
-              {...{
-                onClick: row.getToggleExpandedHandler(),
-                style: { cursor: "pointer" },
-              }}
-            >
-              {row.getIsExpanded() ? "👇" : "👉"}
-            </button>
-          ) : (
-            "🔵"
-          )}{" "}
-          {getValue<boolean>()}
-        </div>
-      </div>
-    ),
-    id: "location",
-    size: 200,
-  }),
-  columnHelper.group({
-    id: "country-stuff",
-    footer: () => "Country stuff",
-    columns: [
-      columnHelper.accessor("country", {
-        header: "Country",
-        cell: (info) => info.getValue(),
-        id: "country",
-      }),
-      columnHelper.accessor("continent", {
-        header: "Continent",
-        cell: (info) => info.getValue(),
-        id: "continent",
-        size: 200,
-      }),
-      columnHelper.accessor("countryCode", {
-        header: "Country Code",
-        cell: (info) => info.getValue(),
-        id: "country-code",
-        size: 200,
-      }),
-      columnHelper.accessor("language", {
-        header: "Language",
-        cell: (info) => info.getValue(),
-        id: "language",
-        size: 200,
-      }),
-    ],
-  }),
-  columnHelper.accessor("favoriteGame", {
-    header: "Favorite Game",
-    cell: (info) => info.getValue(),
-    id: "favorite-game",
-    size: 200,
-  }),
-  columnHelper.accessor("birthMonth", {
-    header: "Birth Month",
-    cell: (info) => info.getValue(),
-    id: "birth-month",
-    size: 200,
-  }),
-  columnHelper.accessor("isActive", {
-    header: "Active",
-    cell: (info) => (info.getValue() ? "Yes" : "No"),
-    id: "is-active",
-    size: 200,
-  }),
-  columnHelper.group({
-    header: "Winnings",
-    id: "winnings",
-    columns: [
-      columnHelper.accessor((data) => data.yearlyWinnings[2021], {
-        id: "winnings-2021",
-        header: "2021",
-        cell: (info) => `$${info.getValue().toLocaleString()}`,
-      }),
-      columnHelper.accessor((data) => data.yearlyWinnings[2022], {
-        id: "winnings-2022",
-        header: "2022",
-        cell: (info) => `$${info.getValue().toLocaleString()}`,
-      }),
-      columnHelper.accessor((data) => data.yearlyWinnings[2023], {
-        id: "winnings-2023",
-        header: "2023",
-        cell: (info) => `$${info.getValue().toLocaleString()}`,
-      }),
-    ],
-  }),
-  columnHelper.accessor("experienceYears", {
-    header: "Experience (Years)",
-    cell: (info) => info.getValue(),
-    id: "experience-years",
-    size: 200,
-  }),
-  columnHelper.accessor("rating", {
-    header: "Rating",
-    cell: (info) => info.getValue().toFixed(1),
-    id: "rating",
-    size: 200,
-  }),
-  columnHelper.accessor("completedProjects", {
-    header: "Completed Projects",
-    cell: (info) => info.getValue(),
-    id: "completed-projects",
-    size: 200,
-  }),
-  columnHelper.accessor("department", {
-    header: "Department",
-    cell: (info) => info.getValue(),
-    id: "department",
-    size: 200,
-  }),
-];
-for (let i = 0; i < 80; i += 1) {
-  columns.push(
-    columnHelper.accessor("department", {
-      header: `Extra ${i}`,
-      cell: (info) => info.getValue(),
-      id: `extra-${i}`,
-      size: 200,
-    }),
-  );
-}
 
 const DraggableTableHeader = ({
   header,
@@ -375,9 +166,9 @@ const DraggableTableHeader = ({
         <div style={{ width: "4px" }}></div>
       </div>
       {/* {header.subHeaders.length === 0 && ( */}
-        <button {...attributes} {...listeners}>
-          🟰
-        </button>
+      <button {...attributes} {...listeners}>
+        🟰
+      </button>
       {/* )} */}
       {header.column.getCanPin() && (
         <div className="flex gap-1 justify-center">
@@ -1382,7 +1173,42 @@ const DragAlongCell = React.memo(function DragAlongCell({
 });
 
 function App() {
-  const [data, setData] = React.useState<User[]>(() => generateTableData(1e2));
+  // function App2() {
+
+  const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
+    useBigTable();
+  // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
+  //   useSmallTable();
+
+  return (
+    <div style={{ textAlign: "center" }}>
+      <VirtualizedTable
+        width={1920}
+        height={1600}
+        data={data}
+        updateData={setData}
+        columnOrder={columnOrder}
+        updateColumnOrder={setColumnOrder}
+        table={table}
+        getSubRows={getSubRows}
+        updateSubRows={(row, newSubRows) => {
+          return { ...row, otherCountries: newSubRows };
+        }}
+        getId={(row) => String(row.id)}
+        getGroup={(row) => "root"}
+        rootGroup="root"
+        rowHeight={tableRowHeight}
+      />
+    </div>
+  );
+}
+
+// function App() {
+function App1() {
+  const columns: ColumnDef<User, any>[] = [];
+  const [data, setData] = React.useState<User[]>(() =>
+    generateTableData({ maxRows: 1e2 }),
+  );
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => {
     const iterateOverColumns = (columns: ColumnDef<User, any>[]): string[] => {
       return columns.flatMap((column): string[] => {
@@ -1423,7 +1249,7 @@ function App() {
     },
     enableRowSelection: true,
   });
-
+  console.log(table.getSelectedRowModel().flatRows);
   const { rows } = table.getRowModel();
   const rowIds = React.useMemo(() => {
     return rows.map((row) => row.id);

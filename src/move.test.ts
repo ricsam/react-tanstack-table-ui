@@ -36,6 +36,7 @@ import { move } from "./move";
 // - virtualized re-ararngements items
 // - move pinned-left to pinned-right
 // - only allow drag to items with the same groupId
+// - move group of columns (not to be confused with the groupId which is handing drag boundries for subItems)
 
 // if pinned items are dragged into empty table space, then unpin them (to be calculated using the window prop)
 
@@ -87,6 +88,7 @@ describe("scroll at initial position", () => {
         },
         dragged: {
           targetIndex: 1,
+          indexDelta: 1,
           pinned: false,
         },
         itemIndices: {
@@ -163,6 +165,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 0,
           pinned: "start",
+          indexDelta: -1,
         },
         pinned: {
           1: "start",
@@ -216,6 +219,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 1,
           pinned: false,
+          indexDelta: 1,
         },
         pinned: {
           1: false,
@@ -268,6 +272,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 0,
           pinned: "start",
+          indexDelta: -1,
         },
         pinned: {
           1: "start",
@@ -346,6 +351,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 1,
           pinned: false,
+          indexDelta: 1,
         },
         pinned: {
           1: false,
@@ -427,6 +433,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 1,
           pinned: "start",
+          indexDelta: 1,
         },
         pinned: {
           1: "start",
@@ -531,6 +538,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 4,
           pinned: false,
+          indexDelta: 1,
         },
         pinned: {
           1: false,
@@ -641,6 +649,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 0,
           pinned: "start",
+          indexDelta: -1,
         },
         pinned: {
           1: "start",
@@ -719,6 +728,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 2,
           pinned: "end",
+          indexDelta: 2,
         },
         pinned: {
           1: "end",
@@ -867,6 +877,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 1,
           pinned: "end",
+          indexDelta: 1,
         },
         pinned: {
           1: "end",
@@ -1026,6 +1037,7 @@ describe("scroll at initial position", () => {
         dragged: {
           targetIndex: 6,
           pinned: false,
+          indexDelta: -1,
         },
         itemIndices: {
           id: 0,

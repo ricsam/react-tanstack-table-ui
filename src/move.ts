@@ -96,6 +96,10 @@ export type VirtualizedWindow = {
 };
 
 type DragInfo = {
+  /**
+   * TODO make optional.
+   * Calculate closest distance based on the id or the mid point of the selected items
+   */
   id: string;
   /**
    * How far have we scrolled inside the table while dragging
@@ -177,6 +181,7 @@ export const move = (moveInput: {
     dragged: {
       targetIndex: dragged.index,
       pinned: pinned[dragged.id],
+      indexDelta: 0,
     },
     pinned,
   };
@@ -324,7 +329,7 @@ function displace({
   }
 
   const prevIndex = dragged.index;
-
+  // todo, dragged.index may be undefined when moving a col group
   const delta = newIndex - prevIndex;
 
   const displaceItems = (itemId: string) => {
@@ -535,7 +540,11 @@ function displace({
   // }
   //#endregion
 
-  return { newIndex, newPinned: targetPinned };
+  return {
+    targetIndex: newIndex,
+    pinned: targetPinned,
+    indexDelta: newIndex - prevIndex,
+  };
 }
 
 function getDisplacements({
@@ -563,9 +572,10 @@ function getDisplacements({
   positions: Record<string, number>;
   window: VirtualizedWindow;
 }) {
-  // should move non-pinned to non-pinned
-  if (!dragged.pinned && !pinned[minDistance.id]) {
-    const { newIndex, newPinned } = displace({
+  return {
+    displacements,
+    itemIndices,
+    dragged: displace({
       dragged,
       selected,
       items,
@@ -576,99 +586,7 @@ function getDisplacements({
       pinned,
       positions,
       window,
-    });
-
-    return {
-      displacements,
-      itemIndices,
-      dragged: {
-        targetIndex: newIndex,
-        pinned: newPinned,
-      },
-      pinned,
-    };
-  }
-
-  // should move pinned to non-pinned
-  if (dragged.pinned !== false && !pinned[minDistance.id]) {
-    // let's move all items
-    const { newIndex, newPinned } = displace({
-      dragged,
-      selected,
-      items,
-      displacements,
-      itemIndices,
-      itemLookup,
-      minDistance,
-      pinned,
-      positions,
-      window,
-    });
-    return {
-      pinned,
-      displacements,
-      itemIndices,
-      dragged: {
-        targetIndex: newIndex,
-        pinned: newPinned,
-      },
-    };
-  }
-
-  // should move pinned to pinned
-  if (dragged.pinned !== false && pinned[minDistance.id] !== false) {
-    // if (dragged.pinned === pinned[minDistance.id]) {
-    // we are just moving pinned within pinned
-    const { newIndex, newPinned } = displace({
-      dragged,
-      selected,
-      items,
-      displacements,
-      itemIndices,
-      itemLookup,
-      minDistance,
-      pinned,
-      positions,
-      window,
-    });
-
-    return {
-      pinned,
-      displacements,
-      itemIndices,
-      dragged: {
-        targetIndex: newIndex,
-        pinned: newPinned,
-      },
-    };
-    // }
-  }
-
-  // should move non-pinned to pinned
-  if (!dragged.pinned && pinned[minDistance.id] !== false) {
-    const { newIndex, newPinned } = displace({
-      dragged,
-      selected,
-      items,
-      displacements,
-      itemIndices,
-      itemLookup,
-      minDistance,
-      pinned,
-      positions,
-      window,
-    });
-
-    return {
-      pinned,
-      displacements,
-      itemIndices,
-      dragged: {
-        targetIndex: newIndex,
-        pinned: newPinned,
-      },
-    };
-  }
-
-  throw new Error("Not implemented");
+    }),
+    pinned,
+  };
 }
