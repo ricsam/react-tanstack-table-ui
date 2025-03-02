@@ -10,7 +10,6 @@ import React from "react";
 import { generateTableData, User } from "../generate_table_data";
 import { IndeterminateCheckbox } from "../table/indeterminate_checkbox";
 import { RowDragHandleCell } from "../table/row_drag_handle_cell";
-import { getFlatIndex } from "../table/utils";
 import { iterateOverColumns } from "../table/iterate_over_columns";
 
 export const useBigTable = () => {
@@ -63,13 +62,16 @@ export const useBigTable = () => {
       {
         id: "drag-handle",
         header: "Move",
-        cell: ({ row, table }) => (
-          <RowDragHandleCell
-            rowId={row.id}
-            rowIndex={getFlatIndex(row)}
-            table={table}
-          />
-        ),
+        cell: ({ row, table }) => {
+          const { rows } = table.getRowModel();
+          const flatIndex = rows.indexOf(row);
+          return (
+            <RowDragHandleCell
+              rowId={row.id}
+              rowIndex={flatIndex}
+              table={table} />
+          );
+        },
         size: 60,
       },
       columnHelper.accessor("id", {

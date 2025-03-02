@@ -47,7 +47,10 @@ import { useDrag } from "./table/use_drag";
 import { DndRowContext } from "./table/dnd_provider";
 import { iterateOverColumns } from "./table/iterate_over_columns";
 import { useBigTable } from "./tests_data/use_big_table";
-import { useSmallTable } from "./tests_data/use_small_table";
+import {
+  useSmallTable,
+  useSmallTableExpandable,
+} from "./tests_data/use_small_table";
 
 let prevLog: any = null;
 const logDiff = (...values: any[]) => {
@@ -1175,10 +1178,12 @@ const DragAlongCell = React.memo(function DragAlongCell({
 function App() {
   // function App2() {
 
-  const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
-    useBigTable();
+  // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
+  //   useBigTable();
   // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
   //   useSmallTable();
+  const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
+    useSmallTableExpandable();
 
   return (
     <div style={{ textAlign: "center" }}>

@@ -3,7 +3,6 @@ import React, { CSSProperties } from "react";
 import { VirtualItem } from "../react-virtual";
 import { useDrag } from "./use_drag";
 import { DndRowContext } from "./dnd_provider";
-import { getFlatIndex } from "./utils";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { DragAlongCell } from "./drag_along_cell";
 
@@ -14,6 +13,7 @@ export const TableRow = React.memo(function TableRow({
   width,
   totalSize,
   rowHeight,
+  flatIndex,
 }: {
   row: Row<any>;
   virtualColumns: VirtualItem[];
@@ -21,13 +21,14 @@ export const TableRow = React.memo(function TableRow({
   width: number;
   totalSize: number;
   rowHeight: number;
+  flatIndex: number;
 }) {
   const visibileCells = row.getVisibleCells();
 
   const { transform, transition, setNodeRef, isDragging, hidden } = useDrag(
     DndRowContext,
     row.id,
-    getFlatIndex(row),
+    flatIndex,
   );
 
   // console.log("@transform?.y ?? 0", transform?.y ?? 0);
@@ -116,11 +117,11 @@ export const TableRow = React.memo(function TableRow({
         style={{
           ...style,
         }}
-        data-index={getFlatIndex(row)}
+        data-index={flatIndex}
         ref={(el) => {
           setNodeRef(el);
           if (isExpanded) {
-            console.log("measureElement", row.id, getFlatIndex(row));
+            console.log("measureElement", row.id, flatIndex);
             measureElement(el);
           }
         }}

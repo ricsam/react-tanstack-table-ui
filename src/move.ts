@@ -332,8 +332,9 @@ function displace({
   // todo, dragged.index may be undefined when moving a col group
   const delta = newIndex - prevIndex;
 
-  const displaceItems = (itemId: string) => {
+  const removeItem = (itemId: string) => {
     const originalIndex = itemLookup[itemId].index;
+    // we have to move delta steps but if we encounter any selected items them we skip them
     const newItemIndex = originalIndex + delta;
 
     // "remove" the item, and decrement the index of all items to the right
@@ -343,6 +344,11 @@ function displace({
         displacements[item.id] -= itemLookup[itemId].size;
       }
     });
+  };
+
+  const injectItem = (itemId: string) => {
+    const originalIndex = itemLookup[itemId].index;
+    const newItemIndex = originalIndex + delta;
 
     // "inject" the item, and increment the index of all items to the right of the injected position
     items.forEach((item) => {
@@ -351,10 +357,6 @@ function displace({
         displacements[item.id] += itemLookup[itemId].size;
       }
     });
-  };
-  const injectItem = (itemId: string) => {
-    const originalIndex = itemLookup[itemId].index;
-    const newItemIndex = originalIndex + delta;
 
     const newItemPos = getPosForIndex(
       newItemIndex,
@@ -385,7 +387,9 @@ function displace({
 
   for (let i = selected.length - 1; i >= 0; i--) {
     const sel = selected[i];
-    displaceItems(sel);
+    removeItem(sel);
+  }
+  for (const sel of selected) {
     injectItem(sel);
   }
 

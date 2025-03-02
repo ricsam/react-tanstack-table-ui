@@ -73,7 +73,7 @@ describe("grouped move", () => {
 
     const items = groupedArrayMove({
       originalData: data,
-      flatSelected: ["i"], // i
+      flatSelected: ["i"],
       delta: -3,
       getExpanded(row) {
         return true;
@@ -268,10 +268,13 @@ describe("grouped move", () => {
         children: [],
       },
     ];
+    const result = [...data];
+    const [item] = result.splice(0, 1);
+    result.splice(1, 0, item);
     expect(
       groupedArrayMove({
         originalData: data,
-        flatSelected: [],
+        flatSelected: ["1"],
         delta: 1,
         rootGroup: "root",
         getSubRows: (row) => row.children,
@@ -282,6 +285,83 @@ describe("grouped move", () => {
           return true;
         },
       }),
-    );
+    ).toEqual(result);
+  });
+  it("can move an expanded row down", () => {
+    type SmallData = {
+      id: string;
+      firstName: string;
+      lastName: string;
+      children: SmallData[];
+    };
+
+    const data: SmallData[] = [
+      {
+        id: "1",
+        firstName: "John",
+        lastName: "Doe",
+        children: [
+          {
+            id: "1.1",
+            firstName: "Jane",
+            lastName: "Doe",
+            children: [],
+          },
+          {
+            id: "1.2",
+            firstName: "Jim",
+            lastName: "Smith",
+            children: [],
+          },
+        ],
+      },
+      {
+        id: "2",
+        firstName: "Jane",
+        lastName: "Doe",
+        children: [],
+      },
+      {
+        id: "3",
+        firstName: "Jim",
+        lastName: "Smith",
+        children: [],
+      },
+      {
+        id: "4",
+        firstName: "Jill",
+        lastName: "Smith",
+        children: [],
+      },
+      {
+        id: "5",
+        firstName: "Jack",
+        lastName: "Brown",
+        children: [],
+      },
+    ];
+
+    const result = [...data];
+    const [item] = result.splice(0, 1);
+    result.splice(1, 0, item);
+
+    expect(
+      groupedArrayMove({
+        originalData: data,
+        flatSelected: ["1"],
+        delta: 1,
+        rootGroup: "root",
+        getSubRows: (row) => row.children,
+        getGroup: (row) => "root",
+        getId: (row) => row.id,
+        updateSubRows: (row, newSubRows) => ({ ...row, children: newSubRows }),
+        getExpanded(row) {
+          if (row.id === "1") {
+            return true;
+          }
+          return false;
+        },
+      }),
+    ).toEqual(result);
   });
 });

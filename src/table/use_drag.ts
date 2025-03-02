@@ -19,22 +19,6 @@ function useGetStyle(
   const hidden = false;
 
   let transform: Transform = { x: 0, y: 0 };
-  // if (isDraggingThis) {
-  //   // dragging from left pinned to center
-  //   // if (
-  //   //   ctx.getPinned(ctx.isDragging.id) === "left" &&
-  //   //   ctx.getPinned(ctx.closestCol.id) === false
-  //   // ) {
-  //   //   pinned = false;
-  //   //   console.log("YES");
-  //   // }
-
-  //   transform = {
-  //     [dimension]: totalDelta(ctx.delta, dimension),
-  //     [antiDimesion]: 0,
-  //   };
-  // }
-
   let transition = "transform 200ms ease";
 
   const prevIndexRef = React.useRef(thisIndex);
@@ -76,6 +60,9 @@ function useGetStyle(
   const prevTransform = prevTransformRef.current;
 
   const start = ctx.getStart(id);
+  if (dimension === "y") {
+    console.log("@start", id, start);
+  }
 
   const prevStartRef = React.useRef(start);
   const prevStart = prevStartRef.current;
@@ -85,9 +72,9 @@ function useGetStyle(
   if (updatedIndex) {
     const totalPreviousD = prevStart + (prevTransform[dimension] ?? 0);
     const newTransformD = totalPreviousD - start;
-    // console.log(
-    //   `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
-    // );
+    console.log(
+      `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
+    );
     overrideRet.current = {
       transform: { ...transform, [dimension]: newTransformD },
       transition: "none",

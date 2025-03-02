@@ -57,17 +57,7 @@ export const arrayMove = <T>({
 /**
  * Used for moving rows
  */
-export const groupedArrayMove = <T>({
-  originalData,
-  flatSelected: rawFlatSelected,
-  delta,
-  getSubRows,
-  getGroup,
-  getId,
-  updateSubRows,
-  getExpanded,
-  rootGroup,
-}: {
+export const groupedArrayMove = <T>(input: {
   originalData: T[];
   flatSelected: string[];
   delta: number;
@@ -78,6 +68,17 @@ export const groupedArrayMove = <T>({
   updateSubRows: (row: T, subRows: T[]) => T;
   rootGroup: string | undefined;
 }) => {
+  const {
+    originalData,
+    flatSelected: rawFlatSelected,
+    delta,
+    getSubRows,
+    getGroup,
+    getId,
+    updateSubRows,
+    getExpanded,
+    rootGroup,
+  } = input;
   if (delta === 0) {
     return originalData;
   }
@@ -90,6 +91,11 @@ export const groupedArrayMove = <T>({
       groupId: string | undefined;
       item: T;
       hasSelectedAncestor: boolean;
+      ancestry: Set<string>;
+      /**
+       * The number of rows occupied by the row, so the row itself + its expanded children
+       */
+      flatLen: number;
     };
   } = {};
   const rawSelected: Record<string, boolean> = {};
@@ -98,11 +104,26 @@ export const groupedArrayMove = <T>({
   });
   function loop(
     rows: T[],
-    props?: { parent?: string; hasSelectedAncestor?: boolean },
+    props?: {
+      parent?: string;
+      hasSelectedAncestor?: boolean;
+      ancestry?: Set<string>;
+    },
   ) {
     rows.forEach((row, index) => {
       const dataLen = flatData.push(row);
       const id = getId(row);
+      let ancestry = new Set<string>();
+      if (props?.parent) {
+        ancestry.add(props.parent);
+      }
+      if (props?.ancestry) {
+        ancestry = props.ancestry.union(ancestry);
+      }
+      // increment the flat len for each ancestor
+      ancestry.forEach((id) => {
+        attrs[id].flatLen += 1;
+      });
       attrs[id] = {
         parent: props?.parent,
         relativeIndex: index,
@@ -110,6 +131,8 @@ export const groupedArrayMove = <T>({
         groupId: getGroup(row),
         item: row,
         hasSelectedAncestor: props?.hasSelectedAncestor || false,
+        ancestry,
+        flatLen: 1,
       };
       if (getExpanded(row)) {
         const subRows = getSubRows(row);
@@ -143,14 +166,16 @@ export const groupedArrayMove = <T>({
       typeof parentId === "string" ? attrs[parentId].item : undefined;
 
     const list = parent ? [...getSubRows(parent)] : newData;
+    // if we remove an expanded item we must delete more indices
+    const removedFlatIndices = attrs[id].flatLen;
 
     list.splice(itemAttrs.relativeIndex, 1);
-    flatData.splice(itemAttrs.flatIndex, 1);
+    flatData.splice(itemAttrs.flatIndex, removedFlatIndices);
 
     for (let i = itemAttrs.flatIndex; i < flatData.length; i++) {
       const a = attrs[getId(flatData[i])];
       // we decrease the index of all items after the removed item
-      a.flatIndex -= 1;
+      a.flatIndex -= removedFlatIndices;
     }
     for (let i = itemAttrs.relativeIndex; i < list.length; i++) {
       const a = attrs[getId(list[i])];
@@ -180,16 +205,17 @@ export const groupedArrayMove = <T>({
     }
   }
 
+  // inject the selected rows
   for (const id of flatSelected) {
     const group = attrs[id].groupId;
     const originalIndex = attrs[id].flatIndex;
     const lastIndexCandidate = originalIndex + delta;
-
+    let movedSteps = 0;
     let candidateIndex = originalIndex;
     let targetIndex = originalIndex;
-
+    // we check each item to the right to find the closest candidate that is in the same group
     // we need to consider the displacement as well here
-    while (candidateIndex !== lastIndexCandidate) {
+    while (movedSteps < Math.abs(delta)) {
       candidateIndex += Math.sign(delta);
       if (candidateIndex < 0 || candidateIndex >= flatData.length) {
         break;
@@ -203,7 +229,13 @@ export const groupedArrayMove = <T>({
       const candidateId = getId(flatData[candidateIndex]);
 
       if (group === attrs[candidateId].groupId) {
+        // it is the same group as the dragged item!
+        // but we can't move a parent onto a child
+        if (attrs[candidateId].ancestry.has(id)) {
+          continue;
+        }
         targetIndex = candidateIndex;
+        movedSteps += 1;
       }
     }
 
@@ -227,7 +259,7 @@ export const groupedArrayMove = <T>({
     }
     for (let i = injectAtFlatIndex; i < flatData.length; i++) {
       const a = attrs[getId(flatData[i])];
-      a.flatIndex += 1;
+      a.flatIndex += attrs[id].flatLen;
     }
 
     attrs[id].relativeIndex = injectAtRelativeIndex;
@@ -238,7 +270,6 @@ export const groupedArrayMove = <T>({
     const item = attrs[id].item;
     list.splice(injectAtRelativeIndex, 0, item);
     flatData.splice(injectAtFlatIndex, 0, item);
-    console.log("@parent", parent);
     // return originalData;
 
     if (parent) {

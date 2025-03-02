@@ -32,7 +32,6 @@ import {
   findDeltaAtPosition,
 } from "../Item";
 import { renderHeaderGroup } from "./render_header_group";
-import { getFlatIndex } from "./utils";
 import { TableBody } from "./table_body";
 import { useHeaderGroupVirtualizers } from "./use_header_group_virtualizers";
 
@@ -95,16 +94,6 @@ export const VirtualizedTable = <T,>(props: {
       selected = [draggedRowId];
     }
 
-    // const withSubRows = (id: string): string[] => {
-    //   const row = table.getRow(id);
-    //   if (!row) {
-    //     return [];
-    //   }
-    //   return [id, ...row.subRows.flatMap((r) => [r.id, ...withSubRows(r.id)])];
-    // };
-
-    // selected = selected.flatMap(withSubRows);
-
     const arrayMoveProps = {
       originalData: props.data,
       flatSelected: selected,
@@ -123,6 +112,10 @@ export const VirtualizedTable = <T,>(props: {
         return tableRow.getIsExpanded();
       },
     };
+
+    // console.log(arrayMoveProps);
+
+    // return;
 
     const after = groupedArrayMove(arrayMoveProps);
 
@@ -170,8 +163,7 @@ export const VirtualizedTable = <T,>(props: {
 
         if (draggedRowId !== null) {
           // If there is a dragged row, retrieve it
-          const draggedRow = table.getRow(draggedRowId);
-          const draggedIndex = getFlatIndex(draggedRow);
+          const draggedIndex = refs.current.rowIds.indexOf(draggedRowId);
 
           // Add the dragged row index to the virtualized range
           next.add(draggedIndex);
@@ -273,6 +265,25 @@ export const VirtualizedTable = <T,>(props: {
       }, 0) / allCols.length
     );
   }, [allCols]);
+
+  let selectedRows: string[] = [];
+  if (draggedRowId) {
+    const allSelectedRows = table.getSelectedRowModel().rows.map((r) => r.id);
+    if (allSelectedRows.includes(draggedRowId)) {
+      selectedRows = allSelectedRows;
+    } else {
+      selectedRows = [draggedRowId];
+    }
+    // add the child rows to the selected
+    const getSubRows = (id: string): string[] => {
+      const row = table.getRow(id);
+      if (row.getIsExpanded()) {
+        return [id, ...row.subRows.flatMap((row) => getSubRows(row.id))];
+      }
+      return [id];
+    };
+    selectedRows = selectedRows.flatMap(getSubRows);
+  }
 
   return (
     <DndProvider
@@ -536,7 +547,7 @@ export const VirtualizedTable = <T,>(props: {
             size: props.height,
             totalSize: rowVirtualizer.getTotalSize(),
           },
-          selected: table.getSelectedRowModel().rows.map((r) => r.id),
+          selected: selectedRows,
         }}
         getPinned={(id) => {
           const row = table.getRow(id);
@@ -653,12 +664,8 @@ export const VirtualizedTable = <T,>(props: {
         }, [table.getSelectedRowModel()])}
         getSize={React.useCallback(
           (id) => {
-            const row = table.getRow(id);
-            if (!row) {
-              throw new Error("No row");
-            }
-            const size =
-              rowVirtualizer.measurementsCache[getFlatIndex(row)].size;
+            const flatIndex = rowIds.indexOf(id);
+            const size = rowVirtualizer.measurementsCache[flatIndex].size;
             return size ?? props.rowHeight;
           },
           [rowVirtualizer.measurementsCache, table],
@@ -669,6 +676,7 @@ export const VirtualizedTable = <T,>(props: {
             if (!row) {
               throw new Error("No row");
             }
+
             const estimateStart = (index: number) => {
               console.log(
                 "@rowVirtualizer.measurementsCache",
@@ -677,9 +685,10 @@ export const VirtualizedTable = <T,>(props: {
               return 0;
             };
             // console.log(rowVirtualizer.measurementsCache);
+            const flatIndex = rowIds.indexOf(row.id);
             return (
-              rowVirtualizer.measurementsCache[getFlatIndex(row)].start ??
-              estimateStart(getFlatIndex(row))
+              rowVirtualizer.measurementsCache[flatIndex].start ??
+              estimateStart(flatIndex)
             );
           },
           [rowVirtualizer.measurementsCache, table],
@@ -765,6 +774,7 @@ export const VirtualizedTable = <T,>(props: {
             totalWidth={table.getTotalSize()}
             totalHeight={rowVirtualizer.getTotalSize()}
             rowHeight={props.rowHeight}
+            rowIds={rowIds}
           ></TableBody>
 
           <div

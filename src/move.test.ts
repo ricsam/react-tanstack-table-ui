@@ -1,5 +1,5 @@
 import { expect, describe, it } from "vitest";
-import { move } from "./move";
+import { move, PinPos } from "./move";
 
 // 1. should move one non-pinned to non-pinned
 // 2. should move one pinned to pinned
@@ -658,6 +658,93 @@ describe("scroll at initial position", () => {
           4: false,
           5: "start",
         },
+      });
+    });
+    it("5. should move group with negative delta", () => {
+      // 1,2,3,4,5,6,7,8,9,10 // start
+      // 1,2,3,4,5,*,*,*,*,10 // remove
+      // 1,6,7,8,9,2,3,4,5,*,*,*,*,10 // inject
+      // 1,6,7,8,9,2,3,4,5,10 // result
+      
+      // in more detail:
+      // 1,2,3,4,5,6,7,8,9,10 // start
+      // 1,2,3,4,5,6,7,8,*,10 // remove
+      // 1,2,3,4,5,6,7,8,10   // adjust indices (10: -1)
+      //         9            // inject
+      // 1,2,3,4,9,5,6,7,8,10 // adjust indices (5,6,7,8,9,10: +1)
+      // 1,2,3,4,9,5,6,7,*,10 // remove
+      // 1,2,3,4,9,5,6,7,10   // adjust indices (10: -1)
+      //         8            // inject
+      // 1,2,3,4,8,9,5,6,7,10 // adjust indices (9,5,6,7,10: +1)
+
+      // 1,6,7,8,9,2,3,4,5,*,*,*,*,10 // inject
+      // 1,6,7,8,9,2,3,4,5,10 // result
+      type Item = {
+        id: string;
+        start: number;
+        index: number;
+        size: number;
+        pinned: PinPos;
+      };
+      const createItem = (index: number): Item => ({
+        id: String(index + 1),
+        start: index,
+        index,
+        size: 1,
+        pinned: false,
+      });
+      const items: Item[] = [];
+      for (let i = 0; i <= 10; i += 1) {
+        items.push(createItem(i));
+      }
+      const selected: string[] = [];
+      for (let i = 6; i <= 9; i += 1) {
+        selected.push(String(i));
+      }
+      const result = move({
+        window: {
+          scroll: 0,
+          size: 10,
+          totalSize: 4,
+          numItems: 4,
+        },
+        drag: {
+          id: "6",
+          deltaInnerScroll: 0,
+          deltaOuterScroll: 0,
+          deltaMouse: -4,
+        },
+        items,
+        selected,
+      });
+      const displacements: Record<string, number> = {};
+      const itemIndices: Record<string, number> = {};
+      const pinned: Record<string, PinPos> = {};
+      items.forEach((item, index) => {
+        const id = item.id;
+        displacements[id] = 0;
+        itemIndices[id] = index;
+        pinned[id] = false;
+      });
+      selected.forEach((itemId) => {
+        displacements[itemId] = -4;
+        itemIndices[itemId] -= 4;
+      });
+      for (let i = 2; i <= 5; i += 1) {
+        const itemId = String(i);
+        displacements[itemId] = 4;
+        itemIndices[itemId] += 4;
+      }
+      // 1,6,7,8,9,2,3,4,5,10 // result
+      expect(result).toEqual({
+        displacements,
+        itemIndices,
+        dragged: {
+          targetIndex: 1,
+          pinned: false,
+          indexDelta: -4,
+        },
+        pinned,
       });
     });
   });

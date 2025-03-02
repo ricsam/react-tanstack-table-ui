@@ -12,6 +12,7 @@ export const TableBody = ({
   totalWidth,
   totalHeight,
   rowHeight,
+  rowIds,
 }: {
   virtualColumns: VirtualItem[];
   virtualRows: VirtualItem[];
@@ -21,6 +22,7 @@ export const TableBody = ({
   totalWidth: number;
   totalHeight: number;
   rowHeight: number;
+  rowIds: string[];
 }) => {
   const { offsetLeft: offsetTop, offsetRight: offsetBottom } =
     getColVirtualizedOffsets({
@@ -51,6 +53,7 @@ export const TableBody = ({
                 width={width}
                 totalSize={totalWidth}
                 rowHeight={rowHeight}
+                flatIndex={rowIds.indexOf(row.id)}
               />
             );
           })}

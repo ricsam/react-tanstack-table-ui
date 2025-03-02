@@ -21,7 +21,7 @@ export const RowDragHandleCell = ({
     <button
       {...attributes}
       {...listeners}
-      style={{ display: hidden ? "none" : "inline" }}
+      style={{ display: hidden ? "none" : "inline", userSelect: "none" }}
     >
       🟰
     </button>
