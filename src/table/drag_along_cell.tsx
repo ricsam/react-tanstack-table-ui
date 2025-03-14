@@ -7,11 +7,13 @@ export const DragAlongCell = React.memo(function DragAlongCell({
   start,
   offsetLeft,
   rowHeight,
+  colIndex,
 }: {
   cell: Cell<any, unknown>;
   start: number;
   offsetLeft: number;
   rowHeight: number;
+  colIndex: number;
 }) {
   // const {
   //   isDragging,
@@ -30,6 +32,7 @@ export const DragAlongCell = React.memo(function DragAlongCell({
       cell,
       start,
       offsetLeft,
+      colIndex,
     });
 
   // const {

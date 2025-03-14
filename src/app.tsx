@@ -50,6 +50,8 @@ import { useBigTable } from "./tests_data/use_big_table";
 import {
   useSmallTable,
   useSmallTableExpandable,
+  useSmallTableExpandableAndSelectable,
+  useSmallTableWithHeaders,
 } from "./tests_data/use_small_table";
 
 let prevLog: any = null;
@@ -65,16 +67,19 @@ const RowDragHandleCell = ({
   rowId,
   rowIndex,
   table,
+  start,
 }: {
   rowId: string;
   rowIndex: number;
   table: Table<User>;
+  start: number;
 }) => {
-  const { attributes, listeners, hidden } = useDrag(
-    DndRowContext,
-    rowId,
-    rowIndex,
-  );
+  const { attributes, listeners, hidden } = useDrag({
+    AnoDndContext: DndRowContext,
+    id: rowId,
+    thisIndex: rowIndex,
+    start,
+  });
   return (
     // Alternatively, you could set these attributes on the rows themselves
     <button
@@ -1178,12 +1183,16 @@ const DragAlongCell = React.memo(function DragAlongCell({
 function App() {
   // function App2() {
 
+  const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
+    useBigTable();
   // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
-  //   useBigTable();
+  //   useSmallTableWithHeaders();
   // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
   //   useSmallTable();
-  const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
-    useSmallTableExpandable();
+  // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
+  //   useSmallTableExpandable();
+  // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
+  //   useSmallTableExpandableAndSelectable();
 
   return (
     <div style={{ textAlign: "center" }}>
@@ -1524,6 +1533,7 @@ function App1() {
             pinned,
             start: vc.start,
             size: vc.size,
+            ancestors: [],
           };
         }),
         window: {
@@ -1746,12 +1756,14 @@ function App1() {
             } else if (rowPinned === "bottom") {
               pinned = "end";
             }
+            const ancestors = row.getParentRows().map((row) => row.id);
             return {
               id: id,
               index: vc.index,
               pinned,
               start: vc.start,
               size: vc.size,
+              ancestors,
             };
           }),
           window: {

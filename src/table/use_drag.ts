@@ -8,12 +8,19 @@ type Transform = {
   y?: number;
 };
 
-function useGetStyle(
-  ctx: DndContextType,
-  id: string,
-  thisIndex: number,
-  isDraggingThis: boolean,
-) {
+function useGetStyle({
+  ctx,
+  id,
+  thisIndex,
+  isDraggingThis,
+  start,
+}: {
+  ctx: DndContextType;
+  id: string;
+  thisIndex: number;
+  isDraggingThis: boolean;
+  start: number;
+}) {
   const dimension = ctx.dimension;
   const antiDimesion = dimension === "x" ? "y" : "x";
   const hidden = false;
@@ -29,10 +36,14 @@ function useGetStyle(
   } | null>(null);
 
   let pinned: undefined | PinPos = undefined;
+  const group = ctx.v2.getGroup(id);
 
-  if (ctx.closestCol && ctx.isDragging && !isDraggingThis && ctx.moveResult) {
-    const indexDiff = ctx.closestCol.index - ctx.isDragging.index;
-
+  if (
+    ctx.moveResult?.dragged &&
+    ctx.isDragging &&
+    !isDraggingThis &&
+    ctx.moveResult
+  ) {
     // console.log(
     //   "@indexDiff",
     //   ctx.closestCol.id,
@@ -40,10 +51,15 @@ function useGetStyle(
     //   ctx.isDragging.index,
     // );
 
-    const displacement = ctx.moveResult.displacements[id];
-    // hidden = !displacements.displacedDisplayedRange.has(id);
-
+    let displacement = ctx.moveResult.displacements[id];
     pinned = ctx.moveResult.pinned[id];
+    // we are moving a header group
+    if (group.length > 1) {
+      // then the first item in the group can represent how the header should be displaced
+      displacement = ctx.moveResult.displacements[group[0]];
+      pinned = ctx.moveResult.pinned[group[0]];
+    }
+    // hidden = !displacements.displacedDisplayedRange.has(id);
 
     transform = {
       [dimension]: displacement,
@@ -59,11 +75,6 @@ function useGetStyle(
   const prevTransformRef = React.useRef(transform);
   const prevTransform = prevTransformRef.current;
 
-  const start = ctx.getStart(id);
-  if (dimension === "y") {
-    console.log("@start", id, start);
-  }
-
   const prevStartRef = React.useRef(start);
   const prevStart = prevStartRef.current;
 
@@ -72,9 +83,9 @@ function useGetStyle(
   if (updatedIndex) {
     const totalPreviousD = prevStart + (prevTransform[dimension] ?? 0);
     const newTransformD = totalPreviousD - start;
-    console.log(
-      `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
-    );
+    // console.log(
+    //   `Updating index from ${prevIndexRef.current} to ${thisIndex} and start from ${prevStart} to ${start} and transform from ${prevTransform.x} to ${transform.x}. New transform: ${newTransformD}. New id: ${prevId.current} to ${id}`,
+    // );
     overrideRet.current = {
       transform: { ...transform, [dimension]: newTransformD },
       transition: "none",
@@ -116,11 +127,22 @@ function useGetStyle(
   return { ...ret, hidden, pinned };
 }
 
-export const useDrag = (
-  AnoDndContext: React.Context<DndContextType | undefined>,
-  id: string,
-  thisIndex: number,
-) => {
+export const useDrag = ({
+  AnoDndContext,
+  id,
+  thisIndex,
+  start,
+  meta,
+}: {
+  AnoDndContext: React.Context<DndContextType | undefined>;
+  id: string;
+  thisIndex: number;
+  start: number;
+  meta?: any;
+}) => {
+  if (!AnoDndContext) {
+    console.trace("wefoijwef");
+  }
   const ctx = React.useContext(AnoDndContext);
   if (!ctx) {
     throw new Error("useAnoDrag must be used within AnoDndProvider");
@@ -132,17 +154,18 @@ export const useDrag = (
 
   if (!isDraggingThis && ctx.selected && ctx.isDragging) {
     const selected = ctx.selected;
-    if (selected.state[ctx.isDragging.id]) {
+    if (ctx.moveResult) {
       isDraggingThis = Boolean(selected.state[id]);
     }
   }
 
-  const { transition, transform, hidden, pinned } = useGetStyle(
+  const { transition, transform, hidden, pinned } = useGetStyle({
     ctx,
     id,
     thisIndex,
-    false,
-  );
+    isDraggingThis: false,
+    start,
+  });
 
   // const dragHandleStyle = useGetStyle(
   //   ctx,
@@ -170,7 +193,7 @@ export const useDrag = (
         if (!scrollEl) {
           throw new Error("No scrollEl");
         }
-        ctx.onDragStart(id);
+        ctx.onDragStart(id, meta);
         const tableRect = scrollEl.getBoundingClientRect();
         ctx.setIsDragging({
           id,

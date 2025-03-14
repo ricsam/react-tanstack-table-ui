@@ -2,18 +2,24 @@ import { flexRender, Header, Table } from "@tanstack/react-table";
 import { useColAttrs } from "./use_col_attrs";
 import { CSSProperties } from "react";
 
-export const DraggableTableHeader = <T,>({
+export const DraggableTableHeader = ({
   header,
   table,
   start,
   offsetLeft,
   defToRender,
+  colIndex,
+  canDrag,
+  hidden,
 }: {
-  header: Header<T, unknown>;
-  table: Table<T>;
+  header: Header<any, unknown>;
+  table: Table<any>;
   start: number;
   offsetLeft: number;
   defToRender: "header" | "footer";
+  colIndex: number;
+  canDrag: boolean;
+  hidden: boolean;
 }) => {
   const {
     isDragging,
@@ -28,6 +34,8 @@ export const DraggableTableHeader = <T,>({
     cell: header,
     start,
     offsetLeft,
+    colIndex,
+    meta: { type: defToRender, headerId: header.id },
   });
 
   // const {
@@ -70,6 +78,21 @@ export const DraggableTableHeader = <T,>({
     ...dragStyle,
   };
 
+  if (defToRender === "header") {
+    console.log("signature", hidden, header.column.id);
+  }
+
+  if (hidden) {
+    return (
+      <div
+        key={header.id}
+        ref={setNodeRef}
+        className="th"
+        style={{ ...style, visibility: "hidden" }}
+      ></div>
+    );
+  }
+
   return (
     <div key={header.id} ref={setNodeRef} className="th" style={style}>
       <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
@@ -82,11 +105,13 @@ export const DraggableTableHeader = <T,>({
         <div style={{ width: "4px" }}></div>
       </div>
       {/* {header.subHeaders.length === 0 && ( */}
-      <button {...attributes} {...listeners}>
-        🟰
-      </button>
+      {canDrag && (
+        <button {...attributes} {...listeners}>
+          🟰
+        </button>
+      )}
       {/* )} */}
-      {header.column.getCanPin() && (
+      {canDrag && header.column.getCanPin() && (
         <div className="flex gap-1 justify-center">
           {header.column.getIsPinned() !== "left" ? (
             <button

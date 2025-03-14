@@ -54,6 +54,7 @@ export const TableBody = ({
                 totalSize={totalWidth}
                 rowHeight={rowHeight}
                 flatIndex={rowIds.indexOf(row.id)}
+                start={start}
               />
             );
           })}

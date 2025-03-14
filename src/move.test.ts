@@ -1,5 +1,5 @@
 import { expect, describe, it } from "vitest";
-import { move, PinPos } from "./move";
+import { Item, move, PinPos } from "./move";
 
 // 1. should move one non-pinned to non-pinned
 // 2. should move one pinned to pinned
@@ -81,6 +81,10 @@ describe("scroll at initial position", () => {
         selected: ["1"],
       });
       expect(result).toEqual({
+        ancestors: {
+          1: [],
+          2: [],
+        },
         displacements: {
           // 2 get moved to the index: 1 and 1 get moved to index
           1: 1,
@@ -172,6 +176,11 @@ describe("scroll at initial position", () => {
           2: false,
           3: "start",
         },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+        },
       });
     });
     it("3. should move one pinned to non-pinned", () => {
@@ -225,6 +234,10 @@ describe("scroll at initial position", () => {
           1: false,
           2: false,
         },
+        ancestors: {
+          1: [],
+          2: [],
+        },
       });
     });
     it("4. should move one non-pinned to pinned", () => {
@@ -277,6 +290,10 @@ describe("scroll at initial position", () => {
         pinned: {
           1: "start",
           2: "start",
+        },
+        ancestors: {
+          1: [],
+          2: [],
         },
       });
     });
@@ -359,6 +376,12 @@ describe("scroll at initial position", () => {
           3: false,
           4: false,
         },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
+        },
       });
     });
     it("2. should move multiple pinned to pinned", () => {
@@ -440,6 +463,12 @@ describe("scroll at initial position", () => {
           2: "start",
           3: "start",
           4: "start",
+        },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
         },
       });
     });
@@ -546,6 +575,13 @@ describe("scroll at initial position", () => {
           3: "start",
           4: false,
           5: false,
+        },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
+          5: [],
         },
       });
     });
@@ -658,6 +694,13 @@ describe("scroll at initial position", () => {
           4: false,
           5: "start",
         },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
+          5: [],
+        },
       });
     });
     it("5. should move group with negative delta", () => {
@@ -665,7 +708,7 @@ describe("scroll at initial position", () => {
       // 1,2,3,4,5,*,*,*,*,10 // remove
       // 1,6,7,8,9,2,3,4,5,*,*,*,*,10 // inject
       // 1,6,7,8,9,2,3,4,5,10 // result
-      
+
       // in more detail:
       // 1,2,3,4,5,6,7,8,9,10 // start
       // 1,2,3,4,5,6,7,8,*,10 // remove
@@ -679,13 +722,6 @@ describe("scroll at initial position", () => {
 
       // 1,6,7,8,9,2,3,4,5,*,*,*,*,10 // inject
       // 1,6,7,8,9,2,3,4,5,10 // result
-      type Item = {
-        id: string;
-        start: number;
-        index: number;
-        size: number;
-        pinned: PinPos;
-      };
       const createItem = (index: number): Item => ({
         id: String(index + 1),
         start: index,
@@ -720,11 +756,13 @@ describe("scroll at initial position", () => {
       const displacements: Record<string, number> = {};
       const itemIndices: Record<string, number> = {};
       const pinned: Record<string, PinPos> = {};
+      const ancestors: Record<string, string[]> = {};
       items.forEach((item, index) => {
         const id = item.id;
         displacements[id] = 0;
         itemIndices[id] = index;
         pinned[id] = false;
+        ancestors[id] = [];
       });
       selected.forEach((itemId) => {
         displacements[itemId] = -4;
@@ -745,6 +783,7 @@ describe("scroll at initial position", () => {
           indexDelta: -4,
         },
         pinned,
+        ancestors,
       });
     });
   });
@@ -822,6 +861,12 @@ describe("scroll at initial position", () => {
           2: false,
           3: "end",
           4: "end",
+        },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
         },
       });
     });
@@ -971,6 +1016,12 @@ describe("scroll at initial position", () => {
           2: false,
           3: "end",
           4: "end",
+        },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
         },
       });
     });
@@ -1157,6 +1208,182 @@ describe("scroll at initial position", () => {
           "is-active": false,
           "winnings-2021": false,
           "full-name": "end",
+        },
+        ancestors: {
+          id: [],
+          location: [],
+          expander: [],
+          select: [],
+          "drag-handle": [],
+          "country-code": [],
+          country: [],
+          continent: [],
+          language: [],
+          "favorite-game": [],
+          "birth-month": [],
+          "is-active": [],
+          "winnings-2021": [],
+          "full-name": [],
+        },
+      });
+    });
+  });
+
+  describe("Can move group", () => {
+    it("should be able to do a basic move", () => {
+      const result = move({
+        window: {
+          scroll: 0,
+          size: 10,
+          totalSize: 2,
+          numItems: 2,
+        },
+        drag: {
+          deltaInnerScroll: 0,
+          deltaOuterScroll: 0,
+          deltaMouse: 1,
+        },
+        items: [
+          {
+            id: "1",
+            start: 0,
+            index: 0,
+            size: 1,
+            pinned: false,
+          },
+          {
+            id: "2",
+            index: 1,
+            size: 1,
+            start: 1,
+            pinned: false,
+          },
+          {
+            id: "3",
+            index: 2,
+            size: 1,
+            start: 2,
+            pinned: false,
+          },
+          {
+            id: "4",
+            index: 3,
+            size: 1,
+            start: 3,
+            pinned: false,
+          },
+        ],
+        selected: ["1", "2"],
+      });
+      expect(result).toEqual({
+        // 1,2,3,4
+        // 3,1,2,4
+        displacements: {
+          1: 1,
+          2: 1,
+          3: -2,
+          4: 0,
+        },
+        dragged: {
+          targetIndex: 1,
+          indexDelta: 1,
+          pinned: false,
+        },
+        itemIndices: {
+          "1": 1,
+          "2": 2,
+          "3": 0,
+          "4": 3,
+        },
+        pinned: {
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+        },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
+        },
+      });
+    });
+    it("should not move if delta is 0", () => {
+      const result = move({
+        window: {
+          scroll: 0,
+          size: 10,
+          totalSize: 2,
+          numItems: 2,
+        },
+        drag: {
+          deltaInnerScroll: 0,
+          deltaOuterScroll: 0,
+          deltaMouse: 0,
+        },
+        items: [
+          {
+            id: "1",
+            start: 0,
+            index: 0,
+            size: 1,
+            pinned: false,
+          },
+          {
+            id: "2",
+            index: 1,
+            size: 1,
+            start: 1,
+            pinned: false,
+          },
+          {
+            id: "3",
+            index: 2,
+            size: 1,
+            start: 2,
+            pinned: false,
+          },
+          {
+            id: "4",
+            index: 3,
+            size: 1,
+            start: 3,
+            pinned: false,
+          },
+        ],
+        selected: ["1", "2"],
+      });
+      expect(result).toEqual({
+        // 1,2,3,4
+        displacements: {
+          1: 0,
+          2: 0,
+          3: 0,
+          4: 0,
+        },
+        dragged: {
+          targetIndex: 0,
+          indexDelta: 0,
+          pinned: false,
+        },
+        itemIndices: {
+          "1": 0,
+          "2": 1,
+          "3": 2,
+          "4": 3,
+        },
+        pinned: {
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+        },
+        ancestors: {
+          1: [],
+          2: [],
+          3: [],
+          4: [],
         },
       });
     });

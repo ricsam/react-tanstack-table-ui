@@ -14,6 +14,7 @@ export const TableRow = React.memo(function TableRow({
   totalSize,
   rowHeight,
   flatIndex,
+  start,
 }: {
   row: Row<any>;
   virtualColumns: VirtualItem[];
@@ -22,14 +23,16 @@ export const TableRow = React.memo(function TableRow({
   totalSize: number;
   rowHeight: number;
   flatIndex: number;
+  start: number;
 }) {
   const visibileCells = row.getVisibleCells();
 
-  const { transform, transition, setNodeRef, isDragging, hidden } = useDrag(
-    DndRowContext,
-    row.id,
-    flatIndex,
-  );
+  const { transform, transition, setNodeRef, isDragging, hidden } = useDrag({
+    AnoDndContext: DndRowContext,
+    id: row.id,
+    thisIndex: flatIndex,
+    start,
+  });
 
   // console.log("@transform?.y ?? 0", transform?.y ?? 0);
 
@@ -92,12 +95,14 @@ export const TableRow = React.memo(function TableRow({
           .map((virtualColumn) => ({
             cell: visibileCells[virtualColumn.index],
             start: virtualColumn.start,
+            colIndex: virtualColumn.index,
           }))
           .filter(({ cell }) => predicate(cell))
-          .map(({ cell, start }) => {
+          .map(({ cell, start, colIndex }) => {
             return (
               <DragAlongCell
                 key={cell.id}
+                colIndex={colIndex}
                 cell={cell}
                 start={start}
                 offsetLeft={offsetLeft}

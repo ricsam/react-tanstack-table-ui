@@ -1,24 +1,12 @@
-import {
-  ColumnOrderState,
-  Header,
-  HeaderGroup,
-  Row,
-  Table,
-} from "@tanstack/react-table";
+import { ColumnOrderState, Table } from "@tanstack/react-table";
 import React from "react";
-import { flushSync } from "react-dom";
-import { PinPos, Item } from "../move";
+import { Item, PinPos } from "../move";
 import {
   defaultRangeExtractor,
-  elementScroll,
   measureElement,
-  observeElementOffset,
-  observeElementRect,
   Range,
   useVirtualizer,
-  VirtualItem,
   Virtualizer,
-  VirtualizerOptions,
 } from "../react-virtual";
 import { arrayMove, groupedArrayMove } from "./array_move";
 import {
@@ -26,14 +14,12 @@ import {
   DndColContext,
   DndProvider,
   DndRowContext,
+  V2,
 } from "./dnd_provider";
-import {
-  calculateDisplacements as calculateDisplacement2,
-  findDeltaAtPosition,
-} from "../Item";
 import { renderHeaderGroup } from "./render_header_group";
 import { TableBody } from "./table_body";
 import { useHeaderGroupVirtualizers } from "./use_header_group_virtualizers";
+import { RowContext } from "./row_context";
 
 export const VirtualizedTable = <T,>(props: {
   data: T[];
@@ -52,7 +38,12 @@ export const VirtualizedTable = <T,>(props: {
 }) => {
   const { table } = props;
 
-  const [isDragging, setIsDragging] = React.useState<string | null>(null);
+  const [isDragging, setIsDragging] = React.useState<{
+    colId: string;
+    headerId: string;
+    headerGroupIndex: number;
+    type: "header" | "footer";
+  } | null>(null);
 
   const { rows } = table.getRowModel();
   const rowIds = React.useMemo(() => {
@@ -64,20 +55,20 @@ export const VirtualizedTable = <T,>(props: {
     if (!isDragging) {
       throw new Error("No column is being dragged");
     }
-    const col = table.getColumn(isDragging);
+    const col = table.getColumn(isDragging.colId);
     if (!col) {
       throw new Error("No column found");
     }
     setIsDragging(null);
-    const selected = col.getFlatColumns().map((col) => col.id);
-    props.updateColumnOrder(
-      arrayMove({
-        arr: props.columnOrder,
-        selected,
-        delta,
-        getIndex: (id) => props.columnOrder.indexOf(id),
-      }),
-    );
+    const selected = col.getLeafColumns().map((col) => col.id);
+    const arrMoveInput = {
+      arr: props.columnOrder,
+      selected,
+      delta,
+      getIndex: (id: string) => props.columnOrder.indexOf(id),
+    };
+    const arrMoveResult = arrayMove(arrMoveInput);
+    props.updateColumnOrder(arrMoveResult);
     col.pin(pin);
   }
 
@@ -266,411 +257,103 @@ export const VirtualizedTable = <T,>(props: {
     );
   }, [allCols]);
 
-  let selectedRows: string[] = [];
-  if (draggedRowId) {
-    const allSelectedRows = table.getSelectedRowModel().rows.map((r) => r.id);
-    if (allSelectedRows.includes(draggedRowId)) {
-      selectedRows = allSelectedRows;
-    } else {
-      selectedRows = [draggedRowId];
-    }
-    // add the child rows to the selected
-    const getSubRows = (id: string): string[] => {
-      const row = table.getRow(id);
-      if (row.getIsExpanded()) {
-        return [id, ...row.subRows.flatMap((row) => getSubRows(row.id))];
+  const virtualRowsForTable = React.useMemo(() => {
+    // items: Item[];
+    return virtualRows.map((vc): Item => {
+      const row = rows[vc.index];
+      const id = row.id;
+      let pinned: PinPos = false;
+      const rowPinned = row.getIsPinned();
+      if (rowPinned === "top") {
+        pinned = "start";
+      } else if (rowPinned === "bottom") {
+        pinned = "end";
       }
-      return [id];
-    };
-    selectedRows = selectedRows.flatMap(getSubRows);
-  }
+      return {
+        id: id,
+        index: vc.index,
+        pinned,
+        start: vc.start,
+        size: vc.size,
+      };
+    });
+  }, [rows, virtualRows]);
+
+  const selectedRows = React.useMemo(() => {
+    let selectedRows: string[] = [];
+    const virtualRowMap: Record<string, Item> = {};
+    virtualRowsForTable.forEach((item) => {
+      virtualRowMap[item.id] = item;
+    });
+    if (draggedRowId) {
+      const allSelectedRows = table
+        .getSelectedRowModel()
+        .flatRows.map((r) => r.id);
+      if (allSelectedRows.includes(draggedRowId)) {
+        selectedRows = allSelectedRows;
+      } else {
+        selectedRows = [draggedRowId];
+      }
+      // add the child rows to the selected
+      const getSubRows = (id: string): string[] => {
+        const row = table.getRow(id);
+        if (row.getIsExpanded()) {
+          return [id, ...row.subRows.flatMap((row) => getSubRows(row.id))];
+        }
+        return [id];
+      };
+      selectedRows = selectedRows.flatMap(getSubRows);
+    }
+    return selectedRows.filter((id) => Boolean(virtualRowMap[id]));
+  }, [draggedRowId, table, virtualRowsForTable]);
+
+  const selectedCols = React.useMemo(() => {
+    let selectedCols: string[] = [];
+    if (isDragging) {
+      const header = table.getFlatHeaders().find((header) => {
+        return header.id === isDragging.headerId;
+      });
+      if (header) {
+        // const col = table.getColumn(isDragging.colId);
+        if (header.subHeaders.length > 0) {
+          selectedCols = header.subHeaders.map((header) => header.column.id);
+          console.log("@selectedCols", selectedCols);
+        } else {
+          selectedCols = [header.column.id];
+        }
+      }
+    }
+    return selectedCols;
+  }, [isDragging, table]);
+
+  const rowV2: V2 = React.useMemo(
+    () => ({
+      items: virtualRowsForTable,
+      window: {
+        numItems: rows.length,
+        scroll: 0,
+        size: props.height,
+        totalSize: rowVirtualizer.getTotalSize(),
+      },
+      selected: selectedRows,
+      getGroup(id) {
+        // we can't make a group move with rows, a row has children. But we can have header groups
+        return [id];
+      },
+    }),
+    [
+      props.height,
+      rowVirtualizer,
+      rows.length,
+      selectedRows,
+      virtualRowsForTable,
+    ],
+  );
 
   return (
-    <DndProvider
-      v2={{
-        items: bodyCols.map((vc) => {
-          const header = vhead.body.headerGroup.headers[vc.index];
-          const id = header.id;
-          let pinned: PinPos = false;
-          const headerPinned = header.column.getIsPinned();
-          if (headerPinned === "left") {
-            pinned = "start";
-          } else if (headerPinned === "right") {
-            pinned = "end";
-          }
-          return {
-            id: id,
-            index: vc.index,
-            pinned,
-            start: vc.start,
-            size: vc.size,
-          };
-        }),
-        window: {
-          numItems: vhead.body.headerGroup.headers.length,
-          scroll: 0,
-          size: props.width,
-          totalSize: table.getTotalSize(),
-        },
-        selected: [],
-      }}
-      table={table}
-      getPinned={(id) => {
-        const col = table.getColumn(id);
-        if (!col) {
-          throw new Error("No column");
-        }
-        const pinned = col.getIsPinned();
-        if (pinned) {
-          return { pinned, pinnedIndex: col.getPinnedIndex() };
-        }
-        return {
-          pinned: false,
-        };
-      }}
-      /* eslint-disable react-hooks/exhaustive-deps */
-      getVirtualItemForOffset={(offset) => {
-        return vhead.body.virtualizer.getVirtualItemForOffset(offset);
-      }}
-      getRenderedRange={React.useCallback(
-        () => bodyCols.map((vc) => vhead.body.headerGroup.headers[vc.index].id),
-        [bodyCols, vhead.body.headerGroup],
-      )}
-      cols={React.useMemo(() => {
-        return allCols.map((col) => {
-          return { id: col.id, size: col.getSize() };
-        });
-      }, [
-        allCols,
-        table.getState().columnSizingInfo,
-        table.getState().columnSizing,
-        props.columnOrder,
-      ])}
-      getSize={React.useCallback(
-        (id: string) => {
-          const col = table.getColumn(id);
-          if (!col) {
-            throw new Error("No column");
-          }
-          return col.getSize();
-        },
-        [
-          table.getState().columnSizingInfo,
-          table.getState().columnSizing,
-          props.columnOrder,
-        ],
-      )}
-      getStart={React.useCallback(
-        (id: string) => {
-          const col = table.getColumn(id);
-          if (!col) {
-            throw new Error("No column");
-          }
-          return bodyCols.find((vc) => vc.index === col.getIndex())?.start ?? 0;
-        },
-        [
-          bodyCols,
-          table.getState().columnSizingInfo,
-          table.getState().columnSizing,
-          props.columnOrder,
-        ],
-      )}
-      getAverageSize={() => averageColSize}
-      dimension="x"
-      scrollRef={tableContainerRef}
-      onDragEnd={(result) => {
-        if (result) {
-          const { delta, pin } = result;
-          handleColDragEnd(
-            delta,
-            pin === "start" ? "left" : pin === "end" ? "right" : false,
-          );
-        }
-        vhead.updateAllDraggedIndexes(null);
-      }}
-      onDragCancel={() => {
-        vhead.updateAllDraggedIndexes(null);
-        setIsDragging(null);
-      }}
-      onDragStart={(colId) => {
-        setIsDragging(colId);
-        vhead.headerGroups.forEach((headerGroup, headerIndex) => {
-          const col = headerGroup.headers.findIndex(
-            (header) => header.id === colId,
-          );
-          if (col !== -1) {
-            vhead.updateDraggedIndex(headerIndex, col);
-          }
-        });
-      }}
-      DndContext={DndColContext}
-      displacements={React.useMemo(() => {
-        const state = table.getState();
-        const r = bodyCols.map((vc) => ({
-          id: vhead.body.headerGroup.headers[vc.index].id,
-          index: vc.index,
-          size: vc.size,
-          start: vc.start,
-          end: vc.end,
-          extra:
-            vhead.body.headerGroup.headers[vc.index].column.getAfter("right"),
-        }));
-
-        const getRange = (
-          indexRange: [number, number],
-        ): { index: [number, number]; start: [number, number] } => {
-          const end = r.find(
-            (vc) => vc.index === indexRange[indexRange.length - 1],
-          );
-          return {
-            index: indexRange,
-            start: [
-              r.find((vc) => vc.index === indexRange[0])?.start ?? 0,
-              (end?.start ?? r.length - 1) + (end?.size ?? props.rowHeight),
-            ],
-          };
-        };
-        let range = getRange([0, r.length - 1]);
-
-        if (vhead.defaultColWindowRef.current) {
-          const currentWindow = vhead.defaultColWindowRef.current;
-          range = getRange([
-            vhead.body.headerGroup.headers[currentWindow[0]].index,
-            vhead.body.headerGroup.headers[
-              currentWindow[currentWindow.length - 1]
-            ].index,
-          ]);
-        }
-        const mapPinnedItem = (id: string): Item => {
-          const item = table.getColumn(id);
-          if (!item) {
-            throw new Error("No item");
-          }
-          const pinned = item.getIsPinned();
-
-          return {
-            id,
-            index: item.getIndex(), // real index
-            size: item.getSize(),
-            start: item.getStart(pinned),
-            pinned:
-              pinned === "left" ? "start" : pinned === "right" ? "end" : false,
-          };
-        };
-
-        const pinnedLeft = (state.columnPinning.left ?? []).map(mapPinnedItem);
-        const pinnedRight = (state.columnPinning.right ?? []).map(
-          mapPinnedItem,
-        );
-        // console.log("@pinnedLeft", pinnedLeft, r);
-
-        return {
-          pinnedLeft,
-          pinnedRight,
-          calculateDisplacements: (delta: number, draggedId: string) => {
-            const sel = r.filter((r) => r.id === draggedId);
-
-            const displayedRange = r.filter(
-              (r) => r.index >= range.index[0] && r.index <= range.index[1],
-            );
-            const displacements = calculateDisplacement2(
-              displayedRange,
-              sel,
-              delta,
-            );
-            const displacedDisplayedRange = r.filter(
-              (r) =>
-                displacements.newItemIndices[r.id] >= range.index[0] &&
-                displacements.newItemIndices[r.id] <= range.index[1],
-            );
-            return {
-              ...displacements,
-              displacedDisplayedRange: new Set(
-                displacedDisplayedRange.map((r) => r.id),
-              ),
-            };
-            // return calculateDisplacement(r, sel, delta, range);
-          },
-          findDeltaAtPosition(
-            estimatedDelta: number,
-            position: number,
-            dragged: DndActive,
-          ) {
-            const sel = r.find((r) => r.id === dragged.id);
-            const delta = findDeltaAtPosition({
-              lastIndex: rows.length - 1,
-              draggedId: dragged.id,
-              inRangeItems: r.filter(
-                (r) => r.index >= range.index[0] && r.index <= range.index[1],
-              ),
-              selectedItems: [
-                {
-                  id: dragged.id,
-                  index: dragged.index,
-                  size: sel?.size ?? 0,
-                  start: sel?.start ?? 0,
-                },
-              ],
-              cursorPosition: position,
-              estimatedDelta,
-            });
-            // console.log("@delta", delta, position);
-            return delta;
-          },
-        };
-      }, [bodyCols, vhead.headerGroups])}
-    >
-      <DndProvider
-        table={table}
-        v2={{
-          items: virtualRows.map((vc) => {
-            const row = rows[vc.index];
-            const id = row.id;
-            let pinned: PinPos = false;
-            const rowPinned = row.getIsPinned();
-            if (rowPinned === "top") {
-              pinned = "start";
-            } else if (rowPinned === "bottom") {
-              pinned = "end";
-            }
-            return {
-              id: id,
-              index: vc.index,
-              pinned,
-              start: vc.start,
-              size: vc.size,
-            };
-          }),
-          window: {
-            numItems: rows.length,
-            scroll: 0,
-            size: props.height,
-            totalSize: rowVirtualizer.getTotalSize(),
-          },
-          selected: selectedRows,
-        }}
-        getPinned={(id) => {
-          const row = table.getRow(id);
-          if (!row) {
-            throw new Error("No row");
-          }
-          const pin = row.getIsPinned();
-          if (pin === "bottom") {
-            return { pinned: "right", pinnedIndex: row.getPinnedIndex() };
-          }
-          if (pin === "top") {
-            return { pinned: "left", pinnedIndex: row.getPinnedIndex() };
-          }
-          return { pinned: false };
-        }}
-        dimension="y"
-        getVirtualItemForOffset={(offset) => {
-          return rowVirtualizer.getVirtualItemForOffset(offset);
-        }}
-        getRenderedRange={React.useCallback(
-          () => virtualRows.map((vc) => rows[vc.index].id),
-          [rows, virtualRows],
-        )}
-        displacements={React.useMemo(() => {
-          const r = virtualRows.map((vc) => ({
-            id: rows[vc.index].id,
-            index: vc.index,
-            size: vc.size,
-            start: vc.start,
-          }));
-
-          const selected = table.getState().rowSelection;
-          const getRange = (
-            indexRange: [number, number],
-          ): { index: [number, number]; start: [number, number] } => {
-            const end = r.find(
-              (vc) => vc.index === indexRange[indexRange.length - 1],
-            );
-            return {
-              index: indexRange,
-              start: [
-                r.find((vc) => vc.index === indexRange[0])?.start ?? 0,
-                (end?.start ?? r.length - 1) + (end?.size ?? props.rowHeight),
-              ],
-            };
-          };
-          let range = getRange([0, r.length - 1]);
-
-          if (defaultRowWindowRef.current) {
-            const currentWindow = defaultRowWindowRef.current;
-            range = getRange([
-              rows[currentWindow[0]].index,
-              rows[currentWindow[currentWindow.length - 1]].index,
-            ]);
-          }
-          return {
-            calculateDisplacements: (delta: number, draggedId: string) => {
-              const sel =
-                table.getIsSomeRowsSelected() && selected[draggedId]
-                  ? r.filter((r) => selected[r.id])
-                  : r.filter((r) => r.id === draggedId);
-
-              const displayedRange = r.filter(
-                (r) => r.index >= range.index[0] && r.index <= range.index[1],
-              );
-              const displacements = calculateDisplacement2(
-                displayedRange,
-                sel,
-                delta,
-              );
-              const displacedDisplayedRange = r.filter(
-                (r) =>
-                  displacements.newItemIndices[r.id] >= range.index[0] &&
-                  displacements.newItemIndices[r.id] <= range.index[1],
-              );
-              return {
-                ...displacements,
-                displacedDisplayedRange: new Set(
-                  displacedDisplayedRange.map((r) => r.id),
-                ),
-              };
-              // return calculateDisplacement(r, sel, delta, range);
-            },
-            findDeltaAtPosition(
-              estimatedDelta: number,
-              position: number,
-              dragged: DndActive,
-            ) {
-              const draggedId = dragged.id;
-              const draggedIndex = dragged.index;
-              const sel =
-                table.getIsSomeRowsSelected() && selected[draggedId]
-                  ? r.filter((r) => selected[r.id])
-                  : r.filter((r) => r.id === draggedId);
-              return findDeltaAtPosition({
-                draggedId,
-                lastIndex: rows.length - 1,
-                inRangeItems: r.filter(
-                  (r) => r.index >= range.index[0] && r.index <= range.index[1],
-                ),
-                selectedItems: sel,
-                cursorPosition: position,
-                estimatedDelta,
-              });
-            },
-            pinnedLeft: [],
-            pinnedRight: [],
-          };
-        }, [rows, table, virtualRows, table.getSelectedRowModel()])}
-        selected={React.useMemo(() => {
-          return {
-            state: table.getState().rowSelection,
-          };
-        }, [table.getSelectedRowModel()])}
-        getSize={React.useCallback(
-          (id) => {
-            const flatIndex = rowIds.indexOf(id);
-            const size = rowVirtualizer.measurementsCache[flatIndex].size;
-            return size ?? props.rowHeight;
-          },
-          [rowVirtualizer.measurementsCache, table],
-        )}
-        getStart={React.useCallback(
+    <RowContext.Provider
+      value={{
+        getStart: React.useCallback(
           (id) => {
             const row = table.getRow(id);
             if (!row) {
@@ -691,120 +374,343 @@ export const VirtualizedTable = <T,>(props: {
               estimateStart(flatIndex)
             );
           },
-          [rowVirtualizer.measurementsCache, table],
+          [rowIds, rowVirtualizer.measurementsCache, table],
+        ),
+      }}
+    >
+      <DndProvider
+        v2={React.useMemo(
+          () => ({
+            items: bodyCols.map((vc): Item => {
+              const header = vhead.body.headerGroup.headers[vc.index];
+              const id = header.id;
+              let pinned: PinPos = false;
+              const headerPinned = header.column.getIsPinned();
+              if (headerPinned === "left") {
+                pinned = "start";
+              } else if (headerPinned === "right") {
+                pinned = "end";
+              }
+              return {
+                id: id,
+                index: vc.index,
+                pinned,
+                start: vc.start,
+                size: vc.size,
+              };
+            }),
+            window: {
+              numItems: vhead.body.headerGroup.headers.length,
+              scroll: 0,
+              size: props.width,
+              totalSize: table.getTotalSize(),
+            },
+            selected: selectedCols,
+            getGroup(id) {
+              const col = table.getColumn(id);
+              if (col) {
+                return col.getLeafColumns().map((col) => col.id);
+              }
+              return [id];
+            },
+          }),
+          [
+            bodyCols,
+            props.width,
+            selectedCols,
+            table,
+            vhead.body.headerGroup.headers,
+          ],
         )}
-        getAverageSize={() => props.rowHeight}
-        DndContext={DndRowContext}
+        table={table}
+        getPinned={(id) => {
+          const col = table.getColumn(id);
+          if (!col) {
+            throw new Error("No column");
+          }
+          const pinned = col.getIsPinned();
+          if (pinned) {
+            return { pinned, pinnedIndex: col.getPinnedIndex() };
+          }
+          return {
+            pinned: false,
+          };
+        }}
+        /* eslint-disable react-hooks/exhaustive-deps */
+        getVirtualItemForOffset={(offset) => {
+          return vhead.body.virtualizer.getVirtualItemForOffset(offset);
+        }}
+        getRenderedRange={React.useCallback(
+          () =>
+            bodyCols.map((vc) => vhead.body.headerGroup.headers[vc.index].id),
+          [bodyCols, vhead.body.headerGroup],
+        )}
+        cols={React.useMemo(() => {
+          return allCols.map((col) => {
+            return { id: col.id, size: col.getSize() };
+          });
+        }, [
+          allCols,
+          table.getState().columnSizingInfo,
+          table.getState().columnSizing,
+          props.columnOrder,
+        ])}
+        getSize={React.useCallback(
+          (id: string) => {
+            const col = table.getColumn(id);
+            if (!col) {
+              throw new Error("No column");
+            }
+            return col.getSize();
+          },
+          [
+            table.getState().columnSizingInfo,
+            table.getState().columnSizing,
+            props.columnOrder,
+          ],
+        )}
+        getAverageSize={() => averageColSize}
+        dimension="x"
         scrollRef={tableContainerRef}
         onDragEnd={(result) => {
           if (result) {
             const { delta, pin } = result;
-            handleRowDragEnd(
+            handleColDragEnd(
               delta,
-              pin === "start" ? "top" : pin === "end" ? "bottom" : false,
+              pin === "start" ? "left" : pin === "end" ? "right" : false,
             );
           }
-          setDraggedRowId(null);
+          vhead.updateAllDraggedIndexes(null);
+          vfoot.updateAllDraggedIndexes(null);
         }}
         onDragCancel={() => {
-          setDraggedRowId(null);
+          vhead.updateAllDraggedIndexes(null);
+          vfoot.updateAllDraggedIndexes(null);
+          setIsDragging(null);
         }}
-        onDragStart={(rowId) => {
-          setDraggedRowId(rowId);
+        onDragStart={(
+          colId,
+          meta: { type: "header" | "footer"; headerId: string },
+        ) => {
+          const loop = (
+            g: typeof vfoot | typeof vhead,
+            type: "header" | "footer",
+          ): boolean => {
+            const loop = (headerGroupIndex: number) => {
+              const headerGroup = g.headerGroups[headerGroupIndex];
+              const headerIndex = headerGroup.headers.findIndex(
+                (header) => header.id === meta.headerId,
+              );
+              if (headerIndex !== -1) {
+                setIsDragging({
+                  colId: headerGroup.headers[headerIndex].column.id,
+                  headerGroupIndex,
+                  type,
+                  headerId: meta.headerId,
+                });
+                g.updateDraggedIndex(headerGroupIndex, headerIndex);
+                return true;
+              }
+            };
+            for (
+              let headerGroupIndex = 0;
+              headerGroupIndex < g.headerGroups.length;
+              headerGroupIndex++
+            ) {
+              if (loop(headerGroupIndex)) {
+                return true;
+              }
+            }
+
+            return false;
+          };
+
+          // check if it's a header or footer
+          const result =
+            meta.type === "footer"
+              ? loop(vfoot, "footer")
+              : loop(vhead, "header");
+
+          if (!result) {
+            console.log({ vhead, vfoot, colId: colId });
+            throw new Error("No column found");
+          }
         }}
-        cols={rowIds.map((id) => {
-          return { id, size: props.rowHeight };
-        })}
-        /* eslint-enable react-hooks/exhaustive-deps */
+        DndContext={DndColContext}
       >
-        <div
-          ref={tableContainerRef}
-          style={{
-            overflow: "auto",
-            width: props.width + "px",
-            height: props.height + "px",
-            position: "relative",
-            contain: "paint",
-            willChange: "transform",
+        <DndProvider
+          table={table}
+          v2={rowV2}
+          getPinned={(id) => {
+            const row = table.getRow(id);
+            if (!row) {
+              throw new Error("No row");
+            }
+            const pin = row.getIsPinned();
+            if (pin === "bottom") {
+              return { pinned: "right", pinnedIndex: row.getPinnedIndex() };
+            }
+            if (pin === "top") {
+              return { pinned: "left", pinnedIndex: row.getPinnedIndex() };
+            }
+            return { pinned: false };
           }}
+          dimension="y"
+          getVirtualItemForOffset={(offset) => {
+            return rowVirtualizer.getVirtualItemForOffset(offset);
+          }}
+          getRenderedRange={React.useCallback(
+            () => virtualRows.map((vc) => rows[vc.index].id),
+            [rows, virtualRows],
+          )}
+          selected={React.useMemo(() => {
+            return {
+              state: table.getState().rowSelection,
+            };
+          }, [table.getSelectedRowModel()])}
+          getSize={React.useCallback(
+            (id) => {
+              const flatIndex = rowIds.indexOf(id);
+              const size = rowVirtualizer.measurementsCache[flatIndex].size;
+              return size ?? props.rowHeight;
+            },
+            [rowVirtualizer.measurementsCache, table],
+          )}
+          getAverageSize={() => props.rowHeight}
+          DndContext={DndRowContext}
+          scrollRef={tableContainerRef}
+          onDragEnd={(result) => {
+            if (result) {
+              const { delta, pin } = result;
+              handleRowDragEnd(
+                delta,
+                pin === "start" ? "top" : pin === "end" ? "bottom" : false,
+              );
+            }
+            setDraggedRowId(null);
+          }}
+          onDragCancel={() => {
+            setDraggedRowId(null);
+          }}
+          onDragStart={(rowId) => {
+            setDraggedRowId(rowId);
+          }}
+          cols={rowIds.map((id) => {
+            return { id, size: props.rowHeight };
+          })}
+          /* eslint-enable react-hooks/exhaustive-deps */
         >
           <div
-            className="table-scroller"
+            ref={tableContainerRef}
             style={{
-              width: table.getTotalSize(),
-              height:
-                rowVirtualizer.getTotalSize() + vhead.height + vfoot.height,
-              position: "absolute",
-            }}
-          ></div>
-
-          <div
-            className="thead"
-            style={{
-              position: "sticky",
-              top: 0,
-              background: "black",
-              width: table.getTotalSize(),
-              zIndex: 1,
+              overflow: "auto",
+              width: props.width + "px",
+              height: props.height + "px",
+              position: "relative",
+              contain: "paint",
+              willChange: "transform",
             }}
           >
-            {vhead.headerGroups.map((headerGroup, headerIndex, arr) => {
-              const { virtualColumns, virtualizer } =
-                vhead.getVirtualHeaders(headerIndex);
+            <div
+              className="table-scroller"
+              style={{
+                width: table.getTotalSize(),
+                height:
+                  rowVirtualizer.getTotalSize() + vhead.height + vfoot.height,
+                position: "absolute",
+              }}
+            ></div>
 
-              return renderHeaderGroup({
-                headerGroup,
-                virtualColumns,
-                virtualizer,
-                isClosestToTable: headerIndex === arr.length - 1,
-                isDragging: Boolean(isDragging),
-                table,
-                defToRender: "header",
-                rowHeight: props.rowHeight,
-              });
-            })}
+            <div
+              className="thead"
+              style={{
+                position: "sticky",
+                top: 0,
+                background: "black",
+                width: table.getTotalSize(),
+                zIndex: 1,
+              }}
+            >
+              {vhead.headerGroups.map((headerGroup, headerGroupIndex, arr) => {
+                const { virtualColumns, virtualizer } =
+                  vhead.getVirtualHeaders(headerGroupIndex);
+
+                // if we are splitting the header group, we need to disable the parent headers, i.e. not render them
+                const hidden =
+                  isDragging &&
+                  (isDragging.headerGroupIndex > headerGroupIndex ||
+                    isDragging.type !== "header")
+                    ? true
+                    : false;
+
+                // headerGroup.id ===
+
+                return renderHeaderGroup({
+                  headerGroup,
+                  virtualColumns,
+                  virtualizer,
+                  hidden,
+                  table,
+                  defToRender: "header",
+                  rowHeight: props.rowHeight,
+                  draggedColId:
+                    isDragging && headerGroupIndex !== arr.length - 1
+                      ? isDragging.colId
+                      : null,
+                });
+              })}
+            </div>
+
+            <TableBody
+              virtualColumns={bodyCols}
+              virtualRows={virtualRows}
+              rows={rows}
+              measureElement={rowVirtualizer.measureElement}
+              width={table.getTotalSize()}
+              totalWidth={table.getTotalSize()}
+              totalHeight={rowVirtualizer.getTotalSize()}
+              rowHeight={props.rowHeight}
+              rowIds={rowIds}
+            ></TableBody>
+
+            <div
+              className="table-footer"
+              style={{
+                position: "sticky",
+                bottom: 0,
+                background: "black",
+                width: table.getTotalSize(),
+                zIndex: 1,
+              }}
+            >
+              {vfoot.headerGroups.map((footerGroup, footerIndex, arr) => {
+                const { virtualColumns, virtualizer } =
+                  vfoot.getVirtualHeaders(footerIndex);
+
+                // if we are splitting the header group, we need to disable the parent headers, i.e. not render them
+                const hidden =
+                  isDragging &&
+                  (isDragging.headerGroupIndex < footerIndex ||
+                    isDragging.type !== "footer")
+                    ? true
+                    : false;
+
+                return renderHeaderGroup({
+                  headerGroup: footerGroup,
+                  virtualColumns,
+                  virtualizer,
+                  hidden,
+                  table,
+                  defToRender: "footer",
+                  rowHeight: props.rowHeight,
+                  draggedColId:
+                    isDragging && footerIndex !== 0 ? isDragging.colId : null,
+                });
+              })}
+            </div>
           </div>
-
-          <TableBody
-            virtualColumns={bodyCols}
-            virtualRows={virtualRows}
-            rows={rows}
-            measureElement={rowVirtualizer.measureElement}
-            width={table.getTotalSize()}
-            totalWidth={table.getTotalSize()}
-            totalHeight={rowVirtualizer.getTotalSize()}
-            rowHeight={props.rowHeight}
-            rowIds={rowIds}
-          ></TableBody>
-
-          <div
-            className="table-footer"
-            style={{
-              position: "sticky",
-              bottom: 0,
-              background: "black",
-              width: table.getTotalSize(),
-              zIndex: 1,
-            }}
-          >
-            {vfoot.headerGroups.map((footerGroup, footerIndex, arr) => {
-              const { virtualColumns, virtualizer } =
-                vfoot.getVirtualHeaders(footerIndex);
-
-              return renderHeaderGroup({
-                headerGroup: footerGroup,
-                virtualColumns,
-                virtualizer,
-                isClosestToTable: footerIndex === 0,
-                isDragging: Boolean(isDragging),
-                table,
-                defToRender: "footer",
-                rowHeight: props.rowHeight,
-              });
-            })}
-          </div>
-        </div>
+        </DndProvider>
       </DndProvider>
-    </DndProvider>
+    </RowContext.Provider>
   );
 };

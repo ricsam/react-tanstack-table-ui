@@ -11,12 +11,17 @@ import { generateTableData, User } from "../generate_table_data";
 import { IndeterminateCheckbox } from "../table/indeterminate_checkbox";
 import { RowDragHandleCell } from "../table/row_drag_handle_cell";
 import { iterateOverColumns } from "../table/iterate_over_columns";
+import { ExpandRowButton } from "../table/expand_row_button";
 
 export const useBigTable = () => {
   const columns = React.useMemo(() => {
     const columnHelper = createColumnHelper<User>();
 
     const columns: ColumnDef<User, any>[] = [
+      columnHelper.group({
+        id: "misc",
+        footer: () => "Misc",
+      }),
       {
         id: "expander",
         header: () => null,
@@ -69,7 +74,8 @@ export const useBigTable = () => {
             <RowDragHandleCell
               rowId={row.id}
               rowIndex={flatIndex}
-              table={table} />
+              table={table}
+            />
           );
         },
         size: 60,
@@ -99,29 +105,10 @@ export const useBigTable = () => {
           </>
         ),
         cell: ({ row, getValue }) => (
-          <div
-            style={{
-              // Since rows are flattened by default,
-              // we can use the row.depth property
-              // and paddingLeft to visually indicate the depth
-              // of the row
-              paddingLeft: `${row.depth * 2}rem`,
-            }}
-          >
+          <div>
             <div>
-              {row.getCanExpand() ? (
-                <button
-                  {...{
-                    onClick: row.getToggleExpandedHandler(),
-                    style: { cursor: "pointer" },
-                  }}
-                >
-                  {row.getIsExpanded() ? "👇" : "👉"}
-                </button>
-              ) : (
-                "🔵"
-              )}{" "}
-              {getValue<boolean>()}
+              <ExpandRowButton row={row} />
+              {getValue()}
             </div>
           </div>
         ),

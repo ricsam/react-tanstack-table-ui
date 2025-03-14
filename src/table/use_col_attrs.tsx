@@ -7,10 +7,14 @@ export const useColAttrs = <T,>({
   cell,
   start,
   offsetLeft,
+  colIndex,
+  meta,
 }: {
   cell: Cell<T, unknown> | Header<T, unknown>;
   start: number;
   offsetLeft: number;
+  colIndex: number;
+  meta?: any;
 }) => {
   const {
     isDragging,
@@ -21,7 +25,13 @@ export const useColAttrs = <T,>({
     table,
     attributes,
     listeners,
-  } = useDrag(DndColContext, cell.column.id, cell.column.getIndex());
+  } = useDrag({
+    AnoDndContext: DndColContext,
+    id: cell.column.id,
+    thisIndex: colIndex,
+    start,
+    meta,
+  });
 
   let isPinned = pinned ?? cell.column.getIsPinned();
 
@@ -41,19 +51,18 @@ export const useColAttrs = <T,>({
     ? "none"
     : // : `translate3d(calc(var(--virtual-padding-left, 0) * 1px${dragTransform}), 0, 0)`;
       `translate3d(calc(0px${dragTransform}), 0, 0)`;
+  const leafs = cell.column.getLeafColumns();
+  const firstLeaf = leafs[0];
+  const lastLeaf = leafs[leafs.length - 1];
 
   const pinnedRightLeftPos =
-    table.getTotalSize() -
-    (cell.column.getAfter("right") + cell.column.getSize());
+    table.getTotalSize() - (lastLeaf.getAfter("right") + cell.column.getSize());
 
   const transformedRightLeftPos = pinnedRightLeftPos + (_transform.x ?? 0);
 
   const transformedRightRightPos =
     table.getTotalSize() - (transformedRightLeftPos + cell.column.getSize());
 
-  if (isPinned === "right") {
-    // console.log(transformedRightRightPos);
-  }
   return {
     isDragging,
     transform,
@@ -68,7 +77,7 @@ export const useColAttrs = <T,>({
         ? {
             left:
               isPinned === "left"
-                ? `${cell.column.getStart("left") + (_transform.x ?? 0)}px`
+                ? `${firstLeaf.getStart("left") + (_transform.x ?? 0)}px`
                 : undefined,
             right:
               isPinned === "right"

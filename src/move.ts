@@ -24,7 +24,6 @@ function getMinDistance({
   positions,
   sizes,
   pinned,
-  dragged,
   window,
 }: {
   draggedPos: number;
@@ -33,7 +32,6 @@ function getMinDistance({
   positions: Record<string, number>;
   sizes: Record<string, number>;
   pinned: Record<string, PinPos>;
-  dragged: Item;
   window: VirtualizedWindow;
 }): MinDistance {
   let itemId: undefined | string;
@@ -63,6 +61,7 @@ function getMinDistance({
   });
 
   if (!itemId) {
+    console.log({ items, draggedPos, positions, sizes, displacements });
     throw new Error("No item found");
   }
 
@@ -95,12 +94,12 @@ export type VirtualizedWindow = {
   numItems: number;
 };
 
-type DragInfo = {
+export type DragInfo = {
   /**
    * TODO make optional.
    * Calculate closest distance based on the id or the mid point of the selected items
    */
-  id: string;
+  id?: string;
   /**
    * How far have we scrolled inside the table while dragging
    * This is not applied when moving pinned items
@@ -116,11 +115,31 @@ type DragInfo = {
   deltaMouse: number;
 };
 
+type MoveInfo = {
+  displacements: Record<string, number>;
+  dragged: {
+    /**
+     * If DragInfo.id is provided then this will be defined
+     */
+    targetIndex?: number;
+    pinned: PinPos;
+    indexDelta: number;
+  };
+  itemIndices: Record<string, number>;
+  pinned: Record<string, PinPos>;
+  ancestors: Record<string, string[]>;
+};
+
+/**
+ * move virtualized items
+ */
 export const move = (moveInput: {
   /**
    * The virtualized items that are displayed in the table.
    * The pinned items should come first and last.
    * The start of pinned items is as if they were not pinned.
+   *
+   * hierarichal items are flat
    */
   items: Item[];
   /**
@@ -129,10 +148,11 @@ export const move = (moveInput: {
   selected: string[];
   window: VirtualizedWindow;
   drag: DragInfo;
-}) => {
+}): MoveInfo => {
   // console.log(structuredClone(moveInput));
   const { items, selected, window, drag } = moveInput;
   const displacements: Record<string, number> = {};
+  const ancestors: Record<string, string[]> = {};
   const pinned: Record<string, PinPos | false> = {};
   const positions: Record<string, number> = {};
   const itemIndices: Record<string, number> = {};
@@ -170,30 +190,55 @@ export const move = (moveInput: {
     }
   });
 
-  if (!dragged) {
-    throw new Error(
-      `There must be a dragged item (${drag.id}), otherwise what are we moving?`,
-    );
+  let draggedIsPinned: PinPos = false;
+  let defaultTargetIndex: number | undefined;
+
+  if (dragged) {
+    draggedIsPinned = pinned[dragged.id];
+    defaultTargetIndex = dragged.index;
+  } else {
+    // when moving a column group the PinPos should be the same for all selected
+    draggedIsPinned = pinned[selected[0]];
   }
 
-  const defaultMove = {
+  const defaultMove: MoveInfo = {
     displacements,
+    itemIndices,
     dragged: {
-      targetIndex: dragged.index,
-      pinned: pinned[dragged.id],
+      targetIndex: defaultTargetIndex,
+      pinned: draggedIsPinned,
       indexDelta: 0,
     },
     pinned,
+    ancestors,
   };
 
-  let draggedPos =
-    positions[drag.id] +
-    sizes[drag.id] / 2 +
-    drag.deltaMouse +
-    drag.deltaOuterScroll;
+  const firstSelected = selected[0];
+  const lastSelected = selected[selected.length - 1];
 
-  if (!dragged.pinned) {
+  const selectedRange: [number, number] = [
+    positions[firstSelected],
+    positions[lastSelected] + sizes[lastSelected],
+  ];
+
+  // This default pos is used when drag.id is undefined, that would be the case if e.g. moving a column group
+  let midPositionOfDragged =
+    selectedRange[0] + (selectedRange[1] - selectedRange[0]) / 2;
+
+  if (typeof drag.id !== "undefined") {
+    midPositionOfDragged = positions[drag.id] + sizes[drag.id] / 2;
+  }
+
+  let draggedPos =
+    midPositionOfDragged + drag.deltaMouse + drag.deltaOuterScroll;
+
+  if (!draggedIsPinned) {
     draggedPos += drag.deltaInnerScroll;
+  }
+
+  if (Number.isNaN(draggedPos)) {
+    console.log({ midPositionOfDragged, drag, selectedRange, positions, selected });
+    throw new Error("draggedPos is NaN");
   }
 
   const iterate = ({
@@ -203,7 +248,7 @@ export const move = (moveInput: {
     pinned,
     positions,
   }: {
-    dragged: Item;
+    dragged?: Item;
     displacements: Record<string, number>;
     itemIndices: Record<string, number>;
     pinned: Record<string, PinPos | false>;
@@ -215,7 +260,6 @@ export const move = (moveInput: {
       positions,
       sizes,
       displacements,
-      dragged,
       pinned,
       window,
     });
@@ -236,6 +280,7 @@ export const move = (moveInput: {
       items,
       positions,
       window,
+      ancestors,
     });
     return { result, minDistance };
   };
@@ -269,7 +314,7 @@ function displace({
   positions,
   window,
 }: {
-  dragged: Item;
+  dragged?: Item;
   selected: string[];
   items: Item[];
   displacements: Record<string, number>;
@@ -279,7 +324,7 @@ function displace({
   pinned: Record<string, PinPos>;
   positions: Record<string, number>;
   window: VirtualizedWindow;
-}) {
+}): MoveInfo["dragged"] {
   const getPosForIndex = (
     index: number,
     injectedSize: number,
@@ -310,8 +355,10 @@ function displace({
   const targetPinned = pinned[minDistance.id];
   let newIndex = itemLookup[minDistance.id].index;
 
+  const draggedIsPinned = dragged ? dragged.pinned : pinned[selected[0]];
+
   // if we are moving a new item into the pinned space
-  if (targetPinned !== false && dragged.pinned !== targetPinned) {
+  if (targetPinned !== false && draggedIsPinned !== targetPinned) {
     // when moving an item into a pinned space we are NOT doing the remove and inject algo, instead we are just injecting. Therefore we can inject before or after the minDistanceItem
     if (targetPinned === "start") {
       // we are pinning a col to the start
@@ -328,11 +375,16 @@ function displace({
     }
   }
 
-  const prevIndex = dragged.index;
+  // let's say that when we are moving a column group (i.e. dragged is undefined) then we are treating all selected
+  // items as one item. Thus the dragged index will be the one of the first selected
+  const prevIndex = dragged ? dragged.index : itemLookup[selected[0]].index;
   // todo, dragged.index may be undefined when moving a col group
   const delta = newIndex - prevIndex;
 
   const removeItem = (itemId: string) => {
+    if (!itemLookup[itemId]) {
+      console.log("@removeitem", { itemLookup, items, itemId });
+    }
     const originalIndex = itemLookup[itemId].index;
     // we have to move delta steps but if we encounter any selected items them we skip them
     const newItemIndex = originalIndex + delta;
@@ -563,22 +615,25 @@ function getDisplacements({
   drag,
   positions,
   window,
+  ancestors,
 }: {
   minDistance: MinDistance;
   displacements: Record<string, number>;
   itemIndices: Record<string, number>;
   pinned: Record<string, PinPos | false>;
-  dragged: Item;
+  dragged?: Item;
   itemLookup: Record<string, Item>;
   selected: string[];
   items: Item[];
   drag: DragInfo;
   positions: Record<string, number>;
+  ancestors: Record<string, string[]>;
   window: VirtualizedWindow;
-}) {
+}): MoveInfo {
   return {
     displacements,
     itemIndices,
+    ancestors,
     dragged: displace({
       dragged,
       selected,
