@@ -1,6 +1,6 @@
 import { Cell, flexRender } from "@tanstack/react-table";
 import React, { CSSProperties } from "react";
-import { useColAttrs } from "./use_col_attrs";
+import { useColAttrs } from "../use_col_attrs";
 
 export const DragAlongCell = React.memo(function DragAlongCell({
   cell,

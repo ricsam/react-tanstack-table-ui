@@ -1,6 +1,6 @@
 import React from "react";
 import { DndContextType } from "./dnd_provider";
-import { PinPos } from "../move";
+import { PinPos } from "./rows/dnd/move_in_window";
 import { flushSync } from "react-dom";
 
 type Transform = {
@@ -78,7 +78,7 @@ function useGetStyle({
   const prevStartRef = React.useRef(start);
   const prevStart = prevStartRef.current;
 
-  const prevId = React.useRef(id);
+  // const prevId = React.useRef(id);
 
   if (updatedIndex) {
     const totalPreviousD = prevStart + (prevTransform[dimension] ?? 0);

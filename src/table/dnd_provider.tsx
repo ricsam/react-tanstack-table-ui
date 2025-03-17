@@ -1,15 +1,6 @@
-import {
-  ColumnPinningPosition,
-  RowSelectionState,
-  Table,
-} from "@tanstack/react-table";
+import { RowSelectionState, Table } from "@tanstack/react-table";
 import React, { useState } from "react";
-import { findDeltaAtPosition, Item } from "../Item";
-import { DragInfo, move, Item as MoveItem, VirtualizedWindow } from "../move";
-import { VirtualItem } from "../react-virtual";
-
-const totalDelta = (delta: Delta, dimension: "x" | "y") =>
-  delta.mouseDelta[dimension] + delta.scrollDelta[dimension];
+import { DragInfo, moveInWindow, Item as MoveItem, VirtualizedWindow } from "./rows/dnd/move_in_window";
 
 export type DndActive = {
   id: string;
@@ -67,7 +58,7 @@ export type DndContextType = {
         pinned: "left" | "right";
         pinnedIndex: number;
       };
-  moveResult?: ReturnType<typeof move>;
+  moveResult?: ReturnType<typeof moveInWindow>;
 };
 export type V2 = {
   window: VirtualizedWindow;
@@ -92,7 +83,6 @@ export const DndProvider = ({
   selected,
   getRenderedRange,
   getSize,
-  getVirtualItemForOffset,
   getPinned,
   table,
   v2,
@@ -117,7 +107,6 @@ export const DndProvider = ({
         pinned: "left" | "right";
         pinnedIndex: number;
       };
-  getVirtualItemForOffset: (offset: number) => VirtualItem | undefined;
   table: Table<any>;
   v2: V2;
 }) => {
@@ -148,7 +137,7 @@ export const DndProvider = ({
           scroll: isDragging.scrollStart[dimension],
         },
       };
-      const moveResult = move(moveInput);
+      const moveResult = moveInWindow(moveInput);
       // console.log("@move", {
       //   moveResult,
       //   moveInput,
@@ -165,7 +154,6 @@ export const DndProvider = ({
     cols,
     onDragCancel,
     getAverageSize,
-    getVirtualItemForOffset,
   };
   const refs = React.useRef(_refs);
   refs.current = _refs;

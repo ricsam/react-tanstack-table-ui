@@ -7,7 +7,7 @@ import {
   observeElementRect,
   Virtualizer,
   VirtualizerOptions,
-} from "../react-virtual";
+} from "../lib/react-virtual";
 import { flushSync } from "react-dom";
 
 const useIsomorphicLayoutEffect =

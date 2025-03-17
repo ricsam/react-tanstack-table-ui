@@ -133,7 +133,7 @@ type MoveInfo = {
 /**
  * move virtualized items
  */
-export const move = (moveInput: {
+export const moveInWindow = (moveInput: {
   /**
    * The virtualized items that are displayed in the table.
    * The pinned items should come first and last.
@@ -178,6 +178,7 @@ export const move = (moveInput: {
     }
 
     positions[item.id] = item.start;
+    ancestors[item.id] = [];
 
     displacements[item.id] = 0;
     sizes[item.id] = item.size;
@@ -387,7 +388,7 @@ function displace({
     }
     const originalIndex = itemLookup[itemId].index;
     // we have to move delta steps but if we encounter any selected items them we skip them
-    const newItemIndex = originalIndex + delta;
+    // const newItemIndex = originalIndex + delta;
 
     // "remove" the item, and decrement the index of all items to the right
     items.forEach((item) => {

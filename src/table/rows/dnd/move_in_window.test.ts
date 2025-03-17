@@ -1,5 +1,5 @@
 import { expect, describe, it } from "vitest";
-import { Item, move, PinPos } from "./move";
+import { Item, moveInWindow, PinPos } from "../move_in_window";
 
 // 1. should move one non-pinned to non-pinned
 // 2. should move one pinned to pinned
@@ -49,7 +49,7 @@ import { Item, move, PinPos } from "./move";
 describe("scroll at initial position", () => {
   describe("move one", () => {
     it("1. should move one non-pinned to non-pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,
@@ -106,7 +106,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("2. should move one pinned to pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,
@@ -184,7 +184,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("3. should move one pinned to non-pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,
@@ -241,7 +241,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("4. should move one non-pinned to pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,
@@ -300,7 +300,7 @@ describe("scroll at initial position", () => {
   });
   describe("move multiple", () => {
     it("1. should move multiple non-pinned to non-pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,
@@ -385,7 +385,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("2. should move multiple pinned to pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         items: [
           {
             start: 0,
@@ -473,7 +473,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("3. should move multiple pinned to non-pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         items: [
           {
             start: 0,
@@ -586,7 +586,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("4. should move multiple non-pinned to pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         items: [
           {
             start: 0,
@@ -737,7 +737,7 @@ describe("scroll at initial position", () => {
       for (let i = 6; i <= 9; i += 1) {
         selected.push(String(i));
       }
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,
@@ -790,7 +790,7 @@ describe("scroll at initial position", () => {
 
   describe("should work with pinned right", () => {
     it("should move left-pinned to right-pinned", () => {
-      const result = move({
+      const result = moveInWindow({
         items: [
           {
             start: 0,
@@ -871,7 +871,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("should unpin by moving to empty space", { todo: true }, () => {
-      const result = move({
+      const result = moveInWindow({
         items: [
           {
             start: 0,
@@ -945,7 +945,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("should pin to the left of the pinned item when left is closer", () => {
-      const result = move({
+      const result = moveInWindow({
         items: [
           {
             start: 0,
@@ -1040,7 +1040,7 @@ describe("scroll at initial position", () => {
 
   describe("should work when the items have actual sizes", () => {
     it("should move one", () => {
-      const result = move({
+      const result = moveInWindow({
         items: [
           {
             id: "id",
@@ -1231,7 +1231,7 @@ describe("scroll at initial position", () => {
 
   describe("Can move group", () => {
     it("should be able to do a basic move", () => {
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,
@@ -1310,7 +1310,7 @@ describe("scroll at initial position", () => {
       });
     });
     it("should not move if delta is 0", () => {
-      const result = move({
+      const result = moveInWindow({
         window: {
           scroll: 0,
           size: 10,

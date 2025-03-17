@@ -1,6 +1,6 @@
 import { Row } from "@tanstack/react-table";
 import React from "react";
-import { DndRowContext } from "./dnd_provider";
+import { DndRowContext } from "../dnd_provider";
 
 export const ExpandRowButton = ({ row }: { row: Row<any> }) => {
   const ctx = React.useContext(DndRowContext);
@@ -16,7 +16,12 @@ export const ExpandRowButton = ({ row }: { row: Row<any> }) => {
 
   if (ctx.moveResult) {
     const ancestors = ctx.moveResult.ancestors[row.id];
-    depth = ancestors.length;
+    if (!ancestors) {
+      depth = 0;
+      console.log(ctx.moveResult.ancestors, row.id);
+    } else {
+      depth = ancestors.length;
+    }
   }
 
   return (

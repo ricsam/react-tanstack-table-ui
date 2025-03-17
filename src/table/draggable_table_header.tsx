@@ -78,10 +78,6 @@ export const DraggableTableHeader = ({
     ...dragStyle,
   };
 
-  if (defToRender === "header") {
-    console.log("signature", hidden, header.column.id);
-  }
-
   if (hidden) {
     return (
       <div

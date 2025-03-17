@@ -1,7 +1,7 @@
 import { Row } from "@tanstack/react-table";
-import { VirtualItem } from "../react-virtual";
-import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
-import { TableRow } from "./table_row";
+import { VirtualItem } from "../lib/react-virtual";
+import { getColVirtualizedOffsets } from "./cols/get_col_virtualized_offset";
+import { TableRow } from "./rows/table_row";
 
 export const TableBody = ({
   virtualColumns,

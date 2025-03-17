@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
-import { iterateOverColumns } from "../table/iterate_over_columns";
+import { iterateOverColumns } from "./iterate_over_columns";
 import { RowDragHandleCell } from "../table/row_drag_handle_cell";
 import { IndeterminateCheckbox } from "../table/indeterminate_checkbox";
 

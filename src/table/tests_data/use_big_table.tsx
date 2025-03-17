@@ -7,11 +7,11 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
-import { generateTableData, User } from "../generate_table_data";
-import { IndeterminateCheckbox } from "../table/indeterminate_checkbox";
-import { RowDragHandleCell } from "../table/row_drag_handle_cell";
-import { iterateOverColumns } from "../table/iterate_over_columns";
-import { ExpandRowButton } from "../table/expand_row_button";
+import { generateTableData, User } from "./generate_table_data";
+import { IndeterminateCheckbox } from "../indeterminate_checkbox";
+import { RowDragHandleCell } from "../rows/row_drag_handle_cell";
+import { iterateOverColumns } from "./iterate_over_columns";
+import { ExpandRowButton } from "../rows/expand_row_button";
 
 export const useBigTable = () => {
   const columns = React.useMemo(() => {

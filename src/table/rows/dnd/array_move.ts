@@ -11,8 +11,6 @@
 //            * inject e here (index 6)
 // a,b,d,f,c,g,e
 
-import { Row } from "@tanstack/react-table";
-
 /**
  * Used for moving columns
  */
@@ -209,7 +207,7 @@ export const groupedArrayMove = <T>(input: {
   for (const id of flatSelected) {
     const group = attrs[id].groupId;
     const originalIndex = attrs[id].flatIndex;
-    const lastIndexCandidate = originalIndex + delta;
+    // const lastIndexCandidate = originalIndex + delta;
     let movedSteps = 0;
     let candidateIndex = originalIndex;
     let targetIndex = originalIndex;

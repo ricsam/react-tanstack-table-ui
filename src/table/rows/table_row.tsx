@@ -1,10 +1,10 @@
 import { Cell, Row } from "@tanstack/react-table";
 import React, { CSSProperties } from "react";
-import { VirtualItem } from "../react-virtual";
-import { useDrag } from "./use_drag";
-import { DndRowContext } from "./dnd_provider";
-import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
-import { DragAlongCell } from "./drag_along_cell";
+import { VirtualItem } from "../../lib/react-virtual";
+import { useDrag } from "../use_drag";
+import { DndRowContext } from "../dnd_provider";
+import { getColVirtualizedOffsets } from "../cols/get_col_virtualized_offset";
+import { DragAlongCell } from "../cols/drag_along_cell";
 
 export const TableRow = React.memo(function TableRow({
   row,

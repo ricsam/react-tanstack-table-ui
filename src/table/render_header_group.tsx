@@ -1,8 +1,7 @@
 import { Header, HeaderGroup, Table } from "@tanstack/react-table";
-import { VirtualItem, Virtualizer } from "../react-virtual";
-import { DisplayHeader } from "./display_header";
+import { getColVirtualizedOffsets } from "./cols/get_col_virtualized_offset";
 import { DraggableTableHeader } from "./draggable_table_header";
-import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
+import { VirtualItem, Virtualizer } from "../lib/react-virtual";
 
 export function renderHeaderGroup({
   headerGroup,
@@ -12,6 +11,7 @@ export function renderHeaderGroup({
   table,
   defToRender,
   rowHeight,
+  canDrag: groupCanDrag,
   draggedColId,
 }: {
   headerGroup: HeaderGroup<any>;
@@ -21,6 +21,7 @@ export function renderHeaderGroup({
   table: Table<any>;
   defToRender: "footer" | "header";
   rowHeight: number;
+  canDrag: boolean;
   draggedColId: string | null;
 }) {
   const { offsetLeft, offsetRight } = getColVirtualizedOffsets({
@@ -47,17 +48,12 @@ export function renderHeaderGroup({
           .filter(({ header }) => predicate(header))
           .map(({ header, start, colIndex }) => {
             let canDrag = true;
-            // const col = table.getColumn(header.column.id);
             if (header.isPlaceholder) {
               canDrag = false;
             }
-            if (defToRender === "header" && draggedColId) {
-              console.log(
-                "signature /2",
-                Boolean(draggedColId && draggedColId !== header.column.id),
-                draggedColId,
-                header.column.id,
-              );
+
+            if (!groupCanDrag) {
+              canDrag = false;
             }
             return (
               <DraggableTableHeader

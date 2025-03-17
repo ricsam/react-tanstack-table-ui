@@ -1,6 +1,6 @@
 import { Table } from "@tanstack/react-table";
-import { useDrag } from "./use_drag";
-import { DndRowContext } from "./dnd_provider";
+import { useDrag } from "../use_drag";
+import { DndRowContext } from "../dnd_provider";
 import { useContext } from "react";
 import { RowContext } from "./row_context";
 
