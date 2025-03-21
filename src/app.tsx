@@ -4,8 +4,6 @@ import { VirtualizedTable } from "./table/table";
 import { useBigTable } from "./table/tests_data/use_big_table";
 
 export default function App() {
-  // function App2() {
-
   const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =
     useBigTable();
   // const { data, setData, columnOrder, setColumnOrder, table, getSubRows } =

@@ -134,10 +134,6 @@ export const ColDragProvider = (
           pinned: false,
         };
       }}
-      getRenderedRange={React.useCallback(
-        () => bodyCols.map((vc) => vhead.body.headerGroup.headers[vc.index].id),
-        [bodyCols, vhead.body.headerGroup],
-      )}
       /* eslint-disable react-hooks/exhaustive-deps */
       cols={React.useMemo(() => {
         return allCols.map((col) => {

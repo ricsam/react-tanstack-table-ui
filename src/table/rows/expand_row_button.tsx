@@ -1,12 +1,8 @@
 import { Row } from "@tanstack/react-table";
-import React from "react";
-import { DndRowContext } from "../dnd_provider";
+import { useRowContext } from "./row_context";
 
 export const ExpandRowButton = ({ row }: { row: Row<any> }) => {
-  const ctx = React.useContext(DndRowContext);
-  if (!ctx) {
-    throw new Error("useAnoDrag must be used within AnoDndProvider");
-  }
+  const ctx = useRowContext();
 
   // Since rows are flattened by default,
   // we can use the row.depth property

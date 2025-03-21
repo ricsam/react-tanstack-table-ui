@@ -1,6 +1,6 @@
 import { ColumnOrderState, Table } from "@tanstack/react-table";
 import React from "react";
-import { useHeaderGroupVirtualizers } from "../use_header_group_virtualizers";
+import { VirtualHeaderGroup } from "./header_group";
 
 export const useColDrag = (props: {
   columnOrder: ColumnOrderState;
@@ -11,20 +11,6 @@ export const useColDrag = (props: {
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
 }) => {
   const { table, tableContainerRef } = props;
-  const vhead = useHeaderGroupVirtualizers({
-    headerGroups: table.getHeaderGroups(),
-    tableContainerRef,
-    table,
-    type: "header",
-    rowHeight: props.rowHeight,
-  });
-  const vfoot = useHeaderGroupVirtualizers({
-    headerGroups: table.getFooterGroups(),
-    tableContainerRef,
-    table,
-    type: "footer",
-    rowHeight: props.rowHeight,
-  });
 
   const [isColDragging, setIsColDragging] = React.useState<{
     colId: string;
@@ -33,5 +19,23 @@ export const useColDrag = (props: {
     type: "header" | "footer";
   } | null>(null);
 
-  return { vfoot, vhead, isColDragging, setIsColDragging };
+  // const vhead = useHeaderGroupVirtualizers({
+  //   headerGroups: table.getHeaderGroups(),
+  //   tableContainerRef,
+  //   table,
+  //   type: "header",
+  //   rowHeight: props.rowHeight,
+  // });
+  // const vfoot = useHeaderGroupVirtualizers({
+  //   headerGroups: table.getFooterGroups(),
+  //   tableContainerRef,
+  //   table,
+  //   type: "footer",
+  //   rowHeight: props.rowHeight,
+  // });
+
+  const headerGroups: VirtualHeaderGroup[] = [];
+  const footerGroups: VirtualHeaderGroup[] = [];
+
+  return { isColDragging, setIsColDragging, headerGroups, footerGroups };
 };

@@ -17,69 +17,98 @@ export const useBigTable = () => {
   const columns = React.useMemo(() => {
     const columnHelper = createColumnHelper<User>();
 
+    const includeLeafRows = true;
+    const includeParentRows = true;
+
     const columns: ColumnDef<User, any>[] = [
       columnHelper.group({
         id: "misc",
         footer: () => "Misc",
+        columns: [
+          {
+            id: "pin-row",
+            header: () => "Pin",
+            cell: ({ row }) =>
+              row.getIsPinned() ? (
+                <button
+                  onClick={() =>
+                    row.pin(false, includeLeafRows, includeParentRows)
+                  }
+                >
+                  ❌
+                </button>
+              ) : (
+                <div style={{ display: "flex", gap: "4px" }}>
+                  <button
+                    onClick={() =>
+                      row.pin("top", includeLeafRows, includeParentRows)
+                    }
+                  >
+                    ⬆️
+                  </button>
+                  <button
+                    onClick={() =>
+                      row.pin("bottom", includeLeafRows, includeParentRows)
+                    }
+                  >
+                    ⬇️
+                  </button>
+                </div>
+              ),
+          },
+          {
+            id: "expander",
+            header: () => null,
+            cell: ({ row }) => {
+              return row.getCanExpand() ? (
+                <button
+                  {...{
+                    onClick: row.getToggleExpandedHandler(),
+                    style: { cursor: "pointer" },
+                  }}
+                >
+                  {row.getIsExpanded() ? "⬇️" : "➡️"}
+                </button>
+              ) : (
+                "🔵"
+              );
+            },
+          },
+          {
+            id: "select",
+            header: ({ table }) => (
+              <IndeterminateCheckbox
+                {...{
+                  checked: table.getIsAllRowsSelected(),
+                  indeterminate: table.getIsSomeRowsSelected(),
+                  onChange: table.getToggleAllRowsSelectedHandler(),
+                }}
+              />
+            ),
+            cell: ({ row }) => (
+              <div className="px-1">
+                <IndeterminateCheckbox
+                  {...{
+                    checked: row.getIsSelected(),
+                    disabled: !row.getCanSelect(),
+                    indeterminate: row.getIsSomeSelected(),
+                    onChange: row.getToggleSelectedHandler(),
+                  }}
+                />
+              </div>
+            ),
+          },
+          {
+            id: "drag-handle",
+            header: "Move",
+            cell: ({ row }) => {
+              return <RowDragHandleCell rowId={row.id} />;
+            },
+            size: 60,
+          },
+        ],
       }),
-      {
-        id: "expander",
-        header: () => null,
-        cell: ({ row }) => {
-          return row.getCanExpand() ? (
-            <button
-              {...{
-                onClick: row.getToggleExpandedHandler(),
-                style: { cursor: "pointer" },
-              }}
-            >
-              {row.getIsExpanded() ? "⬇️" : "➡️"}
-            </button>
-          ) : (
-            "🔵"
-          );
-        },
-      },
-      {
-        id: "select",
-        header: ({ table }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler(),
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <div className="px-1">
-            <IndeterminateCheckbox
-              {...{
-                checked: row.getIsSelected(),
-                disabled: !row.getCanSelect(),
-                indeterminate: row.getIsSomeSelected(),
-                onChange: row.getToggleSelectedHandler(),
-              }}
-            />
-          </div>
-        ),
-      },
-      {
-        id: "drag-handle",
-        header: "Move",
-        cell: ({ row, table }) => {
-          const { rows } = table.getRowModel();
-          const flatIndex = rows.indexOf(row);
-          return (
-            <RowDragHandleCell
-              rowId={row.id}
-              rowIndex={flatIndex}
-              table={table}
-            />
-          );
-        },
-        size: 60,
-      },
+
       columnHelper.accessor("id", {
         header: "ID",
         cell: (info) => info.getValue(),
@@ -252,6 +281,7 @@ export const useBigTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSubRows,
     enableRowSelection: true,
+    keepPinnedRows: true,
   });
   return { data, setData, columnOrder, setColumnOrder, table, getSubRows };
 };

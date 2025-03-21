@@ -1,3 +1,4 @@
+import { ColumnPinningPosition } from "@tanstack/react-table";
 import React from "react";
 
 export function tuple<A, B, C, D>(a: A, b: B, c: C, d: D): [A, B, C, D];
@@ -30,4 +31,16 @@ export const logDiff = (...values: any[]) => {
   }
   prevLog = values.join(", ");
   console.log(...values);
+};
+
+export const mapColumnPinningPositionToPinPos = (
+  pos: ColumnPinningPosition,
+) => {
+  if (pos === false) {
+    return false;
+  }
+  if (pos === "left") {
+    return "start";
+  }
+  return "end";
 };

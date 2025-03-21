@@ -1,6 +1,5 @@
 import { RowSelectionState, Table } from "@tanstack/react-table";
 import React, { useState } from "react";
-import { DragInfo, moveInWindow, Item as MoveItem, VirtualizedWindow } from "./rows/dnd/move_in_window";
 
 export type DndActive = {
   id: string;
@@ -228,9 +227,6 @@ export const DndProvider = ({
 
   const nodeRef = React.useRef<Record<string, HTMLElement | null>>({});
 
-  if (v2.items.length === 14) {
-    // console.log("@moveResult", v2.items, moveResult);
-  }
 
   return (
     <DndContext.Provider

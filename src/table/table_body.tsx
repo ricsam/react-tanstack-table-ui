@@ -1,100 +1,60 @@
-import { Row } from "@tanstack/react-table";
-import { VirtualItem } from "../lib/react-virtual";
-import { getColVirtualizedOffsets } from "./cols/get_col_virtualized_offset";
-import { TableRow } from "./rows/table_row";
+import { useRowContext } from "./rows/row_context";
+import { TableRow, VirtualRow } from "./rows/table_row";
+import { useTableContext } from "./table_context";
 
 export const TableBody = ({
-  virtualColumns,
-  virtualRows,
   rows,
-  measureElement,
-  width,
-  totalWidth,
-  totalHeight,
-  rowHeight,
-  rowIds,
+  offsetBottom,
+  offsetTop,
 }: {
-  virtualColumns: VirtualItem[];
-  virtualRows: VirtualItem[];
-  rows: Row<any>[];
-  measureElement: (el?: HTMLElement | null) => void;
-  width: number;
-  totalWidth: number;
-  totalHeight: number;
-  rowHeight: number;
-  rowIds: string[];
+  rows: VirtualRow[];
+  offsetTop: number;
+  offsetBottom: number;
 }) => {
-  const { offsetLeft: offsetTop, offsetRight: offsetBottom } =
-    getColVirtualizedOffsets({
-      virtualColumns: virtualRows,
-      getIsPinned(vcIndex) {
-        const row = rows[vcIndex];
-        return !!row.getIsPinned();
-      },
-      totalSize: totalHeight,
-    });
+  const { table, rowHeight } = useTableContext();
+  const { headerGroups, footerGroups } = useRowContext();
 
-  const loop = (predicate: (header: Row<any>) => boolean) => {
+  const loop = (rows: VirtualRow[]) => {
     return (
       <>
-        {virtualRows
-          .map((virtualRow) => ({
-            row: rows[virtualRow.index],
-            start: virtualRow.start,
-          }))
-          .filter(({ row }) => predicate(row))
-          .map(({ row, start }) => {
-            return (
-              <TableRow
-                key={row.id}
-                row={row}
-                virtualColumns={virtualColumns}
-                measureElement={measureElement}
-                width={width}
-                totalSize={totalWidth}
-                rowHeight={rowHeight}
-                flatIndex={rowIds.indexOf(row.id)}
-                start={start}
-              />
-            );
-          })}
+        {rows.map((virtualRow) => {
+          return <TableRow key={virtualRow.row.id} {...virtualRow} />;
+        })}
       </>
     );
   };
-  // console.log("@offsetBottom", offsetBottom);
+
+  const pinnedTop = rows.filter((row) => row.isPinned === "start");
 
   return (
     <div
       className="tbody"
       style={{
-        // maxWidth: table.getTotalSize(),
         position: "relative",
-        // transform: `translate3d(0, calc(var(--virtual-offset-top, 0) * 1px), 0)`,
-        // top: virtualRows[0].start,
-        width,
+        width: table.getTotalSize(),
       }}
     >
-      {loop((row) => row.getIsPinned() === "top")}
+      <div
+        style={{
+          position: "sticky",
+          zIndex: 1,
+          top: headerGroups.length * rowHeight,
+        }}
+      >
+        {loop(pinnedTop)}
+      </div>
       <div style={{ height: offsetTop }} className="offset-top"></div>
-      {loop((row) => row.getIsPinned() === false)}
+      {loop(rows.filter((row) => row.isPinned === false))}
       <div style={{ height: offsetBottom }} className="offset-bottom"></div>
-      {loop((row) => row.getIsPinned() === "bottom")}
-
-      {/* {virtualRows.map((virtualRow) => {
-        const row = rows[virtualRow.index];
-
-        return (
-          <TableRow
-            key={row.id}
-            row={row}
-            virtualOffsetTop={virtualRow.start}
-            virtualColumns={virtualColumns}
-            measureElement={measureElement}
-            width={width}
-            totalSize={totalSize}
-          />
-        );
-      })} */}
+      <div
+        style={{
+          position: "sticky",
+          zIndex: 1,
+          bottom: footerGroups.length * rowHeight - 1,
+        }}
+      >
+        {loop(rows.filter((row) => row.isPinned === "end"))}
+      </div>
     </div>
   );
 };

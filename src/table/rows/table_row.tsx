@@ -1,152 +1,98 @@
-import { Cell, Row } from "@tanstack/react-table";
+import { Row } from "@tanstack/react-table";
 import React, { CSSProperties } from "react";
-import { VirtualItem } from "../../lib/react-virtual";
-import { useDrag } from "../use_drag";
-import { DndRowContext } from "../dnd_provider";
-import { getColVirtualizedOffsets } from "../cols/get_col_virtualized_offset";
 import { DragAlongCell } from "../cols/drag_along_cell";
+import { VirtualHeader } from "../cols/draggable_table_header";
+import { useTableContext } from "../table_context";
+import { PinPos } from "./dnd/move_in_window";
+import { useRowContext } from "./row_context";
+import { RowRefContext } from "./row_ref_context";
+
+export type VirtualRow = {
+  dndStyle: CSSProperties;
+  row: Row<any>;
+  isDragging: boolean;
+  isPinned: PinPos;
+  flatIndex: number;
+};
 
 export const TableRow = React.memo(function TableRow({
+  dndStyle,
   row,
-  virtualColumns,
-  measureElement,
-  width,
-  totalSize,
-  rowHeight,
+  isDragging,
   flatIndex,
-  start,
-}: {
-  row: Row<any>;
-  virtualColumns: VirtualItem[];
-  measureElement: (el?: HTMLElement | null) => void;
-  width: number;
-  totalSize: number;
-  rowHeight: number;
-  flatIndex: number;
-  start: number;
-}) {
+  isPinned,
+}: VirtualRow) {
   const visibileCells = row.getVisibleCells();
+  const { rowHeight } = useTableContext();
+  const rowRef = React.useRef<HTMLDivElement>(null);
+  const { mainHeaderGroup: headerGroup, rowVirtualizer } = useRowContext();
 
-  const { transform, transition, setNodeRef, isDragging, hidden } = useDrag({
-    AnoDndContext: DndRowContext,
-    id: row.id,
-    thisIndex: flatIndex,
-    start,
-  });
-
-  // console.log("@transform?.y ?? 0", transform?.y ?? 0);
-
-  const style: CSSProperties = {
-    // position: "absolute",
-    // transform: `translate3d(calc(var(--virtual-padding-left, 0) * 1px), ${virtualRow.start}px, 0)`,
-    // transform: `translate3d(0, ${virtualOffsetTop}px, 0)`,
-    // transform: transform
-    //   ? CSS.Transform.toString(transform)
-    //   : `translate3d(0, ${virtualOffsetTop}px, 0)`,
-    transform: `translate3d(0, ${transform?.y ?? 0}px, 0)`,
-    // top: virtualOffsetTop,
-    position: "relative",
-    transition: transition,
-    opacity: isDragging ? 0.8 : 1,
-    zIndex: isDragging ? 1 : 0,
-    width,
-    backgroundColor: "black",
-    display: hidden ? "none" : "block",
-  };
-  // if (hidden) {
-  //   console.log("hidden");
-  // }
-
-  // let lastPinned: undefined | number;
-  // let firstNonPinned: undefined | number;
-  // for (let i = 0; i < virtualColumns.length; i++) {
-  //   const vc = virtualColumns[i];
-  //   const header = visibileCells[vc.index];
-  //   if (header.column.getIsPinned()) {
-  //     lastPinned = i;
-  //   } else {
-  //     firstNonPinned = i;
-  //     break;
-  //   }
-  // }
-
-  // let offsetLeft = 0;
-
-  // if (typeof firstNonPinned !== "undefined") {
-  //   offsetLeft = virtualColumns[firstNonPinned].start;
-  //   if (typeof lastPinned !== "undefined") {
-  //     offsetLeft -= virtualColumns[lastPinned].end;
-  //   }
-  // }
-
-  const { offsetLeft, offsetRight } = getColVirtualizedOffsets({
-    virtualColumns,
-    getIsPinned(vcIndex) {
-      const header = visibileCells[vcIndex];
-      return !!header.column.getIsPinned();
-    },
-    totalSize,
-  });
-
-  const loop = (predicate: (header: Cell<any, unknown>) => boolean) => {
+  const loop = (headers: VirtualHeader[]) => {
     return (
       <>
-        {virtualColumns
-          .map((virtualColumn) => ({
-            cell: visibileCells[virtualColumn.index],
-            start: virtualColumn.start,
-            colIndex: virtualColumn.index,
-          }))
-          .filter(({ cell }) => predicate(cell))
-          .map(({ cell, start, colIndex }) => {
-            return (
-              <DragAlongCell
-                key={cell.id}
-                colIndex={colIndex}
-                cell={cell}
-                start={start}
-                offsetLeft={offsetLeft}
-                rowHeight={rowHeight}
-              />
-            );
-          })}
+        {headers.map((virtualHeader) => {
+          const cell = visibileCells[virtualHeader.colIndex];
+          return (
+            <DragAlongCell
+              key={cell.id}
+              cell={cell}
+              header={virtualHeader}
+              rowHeight={rowHeight}
+            />
+          );
+        })}
       </>
     );
   };
 
   const isExpanded = row.subRows.length === 0 && row.getIsExpanded();
 
+  const { table } = useTableContext();
+
   return (
     <>
-      <div
-        style={{
-          ...style,
-        }}
-        data-index={flatIndex}
-        ref={(el) => {
-          setNodeRef(el);
-          if (isExpanded) {
-            console.log("measureElement", row.id, flatIndex);
-            measureElement(el);
-          }
-        }}
-      >
+      <RowRefContext.Provider value={rowRef}>
         <div
+          className="table-row"
           style={{
             position: "relative",
-            display: "flex",
-            width,
-            height: rowHeight,
+            opacity: isDragging ? 0.8 : 1,
+            zIndex: isDragging ? 1 : 0,
+            width: table.getTotalSize(),
+            backgroundColor: flatIndex % 2 === 0 ? "black" : "#191919",
+            ...dndStyle,
+          }}
+          data-index={flatIndex}
+          ref={(el) => {
+            rowRef.current = el;
+            if (isExpanded) {
+              rowVirtualizer.measureElement(el);
+            }
           }}
         >
-          {loop((cell) => cell.column.getIsPinned() === "left")}
-          <div style={{ width: offsetLeft }}></div>
-          {loop((cell) => cell.column.getIsPinned() === false)}
-          <div style={{ width: offsetRight }}></div>
-          {loop((cell) => cell.column.getIsPinned() === "right")}
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              width: table.getTotalSize(),
+              height: rowHeight,
+            }}
+          >
+            {loop(
+              headerGroup.headers.filter((cell) => cell.isPinned === "start"),
+            )}
+            <div style={{ width: headerGroup.offsetLeft }}></div>
+            {loop(
+              headerGroup.headers.filter((cell) => cell.isPinned === false),
+            )}
+            <div style={{ width: headerGroup.offsetRight }}></div>
+            {loop(
+              headerGroup.headers.filter((cell) => cell.isPinned === "end"),
+            )}
+          </div>
+          {isExpanded && <div>{renderSubComponent({ row })}</div>}
         </div>
-        {isExpanded && <div>{renderSubComponent({ row })}</div>}
-      </div>
+      </RowRefContext.Provider>
     </>
   );
 });

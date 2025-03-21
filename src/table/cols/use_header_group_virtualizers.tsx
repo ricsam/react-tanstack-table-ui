@@ -1,5 +1,6 @@
-import { Header, HeaderGroup, Table } from "@tanstack/react-table";
+import { flexRender, Header, HeaderGroup } from "@tanstack/react-table";
 import React from "react";
+import { flushSync } from "react-dom";
 import {
   defaultRangeExtractor,
   elementScroll,
@@ -7,50 +8,75 @@ import {
   observeElementRect,
   Virtualizer,
   VirtualizerOptions,
-} from "../lib/react-virtual";
-import { flushSync } from "react-dom";
+} from "../../lib/react-virtual";
+import { mapColumnPinningPositionToPinPos } from "../../utils";
+import { useTableContext } from "../table_context";
+import { VirtualHeader } from "./draggable_table_header";
+import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
+import { VirtualHeaderGroup } from "./header_group";
 
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
+const getVirtualHeaderGroup = (
+  group: HeaderGroup<any>,
+  type: "footer" | "header",
+  virtualizer: Virtualizer<HTMLDivElement, Element>,
+): VirtualHeaderGroup => {
+  const getVirtualHeader = (header: Header<any, unknown>): VirtualHeader => {
+    return {
+      canDrag: header.isPlaceholder ? false : true,
+      canPin: header.column.getCanPin(),
+      canResize: header.column.getCanResize(),
+      children: header.isPlaceholder
+        ? null
+        : flexRender(header.column.columnDef[type], header.getContext()),
+      header,
+      headerId: header.id,
+      isDragging: false,
+      isPinned: mapColumnPinningPositionToPinPos(header.column.getIsPinned()),
+      style: {},
+      width: header.getSize(),
+      colIndex: header.index,
+      start: header.getStart(),
+    };
+  };
+
+  const virtualColumns = virtualizer.getVirtualItems();
+
+  const { offsetLeft, offsetRight } = getColVirtualizedOffsets({
+    virtualColumns,
+    getIsPinned(vcIndex) {
+      const header = group.headers[vcIndex];
+      return !!header.column.getIsPinned();
+    },
+    totalSize: virtualizer.getTotalSize(),
+  });
+
+  return {
+    id: group.id,
+    headers: group.headers.map(getVirtualHeader),
+    offsetLeft,
+    offsetRight,
+    headerGroup: group,
+  };
+};
+
 export function useHeaderGroupVirtualizers(props: {
   headerGroups: HeaderGroup<any>[];
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
-  table: Table<any>;
   type: "footer" | "header";
-  rowHeight: number;
 }) {
-  const headerGroups = React.useMemo(
-    () =>
-      props.headerGroups.filter((group) => {
-        return group.headers.some(
-          (header) => header.column.columnDef[props.type],
-        );
-      }),
-    [props.headerGroups, props.type],
-  );
+  const { tableContainerRef, table } = useTableContext();
+  const filteredHeaderGroups = props.headerGroups.filter((group) => {
+    return group.headers.some((header) => header.column.columnDef[props.type]);
+  });
 
   const _draggedIndexRef = React.useRef<(number | null)[]>(
-    headerGroups.map(() => null),
+    filteredHeaderGroups.map(() => null),
   );
 
-  const updateDraggedIndex = (headerIndex: number, val: number | null) => {
-    if (!val && _draggedIndexRef.current[headerIndex]) {
-      visibleColsOutsideVirtualRange.current[headerIndex].delete(
-        _draggedIndexRef.current[headerIndex],
-      );
-    }
-    _draggedIndexRef.current[headerIndex] = val;
-  };
-
-  const updateAllDraggedIndexes = (val: number | null) => {
-    headerGroups.forEach((_, headerIndex) => {
-      updateDraggedIndex(headerIndex, val);
-    });
-  };
-
   const visibleColsOutsideVirtualRange = React.useRef(
-    headerGroups.map(() => new Set<number>()),
+    filteredHeaderGroups.map(() => new Set<number>()),
   );
 
   const getDraggedIndex = (headerIndex: number) =>
@@ -69,9 +95,9 @@ export function useHeaderGroupVirtualizers(props: {
       | "rangeExtractor"
       | "debug"
     > => {
-      const headers = headerGroups[headerIndex].headers;
+      const headers = filteredHeaderGroups[headerIndex].headers;
       return {
-        getScrollElement: () => props.tableContainerRef.current,
+        getScrollElement: () => tableContainerRef.current,
         horizontal: true,
         // debug: true,
         overscan: 1, //how many columns to render on each side off screen each way (adjust this for performance)
@@ -144,13 +170,13 @@ export function useHeaderGroupVirtualizers(props: {
         },
       };
     },
-    [headerGroups, props.tableContainerRef],
+    [filteredHeaderGroups, tableContainerRef],
   );
 
   const rerender = React.useReducer(() => ({}), {})[1];
 
   const headerColVirtualizerOptions = React.useMemo(() => {
-    return headerGroups.map(
+    return filteredHeaderGroups.map(
       (
         headerGroup,
         headerIndex,
@@ -172,7 +198,7 @@ export function useHeaderGroupVirtualizers(props: {
         };
       },
     );
-  }, [baseColVirtOpts, headerGroups, rerender]);
+  }, [baseColVirtOpts, filteredHeaderGroups, rerender]);
 
   const [headerColVirtualizers] = React.useState(() => {
     return headerColVirtualizerOptions.map((options) => {
@@ -186,7 +212,7 @@ export function useHeaderGroupVirtualizers(props: {
     ].shouldAdjustScrollPositionOnItemSizeChange =
       // when moving columns we want to adjust the scroll position
       // when resizing columns we don't want to adjust the scroll position
-      props.table.getState().columnSizingInfo.isResizingColumn === false
+      table.getState().columnSizingInfo.isResizingColumn === false
         ? (item, delta, instance) => {
             return true;
           }
@@ -212,7 +238,7 @@ export function useHeaderGroupVirtualizers(props: {
 
   headerColVirtualizers.forEach((cv, i) => {
     cv.setOptions(headerColVirtualizerOptions[i]);
-    headerGroups[i].headers.forEach((header, j) => {
+    filteredHeaderGroups[i].headers.forEach((header, j) => {
       cv.resizeItem(j, header.getSize());
     });
   });
@@ -251,23 +277,8 @@ export function useHeaderGroupVirtualizers(props: {
     };
   };
 
-  return {
-    headerGroups,
-    getVirtualHeaders,
-    headerColVirtualizers,
-    updateAllDraggedIndexes,
-    updateDraggedIndex,
-    defaultColWindowRef,
-    height: props.rowHeight * headerGroups.length,
-    body: {
-      headerGroup:
-        props.type === "header"
-          ? headerGroups[headerGroups.length - 1]
-          : headerGroups[0],
-      virtualizer:
-        props.type === "header"
-          ? headerColVirtualizers[headerColVirtualizers.length - 1]
-          : headerColVirtualizers[0],
-    },
-  };
+  return filteredHeaderGroups.map((group, i): VirtualHeaderGroup => {
+    const { virtualizer } = getVirtualHeaders(i);
+    return getVirtualHeaderGroup(group, props.type, virtualizer);
+  });
 }
