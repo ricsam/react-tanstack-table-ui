@@ -1,0 +1,16 @@
+{
+  "name": "@rttui/fixtures",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+  },
+  "devDependencies": {
+    "@tanstack/react-table": "^8.20.6",
+    "@types/react": "^19.0.7",
+    "react": "^19.0.0",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,1 @@
+export type PinPos = false | "start" | "end";
