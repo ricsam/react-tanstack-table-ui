@@ -6,6 +6,8 @@ import {
   TableFooter,
   TableHead,
   TableRow,
+  Theme,
+  alpha,
 } from "@mui/material";
 import {
   Skin,
@@ -22,13 +24,31 @@ const MuiSkin: Skin = {
       <Paper
         ref={tableContainerRef}
         className="outer-container"
-        style={{
+        elevation={2}
+        sx={{
           overflow: "auto",
           width: width + "px",
           height: height + "px",
           position: "relative",
           contain: "paint",
           willChange: "transform",
+          borderRadius: 1,
+          "&::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: (theme) =>
+              alpha(theme.palette.text.secondary, 0.3),
+            borderRadius: "4px",
+            "&:hover": {
+              backgroundColor: (theme) =>
+                alpha(theme.palette.text.secondary, 0.5),
+            },
+          },
         }}
       >
         {children}
@@ -63,8 +83,9 @@ const MuiSkin: Skin = {
           position: "sticky",
           top: 0,
           width: table.getTotalSize(),
-          zIndex: 1,
-          backgroundColor: (theme) => theme.palette.background.default,
+          zIndex: 2,
+          backgroundColor: (theme) => theme.palette.background.paper,
+          boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
         }}
       >
         {children}
@@ -81,8 +102,9 @@ const MuiSkin: Skin = {
           position: "sticky",
           bottom: -1,
           width: table.getTotalSize(),
-          zIndex: 1,
-          backgroundColor: (theme) => theme.palette.background.default,
+          zIndex: 2,
+          backgroundColor: (theme) => theme.palette.background.paper,
+          boxShadow: (theme) => `0 -1px 0 ${theme.palette.divider}`,
         }}
       >
         {children}
@@ -128,8 +150,9 @@ const MuiSkin: Skin = {
         className="sticky-top-rows"
         sx={{
           position: "sticky",
-          zIndex: 1,
+          zIndex: 3,
           top: headerGroups.length * rowHeight,
+          boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
         }}
       >
         {children}
@@ -145,8 +168,9 @@ const MuiSkin: Skin = {
         className="sticky-bottom-rows"
         sx={{
           position: "sticky",
-          zIndex: 1,
+          zIndex: 3,
           bottom: footerGroups.length * rowHeight - 1,
+          boxShadow: (theme) => `0 -1px 0 ${theme.palette.divider}`,
         }}
       >
         {children}
@@ -154,8 +178,15 @@ const MuiSkin: Skin = {
     );
   },
   ExpandableTableRow: React.forwardRef(
-    ({ children, isDragging, isPinned, flatIndex, dndStyle }, ref) => {
+    ({ children, isPinned, flatIndex }, ref) => {
       const { table, rowHeight } = useTableContext();
+
+      const backgroundColor = (theme: Theme) =>
+        isPinned
+          ? theme.palette.background.paper
+          : flatIndex % 2 === 0
+            ? theme.palette.background.paper
+            : theme.palette.action.hover;
 
       return (
         <TableRow
@@ -163,17 +194,20 @@ const MuiSkin: Skin = {
           className="table-row"
           sx={{
             position: "relative",
-            opacity: isDragging ? 0.8 : 1,
-            zIndex: isDragging ? 1 : 0,
             width: table.getTotalSize(),
             display: "flex",
             height: rowHeight,
-            backgroundColor: isPinned
-              ? (theme) => theme.palette.background.default
-              : flatIndex % 2 === 0
-                ? (theme) => theme.palette.background.default
-                : (theme) => theme.palette.divider,
-            ...dndStyle,
+            zIndex: 1,
+            boxSizing: "border-box",
+            backgroundColor,
+            borderTop: (theme) => `1px solid ${backgroundColor(theme)}`,
+            borderBottom: (theme) => `1px solid ${backgroundColor(theme)}`,
+            "&:hover": {
+              borderTop: (theme) => `1px solid ${theme.palette.primary.main}`,
+              borderBottom: (theme) =>
+                `1px solid ${theme.palette.primary.main}`,
+            },
+            transition: "all 0.1s ease",
           }}
           data-index={flatIndex}
           ref={ref}
@@ -186,11 +220,22 @@ const MuiSkin: Skin = {
   ExpandedRow: React.forwardRef(({ children }, ref) => {
     const { table } = useTableContext();
     return (
-      <TableRow component="div" className="expanded-row" ref={ref}>
+      <TableRow
+        component="div"
+        className="expanded-row"
+        ref={ref}
+        sx={{
+          backgroundColor: (theme) => theme.palette.background.default,
+        }}
+      >
         <TableCell
           component="div"
           className="expanded-cell"
           colSpan={table.getAllLeafColumns().length}
+          sx={{
+            padding: 2,
+            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+          }}
         >
           {children}
         </TableCell>
@@ -198,33 +243,33 @@ const MuiSkin: Skin = {
     );
   }),
   Cell: ({ children, header }) => {
-    const { isDragging, isPinned } = header;
+    const { isPinned } = header;
     const { rowHeight } = useTableContext();
     return (
       <TableCell
-        className="drag-along-cell td"
+        className="td"
         component="div"
         sx={{
-          opacity: isDragging ? 0.8 : 1,
           height: rowHeight,
           width: header.width,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
-          zIndex: isDragging || isPinned ? 5 : 0,
+          zIndex: isPinned ? 5 : 0,
           boxSizing: "border-box",
           alignItems: "center",
-          gap: "4px",
+          gap: "8px",
           display: "flex",
           justifyContent: "flex-start",
           alignContent: "center",
-          padding: "4px 8px",
+          padding: "6px 12px",
           backgroundColor: isPinned
-            ? (theme) => theme.palette.background.default
+            ? (theme) => theme.palette.background.paper
             : "transparent",
           flexShrink: 0,
+          borderRight: (theme) =>
+            isPinned ? `1px solid ${theme.palette.divider}` : "none",
           ...header.stickyStyle,
-          ...header.dndStyle,
         }}
       >
         {children}
@@ -235,30 +280,26 @@ const MuiSkin: Skin = {
 
 function TableHeaderCell({
   headerId,
-  isDragging,
   isPinned,
   width,
-  canDrag,
-  dndStyle,
-  children,
   canPin,
   header,
   canResize,
   stickyStyle,
+  children,
 }: VirtualHeader) {
   const { rowHeight } = useTableContext();
   const ref = React.useRef<HTMLDivElement>(null);
-  const ctx = useColContext();
+
   return (
     <TableCell
       component="div"
       className="th"
       ref={ref}
       sx={{
-        opacity: isDragging ? 0.8 : 1,
-        transition: "none",
+        transition: "background-color 0.2s ease",
         whiteSpace: "nowrap",
-        zIndex: isDragging || isPinned ? 1 : 0,
+        zIndex: isPinned ? 1 : 0,
         display: "flex",
         overflow: "hidden",
         height: rowHeight,
@@ -266,47 +307,43 @@ function TableHeaderCell({
         position: "relative",
         flexShrink: 0,
         alignItems: "center",
-        gap: "4px",
-        justifyContent: "flex-start",
-        padding: "4px 8px",
+        gap: "8px",
+        justifyContent: "space-between",
+        padding: "6px 12px",
         boxSizing: "border-box",
+        fontWeight: 600,
         backgroundColor: isPinned
-          ? (theme) => theme.palette.background.default
+          ? (theme) => theme.palette.background.paper
           : "transparent",
+        borderRight: (theme) =>
+          isPinned ? `1px solid ${theme.palette.divider}` : "none",
+        "&:hover": {
+          borderBottom: (theme) => `2px solid ${theme.palette.primary.main}`,
+        },
         ...stickyStyle,
-        ...dndStyle,
       }}
     >
-      <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+      <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
         {children}
-        <div style={{ width: "4px" }}></div>
       </div>
-      {canDrag && (
-        <button
-          onMouseDown={(ev: React.MouseEvent) => {
-            const rect = ref.current?.getBoundingClientRect();
-            if (!rect) {
-              throw new Error("No rect");
-            }
-            ctx.onDragStart(headerId);
-            ctx.setIsDragging({
-              headerId: headerId,
-              mouseStart: { x: ev.clientX, y: ev.clientY },
-              itemPos: {
-                x: rect.left,
-                y: rect.top,
-              },
-            });
-          }}
+
+      {canPin && header && (
+        <div
+          style={{ display: "flex", gap: "4px", justifyContent: "flex-start" }}
         >
-          🟰
-        </button>
-      )}
-      {canDrag && canPin && (
-        <div className="flex gap-1 justify-center">
           {isPinned !== "start" ? (
             <button
-              className="border rounded px-2"
+              style={{
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                padding: "2px 4px",
+                borderRadius: "4px",
+                display: "flex",
+                alignItems: "center",
+                opacity: 0.5,
+                fontSize: "12px",
+              }}
               onClick={() => {
                 if (!header) {
                   return;
@@ -314,26 +351,45 @@ function TableHeaderCell({
                 header.column.pin("left");
               }}
             >
-              {"<="}
+              ◀
             </button>
           ) : null}
           {isPinned ? (
             <button
-              className="border rounded px-2"
+              style={{
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                padding: "2px 4px",
+                borderRadius: "4px",
+                display: "flex",
+                alignItems: "center",
+                opacity: 0.7,
+                fontSize: "12px",
+              }}
               onClick={() => {
                 if (!header) {
                   return;
                 }
                 header.column.pin(false);
-                // table.resetColumnSizing(true);
               }}
             >
-              X
+              ✕
             </button>
           ) : null}
           {isPinned !== "end" ? (
             <button
-              className="border rounded px-2"
+              style={{
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                padding: "2px 4px",
+                borderRadius: "4px",
+                display: "flex",
+                alignItems: "center",
+                opacity: 0.5,
+                fontSize: "12px",
+              }}
               onClick={() => {
                 if (!header) {
                   return;
@@ -341,11 +397,12 @@ function TableHeaderCell({
                 header.column.pin("right");
               }}
             >
-              {"=>"}
+              ▶
             </button>
           ) : null}
         </div>
       )}
+
       {canResize && header && (
         <Box
           {...{
@@ -360,15 +417,17 @@ function TableHeaderCell({
               top: 0,
               height: "100%",
               right: 0,
-              width: "5px",
-              background: "rgba(0, 0, 0, 0.5)",
+              width: "4px",
               cursor: "col-resize",
               userSelect: "none",
               touchAction: "none",
-              opacity: header.column.getIsResizing() ? 1 : 0.5,
-              backgroundColor: header.column.getIsResizing()
-                ? "blue"
-                : "rgba(0, 0, 0, 1)",
+              opacity: 0,
+              backgroundColor: (theme) => theme.palette.primary.main,
+              transition: "opacity 0.2s",
+              "&:hover, &.isResizing": {
+                opacity: 0.5,
+                width: "4px",
+              },
             },
           }}
         />
