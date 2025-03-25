@@ -6,6 +6,9 @@ import { VirtualHeader } from "./table/cols/draggable_table_header";
 import { PinPos } from "./table/types";
 
 export type Skin = {
+  rowHeight: number;
+  headerRowHeight: number;
+  footerRowHeight: number;
   OuterContainer: React.FC<{ children: React.ReactNode }>;
   TableScroller: React.FC;
 
@@ -39,8 +42,13 @@ export type Skin = {
 };
 
 export const defaultSkin: Skin = {
+  rowHeight: 32,
+  headerRowHeight: 32,
+  footerRowHeight: 32,
   OuterContainer: ({ children }) => {
     const { width, height, tableContainerRef } = useTableContext();
+    const cssVars = useTableCssVars();
+
     return (
       <div
         ref={tableContainerRef}
@@ -53,6 +61,7 @@ export const defaultSkin: Skin = {
           contain: "paint",
           willChange: "transform",
           color: "white",
+          ...cssVars,
         }}
       >
         {children}
@@ -60,25 +69,19 @@ export const defaultSkin: Skin = {
     );
   },
   TableScroller: () => {
-    const { table, rowHeight } = useTableContext();
-    const { rowVirtualizer } = useRowContext();
-    const { footerGroups, headerGroups } = useColContext();
     return (
       <div
         className="table-scroller"
         style={{
-          width: table.getTotalSize(),
+          width: "var(--table-width)",
           height:
-            rowVirtualizer.getTotalSize() +
-            footerGroups.length * rowHeight +
-            headerGroups.length * rowHeight,
+            "calc(var(--table-height) + var(--header-height) + var(--footer-height))",
           position: "absolute",
         }}
       ></div>
     );
   },
   TableHeader: ({ children }) => {
-    const { table } = useTableContext();
     return (
       <div
         className="thead"
@@ -86,7 +89,7 @@ export const defaultSkin: Skin = {
           position: "sticky",
           top: 0,
           background: "black",
-          width: table.getTotalSize(),
+          width: "var(--table-width)",
           zIndex: 1,
         }}
       >
@@ -95,13 +98,12 @@ export const defaultSkin: Skin = {
     );
   },
   TableHeaderRow: ({ children }) => {
-    const { rowHeight } = useTableContext();
     return (
       <div
         className="table-header-row"
         style={{
           display: "flex",
-          height: rowHeight,
+          height: "var(--header-row-height)",
         }}
       >
         {children}
@@ -110,7 +112,6 @@ export const defaultSkin: Skin = {
   },
   TableHeaderCell: HeaderCell,
   TableFooter: ({ children }) => {
-    const { table } = useTableContext();
     return (
       <div
         className="table-footer"
@@ -118,7 +119,7 @@ export const defaultSkin: Skin = {
           position: "sticky",
           bottom: -1,
           background: "black",
-          width: table.getTotalSize(),
+          width: "var(--table-width)",
           zIndex: 1,
         }}
       >
@@ -127,13 +128,12 @@ export const defaultSkin: Skin = {
     );
   },
   TableFooterRow: ({ children }) => {
-    const { rowHeight } = useTableContext();
     return (
       <div
         className="table-footer-row"
         style={{
           display: "flex",
-          height: rowHeight,
+          height: "var(--footer-row-height)",
         }}
       >
         {children}
@@ -142,13 +142,12 @@ export const defaultSkin: Skin = {
   },
   TableFooterCell: HeaderCell,
   TableBody: ({ children }) => {
-    const { table } = useTableContext();
     return (
       <div
         className="table-body"
         style={{
           position: "relative",
-          width: table.getTotalSize(),
+          width: "var(--table-width)",
         }}
       >
         {children}
@@ -156,7 +155,6 @@ export const defaultSkin: Skin = {
     );
   },
   StickyTopRows: ({ children }) => {
-    const { rowHeight } = useTableContext();
     const { headerGroups } = useRowContext();
     return (
       <div
@@ -164,7 +162,7 @@ export const defaultSkin: Skin = {
         style={{
           position: "sticky",
           zIndex: 1,
-          top: headerGroups.length * rowHeight,
+          top: "var(--header-height)",
         }}
       >
         {children}
@@ -172,7 +170,6 @@ export const defaultSkin: Skin = {
     );
   },
   StickyBottomRows: ({ children }) => {
-    const { rowHeight } = useTableContext();
     const { footerGroups } = useRowContext();
     return (
       <div
@@ -180,7 +177,7 @@ export const defaultSkin: Skin = {
         style={{
           position: "sticky",
           zIndex: 1,
-          bottom: footerGroups.length * rowHeight - 1,
+          bottom: "var(--footer-height)",
         }}
       >
         {children}
@@ -189,7 +186,7 @@ export const defaultSkin: Skin = {
   },
   ExpandableTableRow: React.forwardRef(
     ({ children, isDragging, isPinned, flatIndex, dndStyle }, ref) => {
-      const { table, rowHeight } = useTableContext();
+      const { table } = useTableContext();
 
       const style: CSSProperties = {
         position: "relative",
@@ -197,7 +194,7 @@ export const defaultSkin: Skin = {
         zIndex: isDragging ? 1 : 0,
         width: table.getTotalSize(),
         display: "flex",
-        height: rowHeight,
+        height: "var(--row-height)",
         backgroundColor: isPinned
           ? "black"
           : flatIndex % 2 === 0
@@ -231,13 +228,12 @@ export const defaultSkin: Skin = {
   }),
   Cell: ({ children, header }) => {
     const { isDragging, isPinned } = header;
-    const { rowHeight } = useTableContext();
     return (
       <div
         className="drag-along-cell td"
         style={{
           opacity: isDragging ? 0.8 : 1,
-          height: rowHeight,
+          height: "var(--row-height)",
           width: header.width,
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -400,4 +396,20 @@ function HeaderCell({
       )}
     </div>
   );
+}
+
+export function useTableCssVars(): Record<string, string> {
+  const { table, skin } = useTableContext();
+  const { rowVirtualizer } = useRowContext();
+  const { footerGroups, headerGroups } = useColContext();
+
+  return {
+    "--table-width": table.getTotalSize() + "px",
+    "--table-height": rowVirtualizer.getTotalSize() + "px",
+    "--row-height": skin.rowHeight + "px",
+    "--header-row-height": skin.headerRowHeight + "px",
+    "--footer-row-height": skin.footerRowHeight + "px",
+    "--header-height": headerGroups.length * skin.headerRowHeight + "px",
+    "--footer-height": footerGroups.length * skin.footerRowHeight + "px",
+  };
 }

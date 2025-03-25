@@ -9,7 +9,6 @@ export const DragAlongCell = React.memo(function DragAlongCell({
 }: {
   cell: Cell<any, unknown>;
   header: VirtualHeader;
-  rowHeight: number;
 }) {
   const { skin } = useTableContext();
   return (

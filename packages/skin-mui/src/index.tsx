@@ -1,4 +1,5 @@
 import {
+  alpha,
   Box,
   Paper,
   TableBody,
@@ -7,19 +8,23 @@ import {
   TableHead,
   TableRow,
   Theme,
-  alpha,
 } from "@mui/material";
 import {
   Skin,
-  useColContext,
-  useRowContext,
   useTableContext,
+  useTableCssVars,
   VirtualHeader,
 } from "@rttui/core";
 import React from "react";
+
 const MuiSkin: Skin = {
+  rowHeight: 32,
+  headerRowHeight: 32,
+  footerRowHeight: 32,
   OuterContainer: ({ children }) => {
     const { width, height, tableContainerRef } = useTableContext();
+    const cssVars = useTableCssVars();
+
     return (
       <Paper
         ref={tableContainerRef}
@@ -33,6 +38,7 @@ const MuiSkin: Skin = {
           contain: "paint",
           willChange: "transform",
           borderRadius: 1,
+          ...cssVars,
           "&::-webkit-scrollbar": {
             width: "8px",
             height: "8px",
@@ -56,25 +62,19 @@ const MuiSkin: Skin = {
     );
   },
   TableScroller: () => {
-    const { table, rowHeight } = useTableContext();
-    const { rowVirtualizer } = useRowContext();
-    const { footerGroups, headerGroups } = useColContext();
     return (
       <div
         className="table-scroller"
         style={{
-          width: table.getTotalSize(),
+          width: "var(--table-width)",
           height:
-            rowVirtualizer.getTotalSize() +
-            footerGroups.length * rowHeight +
-            headerGroups.length * rowHeight,
+            "calc(var(--table-height) + var(--header-height) + var(--footer-height))",
           position: "absolute",
         }}
       ></div>
     );
   },
   TableHeader: ({ children }) => {
-    const { table } = useTableContext();
     return (
       <TableHead
         component="div"
@@ -82,7 +82,7 @@ const MuiSkin: Skin = {
         sx={{
           position: "sticky",
           top: 0,
-          width: table.getTotalSize(),
+          width: "var(--table-width)",
           zIndex: 2,
           backgroundColor: (theme) => theme.palette.background.paper,
           boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
@@ -93,7 +93,6 @@ const MuiSkin: Skin = {
     );
   },
   TableFooter: ({ children }) => {
-    const { table } = useTableContext();
     return (
       <TableFooter
         component="div"
@@ -101,7 +100,7 @@ const MuiSkin: Skin = {
         sx={{
           position: "sticky",
           bottom: -1,
-          width: table.getTotalSize(),
+          width: "var(--table-width)",
           zIndex: 2,
           backgroundColor: (theme) => theme.palette.background.paper,
           boxShadow: (theme) => `0 -1px 0 ${theme.palette.divider}`,
@@ -112,17 +111,21 @@ const MuiSkin: Skin = {
     );
   },
   TableHeaderRow: ({ children }) => {
-    const { rowHeight } = useTableContext();
     return (
-      <TableRow component="div" sx={{ height: rowHeight, display: "flex" }}>
+      <TableRow
+        component="div"
+        sx={{ height: "var(--row-height)", display: "flex" }}
+      >
         {children}
       </TableRow>
     );
   },
   TableFooterRow: ({ children }) => {
-    const { rowHeight } = useTableContext();
     return (
-      <TableRow component="div" sx={{ height: rowHeight, display: "flex" }}>
+      <TableRow
+        component="div"
+        sx={{ height: "var(--row-height)", display: "flex" }}
+      >
         {children}
       </TableRow>
     );
@@ -130,20 +133,17 @@ const MuiSkin: Skin = {
   TableHeaderCell: TableHeaderCell,
   TableFooterCell: TableHeaderCell,
   TableBody: ({ children }) => {
-    const { table } = useTableContext();
     return (
       <TableBody
         component="div"
         className="table-body"
-        sx={{ position: "relative", width: table.getTotalSize() }}
+        sx={{ position: "relative", width: "var(--table-width)" }}
       >
         {children}
       </TableBody>
     );
   },
   StickyTopRows: ({ children }) => {
-    const { rowHeight } = useTableContext();
-    const { headerGroups } = useRowContext();
     return (
       <TableHead
         component="div"
@@ -151,7 +151,7 @@ const MuiSkin: Skin = {
         sx={{
           position: "sticky",
           zIndex: 3,
-          top: headerGroups.length * rowHeight,
+          top: "var(--header-height)",
           boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
         }}
       >
@@ -160,8 +160,6 @@ const MuiSkin: Skin = {
     );
   },
   StickyBottomRows: ({ children }) => {
-    const { rowHeight } = useTableContext();
-    const { footerGroups } = useRowContext();
     return (
       <TableFooter
         component="div"
@@ -169,7 +167,7 @@ const MuiSkin: Skin = {
         sx={{
           position: "sticky",
           zIndex: 3,
-          bottom: footerGroups.length * rowHeight - 1,
+          bottom: "calc(var(--footer-height) - 1px)",
           boxShadow: (theme) => `0 -1px 0 ${theme.palette.divider}`,
         }}
       >
@@ -179,7 +177,7 @@ const MuiSkin: Skin = {
   },
   ExpandableTableRow: React.forwardRef(
     ({ children, isPinned, flatIndex }, ref) => {
-      const { table, rowHeight } = useTableContext();
+      const { table } = useTableContext();
 
       const backgroundColor = (theme: Theme) =>
         isPinned
@@ -194,9 +192,9 @@ const MuiSkin: Skin = {
           className="table-row"
           sx={{
             position: "relative",
-            width: table.getTotalSize(),
+            width: "var(--table-width)",
             display: "flex",
-            height: rowHeight,
+            height: "var(--row-height)",
             zIndex: 1,
             boxSizing: "border-box",
             backgroundColor,
@@ -244,13 +242,12 @@ const MuiSkin: Skin = {
   }),
   Cell: ({ children, header }) => {
     const { isPinned } = header;
-    const { rowHeight } = useTableContext();
     return (
       <TableCell
         className="td"
         component="div"
         sx={{
-          height: rowHeight,
+          height: "var(--row-height)",
           width: header.width,
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -288,13 +285,14 @@ function TableHeaderCell({
   stickyStyle,
   children,
 }: VirtualHeader) {
-  const { rowHeight } = useTableContext();
   const ref = React.useRef<HTMLDivElement>(null);
 
   return (
     <TableCell
       component="div"
       className="th"
+      data-header-id={headerId}
+      data-is-pinned={isPinned}
       ref={ref}
       sx={{
         transition: "background-color 0.2s ease",
@@ -302,7 +300,7 @@ function TableHeaderCell({
         zIndex: isPinned ? 1 : 0,
         display: "flex",
         overflow: "hidden",
-        height: rowHeight,
+        height: "var(--header-row-height)",
         width,
         position: "relative",
         flexShrink: 0,

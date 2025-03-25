@@ -13,7 +13,7 @@ import { RowContext } from "./row_context";
 export const RowProvider = ({ children }: { children: React.ReactNode }) => {
   const [draggedRowId, setDraggedRowId] = React.useState<string | null>(null);
 
-  const { table, rowHeight, tableContainerRef } = useTableContext();
+  const { table, tableContainerRef, skin } = useTableContext();
 
   let draggedRows: string[] | undefined;
 
@@ -55,9 +55,10 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
   const refs = React.useRef(_refs);
   refs.current = _refs;
 
+
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
-    estimateSize: React.useCallback(() => rowHeight, [rowHeight]),
+    estimateSize: React.useCallback(() => skin.rowHeight, [skin.rowHeight]),
     getItemKey: React.useCallback((index: number) => rowIds[index], [rowIds]),
     getScrollElement: () => tableContainerRef.current,
     measureElement: React.useCallback(
@@ -67,9 +68,9 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
         instance: Virtualizer<HTMLDivElement, any>,
       ) => {
         const defaultSize = measureElement(element, entry, instance);
-        return Math.max(defaultSize, rowHeight);
+        return Math.max(defaultSize, skin.rowHeight);
       },
-      [rowHeight],
+      [skin.rowHeight],
     ),
     overscan: 5,
     rangeExtractor: React.useCallback(

@@ -16,7 +16,6 @@ export const ReactTanstackTableUi = <T,>(props: {
   colDndHandler?: ColDndHandler<T>;
   skin?: Skin;
   getId: (row: T) => string;
-  rowHeight: number;
   width: number;
   height: number;
 }) => {
@@ -26,7 +25,6 @@ export const ReactTanstackTableUi = <T,>(props: {
   return (
     <TableContext.Provider
       value={{
-        rowHeight: props.rowHeight,
         width: props.width,
         height: props.height,
         tableContainerRef: tableContainerRef,

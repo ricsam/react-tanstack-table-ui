@@ -1,7 +1,4 @@
-import {
-  iterateOverColumns,
-  ReactTanstackTableUi,
-} from "@rttui/core";
+import { iterateOverColumns, ReactTanstackTableUi } from "@rttui/core";
 import { generateTableData, User } from "@rttui/fixtures";
 import { MuiSkin } from "@rttui/skin-mui";
 import {
@@ -10,7 +7,6 @@ import {
   createColumnHelper,
   getCoreRowModel,
   getExpandedRowModel,
-  Row,
   useReactTable,
 } from "@tanstack/react-table";
 import React, { StrictMode } from "react";
@@ -25,7 +21,6 @@ function App() {
         width={1920}
         height={1600}
         table={table}
-        rowHeight={32}
         getId={(row) => row.id}
         skin={MuiSkin}
       />
@@ -76,7 +71,7 @@ const useBigTable = () => {
                 onChange: table.getToggleAllRowsSelectedHandler(),
               }}
             />
-            
+
             {/* Expand all button */}
             <button
               {...{
@@ -85,7 +80,7 @@ const useBigTable = () => {
             >
               {table.getIsAllRowsExpanded() ? "⬇️" : "➡️"}
             </button>
-            
+
             <span>Full Name</span>
           </div>
         ),
@@ -107,7 +102,7 @@ const useBigTable = () => {
                 onChange: row.getToggleSelectedHandler(),
               }}
             />
-            
+
             {/* Expand/collapse button */}
             {row.getCanExpand() ? (
               <button
@@ -121,7 +116,7 @@ const useBigTable = () => {
             ) : (
               <span style={{ width: "24px", display: "inline-block" }}>🔵</span>
             )}
-            
+
             {/* Pin buttons */}
             {row.getIsPinned() ? (
               <button
@@ -154,7 +149,7 @@ const useBigTable = () => {
                 </button>
               </div>
             )}
-            
+
             {/* Name content */}
             <span>{getValue()}</span>
           </div>
@@ -162,7 +157,7 @@ const useBigTable = () => {
         id: "full-name",
         size: 300, // Increased size to accommodate all controls
       }),
-      
+
       // Rest of the columns
       columnHelper.accessor("email", {
         header: "Email",
@@ -360,27 +355,35 @@ const useBigTable = () => {
         ],
       }),
     ];
-    
+
     // Create additional columns to get to about 100 columns total
     // Using a variety of fields instead of just duplicating department
     const fieldCycles = [
-      "fullName", "email", "city", "country", "favoriteGame", 
-      "experienceYears", "rating", "department", "jobTitle", "salary"
+      "fullName",
+      "email",
+      "city",
+      "country",
+      "favoriteGame",
+      "experienceYears",
+      "rating",
+      "department",
+      "jobTitle",
+      "salary",
     ];
-    
+
     const remainingColumns = 100 - columns.length;
     for (let i = 0; i < remainingColumns; i += 1) {
       const field = fieldCycles[i % fieldCycles.length];
       columns.push(
         columnHelper.accessor(field as any, {
-          header: `Extra ${i+1}`,
+          header: `Extra ${i + 1}`,
           cell: (info) => info.getValue(),
-          id: `extra-${i+1}`,
+          id: `extra-${i + 1}`,
           size: 150,
         }),
       );
     }
-    
+
     return columns;
   }, []);
 

@@ -5,7 +5,6 @@ type TableContextType = {
   width: number;
   height: number;
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
-  rowHeight: number;
   table: Table<any>;
   skin: Skin;
 };

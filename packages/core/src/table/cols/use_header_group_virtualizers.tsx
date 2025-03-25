@@ -1,6 +1,4 @@
 import { flexRender, Header, HeaderGroup, Table } from "@tanstack/react-table";
-import React, { CSSProperties } from "react";
-import { flushSync } from "react-dom";
 import {
   defaultRangeExtractor,
   elementScroll,
@@ -9,6 +7,8 @@ import {
   Virtualizer,
   VirtualizerOptions,
 } from "@tanstack/react-virtual";
+import React, { CSSProperties } from "react";
+import { flushSync } from "react-dom";
 import { mapColumnPinningPositionToPinPos } from "../../utils";
 import { useTableContext } from "../table_context";
 import { VirtualHeader } from "./draggable_table_header";
@@ -18,6 +18,18 @@ import { VirtualHeaderGroup } from "./header_group";
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
+const getIsPinned = (header: Header<any, unknown>) => {
+  let subHeaders: Header<any, unknown>[] = [];
+  if (header.subHeaders.length > 0) {
+    subHeaders = header.subHeaders;
+  } else {
+    subHeaders = [header];
+  }
+  const allPinned = subHeaders.map((h) => h.column.getIsPinned());
+  const uniquePinned = [...new Set(allPinned)];
+  return uniquePinned.length === 1 && uniquePinned[0] ? uniquePinned[0] : false;
+};
+
 const getVirtualHeaderGroup = (
   group: HeaderGroup<any>,
   type: "footer" | "header",
@@ -26,17 +38,18 @@ const getVirtualHeaderGroup = (
 ): VirtualHeaderGroup => {
   const getVirtualHeader = (header: Header<any, unknown>): VirtualHeader => {
     const stickyStyle: CSSProperties = {};
-    const isPinned = header.column.getIsPinned();
+    const isPinned = getIsPinned(header);
+
     if (isPinned) {
       stickyStyle.position = "sticky";
 
-      const leafs = header.column.getLeafColumns();
+      const leafs = header.subHeaders.length > 0 ? header.subHeaders : [header];
       const firstLeaf = leafs[0];
       const lastLeaf = leafs[leafs.length - 1];
 
       const pinnedRightLeftPos =
         table.getTotalSize() -
-        (lastLeaf.getAfter("right") + header.column.getSize());
+        (lastLeaf.column.getAfter("right") + header.column.getSize());
 
       const transformedRightLeftPos = pinnedRightLeftPos;
 
@@ -82,7 +95,6 @@ const getVirtualHeaderGroup = (
 
   return {
     id: group.id,
-    // headers: group.headers.map(getVirtualHeader),
     headers: virtualColumns.map((vc) => {
       const header = group.headers[vc.index];
       return getVirtualHeader(header);

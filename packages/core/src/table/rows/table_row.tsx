@@ -23,7 +23,7 @@ export const TableRow = React.memo(function TableRow({
   isPinned,
 }: VirtualRow) {
   const visibileCells = row.getVisibleCells();
-  const { rowHeight, skin } = useTableContext();
+  const { skin } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
   const { mainHeaderGroup: headerGroup, rowVirtualizer } = useRowContext();
 
@@ -37,7 +37,6 @@ export const TableRow = React.memo(function TableRow({
               key={cell.id}
               cell={cell}
               header={virtualHeader}
-              rowHeight={rowHeight}
             />
           );
         })}
@@ -62,8 +61,7 @@ export const TableRow = React.memo(function TableRow({
       const throttledResizeObserver = throttle(() => {
         if (expandedRowRef.current) {
           const { height } = expandedRowRef.current.getBoundingClientRect();
-          console.log("height", height);
-          rowVirtualizer.resizeItem(flatIndex, height + rowHeight);
+          rowVirtualizer.resizeItem(flatIndex, height + skin.rowHeight);
         }
       }, 100);
 
@@ -71,7 +69,7 @@ export const TableRow = React.memo(function TableRow({
       return () =>
         window.removeEventListener("resize", throttledResizeObserver);
     }
-  }, [isExpanded, rowHeight, rowVirtualizer, flatIndex]);
+  }, [isExpanded, skin.rowHeight, rowVirtualizer, flatIndex]);
 
   return (
     <>
