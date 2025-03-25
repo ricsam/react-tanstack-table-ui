@@ -1,5 +1,5 @@
 {
-  "name": "@rttui/skin-mui",
+  "name": "@rttui/skin-anocca",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.tsx",
@@ -8,9 +8,9 @@
     "react": "^19.0.0",
     "typescript": "^5.8.2",
     "@mui/material": "^6.4.8",
+    "@mui/icons-material": "^6.4.8",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^6.4.8",
     "@rttui/core": "workspace:*"
   }
 }

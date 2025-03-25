@@ -8,7 +8,8 @@ import { useRowContext } from "./rows/row_context";
 import { RowProvider } from "./rows/row_provider";
 import { TableBody } from "./table_body";
 import { TableContext, useTableContext } from "./table_context";
-import { defaultSkin, Skin } from "../skin";
+import { Skin } from "../skin";
+import { defaultSkin } from "../default_skin";
 
 export const ReactTanstackTableUi = <T,>(props: {
   table: Table<T>;

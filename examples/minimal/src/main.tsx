@@ -1,6 +1,5 @@
 import { iterateOverColumns, ReactTanstackTableUi } from "@rttui/core";
 import { generateTableData, User } from "@rttui/fixtures";
-import { MuiSkin } from "@rttui/skin-mui";
 import {
   ColumnDef,
   ColumnOrderState,
@@ -20,9 +19,8 @@ function App() {
       <ReactTanstackTableUi
         width={1920}
         height={1600}
-        table={table}
+        table={table} 
         getId={(row) => row.id}
-        skin={MuiSkin}
       />
     </div>
   );

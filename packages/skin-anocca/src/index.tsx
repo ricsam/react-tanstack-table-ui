@@ -8,6 +8,7 @@ import {
   TableHead,
   TableRow,
   Theme,
+  useTheme,
 } from "@mui/material";
 import { PushPin, ChevronLeft, ChevronRight, Close } from "@mui/icons-material";
 import {
@@ -18,10 +19,10 @@ import {
 } from "@rttui/core";
 import React from "react";
 
-const MuiSkin: Skin = {
-  rowHeight: 52,
-  headerRowHeight: 56,
-  footerRowHeight: 52,
+const AnoccaSkin: Skin = {
+  rowHeight: 32,
+  headerRowHeight: 32,
+  footerRowHeight: 32,
   OuterContainer: ({ children }) => {
     const { width, height, tableContainerRef } = useTableContext();
     const cssVars = useTableCssVars();
@@ -180,12 +181,19 @@ const MuiSkin: Skin = {
     ({ children, isPinned, flatIndex }, ref) => {
       const { table } = useTableContext();
 
-      const backgroundColor = (theme: Theme) =>
-        isPinned
-          ? theme.palette.background.paper
-          : flatIndex % 2 === 0
+      const backgroundColor = (theme: Theme) => {
+        const baseColor =
+          flatIndex % 2 === 0
             ? theme.palette.background.paper
-            : theme.palette.action.hover;
+            : theme.palette.grey[100];
+        return baseColor;
+      };
+
+      const theme = useTheme();
+
+      const vars: Record<string, string> = {
+        "--row-background-color": backgroundColor(theme),
+      };
 
       return (
         <TableRow
@@ -198,14 +206,8 @@ const MuiSkin: Skin = {
             height: "var(--row-height)",
             zIndex: 1,
             boxSizing: "border-box",
-            backgroundColor,
-            borderTop: (theme) => `1px solid ${backgroundColor(theme)}`,
-            borderBottom: (theme) => `1px solid ${backgroundColor(theme)}`,
-            "&:hover": {
-              borderTop: (theme) => `1px solid ${theme.palette.primary.main}`,
-              borderBottom: (theme) =>
-                `1px solid ${theme.palette.primary.main}`,
-            },
+            ...vars,
+            // Remove hover background from row
             transition: "all 0.1s ease",
           }}
           data-index={flatIndex}
@@ -233,7 +235,6 @@ const MuiSkin: Skin = {
           colSpan={table.getAllLeafColumns().length}
           sx={{
             padding: 2,
-            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
           }}
         >
           {children}
@@ -260,13 +261,18 @@ const MuiSkin: Skin = {
           display: "flex",
           justifyContent: "flex-start",
           alignContent: "center",
-          padding: "16px",
-          backgroundColor: isPinned
-            ? (theme) => theme.palette.background.paper
-            : "transparent",
+          padding: "6px 12px",
+          backgroundColor: "var(--row-background-color)",
           flexShrink: 0,
           borderRight: (theme) =>
             isPinned ? `1px solid ${theme.palette.divider}` : "none",
+          ".table-row:hover &": {
+            backgroundColor: (theme) => {
+              // Always use solid background colors for all cells on hover
+              return "#E3F2FD"; // Light blue solid color
+            },
+            zIndex: isPinned ? 2 : 0,
+          },
           ...header.stickyStyle,
         }}
       >
@@ -308,7 +314,7 @@ function TableHeaderCell({
         alignItems: "center",
         gap: "8px",
         justifyContent: "space-between",
-        padding: "16px",
+        padding: "6px 12px",
         boxSizing: "border-box",
         fontWeight: 600,
         backgroundColor: isPinned
@@ -316,10 +322,7 @@ function TableHeaderCell({
           : "transparent",
         borderRight: (theme) =>
           isPinned ? `1px solid ${theme.palette.divider}` : "none",
-        "&:hover": {
-          backgroundColor: (theme) => theme.palette.action.hover,
-          borderBottom: (theme) => `2px solid ${theme.palette.primary.main}`,
-        },
+        // Add transparent border to prevent layout shift
         ...stickyStyle,
       }}
     >
@@ -411,19 +414,21 @@ function TableHeaderCell({
             }`,
             sx: {
               position: "absolute",
-              top: 0,
-              height: "100%",
+              top: 4,
+              bottom: 4,
               right: 0,
-              width: "4px",
+              width: "3px",
               cursor: "col-resize",
               userSelect: "none",
               touchAction: "none",
-              opacity: 0,
-              backgroundColor: (theme) => theme.palette.primary.main,
-              transition: "opacity 0.2s",
-              "&:hover, &.isResizing": {
-                opacity: 0.5,
-                width: "4px",
+              opacity: 0.2,
+              backgroundColor: (theme) => theme.palette.text.secondary,
+              transition: "opacity 0.2s, top 0.2s, bottom 0.2s",
+              "&.isResizing": {
+                backgroundColor: (theme) => theme.palette.primary.main,
+                opacity: 1,
+                top: 0,
+                bottom: 0,
               },
             },
           }}
@@ -433,4 +438,4 @@ function TableHeaderCell({
   );
 }
 
-export { MuiSkin };
+export { AnoccaSkin };

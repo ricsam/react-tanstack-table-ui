@@ -1,2 +1,2 @@
-# @rttui/skin-mui
+# @rttui/skin-anocca
 Published soon
