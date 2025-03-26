@@ -53,7 +53,14 @@ function Body() {
 
       <skin.TableHeader>
         {headerGroups.map((headerGroup) => {
-          return <HeaderGroup {...headerGroup} key={headerGroup.id} Component={skin.TableHeaderRow} />;
+          return (
+            <HeaderGroup
+              {...headerGroup}
+              key={headerGroup.id}
+              Component={skin.TableHeaderRow}
+              type="header"
+            />
+          );
         })}
       </skin.TableHeader>
 
@@ -65,7 +72,14 @@ function Body() {
 
       <skin.TableFooter>
         {footerGroups.map((footerGroup) => {
-          return <HeaderGroup {...footerGroup} key={footerGroup.id} Component={skin.TableFooterRow} />;
+          return (
+            <HeaderGroup
+              {...footerGroup}
+              key={footerGroup.id}
+              Component={skin.TableFooterRow}
+              type="footer"
+            />
+          );
         })}
       </skin.TableFooter>
     </skin.OuterContainer>

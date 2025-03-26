@@ -8,6 +8,7 @@ import {
   TableHead,
   TableRow,
   Theme,
+  SxProps,
 } from "@mui/material";
 import { PushPin, ChevronLeft, ChevronRight, Close } from "@mui/icons-material";
 import {
@@ -144,85 +145,113 @@ const MuiSkin: Skin = {
       </TableBody>
     );
   },
-  StickyTopRows: ({ children }) => {
-    return (
-      <TableHead
-        component="div"
-        className="sticky-top-rows"
-        sx={{
-          position: "sticky",
-          zIndex: 3,
-          top: "var(--header-height)",
-          boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
-        }}
-      >
-        {children}
-      </TableHead>
-    );
-  },
-  StickyBottomRows: ({ children }) => {
-    return (
-      <TableFooter
-        component="div"
-        className="sticky-bottom-rows"
-        sx={{
-          position: "sticky",
-          zIndex: 3,
-          bottom: "calc(var(--footer-height) - 1px)",
-          boxShadow: (theme) => `0 -1px 0 ${theme.palette.divider}`,
-        }}
-      >
-        {children}
-      </TableFooter>
-    );
-  },
-  ExpandableTableRow: React.forwardRef(
-    ({ children, isPinned, flatIndex }, ref) => {
-      const { table } = useTableContext();
+  PinnedRows: ({ children, position, pinned }) => {
+    if (pinned.length === 0) {
+      return null;
+    }
 
+    let style: SxProps<Theme> = {
+      position: "sticky",
+      zIndex: 3,
+    };
+    if (position === "top") {
+      style.top = "var(--header-height)";
+      style.boxShadow = (theme: Theme) => `0 1px 0 ${theme.palette.divider}`;
+    } else if (position === "bottom") {
+      style.bottom = "var(--footer-height)";
+      style.boxShadow = (theme: Theme) => `0 -1px 0 ${theme.palette.divider}`;
+    }
+
+    const Component = position === "top" ? TableHead : TableFooter;
+
+    return (
+      <Component
+        component="div"
+        className={`sticky-${position}-rows`}
+        sx={style}
+      >
+        {children}
+      </Component>
+    );
+  },
+  PinnedCols: ({ children, position, pinned, type }) => {
+    if (pinned.length === 0) {
+      return null;
+    }
+
+    let style: SxProps<Theme> = {
+      position: "sticky",
+      zIndex: 3,
+      display: "flex",
+    };
+
+    if (position === "left") {
+      style.left = 0;
+      style.boxShadow = "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+    } else if (position === "right") {
+      style.right = 0;
+      style.borderLeft = (theme: Theme) => `1px solid ${theme.palette.divider}`;
+      style.boxShadow = "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+    }
+
+    return (
+      <Box component="div" className={`sticky-${position}-cols`} sx={style}>
+        {children}
+      </Box>
+    );
+  },
+  TableRowWrapper: React.forwardRef(
+    ({ children, flatIndex, dndStyle }, ref) => {
       const backgroundColor = (theme: Theme) =>
-        isPinned
+        flatIndex % 2 === 0
           ? theme.palette.background.paper
-          : flatIndex % 2 === 0
-            ? theme.palette.background.paper
-            : theme.palette.action.hover;
+          : theme.palette.action.hover;
 
       return (
-        <TableRow
-          component="div"
-          className="table-row"
+        <Box
           sx={{
-            position: "relative",
-            width: "var(--table-width)",
-            display: "flex",
-            height: "var(--row-height)",
-            zIndex: 1,
-            boxSizing: "border-box",
-            backgroundColor,
-            borderTop: (theme) => `1px solid ${backgroundColor(theme)}`,
-            borderBottom: (theme) => `1px solid ${backgroundColor(theme)}`,
-            "&:hover": {
-              borderTop: (theme) => `1px solid ${theme.palette.primary.main}`,
-              borderBottom: (theme) =>
-                `1px solid ${theme.palette.primary.main}`,
-            },
-            transition: "all 0.1s ease",
+            ...dndStyle,
           }}
           data-index={flatIndex}
           ref={ref}
         >
           {children}
-        </TableRow>
+        </Box>
       );
     },
   ),
-  ExpandedRow: React.forwardRef(({ children }, ref) => {
+  TableRow: ({ children, isPinned, flatIndex }) => {
+    return (
+      <TableRow
+        component="div"
+        className="table-row"
+        sx={{
+          position: "relative",
+          width: "var(--table-width)",
+          display: "flex",
+          height: "var(--row-height)",
+          zIndex: 1,
+          boxSizing: "border-box",
+          backgroundColor: (theme) =>
+            isPinned
+              ? theme.palette.background.paper
+              : flatIndex % 2 === 0
+                ? theme.palette.background.paper
+                : theme.palette.action.hover,
+          borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        {children}
+      </TableRow>
+    );
+  },
+  TableRowExpandedContent: ({ children }) => {
     const { table } = useTableContext();
     return (
       <TableRow
         component="div"
         className="expanded-row"
-        ref={ref}
         sx={{
           backgroundColor: (theme) => theme.palette.background.default,
         }}
@@ -240,7 +269,7 @@ const MuiSkin: Skin = {
         </TableCell>
       </TableRow>
     );
-  }),
+  },
   Cell: ({ children, header }) => {
     const { isPinned } = header;
     return (

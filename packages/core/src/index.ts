@@ -7,6 +7,18 @@ import { useColContext } from "./table/cols/col_context";
 import { VirtualHeader } from "./table/cols/draggable_table_header";
 import { useTableCssVars } from "./skin";
 import { defaultSkin, darkModeVars, lightModeVars } from "./default_skin";
+import { useVirtualHeader } from "./table/cols/draggable_table_header";
 
-export { ReactTanstackTableUi, useRowContext, iterateOverColumns, useTableContext, useColContext, useTableCssVars, defaultSkin, darkModeVars, lightModeVars };
+export {
+  ReactTanstackTableUi,
+  useRowContext,
+  iterateOverColumns,
+  useTableContext,
+  useColContext,
+  useTableCssVars,
+  defaultSkin,
+  darkModeVars,
+  lightModeVars,
+  useVirtualHeader,
+};
 export type { Skin, VirtualHeader };

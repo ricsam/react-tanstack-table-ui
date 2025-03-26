@@ -2,6 +2,7 @@ import {
   alpha,
   Box,
   Paper,
+  SxProps,
   TableBody,
   TableCell,
   TableFooter,
@@ -10,7 +11,7 @@ import {
   Theme,
   useTheme,
 } from "@mui/material";
-import { PushPin, ChevronLeft, ChevronRight, Close } from "@mui/icons-material";
+import { MdChevronLeft, MdChevronRight, MdClose } from "react-icons/md";
 import {
   Skin,
   useTableContext,
@@ -41,22 +42,6 @@ const AnoccaSkin: Skin = {
           willChange: "transform",
           borderRadius: 1,
           ...cssVars,
-          "&::-webkit-scrollbar": {
-            width: "8px",
-            height: "8px",
-          },
-          "&::-webkit-scrollbar-track": {
-            backgroundColor: "transparent",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            backgroundColor: (theme) =>
-              alpha(theme.palette.text.secondary, 0.3),
-            borderRadius: "4px",
-            "&:hover": {
-              backgroundColor: (theme) =>
-                alpha(theme.palette.text.secondary, 0.5),
-            },
-          },
         }}
       >
         {children}
@@ -112,26 +97,8 @@ const AnoccaSkin: Skin = {
       </TableFooter>
     );
   },
-  TableHeaderRow: ({ children }) => {
-    return (
-      <TableRow
-        component="div"
-        sx={{ height: "var(--row-height)", display: "flex" }}
-      >
-        {children}
-      </TableRow>
-    );
-  },
-  TableFooterRow: ({ children }) => {
-    return (
-      <TableRow
-        component="div"
-        sx={{ height: "var(--row-height)", display: "flex" }}
-      >
-        {children}
-      </TableRow>
-    );
-  },
+  TableHeaderRow,
+  TableFooterRow: TableHeaderRow,
   TableHeaderCell: TableHeaderCell,
   TableFooterCell: TableHeaderCell,
   TableBody: ({ children }) => {
@@ -145,86 +112,124 @@ const AnoccaSkin: Skin = {
       </TableBody>
     );
   },
-  StickyTopRows: ({ children }) => {
-    return (
-      <TableHead
-        component="div"
-        className="sticky-top-rows"
-        sx={{
-          position: "sticky",
-          zIndex: 3,
-          top: "var(--header-height)",
-          boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
-        }}
-      >
-        {children}
-      </TableHead>
-    );
-  },
-  StickyBottomRows: ({ children }) => {
-    return (
-      <TableFooter
-        component="div"
-        className="sticky-bottom-rows"
-        sx={{
-          position: "sticky",
-          zIndex: 3,
-          bottom: "calc(var(--footer-height) - 1px)",
-          boxShadow: (theme) => `0 -1px 0 ${theme.palette.divider}`,
-        }}
-      >
-        {children}
-      </TableFooter>
-    );
-  },
-  ExpandableTableRow: React.forwardRef(
-    ({ children, isPinned, flatIndex }, ref) => {
-      const { table } = useTableContext();
+  PinnedRows: ({ children, position, pinned }) => {
+    if (pinned.length === 0) {
+      return null;
+    }
 
+    let style: SxProps<Theme> = {
+      position: "sticky",
+      zIndex: 3,
+    };
+    if (position === "top") {
+      style.top = "var(--header-height)";
+      style.borderBottom = (theme) => `1px solid ${theme.palette.divider}`;
+      style.boxShadow =
+        "0 4px 8px -4px rgba(0, 0, 0, 0.15), 0 6px 12px -6px rgba(0, 0, 0, 0.1)";
+    } else if (position === "bottom") {
+      style.bottom = "var(--footer-height)";
+      style.borderTop = (theme) => `1px solid ${theme.palette.divider}`;
+      style.boxShadow =
+        "0 -4px 8px -4px rgba(0, 0, 0, 0.15), 0 -6px 12px -6px rgba(0, 0, 0, 0.1)";
+    }
+
+    const Component = position === "top" ? TableHead : TableFooter;
+
+    return (
+      <Component
+        component="div"
+        className={`sticky-${position}-rows`}
+        sx={style}
+      >
+        {children}
+      </Component>
+    );
+  },
+  PinnedCols: ({ children, position, pinned, type }) => {
+    if (pinned.length === 0) {
+      return null;
+    }
+
+    let style: SxProps<Theme> = {
+      position: "sticky",
+      zIndex: 3,
+      display: "flex",
+    };
+
+    if (position === "left") {
+      style.left = 0;
+      style.boxShadow =
+        "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+    } else if (position === "right") {
+      style.right = 0;
+      style.borderLeft = (theme) => `1px solid ${theme.palette.divider}`;
+      style.boxShadow =
+        "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+    }
+
+    return (
+      <Box component="div" className={`sticky-${position}-cols`} sx={style}>
+        {children}
+      </Box>
+    );
+  },
+
+  TableRowWrapper: React.forwardRef(
+    ({ children, flatIndex, dndStyle }, ref) => {
+      const theme = useTheme();
       const backgroundColor = (theme: Theme) => {
         const baseColor =
           flatIndex % 2 === 0
             ? theme.palette.background.paper
-            : theme.palette.grey[100];
+            : theme.palette.mode === "dark"
+              ? theme.palette.grey[900]
+              : theme.palette.grey[100];
         return baseColor;
       };
-
-      const theme = useTheme();
 
       const vars: Record<string, string> = {
         "--row-background-color": backgroundColor(theme),
       };
 
       return (
-        <TableRow
-          component="div"
-          className="table-row"
+        <Box
           sx={{
-            position: "relative",
-            width: "var(--table-width)",
-            display: "flex",
-            height: "var(--row-height)",
-            zIndex: 1,
-            boxSizing: "border-box",
+            ...dndStyle,
             ...vars,
-            // Remove hover background from row
-            transition: "all 0.1s ease",
           }}
           data-index={flatIndex}
           ref={ref}
         >
           {children}
-        </TableRow>
+        </Box>
       );
     },
   ),
-  ExpandedRow: React.forwardRef(({ children }, ref) => {
+  TableRow: ({ children, isPinned, flatIndex }) => {
+    return (
+      <TableRow
+        component="div"
+        className="table-row"
+        sx={{
+          position: "relative",
+          width: "var(--table-width)",
+          display: "flex",
+          height: "var(--row-height)",
+          zIndex: 1,
+          boxSizing: "border-box",
+          backgroundColor: "var(--row-background-color)",
+        }}
+      >
+        {children}
+      </TableRow>
+    );
+  },
+  TableRowExpandedContent: ({ children }) => {
     const { table } = useTableContext();
     return (
       <TableRow
         component="div"
         className="expanded-row"
-        ref={ref}
         sx={{
           backgroundColor: (theme) => theme.palette.background.default,
         }}
@@ -241,7 +246,7 @@ const AnoccaSkin: Skin = {
         </TableCell>
       </TableRow>
     );
-  }),
+  },
   Cell: ({ children, header }) => {
     const { isPinned } = header;
     return (
@@ -263,13 +268,16 @@ const AnoccaSkin: Skin = {
           alignContent: "center",
           padding: "6px 12px",
           backgroundColor: "var(--row-background-color)",
+          borderBottom: "none",
           flexShrink: 0,
-          borderRight: (theme) =>
-            isPinned ? `1px solid ${theme.palette.divider}` : "none",
+          position: "relative",
+          borderRight: (theme) => `1px solid ${theme.palette.divider}`,
           ".table-row:hover &": {
             backgroundColor: (theme) => {
               // Always use solid background colors for all cells on hover
-              return "#E3F2FD"; // Light blue solid color
+              return theme.palette.mode === "dark"
+                ? "#1e1e52" // Dark blue solid color
+                : "#E3F2FD"; // Light blue solid color
             },
             zIndex: isPinned ? 2 : 0,
           },
@@ -320,8 +328,7 @@ function TableHeaderCell({
         backgroundColor: isPinned
           ? (theme) => theme.palette.background.paper
           : "transparent",
-        borderRight: (theme) =>
-          isPinned ? `1px solid ${theme.palette.divider}` : "none",
+        borderRight: (theme) => `1px solid ${theme.palette.divider}`,
         // Add transparent border to prevent layout shift
         ...stickyStyle,
       }}
@@ -329,113 +336,19 @@ function TableHeaderCell({
       <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
         {children}
       </div>
-
-      {canPin && header && (
-        <div
-          style={{ display: "flex", gap: "4px", justifyContent: "flex-start" }}
-        >
-          {isPinned !== "start" ? (
-            <button
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                padding: "2px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                opacity: 0.5,
-              }}
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin("left");
-              }}
-            >
-              <ChevronLeft fontSize="small" />
-            </button>
-          ) : null}
-          {isPinned ? (
-            <button
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                padding: "2px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                opacity: 0.7,
-              }}
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin(false);
-              }}
-            >
-              <Close fontSize="small" />
-            </button>
-          ) : null}
-          {isPinned !== "end" ? (
-            <button
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                padding: "2px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                opacity: 0.5,
-              }}
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin("right");
-              }}
-            >
-              <ChevronRight fontSize="small" />
-            </button>
-          ) : null}
-        </div>
-      )}
-
-      {canResize && header && (
-        <Box
-          {...{
-            onDoubleClick: () => header.column.resetSize(),
-            onMouseDown: header.getResizeHandler(),
-            onTouchStart: header.getResizeHandler(),
-            className: `resizer ${
-              header.column.getIsResizing() ? "isResizing" : ""
-            }`,
-            sx: {
-              position: "absolute",
-              top: 4,
-              bottom: 4,
-              right: 0,
-              width: "3px",
-              cursor: "col-resize",
-              userSelect: "none",
-              touchAction: "none",
-              opacity: 0.2,
-              backgroundColor: (theme) => theme.palette.text.secondary,
-              transition: "opacity 0.2s, top 0.2s, bottom 0.2s",
-              "&.isResizing": {
-                backgroundColor: (theme) => theme.palette.primary.main,
-                opacity: 1,
-                top: 0,
-                bottom: 0,
-              },
-            },
-          }}
-        />
-      )}
     </TableCell>
   );
 }
 
 export { AnoccaSkin };
+
+function TableHeaderRow({ children }: { children: React.ReactNode }) {
+  return (
+    <TableRow
+      component="div"
+      sx={{ height: "var(--row-height)", display: "flex" }}
+    >
+      {children}
+    </TableRow>
+  );
+}

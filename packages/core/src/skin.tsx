@@ -4,6 +4,7 @@ import { useColContext } from "./table/cols/col_context";
 import { useRowContext } from "./table/rows/row_context";
 import { VirtualHeader } from "./table/cols/draggable_table_header";
 import { PinPos } from "./table/types";
+import { VirtualRow } from "./table/rows/table_row";
 
 export type Skin = {
   rowHeight: number;
@@ -22,21 +23,31 @@ export type Skin = {
 
   TableBody: React.FC<{ children: React.ReactNode }>;
 
-  StickyTopRows: React.FC<{ children: React.ReactNode }>;
-  StickyBottomRows: React.FC<{ children: React.ReactNode }>;
+  PinnedRows: React.FC<{ children: React.ReactNode, position: "top" | "bottom", pinned: VirtualRow[] }>;
 
-  ExpandableTableRow: React.ForwardRefExoticComponent<
+  TableRowWrapper: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> & {
       children: React.ReactNode;
+      flatIndex: number;
       isDragging: boolean;
       isPinned: PinPos;
-      flatIndex: number;
       dndStyle: CSSProperties;
     }
   >;
-  ExpandedRow: React.ForwardRefExoticComponent<
-    React.RefAttributes<HTMLDivElement> & { children: React.ReactNode }
-  >;
+  TableRow: React.FC<{
+    children: React.ReactNode;
+    isDragging: boolean;
+    flatIndex: number;
+    isPinned: PinPos;
+  }>;
+  TableRowExpandedContent: React.FC<{ children: React.ReactNode }>;
+
+  PinnedCols: React.FC<{
+    children: React.ReactNode;
+    position: "left" | "right";
+    pinned: VirtualHeader[];
+    type: 'header' | 'footer' | 'body'
+  }>;
 
   Cell: React.FC<{ children: React.ReactNode; header: VirtualHeader }>;
 };

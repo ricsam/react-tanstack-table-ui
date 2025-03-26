@@ -1,4 +1,4 @@
-import { ColumnPinningPosition } from "@tanstack/react-table";
+import { ColumnPinningPosition, Header } from "@tanstack/react-table";
 import React from "react";
 
 export function tuple<A, B, C, D>(a: A, b: B, c: C, d: D): [A, B, C, D];
@@ -43,4 +43,24 @@ export const mapColumnPinningPositionToPinPos = (
     return "start";
   }
   return "end";
+};
+const getSubHeaders = (header: Header<any, unknown>) => {
+  const subHeaders: Header<any, unknown>[] = [];
+  const appendSubHeaders = (header: Header<any, unknown>) => {
+    if (header.subHeaders.length > 0) {
+      header.subHeaders.forEach(appendSubHeaders);
+    } else {
+      subHeaders.push(header);
+    }
+  };
+  appendSubHeaders(header);
+  return subHeaders;
+};
+
+export const getIsPinned = (header: Header<any, unknown>) => {
+  // for pinned, let the subheaders decide how it should be pinned
+  const subHeaders = getSubHeaders(header);
+  const allVals = subHeaders.map((h) => h.column.getIsPinned());
+  const uniqueVals = [...new Set(allVals)];
+  return uniqueVals[uniqueVals.length - 1] ?? false;
 };

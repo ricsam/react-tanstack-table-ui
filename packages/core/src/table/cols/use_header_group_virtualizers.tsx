@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-virtual";
 import React, { CSSProperties } from "react";
 import { flushSync } from "react-dom";
-import { mapColumnPinningPositionToPinPos } from "../../utils";
+import { getIsPinned, mapColumnPinningPositionToPinPos } from "../../utils";
 import { useTableContext } from "../table_context";
 import { VirtualHeader } from "./draggable_table_header";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
@@ -17,18 +17,6 @@ import { VirtualHeaderGroup } from "./header_group";
 
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
-
-const getIsPinned = (header: Header<any, unknown>) => {
-  let subHeaders: Header<any, unknown>[] = [];
-  if (header.subHeaders.length > 0) {
-    subHeaders = header.subHeaders;
-  } else {
-    subHeaders = [header];
-  }
-  const allPinned = subHeaders.map((h) => h.column.getIsPinned());
-  const uniquePinned = [...new Set(allPinned)];
-  return uniquePinned.length === 1 && uniquePinned[0] ? uniquePinned[0] : false;
-};
 
 const getVirtualHeaderGroup = (
   group: HeaderGroup<any>,
@@ -292,6 +280,9 @@ export function useHeaderGroupVirtualizers(props: {
     let virtualPaddingLeft: number | undefined;
     let virtualPaddingRight: number | undefined;
 
+    if (!virtualizer) {
+      console.log("no virtualizer", headerIndex, headerColVirtualizers);
+    }
     const virtualColumns = virtualizer.getVirtualItems();
 
     if (virtualColumns.length) {

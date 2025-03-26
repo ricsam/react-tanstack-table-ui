@@ -19,7 +19,24 @@ export type VirtualHeader = {
   header?: Header<any, any>;
 };
 
+export const VirtualHeaderContext = React.createContext<VirtualHeader | null>(
+  null,
+);
+export const useVirtualHeader = (): VirtualHeader => {
+  const context = React.useContext(VirtualHeaderContext);
+  if (!context) {
+    throw new Error(
+      "useVirtualHeader must be used within a VirtualHeaderContext",
+    );
+  }
+  return context;
+};
+
 export const DraggableTableHeader = (props: VirtualHeader) => {
   const { skin } = useTableContext();
-  return <skin.TableHeaderCell {...props} />;
+  return (
+    <VirtualHeaderContext.Provider value={props}>
+      <skin.TableHeaderCell {...props} />
+    </VirtualHeaderContext.Provider>
+  );
 };

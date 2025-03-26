@@ -1,6 +1,6 @@
 import { Cell, flexRender } from "@tanstack/react-table";
 import React from "react";
-import { VirtualHeader } from "./draggable_table_header";
+import { VirtualHeader, VirtualHeaderContext } from "./draggable_table_header";
 import { useTableContext } from "../table_context";
 
 export const DragAlongCell = React.memo(function DragAlongCell({
@@ -12,8 +12,10 @@ export const DragAlongCell = React.memo(function DragAlongCell({
 }) {
   const { skin } = useTableContext();
   return (
-    <skin.Cell header={header}>
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </skin.Cell>
+    <VirtualHeaderContext.Provider value={header}>
+      <skin.Cell header={header}>
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </skin.Cell>
+    </VirtualHeaderContext.Provider>
   );
 });

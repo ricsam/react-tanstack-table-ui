@@ -33,11 +33,7 @@ export const TableRow = React.memo(function TableRow({
         {headers.map((virtualHeader) => {
           const cell = visibileCells[virtualHeader.colIndex];
           return (
-            <DragAlongCell
-              key={cell.id}
-              cell={cell}
-              header={virtualHeader}
-            />
+            <DragAlongCell key={cell.id} cell={cell} header={virtualHeader} />
           );
         })}
       </>
@@ -46,56 +42,59 @@ export const TableRow = React.memo(function TableRow({
 
   const isExpanded = row.subRows.length === 0 && row.getIsExpanded();
 
-  const expandedRowRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (isExpanded) {
-      const throttle = (fn: () => void, wait: number) => {
-        let timeout: NodeJS.Timer;
-        return () => {
-          clearTimeout(timeout);
-          timeout = setTimeout(fn, wait);
-        };
-      };
-
-      const throttledResizeObserver = throttle(() => {
-        if (expandedRowRef.current) {
-          const { height } = expandedRowRef.current.getBoundingClientRect();
-          rowVirtualizer.resizeItem(flatIndex, height + skin.rowHeight);
-        }
-      }, 100);
-
-      window.addEventListener("resize", throttledResizeObserver);
-      return () =>
-        window.removeEventListener("resize", throttledResizeObserver);
-    }
-  }, [isExpanded, skin.rowHeight, rowVirtualizer, flatIndex]);
+  const stickyLeft = headerGroup.headers.filter(
+    (cell) => cell.isPinned === "start",
+  );
+  const stickyRight = headerGroup.headers.filter(
+    (cell) => cell.isPinned === "end",
+  );
 
   return (
     <>
       <RowRefContext.Provider value={rowRef}>
-        <skin.ExpandableTableRow
+        <skin.TableRowWrapper
           isDragging={isDragging}
           isPinned={isPinned}
           flatIndex={flatIndex}
           dndStyle={dndStyle}
           ref={(el) => {
             rowRef.current = el;
+            if (isExpanded) {
+              rowVirtualizer.measureElement(el);
+            }
           }}
         >
-          {loop(
-            headerGroup.headers.filter((cell) => cell.isPinned === "start"),
+          <skin.TableRow
+            isDragging={isDragging}
+            isPinned={isPinned}
+            flatIndex={flatIndex}
+          >
+            <skin.PinnedCols
+              position="left"
+              pinned={stickyLeft}
+              type={'body'}
+            >
+              {loop(stickyLeft)}
+            </skin.PinnedCols>
+            <div style={{ width: headerGroup.offsetLeft }}></div>
+            {loop(
+              headerGroup.headers.filter((cell) => cell.isPinned === false),
+            )}
+            <div style={{ width: headerGroup.offsetRight }}></div>
+            <skin.PinnedCols
+              position="right"
+              pinned={stickyRight}
+              type={'body'}
+            >
+              {loop(stickyRight)}
+            </skin.PinnedCols>
+          </skin.TableRow>
+          {isExpanded && (
+            <skin.TableRowExpandedContent>
+              {renderSubComponent({ row })}
+            </skin.TableRowExpandedContent>
           )}
-          <div style={{ width: headerGroup.offsetLeft }}></div>
-          {loop(headerGroup.headers.filter((cell) => cell.isPinned === false))}
-          <div style={{ width: headerGroup.offsetRight }}></div>
-          {loop(headerGroup.headers.filter((cell) => cell.isPinned === "end"))}
-        </skin.ExpandableTableRow>
-        {isExpanded && (
-          <skin.ExpandedRow ref={expandedRowRef}>
-            {renderSubComponent({ row })}
-          </skin.ExpandedRow>
-        )}
+        </skin.TableRowWrapper>
       </RowRefContext.Provider>
     </>
   );

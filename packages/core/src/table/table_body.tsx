@@ -26,7 +26,7 @@ export const TableBody = ({
   const pinnedBottom = rows.filter((row) => row.isPinned === "end");
   return (
     <skin.TableBody>
-      <skin.StickyTopRows>{loop(pinnedTop)}</skin.StickyTopRows>
+      <skin.PinnedRows position="top" pinned={pinnedTop}>{loop(pinnedTop)}</skin.PinnedRows>
 
       <div style={{ height: offsetTop }} className="offset-top"></div>
 
@@ -34,7 +34,7 @@ export const TableBody = ({
 
       <div style={{ height: offsetBottom }} className="offset-bottom"></div>
 
-      <skin.StickyBottomRows>{loop(pinnedBottom)}</skin.StickyBottomRows>
+      <skin.PinnedRows position="bottom" pinned={pinnedBottom}>{loop(pinnedBottom)}</skin.PinnedRows>
     </skin.TableBody>
   );
 };
