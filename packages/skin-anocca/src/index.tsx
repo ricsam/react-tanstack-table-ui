@@ -1,5 +1,4 @@
 import {
-  alpha,
   Box,
   Paper,
   SxProps,
@@ -11,7 +10,6 @@ import {
   Theme,
   useTheme,
 } from "@mui/material";
-import { MdChevronLeft, MdChevronRight, MdClose } from "react-icons/md";
 import {
   Skin,
   useTableContext,
@@ -19,6 +17,7 @@ import {
   VirtualHeader,
 } from "@rttui/core";
 import React from "react";
+import { flexRender } from "@tanstack/react-table";
 
 const AnoccaSkin: Skin = {
   rowHeight: 32,
@@ -97,10 +96,10 @@ const AnoccaSkin: Skin = {
       </TableFooter>
     );
   },
-  TableHeaderRow,
-  TableFooterRow: TableHeaderRow,
-  TableHeaderCell: TableHeaderCell,
-  TableFooterCell: TableHeaderCell,
+  HeaderRow: TableHeaderRow,
+  HeaderCell: (props) => {
+    return <TableHeaderCell {...props} />;
+  },
   TableBody: ({ children }) => {
     return (
       <TableBody
@@ -117,7 +116,7 @@ const AnoccaSkin: Skin = {
       return null;
     }
 
-    let style: SxProps<Theme> = {
+    const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
     };
@@ -150,7 +149,7 @@ const AnoccaSkin: Skin = {
       return null;
     }
 
-    let style: SxProps<Theme> = {
+    const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
       display: "flex",
@@ -281,7 +280,6 @@ const AnoccaSkin: Skin = {
             },
             zIndex: isPinned ? 2 : 0,
           },
-          ...header.stickyStyle,
         }}
       >
         {children}
@@ -294,21 +292,17 @@ function TableHeaderCell({
   headerId,
   isPinned,
   width,
-  canPin,
   header,
-  canResize,
-  stickyStyle,
-  children,
-}: VirtualHeader) {
-  const ref = React.useRef<HTMLDivElement>(null);
-
+  type,
+}: VirtualHeader & {
+  type: "header" | "footer";
+}) {
   return (
     <TableCell
       component="div"
       className="th"
       data-header-id={headerId}
       data-is-pinned={isPinned}
-      ref={ref}
       sx={{
         transition: "background-color 0.2s ease",
         whiteSpace: "nowrap",
@@ -329,12 +323,12 @@ function TableHeaderCell({
           ? (theme) => theme.palette.background.paper
           : "transparent",
         borderRight: (theme) => `1px solid ${theme.palette.divider}`,
-        // Add transparent border to prevent layout shift
-        ...stickyStyle,
       }}
     >
       <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-        {children}
+        {header && !header.isPlaceholder
+          ? flexRender(header.column.columnDef[type], header.getContext())
+          : null}
       </div>
     </TableCell>
   );

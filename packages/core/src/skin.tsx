@@ -2,7 +2,7 @@ import React, { CSSProperties } from "react";
 import { useTableContext } from "./table/table_context";
 import { useColContext } from "./table/cols/col_context";
 import { useRowContext } from "./table/rows/row_context";
-import { VirtualHeader } from "./table/cols/draggable_table_header";
+import { VirtualHeader } from "./table/cols/virtual_header/types";
 import { PinPos } from "./table/types";
 import { VirtualRow } from "./table/rows/table_row";
 
@@ -13,13 +13,12 @@ export type Skin = {
   OuterContainer: React.FC<{ children: React.ReactNode }>;
   TableScroller: React.FC;
 
-  TableHeader: React.FC<{ children: React.ReactNode }>;
-  TableHeaderRow: React.FC<{ children: React.ReactNode }>;
-  TableHeaderCell: React.FC<VirtualHeader>;
 
+  HeaderCell: React.FC<VirtualHeader>;
+  HeaderRow: React.FC<{ children: React.ReactNode, type: "header" | "footer" }>;
+
+  TableHeader: React.FC<{ children: React.ReactNode }>;
   TableFooter: React.FC<{ children: React.ReactNode }>;
-  TableFooterRow: React.FC<{ children: React.ReactNode }>;
-  TableFooterCell: React.FC<VirtualHeader>;
 
   TableBody: React.FC<{ children: React.ReactNode }>;
 

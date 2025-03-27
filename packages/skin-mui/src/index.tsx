@@ -18,7 +18,7 @@ import {
   VirtualHeader,
 } from "@rttui/core";
 import React from "react";
-
+import { flexRender } from "@tanstack/react-table";
 const MuiSkin: Skin = {
   rowHeight: 52,
   headerRowHeight: 56,
@@ -112,7 +112,7 @@ const MuiSkin: Skin = {
       </TableFooter>
     );
   },
-  TableHeaderRow: ({ children }) => {
+  HeaderRow: ({ children }) => {
     return (
       <TableRow
         component="div"
@@ -122,18 +122,9 @@ const MuiSkin: Skin = {
       </TableRow>
     );
   },
-  TableFooterRow: ({ children }) => {
-    return (
-      <TableRow
-        component="div"
-        sx={{ height: "var(--row-height)", display: "flex" }}
-      >
-        {children}
-      </TableRow>
-    );
+  HeaderCell: (props) => {
+    return <TableHeaderCell {...props} />;
   },
-  TableHeaderCell: TableHeaderCell,
-  TableFooterCell: TableHeaderCell,
   TableBody: ({ children }) => {
     return (
       <TableBody
@@ -150,7 +141,7 @@ const MuiSkin: Skin = {
       return null;
     }
 
-    let style: SxProps<Theme> = {
+    const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
     };
@@ -179,7 +170,7 @@ const MuiSkin: Skin = {
       return null;
     }
 
-    let style: SxProps<Theme> = {
+    const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
       display: "flex",
@@ -187,11 +178,13 @@ const MuiSkin: Skin = {
 
     if (position === "left") {
       style.left = 0;
-      style.boxShadow = "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+      style.boxShadow =
+        "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
     } else if (position === "right") {
       style.right = 0;
       style.borderLeft = (theme: Theme) => `1px solid ${theme.palette.divider}`;
-      style.boxShadow = "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+      style.boxShadow =
+        "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
     }
 
     return (
@@ -202,11 +195,6 @@ const MuiSkin: Skin = {
   },
   TableRowWrapper: React.forwardRef(
     ({ children, flatIndex, dndStyle }, ref) => {
-      const backgroundColor = (theme: Theme) =>
-        flatIndex % 2 === 0
-          ? theme.palette.background.paper
-          : theme.palette.action.hover;
-
       return (
         <Box
           sx={{
@@ -296,7 +284,6 @@ const MuiSkin: Skin = {
           flexShrink: 0,
           borderRight: (theme) =>
             isPinned ? `1px solid ${theme.palette.divider}` : "none",
-          ...header.stickyStyle,
         }}
       >
         {children}
@@ -309,13 +296,14 @@ function TableHeaderCell({
   headerId,
   isPinned,
   width,
-  canPin,
   header,
-  canResize,
-  stickyStyle,
-  children,
-}: VirtualHeader) {
+  type,
+}: VirtualHeader & {
+  type: "header" | "footer";
+}) {
   const ref = React.useRef<HTMLDivElement>(null);
+  const canPin = header?.column.getCanPin();
+  const canResize = header?.column.getCanResize();
 
   return (
     <TableCell
@@ -349,11 +337,12 @@ function TableHeaderCell({
           backgroundColor: (theme) => theme.palette.action.hover,
           borderBottom: (theme) => `2px solid ${theme.palette.primary.main}`,
         },
-        ...stickyStyle,
       }}
     >
       <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-        {children}
+        {header && !header.isPlaceholder
+          ? flexRender(header.column.columnDef[type], header.getContext())
+          : null}
       </div>
 
       {canPin && header && (

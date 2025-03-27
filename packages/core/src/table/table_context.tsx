@@ -1,12 +1,19 @@
 import { Table } from "@tanstack/react-table";
 import React from "react";
 import { Skin } from "../skin";
+
+export type TableConfig = {
+  columnOverscan: number;
+  rowOverscan: number;
+};
+
 type TableContextType = {
   width: number;
   height: number;
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   table: Table<any>;
   skin: Skin;
+  config: TableConfig;
 };
 
 export const TableContext = React.createContext<TableContextType | undefined>(

@@ -1,84 +1,53 @@
-import { flexRender, Header, HeaderGroup, Table } from "@tanstack/react-table";
+import { Header, HeaderGroup } from "@tanstack/react-table";
 import {
   defaultRangeExtractor,
   elementScroll,
   observeElementOffset,
   observeElementRect,
+  VirtualItem,
   Virtualizer,
   VirtualizerOptions,
 } from "@tanstack/react-virtual";
-import React, { CSSProperties } from "react";
+import React, { useLayoutEffect } from "react";
 import { flushSync } from "react-dom";
 import { getIsPinned, mapColumnPinningPositionToPinPos } from "../../utils";
 import { useTableContext } from "../table_context";
-import { VirtualHeader } from "./draggable_table_header";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { VirtualHeaderGroup } from "./header_group";
+import { VirtualHeader } from "./virtual_header/types";
+import { VirtualHeaderGroupCache } from "./virtual_header_group_cache/virtual_header_group_cache";
 
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
 const getVirtualHeaderGroup = (
   group: HeaderGroup<any>,
-  type: "footer" | "header",
-  virtualizer: Virtualizer<HTMLDivElement, Element>,
-  table: Table<any>,
+  virtualColumns: VirtualItem[],
+  totalSize: number,
+  type: "header" | "footer",
 ): VirtualHeaderGroup => {
   const getVirtualHeader = (header: Header<any, unknown>): VirtualHeader => {
-    const stickyStyle: CSSProperties = {};
     const isPinned = getIsPinned(header);
 
-    if (isPinned) {
-      stickyStyle.position = "sticky";
-
-      const leafs = header.subHeaders.length > 0 ? header.subHeaders : [header];
-      const firstLeaf = leafs[0];
-      const lastLeaf = leafs[leafs.length - 1];
-
-      const pinnedRightLeftPos =
-        table.getTotalSize() -
-        (lastLeaf.column.getAfter("right") + header.column.getSize());
-
-      const transformedRightLeftPos = pinnedRightLeftPos;
-
-      const transformedRightRightPos =
-        table.getTotalSize() -
-        (transformedRightLeftPos + header.column.getSize());
-
-      if (isPinned === "left") {
-        stickyStyle.left = firstLeaf.getStart("left");
-      } else {
-        stickyStyle.right = transformedRightRightPos;
-      }
-    }
     return {
-      canDrag: header.isPlaceholder ? false : true,
-      canPin: header.column.getCanPin(),
-      canResize: header.column.getCanResize(),
-      children: header.isPlaceholder
-        ? null
-        : flexRender(header.column.columnDef[type], header.getContext()),
       header,
       headerId: header.id,
       isDragging: false,
       isPinned: mapColumnPinningPositionToPinPos(isPinned),
       dndStyle: {},
-      stickyStyle,
       width: header.getSize(),
-      colIndex: header.index,
-      start: header.getStart(),
+      headerIndex: header.index,
+      type,
     };
   };
-
-  const virtualColumns = virtualizer.getVirtualItems();
 
   const { offsetLeft, offsetRight } = getColVirtualizedOffsets({
     virtualColumns,
     getIsPinned(vcIndex) {
       const header = group.headers[vcIndex];
-      return !!header.column.getIsPinned();
+      return mapColumnPinningPositionToPinPos(getIsPinned(header));
     },
-    totalSize: virtualizer.getTotalSize(),
+    totalSize,
   });
 
   return {
@@ -97,17 +66,42 @@ export function useHeaderGroupVirtualizers(props: {
   headerGroups: HeaderGroup<any>[];
   type: "footer" | "header";
 }) {
-  const { tableContainerRef, table } = useTableContext();
-  const filteredHeaderGroups = props.headerGroups.filter((group) => {
-    return group.headers.some((header) => header.column.columnDef[props.type]);
-  });
+  const { tableContainerRef, table, config } = useTableContext();
+  const tableState = table.getState();
+  const { filteredHeaderGroups, headerIndices } = React.useMemo(() => {
+    const headerIndices: Record<
+      string,
+      undefined | { headerIndex: number; groupIndex: number }
+    > = {};
+    const filteredHeaderGroups: HeaderGroup<any>[] = [];
+    props.headerGroups.forEach((group, i) => {
+      let hasVisibleHeader = false;
+      const groupHeaderIndices: Record<
+        string,
+        { headerIndex: number; groupIndex: number }
+      > = {};
+      group.headers.forEach((header, j) => {
+        groupHeaderIndices[header.column.id] = {
+          headerIndex: j,
+          groupIndex: filteredHeaderGroups.length,
+        };
+        if (header.column.columnDef[props.type]) {
+          hasVisibleHeader = true;
+        }
+      });
+      if (hasVisibleHeader) {
+        filteredHeaderGroups.push(group);
+        Object.assign(headerIndices, groupHeaderIndices);
+      }
+    });
+    return {
+      filteredHeaderGroups,
+      headerIndices,
+    };
+  }, [props.headerGroups, props.type]);
 
   const _draggedIndexRef = React.useRef<(number | null)[]>(
     filteredHeaderGroups.map(() => null),
-  );
-
-  const visibleColsOutsideVirtualRange = React.useRef(
-    filteredHeaderGroups.map(() => new Set<number>()),
   );
 
   const getDraggedIndex = (headerIndex: number) =>
@@ -117,6 +111,7 @@ export function useHeaderGroupVirtualizers(props: {
 
   const baseColVirtOpts = React.useCallback(
     (
+      headerGroup: HeaderGroup<any>,
       headerIndex: number,
     ): Pick<
       VirtualizerOptions<HTMLDivElement, Element>,
@@ -125,13 +120,14 @@ export function useHeaderGroupVirtualizers(props: {
       | "overscan"
       | "rangeExtractor"
       | "debug"
+      | "getItemKey"
     > => {
-      const headers = filteredHeaderGroups[headerIndex].headers;
+      const headers = headerGroup.headers;
       return {
         getScrollElement: () => tableContainerRef.current,
         horizontal: true,
         // debug: true,
-        overscan: 1, //how many columns to render on each side off screen each way (adjust this for performance)
+        overscan: config.columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
         rangeExtractor: (range) => {
           const draggedIndex = getDraggedIndex(headerIndex);
           const defaultRange = defaultRangeExtractor(range);
@@ -146,62 +142,26 @@ export function useHeaderGroupVirtualizers(props: {
           if (draggedIndex !== null) {
             if (!next.has(draggedIndex)) {
               next.add(draggedIndex);
-              visibleColsOutsideVirtualRange.current[headerIndex].add(
-                draggedIndex,
-              );
-            } else {
-              visibleColsOutsideVirtualRange.current[headerIndex].delete(
-                draggedIndex,
-              );
             }
           }
-          const pinnedHeaders: Header<any, unknown>[] = [];
-          const unpinnedHeaders: Header<any, unknown>[] = [];
           for (let i = 0; i < headers.length; i++) {
             const header = headers[i];
-            if (header.column.getIsPinned()) {
-              pinnedHeaders.push(header);
-            } else {
-              unpinnedHeaders.push(header);
+            if (getIsPinned(header)) {
+              next.add(i);
             }
           }
-          pinnedHeaders.forEach((col) => {
-            const index = col.index;
-            if (index !== -1) {
-              if (!next.has(index)) {
-                next.add(index);
-                visibleColsOutsideVirtualRange.current[headerIndex].add(index);
-              } else {
-                visibleColsOutsideVirtualRange.current[headerIndex].delete(
-                  index,
-                );
-              }
-            }
-          });
-          unpinnedHeaders.forEach((col) => {
-            const index = col.index;
-            if (index === draggedIndex) {
-              return;
-            }
-            if (
-              visibleColsOutsideVirtualRange.current[headerIndex].has(index)
-            ) {
-              visibleColsOutsideVirtualRange.current[headerIndex].delete(index);
-            }
-          });
-          // console.log(
-          //   "range",
-          //   draggedIndex,
-          //   [...next].sort((a, b) => a - b),
-          // );
+
           const sortedRange = [...next].sort((a, b) => {
             return a - b;
           });
           return sortedRange;
         },
+        getItemKey(index) {
+          return headers[index].id;
+        },
       };
     },
-    [filteredHeaderGroups, tableContainerRef],
+    [tableContainerRef, config.columnOverscan],
   );
 
   const rerender = React.useReducer(() => ({}), {})[1];
@@ -213,8 +173,10 @@ export function useHeaderGroupVirtualizers(props: {
         headerIndex,
       ): VirtualizerOptions<HTMLDivElement, Element> => {
         return {
-          ...baseColVirtOpts(headerIndex),
+          ...baseColVirtOpts(headerGroup, headerIndex),
           count: headerGroup.headers.length,
+          // estimateSize: (index) =>
+          //   tableState.columnSizing[headerGroup.headers[index].column.id],
           estimateSize: (index) => headerGroup.headers[index].getSize(),
           observeElementRect,
           observeElementOffset,
@@ -237,18 +199,34 @@ export function useHeaderGroupVirtualizers(props: {
     });
   });
 
-  if (headerColVirtualizers.length > 0) {
-    headerColVirtualizers[
-      headerColVirtualizers.length - 1
-    ].shouldAdjustScrollPositionOnItemSizeChange =
-      // when moving columns we want to adjust the scroll position
-      // when resizing columns we don't want to adjust the scroll position
-      table.getState().columnSizingInfo.isResizingColumn === false
-        ? () => {
-            return true;
-          }
-        : undefined;
-  }
+  const columnResizingInfo = tableState.columnSizingInfo;
+
+  useIsomorphicLayoutEffect(() => {
+    if (columnResizingInfo.isResizingColumn) {
+      const indices = headerIndices[columnResizingInfo.isResizingColumn];
+      if (!indices) {
+        return;
+      }
+      const { headerIndex, groupIndex } = indices;
+
+      const virtualizer = headerColVirtualizers[groupIndex];
+      virtualizer.resizeItem(
+        headerIndex,
+        tableState.columnSizing[columnResizingInfo.isResizingColumn],
+      );
+    }
+  }, [
+    columnResizingInfo.isResizingColumn,
+    headerColVirtualizers,
+    headerIndices,
+    tableState.columnSizing,
+  ]);
+
+  headerColVirtualizers.forEach((cv, i) => {
+    cv.shouldAdjustScrollPositionOnItemSizeChange = undefined;
+    cv.setOptions(headerColVirtualizerOptions[i]);
+    cv.calculateRange();
+  });
 
   useIsomorphicLayoutEffect(() => {
     const cleanups = headerColVirtualizers.map((cv) => {
@@ -267,52 +245,17 @@ export function useHeaderGroupVirtualizers(props: {
     });
   });
 
-  headerColVirtualizers.forEach((cv, i) => {
-    cv.setOptions(headerColVirtualizerOptions[i]);
-    filteredHeaderGroups[i].headers.forEach((header, j) => {
-      cv.resizeItem(j, header.getSize());
-    });
+  const [virtualHeaderGroupCache] = React.useState(() => {
+    const virtualHeaderGroupCache = new VirtualHeaderGroupCache();
+    return virtualHeaderGroupCache;
   });
 
-  //different virtualization strategy for columns - instead of absolute and translateY, we add empty columns to the left and right
-  const getVirtualHeaders = (headerIndex: number) => {
-    const virtualizer = headerColVirtualizers[headerIndex];
-    let virtualPaddingLeft: number | undefined;
-    let virtualPaddingRight: number | undefined;
-
-    if (!virtualizer) {
-      console.log("no virtualizer", headerIndex, headerColVirtualizers);
-    }
+  const virtualHeaderGroups = filteredHeaderGroups.map((group, i) => {
+    const virtualizer = headerColVirtualizers[i];
     const virtualColumns = virtualizer.getVirtualItems();
-
-    if (virtualColumns.length) {
-      const virtualColumnsStart = virtualColumns.find(
-        (vc) =>
-          !visibleColsOutsideVirtualRange.current[headerIndex].has(vc.index),
-      );
-      const virtualColumnsEnd = [...virtualColumns]
-        .reverse()
-        .find(
-          (vc) =>
-            !visibleColsOutsideVirtualRange.current[headerIndex].has(vc.index),
-        );
-      // const virtualColumnsStart = virtualColumns[0];
-      // const virtualColumnsEnd = [...virtualColumns].reverse()[0];
-
-      virtualPaddingLeft = virtualColumnsStart?.start ?? 0;
-      virtualPaddingRight =
-        virtualizer.getTotalSize() - (virtualColumnsEnd?.end ?? 0);
-    }
-    return {
-      virtualPaddingLeft,
-      virtualPaddingRight,
-      virtualColumns,
-      virtualizer,
-    };
-  };
-
-  return filteredHeaderGroups.map((group, i): VirtualHeaderGroup => {
-    const { virtualizer } = getVirtualHeaders(i);
-    return getVirtualHeaderGroup(group, props.type, virtualizer, table);
+    const totalSize = virtualizer.getTotalSize();
+    return getVirtualHeaderGroup(group, virtualColumns, totalSize, props.type);
   });
+
+  return virtualHeaderGroupCache.update(virtualHeaderGroups, tableState);
 }

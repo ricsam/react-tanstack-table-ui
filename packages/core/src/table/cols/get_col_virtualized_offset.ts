@@ -1,3 +1,5 @@
+import { PinPos } from "../types";
+
 /**
  * when we are only rendering a window of columns while maintaining a scrollbar we need to move the elements as we remove elements to the left
  * we are assuming that the columns are rendered in order, so pinned left, followed by non-pinned, followed by pinned right
@@ -8,7 +10,7 @@ export function getColVirtualizedOffsets({
   totalSize,
 }: {
   virtualColumns: { index: number; start: number; end: number }[];
-  getIsPinned: (vcIndex: number) => boolean;
+  getIsPinned: (vcIndex: number) => PinPos;
   totalSize: number;
 }) {
   let offsetLeft = 0;
@@ -19,7 +21,7 @@ export function getColVirtualizedOffsets({
     let firstNonPinned: undefined | number;
     for (let i = 0; i < virtualColumns.length; i++) {
       const vc = virtualColumns[i];
-      if (getIsPinned(vc.index)) {
+      if (getIsPinned(vc.index) === "start") {
         lastPinned = i;
       } else {
         firstNonPinned = i;
@@ -40,7 +42,7 @@ export function getColVirtualizedOffsets({
     let firstNonPinned: undefined | number;
     for (let i = virtualColumns.length - 1; i >= 0; i--) {
       const vc = virtualColumns[i];
-      if (getIsPinned(vc.index)) {
+      if (getIsPinned(vc.index) === "end") {
         lastPinned = i;
       } else {
         firstNonPinned = i;

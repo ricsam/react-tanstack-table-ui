@@ -13,17 +13,33 @@ import {
   getCoreRowModel,
   getExpandedRowModel,
   useReactTable,
-  RowPinningState,
   ColumnHelper,
-  CellContext
+  CellContext,
 } from "@tanstack/react-table";
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { AnoccaSkin } from "@rttui/skin-anocca";
 import { MuiSkin } from "@rttui/skin-mui";
-import { ThemeProvider, createTheme, CssBaseline, Chip, Rating, Link as MuiLink, Typography, Checkbox, IconButton, Button } from "@mui/material";
+import {
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
+  Chip,
+  Rating,
+  Link as MuiLink,
+  Typography,
+  Checkbox,
+  IconButton,
+} from "@mui/material";
 import { useHashState } from "./use_hash_state";
-import { CheckCircle, Cancel, KeyboardArrowDown, KeyboardArrowRight, Close, KeyboardArrowUp } from "@mui/icons-material";
+import {
+  CheckCircle,
+  Cancel,
+  KeyboardArrowDown,
+  KeyboardArrowRight,
+  Close,
+  KeyboardArrowUp,
+} from "@mui/icons-material";
 
 interface ThemeProviderProps {
   theme?: "light" | "dark";
@@ -35,9 +51,7 @@ const DefaultThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
 }) => {
   return (
-    <div
-      style={theme === "light" ? lightModeVars : darkModeVars}
-    >
+    <div style={theme === "light" ? lightModeVars : darkModeVars}>
       {children}
     </div>
   );
@@ -46,7 +60,10 @@ const DefaultThemeProvider: React.FC<ThemeProviderProps> = ({
 function App() {
   const { table } = useBigTable();
   const [theme, setTheme] = useHashState<"light" | "dark">("theme", "light");
-  const [skin, setSkin] = useHashState<"mui" | "anocca" | "default">("skin", "mui");
+  const [skin, setSkin] = useHashState<"mui" | "anocca" | "default">(
+    "skin",
+    "mui",
+  );
 
   const activeSkin = React.useMemo(() => {
     switch (skin) {
@@ -140,11 +157,12 @@ const includeParentRows = true;
 const defaultSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
   "is-active": columnHelper.accessor("isActive", {
     header: "Active",
-    cell: (info: CellContext<User, boolean>) => (info.getValue() ? "Yes" : "No"),
+    cell: (info: CellContext<User, boolean>) =>
+      info.getValue() ? "Yes" : "No",
     id: "is-active",
     size: 100,
   }),
-  
+
   "performance-score": columnHelper.accessor("performanceScore", {
     header: "Performance",
     cell: (info: CellContext<User, number>) => {
@@ -155,21 +173,22 @@ const defaultSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
     id: "performance-score",
     size: 120,
   }),
-  
-  "salary": columnHelper.accessor("salary", {
+
+  salary: columnHelper.accessor("salary", {
     header: "Salary",
-    cell: (info: CellContext<User, number>) => `$${info.getValue().toLocaleString()}`,
+    cell: (info: CellContext<User, number>) =>
+      `$${info.getValue().toLocaleString()}`,
     id: "salary",
     size: 120,
   }),
-  
-  "email": columnHelper.accessor("email", {
+
+  email: columnHelper.accessor("email", {
     header: "Email",
     cell: (info: CellContext<User, string>) => info.getValue(),
     id: "email",
     size: 200,
   }),
-  
+
   "full-name": columnHelper.accessor("fullName", {
     header: ({ table }) => (
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -183,9 +202,7 @@ const defaultSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
         />
 
         {/* Standard Expand all button */}
-        <button
-          onClick={table.getToggleAllRowsExpandedHandler()}
-        >
+        <button onClick={table.getToggleAllRowsExpandedHandler()}>
           {table.getIsAllRowsExpanded() ? "⬇️" : "➡️"}
         </button>
 
@@ -226,9 +243,7 @@ const defaultSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
         {/* Standard Pin buttons */}
         {row.getIsPinned() ? (
           <button
-            onClick={() =>
-              row.pin(false, includeLeafRows, includeParentRows)
-            }
+            onClick={() => row.pin(false, includeLeafRows, includeParentRows)}
           >
             ❌
           </button>
@@ -240,9 +255,7 @@ const defaultSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
             }}
           >
             <button
-              onClick={() =>
-                row.pin("top", includeLeafRows, includeParentRows)
-              }
+              onClick={() => row.pin("top", includeLeafRows, includeParentRows)}
             >
               ⬆️
             </button>
@@ -272,56 +285,54 @@ const muiSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
       <Chip
         size="small"
         color={info.getValue() ? "success" : "error"}
-        icon={info.getValue() ? <CheckCircle fontSize="small" /> : <Cancel fontSize="small" />}
+        icon={
+          info.getValue() ? (
+            <CheckCircle fontSize="small" />
+          ) : (
+            <Cancel fontSize="small" />
+          )
+        }
         label={info.getValue() ? "Active" : "Inactive"}
       />
     ),
     id: "is-active",
     size: 100,
   }),
-  
+
   "performance-score": columnHelper.accessor("performanceScore", {
     header: "Performance",
     cell: (info: CellContext<User, number>) => (
-      <Rating 
-        value={info.getValue()} 
-        readOnly 
-        size="small" 
-        max={5}
-      />
+      <Rating value={info.getValue()} readOnly size="small" max={5} />
     ),
     id: "performance-score",
     size: 120,
   }),
-  
-  "salary": columnHelper.accessor("salary", {
+
+  salary: columnHelper.accessor("salary", {
     header: "Salary",
     cell: (info: CellContext<User, number>) => (
       <Typography variant="body2">
-        {new Intl.NumberFormat('en-US', { 
-          style: 'currency', 
-          currency: 'USD' 
+        {new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
         }).format(info.getValue())}
       </Typography>
     ),
     id: "salary",
     size: 120,
   }),
-  
-  "email": columnHelper.accessor("email", {
+
+  email: columnHelper.accessor("email", {
     header: "Email",
     cell: (info: CellContext<User, string>) => (
-      <MuiLink 
-        href={`mailto:${info.getValue()}`}
-        underline="hover"
-      >
+      <MuiLink href={`mailto:${info.getValue()}`} underline="hover">
         {info.getValue()}
       </MuiLink>
     ),
     id: "email",
     size: 200,
   }),
-  
+
   "full-name": columnHelper.accessor("fullName", {
     header: ({ table }) => (
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -338,7 +349,11 @@ const muiSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
           size="small"
           onClick={table.getToggleAllRowsExpandedHandler()}
         >
-          {table.getIsAllRowsExpanded() ? <KeyboardArrowDown /> : <KeyboardArrowRight />}
+          {table.getIsAllRowsExpanded() ? (
+            <KeyboardArrowDown />
+          ) : (
+            <KeyboardArrowRight />
+          )}
         </IconButton>
 
         <Typography variant="body1">Full Name</Typography>
@@ -364,11 +379,12 @@ const muiSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
 
         {/* MUI Expand/collapse button */}
         {row.getCanExpand() ? (
-          <IconButton
-            size="small"
-            onClick={row.getToggleExpandedHandler()}
-          >
-            {row.getIsExpanded() ? <KeyboardArrowDown /> : <KeyboardArrowRight />}
+          <IconButton size="small" onClick={row.getToggleExpandedHandler()}>
+            {row.getIsExpanded() ? (
+              <KeyboardArrowDown />
+            ) : (
+              <KeyboardArrowRight />
+            )}
           </IconButton>
         ) : (
           <span style={{ width: "24px", display: "inline-block" }}></span>
@@ -378,9 +394,7 @@ const muiSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
         {row.getIsPinned() ? (
           <IconButton
             size="small"
-            onClick={() =>
-              row.pin(false, includeLeafRows, includeParentRows)
-            }
+            onClick={() => row.pin(false, includeLeafRows, includeParentRows)}
           >
             <Close fontSize="small" />
           </IconButton>
@@ -393,9 +407,7 @@ const muiSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
           >
             <IconButton
               size="small"
-              onClick={() =>
-                row.pin("top", includeLeafRows, includeParentRows)
-              }
+              onClick={() => row.pin("top", includeLeafRows, includeParentRows)}
             >
               <KeyboardArrowUp fontSize="small" />
             </IconButton>
@@ -422,25 +434,25 @@ const muiSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
 const useBigTable = () => {
   const [skin] = useHashState<"mui" | "anocca" | "default">("skin", "mui");
   const columnHelper = createColumnHelper<User>();
-  
+
   // Get special column definitions based on skin
   const specialColumnDefs = React.useMemo(() => {
     if (skin === "mui" || skin === "anocca") {
       return muiSpecialColumnDefs(columnHelper);
     }
     return defaultSpecialColumnDefs(columnHelper);
-  }, [skin]);
-  
+  }, [columnHelper, skin]);
+
   // Build columns structure with injected special columns
   const columns = React.useMemo(() => {
     // Add special columns where they belong
     const allColumns: ColumnDef<User, any>[] = [
-      // Use special fullName column 
+      // Use special fullName column
       specialColumnDefs["full-name"],
-      
+
       // Use special email column
       specialColumnDefs["email"],
-      
+
       // Normal columns
       columnHelper.accessor("location", {
         header: "Location",
@@ -448,28 +460,28 @@ const useBigTable = () => {
         id: "location",
         size: 200,
       }),
-      
+
       columnHelper.accessor("city", {
         header: "City",
         cell: (info) => info.getValue(),
         id: "city",
         size: 150,
       }),
-      
+
       columnHelper.accessor("address", {
         header: "Address",
         cell: (info) => info.getValue(),
         id: "address",
         size: 200,
       }),
-      
+
       // Use special isActive column
       specialColumnDefs["is-active"],
-      
+
       // Country group
       columnHelper.group({
         id: "country-stuff",
-        footer: () => "Country stuff",
+        footer: "Country stuff",
         columns: [
           columnHelper.accessor("country", {
             header: "Country",
@@ -496,14 +508,14 @@ const useBigTable = () => {
           }),
         ],
       }),
-      
+
       columnHelper.accessor("favoriteGame", {
         header: "Favorite Game",
         cell: (info) => info.getValue(),
         id: "favorite-game",
         size: 200,
       }),
-      
+
       // Employment group with special columns injected
       columnHelper.group({
         header: "Employment Info",
@@ -527,7 +539,7 @@ const useBigTable = () => {
             id: "team-name",
             size: 120,
           }),
-          // Special salary column 
+          // Special salary column
           specialColumnDefs["salary"],
           columnHelper.accessor("hireDate", {
             header: "Hire Date",
@@ -546,11 +558,11 @@ const useBigTable = () => {
         ],
       }),
     ];
-    
+
     // Create additional columns to get to about 100 columns total
     const fieldCycles = [
       "fullName",
-      "city", 
+      "city",
       "country",
       "favoriteGame",
       "experienceYears",
@@ -571,10 +583,10 @@ const useBigTable = () => {
         }),
       );
     }
-    
+
     return allColumns;
-  }, [specialColumnDefs]);
-  
+  }, [columnHelper, specialColumnDefs]);
+
   const [data, setData] = React.useState<User[]>(() =>
     // Use a fixed seed for consistent test data
     generateTableData({ maxRows: 1e5, seed: 12345 }),

@@ -9,13 +9,15 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
   },
   "devDependencies": {
     "@tanstack/react-table": "^8.20.6",
     "@tanstack/react-virtual": "^3.11.2",
     "@types/react": "^19.0.7",
     "react": "^19.0.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
   }
 }

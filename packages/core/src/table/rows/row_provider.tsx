@@ -13,7 +13,7 @@ import { RowContext } from "./row_context";
 export const RowProvider = ({ children }: { children: React.ReactNode }) => {
   const [draggedRowId, setDraggedRowId] = React.useState<string | null>(null);
 
-  const { table, tableContainerRef, skin } = useTableContext();
+  const { table, tableContainerRef, skin, config } = useTableContext();
 
   let draggedRows: string[] | undefined;
 
@@ -41,7 +41,6 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     draggedRows = [...expandedRowIds];
-    console.log("@draggedRows", draggedRows);
   }
 
   const { mainHeaderGroup, headerGroups, footerGroups } = useColContext();
@@ -72,7 +71,7 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
       },
       [skin.rowHeight],
     ),
-    overscan: 5,
+    overscan: config.rowOverscan,
     rangeExtractor: React.useCallback(
       (range: Range): number[] => {
         const defaultRange = defaultRangeExtractor(range);

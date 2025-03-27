@@ -1,7 +1,7 @@
 import React, { CSSProperties } from "react";
-import { Skin, useTableCssVars } from "./skin";
-import { VirtualHeader } from "./table/cols/draggable_table_header";
-import { useTableContext } from "./table/table_context";
+import { Skin, useTableCssVars } from "../skin";
+import { useTableContext } from "../table/table_context";
+import { HeaderCell } from "./header_cell";
 
 export const darkModeVars: Record<string, string> = {
   "--table-text-color": "#ffffff",
@@ -84,10 +84,10 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  TableHeaderRow: ({ children }) => {
+  HeaderRow: ({ children, type }) => {
     return (
       <div
-        className="table-header-row"
+        className={`table-${type}-row`}
         style={{
           display: "flex",
           height: "var(--header-row-height)",
@@ -100,7 +100,9 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  TableHeaderCell: HeaderCell,
+  HeaderCell: (props) => {
+    return <HeaderCell {...props} />;
+  },
   TableFooter: ({ children }) => {
     return (
       <div
@@ -119,23 +121,6 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  TableFooterRow: ({ children }) => {
-    return (
-      <div
-        className="table-footer-row"
-        style={{
-          display: "flex",
-          height: "var(--footer-row-height)",
-          borderBottom: "1px solid var(--table-border-color)",
-          boxSizing: "border-box",
-          margin: 0,
-        }}
-      >
-        {children}
-      </div>
-    );
-  },
-  TableFooterCell: HeaderCell,
   TableBody: ({ children }) => {
     return (
       <div
@@ -178,7 +163,7 @@ export const defaultSkin: Skin = {
     );
   },
   PinnedCols: ({ children, position, pinned }) => {
-    let style: CSSProperties = {
+    const style: CSSProperties = {
       position: "sticky",
       zIndex: 1,
       top: "var(--header-height)",
@@ -204,7 +189,7 @@ export const defaultSkin: Skin = {
     );
   },
   TableRowWrapper: React.forwardRef(
-    ({ children, flatIndex, isDragging, isPinned, dndStyle }, ref) => {
+    ({ children, flatIndex, dndStyle }, ref) => {
       return (
         <div data-index={flatIndex} ref={ref} style={dndStyle}>
           {children}
@@ -288,142 +273,3 @@ export const defaultSkin: Skin = {
     );
   },
 };
-
-function HeaderCell({
-  isDragging,
-  isPinned,
-  width,
-  canDrag,
-  dndStyle,
-  children,
-  canPin,
-  header,
-  canResize,
-  stickyStyle,
-}: VirtualHeader) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  return (
-    <div
-      className="th"
-      ref={ref}
-      style={{
-        opacity: isDragging ? 0.8 : 1,
-        transition: "none",
-        whiteSpace: "nowrap",
-        zIndex: isDragging || isPinned ? 1 : 0,
-        display: "flex",
-        overflow: "hidden",
-        width,
-        backgroundColor: "var(--table-header-bg)",
-        position: "relative",
-        flexShrink: 0,
-        paddingLeft: "8px",
-        paddingRight: "8px",
-        margin: 0,
-        boxSizing: "border-box",
-        borderRight: "1px solid var(--table-border-color)",
-        fontWeight: "600",
-        alignItems: "center",
-        ...stickyStyle,
-        ...dndStyle,
-      }}
-    >
-      <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-        {children}
-        <div style={{ width: "4px" }}></div>
-      </div>
-      {/* {canDrag && (
-          <button
-            onMouseDown={(ev: React.MouseEvent) => {
-              const rect = ref.current?.getBoundingClientRect();
-              if (!rect) {
-                throw new Error("No rect");
-              }
-              ctx.onDragStart(headerId);
-              ctx.setIsDragging({
-                headerId: headerId,
-                mouseStart: { x: ev.clientX, y: ev.clientY },
-                itemPos: {
-                  x: rect.left,
-                  y: rect.top,
-                },
-              });
-            }}
-          >
-            🟰
-          </button>
-        )} */}
-      {canDrag && canPin && (
-        <div className="flex gap-1 justify-center">
-          {isPinned !== "start" ? (
-            <button
-              className="border rounded px-2"
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin("left");
-              }}
-            >
-              {"<="}
-            </button>
-          ) : null}
-          {isPinned ? (
-            <button
-              className="border rounded px-2"
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin(false);
-                // table.resetColumnSizing(true);
-              }}
-            >
-              X
-            </button>
-          ) : null}
-          {isPinned !== "end" ? (
-            <button
-              className="border rounded px-2"
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin("right");
-              }}
-            >
-              {"=>"}
-            </button>
-          ) : null}
-        </div>
-      )}
-      {canResize && header && (
-        <div
-          {...{
-            onDoubleClick: () => header.column.resetSize(),
-            onMouseDown: header.getResizeHandler(),
-            onTouchStart: header.getResizeHandler(),
-            className: `resizer ${
-              header.column.getIsResizing() ? "isResizing" : ""
-            }`,
-            style: {
-              position: "absolute",
-              top: 0,
-              height: "100%",
-              right: 0,
-              width: "5px",
-              background: "var(--table-border-color)",
-              cursor: "col-resize",
-              userSelect: "none",
-              touchAction: "none",
-              opacity: header.column.getIsResizing() ? 1 : 0,
-              backgroundColor: header.column.getIsResizing()
-                ? "var(--table-border-color)"
-                : "var(--table-border-color)",
-            },
-          }}
-        />
-      )}
-    </div>
-  );
-}

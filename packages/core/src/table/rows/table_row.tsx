@@ -1,7 +1,7 @@
 import { Row } from "@tanstack/react-table";
 import React, { CSSProperties } from "react";
-import { DragAlongCell } from "../cols/drag_along_cell";
-import { VirtualHeader } from "../cols/draggable_table_header";
+import { VirtualCell } from "../cols/virtual_cell";
+import { VirtualHeader } from "../cols/virtual_header/types";
 import { useTableContext } from "../table_context";
 import { PinPos } from "../types";
 import { useRowContext } from "./row_context";
@@ -31,9 +31,9 @@ export const TableRow = React.memo(function TableRow({
     return (
       <>
         {headers.map((virtualHeader) => {
-          const cell = visibileCells[virtualHeader.colIndex];
+          const cell = visibileCells[virtualHeader.headerIndex];
           return (
-            <DragAlongCell key={cell.id} cell={cell} header={virtualHeader} />
+            <VirtualCell key={cell.id} cell={cell} header={virtualHeader} />
           );
         })}
       </>
@@ -43,10 +43,10 @@ export const TableRow = React.memo(function TableRow({
   const isExpanded = row.subRows.length === 0 && row.getIsExpanded();
 
   const stickyLeft = headerGroup.headers.filter(
-    (cell) => cell.isPinned === "start",
+    (header) => header.isPinned === "start",
   );
   const stickyRight = headerGroup.headers.filter(
-    (cell) => cell.isPinned === "end",
+    (header) => header.isPinned === "end",
   );
 
   return (

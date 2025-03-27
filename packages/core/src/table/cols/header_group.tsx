@@ -1,6 +1,7 @@
 import { HeaderGroup as HeaderGroupType } from "@tanstack/react-table";
-import { DraggableTableHeader, VirtualHeader } from "./draggable_table_header";
+import { VirtualHeader } from "./virtual_header/types";
 import { useTableContext } from "../table_context";
+import { VirtualHeaderContext } from "./virtual_header/context";
 export type VirtualHeaderGroup = {
   offsetLeft: number;
   offsetRight: number;
@@ -13,17 +14,19 @@ export function HeaderGroup({
   offsetLeft,
   offsetRight,
   headers,
-  Component,
   type,
 }: VirtualHeaderGroup & {
-  Component: React.FC<{ children: React.ReactNode }>;
-  type: 'header' | 'footer'
+  type: "header" | "footer";
 }) {
   const loop = (headers: VirtualHeader[]) => {
     const draggableHeader = (
       <>
         {headers.map((header) => {
-          return <DraggableTableHeader key={header.headerId} {...header} />;
+          return (
+            <VirtualHeaderContext.Provider value={header} key={header.headerId}>
+              <skin.HeaderCell {...header} />
+            </VirtualHeaderContext.Provider>
+          );
         })}
       </>
     );
@@ -36,7 +39,7 @@ export function HeaderGroup({
   const { skin } = useTableContext();
 
   return (
-    <Component>
+    <skin.HeaderRow type={type}>
       <skin.PinnedCols position="left" pinned={pinnedLeft} type={type}>
         {loop(pinnedLeft)}
       </skin.PinnedCols>
@@ -46,6 +49,6 @@ export function HeaderGroup({
       <skin.PinnedCols position="right" pinned={pinnedRight} type={type}>
         {loop(pinnedRight)}
       </skin.PinnedCols>
-    </Component>
+    </skin.HeaderRow>
   );
 }

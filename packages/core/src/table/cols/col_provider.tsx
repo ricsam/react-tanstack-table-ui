@@ -1,3 +1,4 @@
+import React from "react";
 import { useTableContext } from "../table_context";
 import { ColContext } from "./col_context";
 import { VirtualHeaderGroup } from "./header_group";
@@ -38,13 +39,18 @@ export const ColProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <ColContext.Provider
-      value={{
-        onDragStart: () => {},
-        setIsDragging: () => {},
-        headerGroups,
-        footerGroups,
-        mainHeaderGroup,
-      }}
+      value={React.useMemo(
+        () => {
+          return ({
+            onDragStart: () => { },
+            setIsDragging: () => { },
+            headerGroups,
+            footerGroups,
+            mainHeaderGroup,
+          });
+        },
+        [headerGroups, footerGroups, mainHeaderGroup],
+      )}
     >
       {children}
     </ColContext.Provider>

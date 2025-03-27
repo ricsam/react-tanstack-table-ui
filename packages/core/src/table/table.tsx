@@ -7,9 +7,9 @@ import { HeaderGroup } from "./cols/header_group";
 import { useRowContext } from "./rows/row_context";
 import { RowProvider } from "./rows/row_provider";
 import { TableBody } from "./table_body";
-import { TableContext, useTableContext } from "./table_context";
+import { TableContext, useTableContext, TableConfig } from "./table_context";
 import { Skin } from "../skin";
-import { defaultSkin } from "../default_skin";
+import { defaultSkin } from "../default_skin/default_skin";
 
 export const ReactTanstackTableUi = <T,>(props: {
   table: Table<T>;
@@ -19,19 +19,35 @@ export const ReactTanstackTableUi = <T,>(props: {
   getId: (row: T) => string;
   width: number;
   height: number;
+  rowOverscan?: number;
+  columnOverscan?: number;
 }) => {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
 
   return (
     <TableContext.Provider
-      value={{
-        width: props.width,
-        height: props.height,
-        tableContainerRef: tableContainerRef,
-        table,
-        skin: props.skin ?? defaultSkin,
-      }}
+      value={React.useMemo(
+        () => ({
+          width: props.width,
+          height: props.height,
+          tableContainerRef: tableContainerRef,
+          table,
+          skin: props.skin ?? defaultSkin,
+          config: {
+            rowOverscan: props.rowOverscan ?? 10,
+            columnOverscan: props.columnOverscan ?? 3,
+          },
+        }),
+        [
+          props.width,
+          props.height,
+          table,
+          props.skin,
+          props.rowOverscan,
+          props.columnOverscan,
+        ],
+      )}
     >
       <ColProvider>
         <RowProvider>
@@ -57,7 +73,6 @@ function Body() {
             <HeaderGroup
               {...headerGroup}
               key={headerGroup.id}
-              Component={skin.TableHeaderRow}
               type="header"
             />
           );
@@ -76,7 +91,6 @@ function Body() {
             <HeaderGroup
               {...footerGroup}
               key={footerGroup.id}
-              Component={skin.TableFooterRow}
               type="footer"
             />
           );
