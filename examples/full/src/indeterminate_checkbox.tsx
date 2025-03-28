@@ -1,10 +1,8 @@
 import React from "react";
 
 export const IndeterminateCheckbox = React.memo(function IndeterminateCheckbox({
-  indeterminate,
-  className = "",
-  ...rest
-}: { indeterminate?: boolean } & React.HTMLProps<HTMLInputElement>) {
+  indeterminate, className = "", ...rest
+}: { indeterminate?: boolean; } & React.HTMLProps<HTMLInputElement>) {
   const ref = React.useRef<HTMLInputElement>(null!);
 
   React.useEffect(() => {
@@ -18,7 +16,6 @@ export const IndeterminateCheckbox = React.memo(function IndeterminateCheckbox({
       type="checkbox"
       ref={ref}
       className={className + " cursor-pointer"}
-      {...rest}
-    />
+      {...rest} />
   );
 });

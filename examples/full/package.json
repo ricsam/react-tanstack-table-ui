@@ -1,5 +1,5 @@
 {
-  "name": "react-tanstack-table-ui-example-skins",
+  "name": "react-tanstack-table-ui-example-full",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,11 +13,6 @@
     "@rttui/core": "0.0.0",
     "@rttui/fixtures": "0.0.0",
     "@rttui/skin-mui": "0.0.0",
-    "@rttui/skin-anocca": "0.0.0",
-    "@mui/material": "^6.4.8",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^6.4.8",
     "@types/node": "^22.13.12",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",

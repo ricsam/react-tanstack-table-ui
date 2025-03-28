@@ -8,14 +8,14 @@ import {
   Virtualizer,
   VirtualizerOptions,
 } from "@tanstack/react-virtual";
-import React, { useLayoutEffect } from "react";
+import React from "react";
 import { flushSync } from "react-dom";
 import { getIsPinned, mapColumnPinningPositionToPinPos } from "../../utils";
 import { useTableContext } from "../table_context";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { VirtualHeaderGroup } from "./header_group";
 import { VirtualHeader } from "./virtual_header/types";
-import { VirtualHeaderGroupCache } from "./virtual_header_group_cache/virtual_header_group_cache";
+import { VirtualHeaderGroupCache } from "./virtual_header_group_cache";
 
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -74,7 +74,7 @@ export function useHeaderGroupVirtualizers(props: {
       undefined | { headerIndex: number; groupIndex: number }
     > = {};
     const filteredHeaderGroups: HeaderGroup<any>[] = [];
-    props.headerGroups.forEach((group, i) => {
+    props.headerGroups.forEach((group) => {
       let hasVisibleHeader = false;
       const groupHeaderIndices: Record<
         string,
@@ -100,19 +100,9 @@ export function useHeaderGroupVirtualizers(props: {
     };
   }, [props.headerGroups, props.type]);
 
-  const _draggedIndexRef = React.useRef<(number | null)[]>(
-    filteredHeaderGroups.map(() => null),
-  );
-
-  const getDraggedIndex = (headerIndex: number) =>
-    _draggedIndexRef.current[headerIndex];
-
-  const defaultColWindowRef = React.useRef<number[] | null>(null);
-
   const baseColVirtOpts = React.useCallback(
     (
       headerGroup: HeaderGroup<any>,
-      headerIndex: number,
     ): Pick<
       VirtualizerOptions<HTMLDivElement, Element>,
       | "getScrollElement"
@@ -129,21 +119,9 @@ export function useHeaderGroupVirtualizers(props: {
         // debug: true,
         overscan: config.columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
         rangeExtractor: (range) => {
-          const draggedIndex = getDraggedIndex(headerIndex);
           const defaultRange = defaultRangeExtractor(range);
           const next = new Set(defaultRange);
 
-          const defaultRangeSet = new Set(defaultRange);
-
-          defaultColWindowRef.current = [...defaultRangeSet].sort(
-            (a, b) => a - b,
-          );
-
-          if (draggedIndex !== null) {
-            if (!next.has(draggedIndex)) {
-              next.add(draggedIndex);
-            }
-          }
           for (let i = 0; i < headers.length; i++) {
             const header = headers[i];
             if (getIsPinned(header)) {
@@ -168,15 +146,10 @@ export function useHeaderGroupVirtualizers(props: {
 
   const headerColVirtualizerOptions = React.useMemo(() => {
     return filteredHeaderGroups.map(
-      (
-        headerGroup,
-        headerIndex,
-      ): VirtualizerOptions<HTMLDivElement, Element> => {
+      (headerGroup): VirtualizerOptions<HTMLDivElement, Element> => {
         return {
-          ...baseColVirtOpts(headerGroup, headerIndex),
+          ...baseColVirtOpts(headerGroup),
           count: headerGroup.headers.length,
-          // estimateSize: (index) =>
-          //   tableState.columnSizing[headerGroup.headers[index].column.id],
           estimateSize: (index) => headerGroup.headers[index].getSize(),
           observeElementRect,
           observeElementOffset,
@@ -193,11 +166,11 @@ export function useHeaderGroupVirtualizers(props: {
     );
   }, [baseColVirtOpts, filteredHeaderGroups, rerender]);
 
-  const [headerColVirtualizers] = React.useState(() => {
+  const headerColVirtualizers = React.useMemo(() => {
     return headerColVirtualizerOptions.map((options) => {
       return new Virtualizer(options);
     });
-  });
+  }, [headerColVirtualizerOptions]);
 
   const columnResizingInfo = tableState.columnSizingInfo;
 

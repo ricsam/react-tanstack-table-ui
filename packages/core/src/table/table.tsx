@@ -1,15 +1,15 @@
 import { Table } from "@tanstack/react-table";
 import React from "react";
+import { defaultSkin } from "../default_skin/default_skin";
 import { ColDndHandler, RowDndHandler } from "../dnd_handler";
+import { Skin } from "../skin";
 import { useColContext } from "./cols/col_context";
 import { ColProvider } from "./cols/col_provider";
 import { HeaderGroup } from "./cols/header_group";
 import { useRowContext } from "./rows/row_context";
 import { RowProvider } from "./rows/row_provider";
 import { TableBody } from "./table_body";
-import { TableContext, useTableContext, TableConfig } from "./table_context";
-import { Skin } from "../skin";
-import { defaultSkin } from "../default_skin/default_skin";
+import { TableContext, useTableContext } from "./table_context";
 
 export const ReactTanstackTableUi = <T,>(props: {
   table: Table<T>;
@@ -70,11 +70,7 @@ function Body() {
       <skin.TableHeader>
         {headerGroups.map((headerGroup) => {
           return (
-            <HeaderGroup
-              {...headerGroup}
-              key={headerGroup.id}
-              type="header"
-            />
+            <HeaderGroup {...headerGroup} key={headerGroup.id} type="header" />
           );
         })}
       </skin.TableHeader>
@@ -88,11 +84,7 @@ function Body() {
       <skin.TableFooter>
         {footerGroups.map((footerGroup) => {
           return (
-            <HeaderGroup
-              {...footerGroup}
-              key={footerGroup.id}
-              type="footer"
-            />
+            <HeaderGroup {...footerGroup} key={footerGroup.id} type="footer" />
           );
         })}
       </skin.TableFooter>

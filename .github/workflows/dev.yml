@@ -1,0 +1,16 @@
+name: dev
+
+on: [pull_request]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm knip
+      - run: pnpm -r exec tsc --noEmit
+

@@ -1,5 +1,5 @@
-import { VirtualHeader } from "../virtual_header/types";
-import { VirtualHeaderGroup } from "../header_group";
+import { VirtualHeader } from "./virtual_header/types";
+import { VirtualHeaderGroup } from "./header_group";
 import { TableState } from "@tanstack/react-table";
 // Helper for shallow equality on objects (for dndStyle)
 function shallowEqual(
@@ -33,61 +33,6 @@ function shallowEqual(
   }
 
   return true;
-}
-
-/**
- * Identifies which keys are different between two objects.
- * Useful for debugging why a shallow equality check failed.
- *
- * @param objA First object to compare
- * @param objB Second object to compare
- * @param excludeKeys Optional keys to exclude from comparison
- * @returns Array of keys that are different between the objects
- */
-function findDifferentKeys(
-  objA: any,
-  objB: any,
-  excludeKeys?: string | string[],
-): string[] {
-  if (objA === objB) return [];
-  if (!objA || !objB || typeof objA !== "object" || typeof objB !== "object")
-    return ["<objects_not_comparable>", objA, objB];
-
-  // Convert single key to array for consistent handling
-  const excludeKeysArr = excludeKeys
-    ? Array.isArray(excludeKeys)
-      ? excludeKeys
-      : [excludeKeys]
-    : [];
-
-  const keysA = Object.keys(objA);
-  const keysB = Object.keys(objB);
-
-  const differentKeys: string[] = [];
-
-  // Check for keys in A that are different from B
-  for (const key of keysA) {
-    if (excludeKeysArr.includes(key)) continue;
-
-    if (!keysB.includes(key)) {
-      differentKeys.push(`${key} (missing in second object)`);
-    } else if (objA[key] !== objB[key]) {
-      differentKeys.push(
-        `${key} (values differ: ${objA[key]} vs ${objB[key]})`,
-      );
-    }
-  }
-
-  // Check for keys in B that don't exist in A
-  for (const key of keysB) {
-    if (excludeKeysArr.includes(key)) continue;
-
-    if (!keysA.includes(key)) {
-      differentKeys.push(`${key} (missing in first object)`);
-    }
-  }
-
-  return differentKeys;
 }
 
 export class VirtualHeaderGroupCache {
@@ -191,6 +136,18 @@ export class VirtualHeaderGroupCache {
       return cachedGroup;
     });
 
+    if (!changed && this.lastResult) {
+      if (updatedGroups.length !== this.lastResult.length) {
+        changed = true;
+      } else {
+        for (let i = 0; i < updatedGroups.length; i++) {
+          if (updatedGroups[i] !== this.lastResult[i]) {
+            changed = true;
+            break;
+          }
+        }
+      }
+    }
     // If nothing changed overall, return the same array reference.
     if (!changed && this.lastResult) {
       return this.lastResult;

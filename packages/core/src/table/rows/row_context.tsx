@@ -3,7 +3,7 @@ import { Virtualizer } from "@tanstack/react-virtual";
 import { VirtualHeaderGroup } from "../cols/header_group";
 import { VirtualRow } from "./table_row";
 
-export type DragState = {
+type DragState = {
   rowId: string;
   mouseStart: { x: number; y: number };
   itemPos: { x: number; y: number };

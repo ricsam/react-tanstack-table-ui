@@ -1,17 +1,15 @@
 {
   "name": "@rttui/skin-anocca",
   "version": "0.0.1",
-  "private": true,
   "main": "./src/index.tsx",
   "devDependencies": {
     "@types/react": "^19.0.7",
     "react": "^19.0.0",
     "typescript": "^5.8.2",
     "@mui/material": "^6.4.8",
-    "@mui/icons-material": "^6.4.8",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "react-icons": "^5.5.0",
+    "@tanstack/react-table": "^8.20.6",
     "@rttui/core": "workspace:*"
   }
 }

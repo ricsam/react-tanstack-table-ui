@@ -11,9 +11,10 @@ import { useTableContext } from "../table_context";
 import { RowContext } from "./row_context";
 
 export const RowProvider = ({ children }: { children: React.ReactNode }) => {
-  const [draggedRowId, setDraggedRowId] = React.useState<string | null>(null);
-
   const { table, tableContainerRef, skin, config } = useTableContext();
+
+  /* to be implemented
+  const [draggedRowId, setDraggedRowId] = React.useState<string | null>(null);
 
   let draggedRows: string[] | undefined;
 
@@ -42,6 +43,7 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
 
     draggedRows = [...expandedRowIds];
   }
+  */
 
   const { mainHeaderGroup, headerGroups, footerGroups } = useColContext();
 
@@ -53,7 +55,6 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
   const _refs = { table, rowIds };
   const refs = React.useRef(_refs);
   refs.current = _refs;
-
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -122,7 +123,7 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
             dndStyle,
           };
         }),
-        setIsDragging(dragState) {
+        setIsDragging(_dragState) {
           // to be implemented
         },
         rowVirtualizer,

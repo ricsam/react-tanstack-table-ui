@@ -1,9 +1,9 @@
 import React from "react";
 import { VirtualHeaderGroup } from "./header_group";
 
-export type Position = { x: number; y: number };
+type Position = { x: number; y: number };
 
-export type ColContextType = {
+type ColContextType = {
   onDragStart: (headerId: string) => void;
   setIsDragging: (props: {
     headerId: string;

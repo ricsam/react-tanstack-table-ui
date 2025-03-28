@@ -1,14 +1,9 @@
 {
   "name": "@rttui/core",
-  "private": true,
   "version": "0.0.0",
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest"
   },
@@ -17,6 +12,7 @@
     "@tanstack/react-virtual": "^3.11.2",
     "@types/react": "^19.0.7",
     "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "typescript": "^5.8.2",
     "vitest": "^3.0.9"
   }

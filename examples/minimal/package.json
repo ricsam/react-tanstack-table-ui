@@ -10,10 +10,8 @@
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.6",
-    "@tanstack/react-virtual": "^3.11.2",
     "@rttui/core": "0.0.0",
     "@rttui/fixtures": "0.0.0",
-    "@rttui/skin-mui": "0.0.0",
     "@types/node": "^22.13.12",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",

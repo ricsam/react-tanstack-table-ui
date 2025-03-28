@@ -144,7 +144,7 @@ const AnoccaSkin: Skin = {
       </Component>
     );
   },
-  PinnedCols: ({ children, position, pinned, type }) => {
+  PinnedCols: ({ children, position, pinned }) => {
     if (pinned.length === 0) {
       return null;
     }
@@ -204,7 +204,7 @@ const AnoccaSkin: Skin = {
       );
     },
   ),
-  TableRow: ({ children, isPinned, flatIndex }) => {
+  TableRow: ({ children }) => {
     return (
       <TableRow
         component="div"

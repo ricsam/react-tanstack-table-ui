@@ -1,24 +1,24 @@
+import { ChevronLeft, ChevronRight, Close } from "@mui/icons-material";
 import {
   alpha,
   Box,
   Paper,
+  SxProps,
   TableBody,
   TableCell,
   TableFooter,
   TableHead,
   TableRow,
   Theme,
-  SxProps,
 } from "@mui/material";
-import { PushPin, ChevronLeft, ChevronRight, Close } from "@mui/icons-material";
 import {
   Skin,
   useTableContext,
   useTableCssVars,
   VirtualHeader,
 } from "@rttui/core";
-import React from "react";
 import { flexRender } from "@tanstack/react-table";
+import React from "react";
 const MuiSkin: Skin = {
   rowHeight: 52,
   headerRowHeight: 56,
@@ -165,7 +165,7 @@ const MuiSkin: Skin = {
       </Component>
     );
   },
-  PinnedCols: ({ children, position, pinned, type }) => {
+  PinnedCols: ({ children, position, pinned }) => {
     if (pinned.length === 0) {
       return null;
     }

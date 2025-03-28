@@ -42,6 +42,9 @@ export function getColVirtualizedOffsets({
     let firstNonPinned: undefined | number;
     for (let i = virtualColumns.length - 1; i >= 0; i--) {
       const vc = virtualColumns[i];
+      if (!vc) {
+        console.log(vc, virtualColumns, i);
+      }
       if (getIsPinned(vc.index) === "end") {
         lastPinned = i;
       } else {

@@ -2,7 +2,7 @@ import { Table } from "@tanstack/react-table";
 import React from "react";
 import { Skin } from "../skin";
 
-export type TableConfig = {
+type TableConfig = {
   columnOverscan: number;
   rowOverscan: number;
 };
