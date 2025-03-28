@@ -6,6 +6,7 @@ import React from "react";
 import { DefaultThemeProvider } from "./default_theme_provider";
 import { useBigTable } from "./use_big_table";
 import { useHashState } from "./use_hash_state";
+import { Table } from "@tanstack/react-table";
 
 export function App() {
   const { table } = useBigTable();
@@ -66,8 +67,7 @@ export function App() {
           <ReactTanstackTableUi
             width={1920}
             height={1600}
-            table={table}
-            getId={(row) => row.id}
+            table={table as Table<any>}
             skin={activeSkin}
           />
         </div>

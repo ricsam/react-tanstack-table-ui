@@ -11,17 +11,16 @@ import { RowProvider } from "./rows/row_provider";
 import { TableBody } from "./table_body";
 import { TableContext, useTableContext } from "./table_context";
 
-export const ReactTanstackTableUi = <T,>(props: {
+export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   table: Table<T>;
   rowDndHandler?: RowDndHandler<T>;
   colDndHandler?: ColDndHandler<T>;
   skin?: Skin;
-  getId: (row: T) => string;
   width: number;
   height: number;
   rowOverscan?: number;
   columnOverscan?: number;
-}) => {
+}) {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
 

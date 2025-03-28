@@ -6,11 +6,7 @@ export function App() {
 
   return (
     <div style={{ textAlign: "center" }}>
-      <ReactTanstackTableUi
-        width={1920}
-        height={1600}
-        table={table}
-        getId={(row) => row.id} />
+      <ReactTanstackTableUi width={1920} height={1600} table={table} />
     </div>
   );
 }
