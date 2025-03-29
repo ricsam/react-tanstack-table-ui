@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Here's a clear and structured code rule for your LLM-driven code editor regarding `useEffect` dependencies:
+
+---
+
+### **Rule: Managing Dependencies in `useEffect`**
+
+1. **Avoid Passing Functions as Dependencies**  
+   - Functions should **almost never** be added to the dependency array of `useEffect` unless they are memoized using `useCallback`.  
+   - Instead, store functions inside a `React.useRef` object and **access them inside the effect** to prevent unnecessary re-renders.
+
+2. **Handling Linter Warnings**  
+   - Do **not blindly** follow linter suggestions for dependencies.  
+   - Only include dependencies if their changes **must** trigger the effect.  
+   - If a dependency is needed **inside the effect but should not trigger re-runs**, store it in a `ref`.
+
+3. **Two Approaches to Dependencies**  
+   - **Pulled (Passive Consumption via Ref):**  
+     - Values/functions are placed inside a `ref` and accessed within the effect without causing re-renders.
+   - **Pushed (Active Triggers in Dependency Array):**  
+     - Values are included in the dependency array when their updates **must** re-run the effect.
+
+---
+
+### **Examples**
+
+#### ❌ **Bad Practice: Directly Adding Functions as Dependencies**
+```tsx
+useEffect(() => {
+  someFunction(); // Will trigger unnecessary re-renders
+}, [someFunction]); // 🚨 Bad: Function causes re-renders
+```
+
+#### ✅ **Good Practice: Using a Ref to Store Functions**
+```tsx
+const someFunctionRef = useRef(someFunction);
+someFunctionRef.current = someFunction;
+
+useEffect(() => {
+  someFunctionRef.current();
+}, []); // ✅ Good: Function is used without triggering re-renders
+```
+
+#### ✅ **Handling a Changing Dependency**
+```tsx
+const time = useTime();
+const timeRef = React.useRef(time);
+timeRef.current = time;
+useEffect(() => {
+  console.log(`User ID changed to: ${userId} [${timeRef.current}]`); // ✅ Good: `timeRef` is passively consumed and will not trigger the effect to re-run
+}, [userId]); // ✅ Good: `userId` should actively trigger the effect
+```

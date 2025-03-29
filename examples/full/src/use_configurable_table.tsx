@@ -1,12 +1,17 @@
 import {
   ColumnDef,
+  ColumnFiltersState,
   ColumnOrderState,
+  SortingState,
   createColumnHelper,
   getCoreRowModel,
   getExpandedRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
+import { Filter } from "./filter_components";
 import { IndeterminateCheckbox } from "./indeterminate_checkbox";
 import { RowDragHandleCell } from "./row_drag_handle_cell";
 import { TableConfig } from "./table_config";
@@ -18,6 +23,9 @@ type SmallData = {
   firstName: string;
   lastName: string;
   children: SmallData[];
+  status?: "active" | "inactive" | "pending";
+  age?: number;
+  rating?: number;
 };
 
 // Helper function to generate the column IDs
@@ -35,8 +43,24 @@ const iterateOverColumns = (columns: ColumnDef<any, any>[]) => {
   }, []);
 };
 
+// Sort indicator component with improved styling
+const SortIndicator = ({ sorted }: { sorted: false | "asc" | "desc" }) => {
+  if (!sorted) return null;
+  return (
+    <span style={{ marginLeft: "8px", fontSize: "14px", display: "inline-block" }}>
+      {sorted === "asc" ? " 🔼" : " 🔽"}
+    </span>
+  );
+};
+
 export const useConfigurableTable = (config: TableConfig) => {
   const bigTableResult = useBigTable();
+
+  // State for sorting and filtering
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
 
   // Generate small data based on config
   const generateSmallData = (
@@ -64,10 +88,15 @@ export const useConfigurableTable = (config: TableConfig) => {
       "Wilson",
     ];
 
+    const statuses = ["active", "inactive", "pending"] as const;
+
     return Array.from({ length: count }).map((_, i) => ({
       id: (i + 1).toString(),
       firstName: firstNames[i % firstNames.length],
       lastName: lastNames[i % lastNames.length],
+      status: statuses[i % statuses.length],
+      age: 20 + (i % 50),
+      rating: Math.floor(Math.random() * 50 + 50) / 10,
       children:
         withChildren && i < 2
           ? [
@@ -75,12 +104,18 @@ export const useConfigurableTable = (config: TableConfig) => {
                 id: `${i + 1}.1`,
                 firstName: firstNames[(i + 3) % firstNames.length],
                 lastName: lastNames[(i + 3) % lastNames.length],
+                status: statuses[(i + 1) % statuses.length],
+                age: 20 + ((i + 1) % 50),
+                rating: Math.floor(Math.random() * 50 + 50) / 10,
                 children: [],
               },
               {
                 id: `${i + 1}.2`,
                 firstName: firstNames[(i + 4) % firstNames.length],
                 lastName: lastNames[(i + 4) % lastNames.length],
+                status: statuses[(i + 2) % statuses.length],
+                age: 20 + ((i + 2) % 50),
+                rating: Math.floor(Math.random() * 50 + 50) / 10,
                 children: [],
               },
             ]
@@ -108,6 +143,35 @@ export const useConfigurableTable = (config: TableConfig) => {
       return [];
     }
 
+    // Create a consistent header render function to reuse across columns
+    const createHeaderCell = (
+      title: string, 
+      filterVariant: "text" | "select" | "range" = "text"
+    ) => {
+      return ({ column }: { column: any }) => (
+        <div style={{ display: "flex", flexDirection: "column", padding: "8px 0" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              cursor: config.features.sorting ? "pointer" : "default",
+              padding: "4px 0",
+              fontWeight: "bold",
+            }}
+            onClick={config.features.sorting ? column.getToggleSortingHandler() : undefined}
+          >
+            {title}
+            {config.features.sorting && <SortIndicator sorted={column.getIsSorted()} />}
+          </div>
+          {config.features.filtering && column.getCanFilter() && (
+            <div style={{ marginTop: "6px", width: "100%" }}>
+              <Filter column={column} variant={filterVariant} />
+            </div>
+          )}
+        </div>
+      );
+    };
+    
     const columnHelper = createColumnHelper<SmallData>();
     const columnDefs: ColumnDef<SmallData, any>[] = [];
 
@@ -194,6 +258,7 @@ export const useConfigurableTable = (config: TableConfig) => {
       columnHelper.accessor("id", {
         id: "id",
         cell: (info) => info.getValue(),
+        header: createHeaderCell("ID", "text"),
       }),
     );
 
@@ -203,28 +268,70 @@ export const useConfigurableTable = (config: TableConfig) => {
       columnDefs.push(
         columnHelper.group({
           id: "name-stuff",
-          footer: () => "Name stuff",
+          header: "Name",
+          footer: () => "Name",
           columns: [
             columnHelper.accessor("firstName", {
               id: "first-name",
               cell: (info) => info.getValue(),
+              header: createHeaderCell("First Name", "text"),
+              enableSorting: config.features.sorting,
+              enableColumnFilter: config.features.filtering,
             }),
             columnHelper.accessor("lastName", {
               id: "last-name",
               cell: (info) => info.getValue(),
+              header: createHeaderCell("Last Name", "text"),
+              enableSorting: config.features.sorting,
+              enableColumnFilter: config.features.filtering,
             }),
           ],
         }),
       );
 
+      // Add status column
+      columnDefs.push(
+        columnHelper.accessor("status", {
+          id: "status",
+          cell: (info) => info.getValue(),
+          header: createHeaderCell("Status", "select"),
+          enableSorting: config.features.sorting,
+          enableColumnFilter: config.features.filtering,
+        }),
+      );
+
+      // Add age column
+      columnDefs.push(
+        columnHelper.accessor("age", {
+          id: "age",
+          cell: (info) => info.getValue(),
+          header: createHeaderCell("Age", "range"),
+          enableSorting: config.features.sorting,
+          enableColumnFilter: config.features.filtering,
+        }),
+      );
+
+      // Add rating column
+      columnDefs.push(
+        columnHelper.accessor("rating", {
+          id: "rating",
+          cell: (info) => info.getValue()?.toFixed(1),
+          header: createHeaderCell("Rating", "range"),
+          enableSorting: config.features.sorting,
+          enableColumnFilter: config.features.filtering,
+        }),
+      );
+
       // Add additional columns if needed
-      if (config.columnCount > 4) {
-        for (let i = 4; i < config.columnCount; i++) {
+      if (config.columnCount > 7) {
+        for (let i = 7; i < config.columnCount; i++) {
           columnDefs.push(
-            columnHelper.accessor(() => `Column ${i}`, {
+            columnHelper.accessor((row) => `Column ${i}`, {
               id: `column-${i}`,
-              header: `Column ${i}`,
+              header: createHeaderCell(`Column ${i}`, "text"),
               cell: (info) => info.getValue(),
+              enableSorting: false,
+              enableColumnFilter: false,
             }),
           );
         }
@@ -235,21 +342,43 @@ export const useConfigurableTable = (config: TableConfig) => {
         columnHelper.accessor("firstName", {
           id: "first-name",
           cell: (info) => info.getValue(),
+          header: createHeaderCell("First Name", "text"),
+          enableSorting: config.features.sorting,
+          enableColumnFilter: config.features.filtering,
         }),
         columnHelper.accessor("lastName", {
           id: "last-name",
           cell: (info) => info.getValue(),
+          header: createHeaderCell("Last Name", "text"),
+          enableSorting: config.features.sorting,
+          enableColumnFilter: config.features.filtering,
+        }),
+        columnHelper.accessor("status", {
+          id: "status",
+          cell: (info) => info.getValue(),
+          header: createHeaderCell("Status", "select"),
+          enableSorting: config.features.sorting,
+          enableColumnFilter: config.features.filtering,
+        }),
+        columnHelper.accessor("age", {
+          id: "age",
+          cell: (info) => info.getValue(),
+          header: createHeaderCell("Age", "range"),
+          enableSorting: config.features.sorting,
+          enableColumnFilter: config.features.filtering,
         }),
       );
 
       // Add additional columns if needed
-      if (config.columnCount > 4) {
-        for (let i = 4; i < config.columnCount; i++) {
+      if (config.columnCount > 5) {
+        for (let i = 5; i < config.columnCount; i++) {
           columnDefs.push(
-            columnHelper.accessor(() => `Column ${i}`, {
+            columnHelper.accessor((row) => `Column ${i}`, {
               id: `column-${i}`,
-              header: `Column ${i}`,
+              header: createHeaderCell(`Column ${i}`, "text"),
               cell: (info) => info.getValue(),
+              enableSorting: false,
+              enableColumnFilter: false,
             }),
           );
         }
@@ -262,12 +391,15 @@ export const useConfigurableTable = (config: TableConfig) => {
   const [smallColumnOrder, setSmallColumnOrder] =
     React.useState<ColumnOrderState>(() => iterateOverColumns(smallColumns));
 
+  const smallColumnsRef = React.useRef(smallColumns);
+  smallColumnsRef.current = smallColumns;
+
   // Update column order when columns change
   React.useEffect(() => {
-    if (config.dataSize === "small" && smallColumns.length > 0) {
-      setSmallColumnOrder(iterateOverColumns(smallColumns));
+    if (config.dataSize === "small" && smallColumnsRef.current.length > 0) {
+      setSmallColumnOrder(iterateOverColumns(smallColumnsRef.current));
     }
-  }, [smallColumns, config.dataSize]);
+  }, [config.dataSize]);
 
   const getSmallSubRows = (row: SmallData) => {
     return config.features.expandable ? row.children : [];
@@ -279,19 +411,26 @@ export const useConfigurableTable = (config: TableConfig) => {
     columns: smallColumns,
     state: {
       columnOrder: smallColumnOrder,
+      sorting,
+      columnFilters,
     },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getRowId(originalRow) {
       return originalRow.id;
     },
     onColumnOrderChange: setSmallColumnOrder,
     defaultColumn: {
-      minSize: 60,
+      minSize: 150,
+      size: 200,
       maxSize: 800,
     },
     columnResizeMode: "onChange",
     getRowCanExpand: () => config.features.expandable,
     getExpandedRowModel: getExpandedRowModel(),
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getSubRows: getSmallSubRows,
     enableRowSelection: config.features.selectable,
   });

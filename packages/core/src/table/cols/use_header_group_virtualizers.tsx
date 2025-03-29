@@ -100,77 +100,97 @@ export function useHeaderGroupVirtualizers(props: {
     };
   }, [props.headerGroups, props.type]);
 
-  const baseColVirtOpts = React.useCallback(
-    (
-      headerGroup: HeaderGroup<any>,
-    ): Pick<
-      VirtualizerOptions<HTMLDivElement, Element>,
-      | "getScrollElement"
-      | "horizontal"
-      | "overscan"
-      | "rangeExtractor"
-      | "debug"
-      | "getItemKey"
-    > => {
-      const headers = headerGroup.headers;
-      return {
-        getScrollElement: () => tableContainerRef.current,
-        horizontal: true,
-        // debug: true,
-        overscan: config.columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
-        rangeExtractor: (range) => {
-          const defaultRange = defaultRangeExtractor(range);
-          const next = new Set(defaultRange);
+  const baseColVirtOpts = (
+    headerGroup: HeaderGroup<any>,
+  ): Pick<
+    VirtualizerOptions<HTMLDivElement, Element>,
+    | "getScrollElement"
+    | "horizontal"
+    | "overscan"
+    | "rangeExtractor"
+    | "debug"
+    | "getItemKey"
+  > => {
+    const headers = headerGroup.headers;
+    return {
+      getScrollElement: () => tableContainerRef.current,
+      horizontal: true,
+      // debug: true,
+      overscan: config.columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
+      rangeExtractor: (range) => {
+        const defaultRange = defaultRangeExtractor(range);
+        const next = new Set(defaultRange);
 
-          for (let i = 0; i < headers.length; i++) {
-            const header = headers[i];
-            if (getIsPinned(header)) {
-              next.add(i);
-            }
+        for (let i = 0; i < headers.length; i++) {
+          const header = headers[i];
+          if (getIsPinned(header)) {
+            next.add(i);
           }
+        }
 
-          const sortedRange = [...next].sort((a, b) => {
-            return a - b;
-          });
-          return sortedRange;
-        },
-        getItemKey(index) {
-          return headers[index].id;
-        },
-      };
-    },
-    [tableContainerRef, config.columnOverscan],
-  );
+        const sortedRange = [...next].sort((a, b) => {
+          return a - b;
+        });
+        return sortedRange;
+      },
+      getItemKey(index) {
+        return headers[index].id;
+      },
+    };
+  };
 
   const rerender = React.useReducer(() => ({}), {})[1];
 
-  const headerColVirtualizerOptions = React.useMemo(() => {
-    return filteredHeaderGroups.map(
-      (headerGroup): VirtualizerOptions<HTMLDivElement, Element> => {
-        return {
-          ...baseColVirtOpts(headerGroup),
-          count: headerGroup.headers.length,
-          estimateSize: (index) => headerGroup.headers[index].getSize(),
-          observeElementRect,
-          observeElementOffset,
-          scrollToFn: elementScroll,
-          onChange: (_, sync) => {
-            if (sync) {
-              flushSync(rerender);
-            } else {
-              rerender();
-            }
-          },
-        };
-      },
-    );
-  }, [baseColVirtOpts, filteredHeaderGroups, rerender]);
+  const headerColVirtualizerOptions = filteredHeaderGroups.map(
+    (headerGroup): VirtualizerOptions<HTMLDivElement, Element> => {
+      return {
+        ...baseColVirtOpts(headerGroup),
+        count: headerGroup.headers.length,
+        estimateSize: (index) => headerGroup.headers[index].getSize(),
+        observeElementRect,
+        observeElementOffset,
+        scrollToFn: () => {},
+        onChange: (_, sync) => {
+          if (sync) {
+            flushSync(rerender);
+          } else {
+            rerender();
+          }
+        },
+      };
+    },
+  );
 
-  const headerColVirtualizers = React.useMemo(() => {
-    return headerColVirtualizerOptions.map((options) => {
-      return new Virtualizer(options);
-    });
-  }, [headerColVirtualizerOptions]);
+  const headerColVirtualizersCache = React.useRef<
+    Virtualizer<HTMLDivElement, Element>[]
+  >([]);
+  const headerColVirtualizers = React.useRef<
+    Virtualizer<HTMLDivElement, Element>[]
+  >([]);
+
+  if (
+    headerColVirtualizerOptions.length >
+    headerColVirtualizersCache.current.length
+  ) {
+    const prevVirtualizer: Virtualizer<HTMLDivElement, Element> | undefined =
+      headerColVirtualizers.current[headerColVirtualizers.current.length - 1];
+    for (
+      let i = headerColVirtualizers.current.length;
+      i < headerColVirtualizerOptions.length;
+      i++
+    ) {
+      const newVirtualizer = new Virtualizer({
+        ...headerColVirtualizerOptions[i],
+        initialOffset: prevVirtualizer?.scrollOffset ?? undefined,
+      });
+      headerColVirtualizersCache.current.push(newVirtualizer);
+    }
+  }
+
+  headerColVirtualizers.current = headerColVirtualizersCache.current.slice(
+    0,
+    headerColVirtualizerOptions.length,
+  );
 
   const columnResizingInfo = tableState.columnSizingInfo;
 
@@ -182,7 +202,7 @@ export function useHeaderGroupVirtualizers(props: {
       }
       const { headerIndex, groupIndex } = indices;
 
-      const virtualizer = headerColVirtualizers[groupIndex];
+      const virtualizer = headerColVirtualizers.current[groupIndex];
       virtualizer.resizeItem(
         headerIndex,
         tableState.columnSizing[columnResizingInfo.isResizingColumn],
@@ -195,14 +215,17 @@ export function useHeaderGroupVirtualizers(props: {
     tableState.columnSizing,
   ]);
 
-  headerColVirtualizers.forEach((cv, i) => {
+  headerColVirtualizers.current.forEach((cv, i) => {
     cv.shouldAdjustScrollPositionOnItemSizeChange = undefined;
-    cv.setOptions(headerColVirtualizerOptions[i]);
+    cv.setOptions({
+      ...headerColVirtualizerOptions[i],
+      initialOffset: cv.options.initialOffset,
+    });
     cv.calculateRange();
   });
 
   useIsomorphicLayoutEffect(() => {
-    const cleanups = headerColVirtualizers.map((cv) => {
+    const cleanups = headerColVirtualizers.current.map((cv) => {
       return cv._didMount();
     });
     return () => {
@@ -213,7 +236,7 @@ export function useHeaderGroupVirtualizers(props: {
   }, []);
 
   useIsomorphicLayoutEffect(() => {
-    headerColVirtualizers.forEach((cv) => {
+    headerColVirtualizers.current.forEach((cv) => {
       cv._willUpdate();
     });
   });
@@ -224,7 +247,7 @@ export function useHeaderGroupVirtualizers(props: {
   });
 
   const virtualHeaderGroups = filteredHeaderGroups.map((group, i) => {
-    const virtualizer = headerColVirtualizers[i];
+    const virtualizer = headerColVirtualizers.current[i];
     const virtualColumns = virtualizer.getVirtualItems();
     const totalSize = virtualizer.getTotalSize();
     return getVirtualHeaderGroup(group, virtualColumns, totalSize, props.type);

@@ -55,8 +55,7 @@ export function App() {
         <ReactTanstackTableUi
           width={1920}
           height={800}
-          table={table}
-          getId={(row: any) => row.id}
+          table={table as any}
           skin={activeSkin}
         />
       </div>

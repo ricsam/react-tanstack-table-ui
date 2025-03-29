@@ -6,6 +6,8 @@ export interface TableConfig {
     selectable: boolean;
     columnGroups: boolean;
     draggable: boolean;
+    filtering: boolean;
+    sorting: boolean;
   };
   dataSize: "small" | "big";
   skin: "default" | "mui";
@@ -19,6 +21,8 @@ export const defaultTableConfig: TableConfig = {
     selectable: false,
     columnGroups: false,
     draggable: true,
+    filtering: false,
+    sorting: false,
   },
   dataSize: "small",
   skin: "default",
@@ -34,6 +38,10 @@ export function getFeatureDescription(feature: keyof TableConfig["features"]): s
       return "Group related columns together";
     case "draggable":
       return "Enable row reordering";
+    case "filtering":
+      return "Filter table data by column values";
+    case "sorting":
+      return "Sort table by clicking column headers";
     default:
       return "";
   }

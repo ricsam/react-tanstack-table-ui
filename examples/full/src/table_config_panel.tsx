@@ -29,6 +29,8 @@ export const TableConfigPanel = ({
     { key: "selectable", name: "Row Selection" },
     { key: "columnGroups", name: "Column Groups" },
     { key: "draggable", name: "Draggable Rows" },
+    { key: "filtering", name: "Column Filtering" },
+    { key: "sorting", name: "Column Sorting" },
   ] as const;
 
   return (
