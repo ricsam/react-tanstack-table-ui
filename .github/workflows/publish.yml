@@ -12,10 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun install
-      - run: bun typecheck
-      - run: bun test
-      - run: bun build.ts
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.1
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm knip
+      - run: pnpm -r exec tsc --noEmit
+      - run: bun run scripts/prepare_release.ts
 
   publish:
     name: Publish
@@ -24,16 +28,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun install
-      - run: bun typecheck
-      - run: bun test
-      - run: bun build.ts
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.1
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm knip
+      - run: pnpm -r exec tsc --noEmit
+      - run: bun run scripts/prepare_release.ts
       - run: |
           echo '@ricsam:registry=https://registry.npmjs.org' >> .npmrc
           echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> .npmrc
           echo '//registry.npmjs.org/:always-auth=true' >> .npmrc
       - name: changeset publish
-        run: npx changeset publish --access=public --registry=https://registry.npmjs.org/
+        run: pnpm exec changeset publish --access=public --registry=https://registry.npmjs.org/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

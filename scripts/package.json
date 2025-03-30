@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "devDependencies": {
-    "@types/bun": "^1.2.8"
+    "@types/bun": "^1.2.8",
+    "jsonc-parser": "^3.3.1"
   }
 }
