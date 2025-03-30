@@ -21,6 +21,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
           allowJs: true,
           allowSyntheticDefaultImports: true,
           baseUrl: "src",
+          target: "ESNext",
           declaration: true,
           esModuleInterop: true,
           inlineSourceMap: false,
@@ -54,7 +55,6 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
         compilerOptions: {
           module: "preserve",
           outDir: "dist/mjs",
-          target: "esnext",
         },
       },
       null,
@@ -70,7 +70,23 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
         compilerOptions: {
           module: "commonjs",
           outDir: "dist/cjs",
-          target: "es2015",
+        },
+      },
+      null,
+      2,
+    ),
+  );
+
+  await Bun.write(
+    path.join(packageDir, "tsconfig.types.json"),
+    JSON.stringify(
+      {
+        extends: "./tsconfig.json",
+        compilerOptions: {
+          declaration: true,
+          outDir: "dist/types",
+          emitDeclarationOnly: true,
+          declarationDir: "dist/types",
         },
       },
       null,
@@ -102,6 +118,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     await Promise.all([
       runTsc("tsconfig.mjs.json"),
       runTsc("tsconfig.cjs.json"),
+      runTsc("tsconfig.types.json"),
     ])
   ).every((s) => s);
 
@@ -133,10 +150,10 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
   Object.assign(packageJson, {
     main: "./dist/cjs/index.js",
     module: "./dist/mjs/index.js",
-    types: "./dist/index.d.ts",
+    types: "./dist/types/index.d.ts",
     exports: {
       ".": {
-        types: "./dist/index.d.ts",
+        types: "./dist/types/index.d.ts",
         require: "./dist/cjs/index.js",
         import: "./dist/mjs/index.js",
       },

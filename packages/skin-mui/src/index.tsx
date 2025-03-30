@@ -11,12 +11,8 @@ import {
   TableRow,
   Theme,
 } from "@mui/material";
-import {
-  Skin,
-  useTableContext,
-  useTableCssVars,
-  VirtualHeader,
-} from "@rttui/core";
+import type { Skin, VirtualHeader } from "@rttui/core";
+import { useTableContext, useTableCssVars } from "@rttui/core";
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
 const MuiSkin: Skin = {
