@@ -1,11 +1,15 @@
 {
   "name": "@rttui/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "8",
+    "@tanstack/react-virtual": "3"
   },
   "devDependencies": {
     "@tanstack/react-table": "^8.20.6",

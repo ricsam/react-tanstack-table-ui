@@ -1,7 +1,14 @@
 {
   "name": "@rttui/skin-mui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./src/index.tsx",
+  "dependencies": {
+    "@rttui/core": "workspace:*",
+    "@mui/icons-material": "6",
+    "@mui/material": "6",
+    "@emotion/react": "11",
+    "@emotion/styled": "11"
+  },
   "devDependencies": {
     "@types/react": "^19.0.7",
     "react": "^19.0.0",
@@ -10,7 +17,6 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.8",
-    "@rttui/core": "workspace:*",
     "@tanstack/react-table": "^8.20.6"
   }
 }
