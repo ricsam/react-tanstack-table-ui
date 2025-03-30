@@ -1,4 +1,4 @@
-import { Glob } from "bun";
+import { $, Glob } from "bun";
 import path from "path";
 
 const examples = new Glob("examples/*/package.json");
@@ -41,3 +41,4 @@ for await (const example of examples.scan({
 
   await Bun.write(example, JSON.stringify(packageJson, null, 2));
 }
+await $`pnpm install`.cwd(path.join(projectRoot, "examples"));
