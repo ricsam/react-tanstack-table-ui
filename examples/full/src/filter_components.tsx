@@ -2,7 +2,7 @@ import React from "react";
 import { Column } from "@tanstack/react-table";
 
 // Define the filter variant types
-export type FilterVariant = "text" | "range" | "select";
+type FilterVariant = "text" | "range" | "select";
 
 // Status options for the select filter
 const STATUS_OPTIONS = [
@@ -13,7 +13,7 @@ const STATUS_OPTIONS = [
 ];
 
 // A debounced input component to prevent too many filter updates
-export function DebouncedInput({
+function DebouncedInput({
   value: initialValue,
   onChange,
   debounce = 300,

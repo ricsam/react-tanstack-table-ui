@@ -1,7 +1,6 @@
 import { Header, HeaderGroup } from "@tanstack/react-table";
 import {
   defaultRangeExtractor,
-  elementScroll,
   observeElementOffset,
   observeElementRect,
   VirtualItem,

@@ -16,6 +16,7 @@ import { IndeterminateCheckbox } from "./indeterminate_checkbox";
 import { RowDragHandleCell } from "./row_drag_handle_cell";
 import { TableConfig } from "./table_config";
 import { useBigTable } from "./use_big_table";
+import { SortIndicator } from "./sort_indicator";
 
 // Import types from SmallData from use_small_table
 type SmallData = {
@@ -41,16 +42,6 @@ const iterateOverColumns = (columns: ColumnDef<any, any>[]) => {
 
     return acc;
   }, []);
-};
-
-// Sort indicator component with improved styling
-const SortIndicator = ({ sorted }: { sorted: false | "asc" | "desc" }) => {
-  if (!sorted) return null;
-  return (
-    <span style={{ marginLeft: "8px", fontSize: "14px", display: "inline-block" }}>
-      {sorted === "asc" ? " 🔼" : " 🔽"}
-    </span>
-  );
 };
 
 export const useConfigurableTable = (config: TableConfig) => {
@@ -145,11 +136,19 @@ export const useConfigurableTable = (config: TableConfig) => {
 
     // Create a consistent header render function to reuse across columns
     const createHeaderCell = (
-      title: string, 
-      filterVariant: "text" | "select" | "range" = "text"
+      title: string,
+      filterVariant: "text" | "select" | "range" = "text",
     ) => {
       return ({ column }: { column: any }) => (
-        <div style={{ display: "flex", flexDirection: "column", padding: "8px 0" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            padding: "8px 0",
+            gap: 4,
+            alignItems: "center",
+          }}
+        >
           <div
             style={{
               display: "flex",
@@ -158,10 +157,16 @@ export const useConfigurableTable = (config: TableConfig) => {
               padding: "4px 0",
               fontWeight: "bold",
             }}
-            onClick={config.features.sorting ? column.getToggleSortingHandler() : undefined}
+            onClick={
+              config.features.sorting
+                ? column.getToggleSortingHandler()
+                : undefined
+            }
           >
             {title}
-            {config.features.sorting && <SortIndicator sorted={column.getIsSorted()} />}
+            {config.features.sorting && (
+              <SortIndicator sorted={column.getIsSorted()} />
+            )}
           </div>
           {config.features.filtering && column.getCanFilter() && (
             <div style={{ marginTop: "6px", width: "100%" }}>
@@ -171,7 +176,7 @@ export const useConfigurableTable = (config: TableConfig) => {
         </div>
       );
     };
-    
+
     const columnHelper = createColumnHelper<SmallData>();
     const columnDefs: ColumnDef<SmallData, any>[] = [];
 
@@ -326,12 +331,12 @@ export const useConfigurableTable = (config: TableConfig) => {
       if (config.columnCount > 7) {
         for (let i = 7; i < config.columnCount; i++) {
           columnDefs.push(
-            columnHelper.accessor((row) => `Column ${i}`, {
+            columnHelper.accessor(() => `Column ${i}`, {
               id: `column-${i}`,
               header: createHeaderCell(`Column ${i}`, "text"),
               cell: (info) => info.getValue(),
-              enableSorting: false,
-              enableColumnFilter: false,
+              enableSorting: config.features.sorting,
+              enableColumnFilter: config.features.filtering,
             }),
           );
         }
@@ -373,12 +378,12 @@ export const useConfigurableTable = (config: TableConfig) => {
       if (config.columnCount > 5) {
         for (let i = 5; i < config.columnCount; i++) {
           columnDefs.push(
-            columnHelper.accessor((row) => `Column ${i}`, {
+            columnHelper.accessor(() => `Column ${i}`, {
               id: `column-${i}`,
               header: createHeaderCell(`Column ${i}`, "text"),
               cell: (info) => info.getValue(),
-              enableSorting: false,
-              enableColumnFilter: false,
+              enableSorting: config.features.sorting,
+              enableColumnFilter: config.features.filtering,
             }),
           );
         }
@@ -421,7 +426,7 @@ export const useConfigurableTable = (config: TableConfig) => {
     },
     onColumnOrderChange: setSmallColumnOrder,
     defaultColumn: {
-      minSize: 150,
+      minSize: config.features.filtering ? 300 : 150,
       size: 200,
       maxSize: 800,
     },
