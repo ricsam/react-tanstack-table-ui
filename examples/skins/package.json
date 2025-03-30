@@ -1,7 +1,7 @@
 {
   "name": "@rttui/example-skins",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.6",
-    "@rttui/core": "1.0.0",
-    "@rttui/fixtures": "1.0.0",
-    "@rttui/skin-mui": "1.0.0",
-    "@rttui/skin-anocca": "1.0.0",
+    "@rttui/core": "0.0.0",
+    "@rttui/fixtures": "0.0.0",
+    "@rttui/skin-mui": "0.0.0",
+    "@rttui/skin-anocca": "0.0.0",
     "@mui/material": "^6.4.8",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
