@@ -10,7 +10,8 @@
   "devDependencies": {
     "@tanstack/react-table": "^8.20.6",
     "@tanstack/react-virtual": "^3.11.2",
-    "@types/react": "^19.0.7",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.8.2",
