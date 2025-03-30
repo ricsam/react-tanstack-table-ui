@@ -25,7 +25,7 @@
   },
   "eslintConfig": {},
   "knip": {
-    "ignore": ["scripts/**/*", "packages/core/src/utils.ts"],
+    "ignore": ["scripts/**/*", "packages/core/src/utils.ts", "examples/**/*"],
     "ignoreDependencies": ["prettier"]
   }
 }
