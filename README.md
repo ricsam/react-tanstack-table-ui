@@ -100,11 +100,8 @@ const columns = [
 
 // Use the table in your component
 function MyTable() {
-  const [data, _setData] = React.useState(() => [...defaultData])
-  const rerender = React.useReducer(() => ({}), {})[1]
-
   const table = useReactTable({
-    data,
+    data: defaultData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   })
