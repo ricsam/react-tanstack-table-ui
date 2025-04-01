@@ -20,6 +20,71 @@ npm install @rttui/core
 npm install @rttui/skin-mui
 ```
 
+## Getting Started
+
+Here's a basic example of how to use React TanStack Table UI:
+
+```tsx
+import { createTable, useTable } from '@rttui/core';
+import { defaultSkin, lightModeVars } from '@rttui/core';
+
+// Define your data type
+type Person = {
+  id: number;
+  name: string;
+  age: number;
+  email: string;
+};
+
+// Create your table instance
+const table = createTable<Person>({
+  columns: [
+    {
+      accessorKey: 'name',
+      header: 'Name',
+    },
+    {
+      accessorKey: 'age',
+      header: 'Age',
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+  ],
+});
+
+// Use the table in your component
+function MyTable() {
+  const tableInstance = useTable(table, {
+    data: [
+      { id: 1, name: 'John Doe', age: 30, email: 'john@example.com' },
+      { id: 2, name: 'Jane Smith', age: 25, email: 'jane@example.com' },
+      // ... more data
+    ],
+  });
+
+  return (
+    <div className="h-[400px] w-full" style={lightModeVars}>
+      <Table
+        table={tableInstance}
+        width={800}
+        height={400}
+        skin={defaultSkin}
+      />
+    </div>
+  );
+}
+```
+
+For more advanced features like:
+- Virtual scrolling with large datasets
+- Custom skins and theming
+- Drag and drop functionality
+- Column resizing and reordering
+
+Check out our [documentation](https://rttui-docs.vercel.app) and [examples](https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full).
+
 ## Documentation
 
 Visit our [documentation site](https://rttui-docs.vercel.app) for comprehensive guides, examples, and API references.
