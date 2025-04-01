@@ -23,14 +23,14 @@ importers:
         specifier: ^6.4.8
         version: 6.4.9(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@rttui/core':
-        specifier: 1.0.1
-        version: 1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: 1.0.2
+        version: 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@rttui/fixtures':
-        specifier: 1.0.0
-        version: 1.0.0
-      '@rttui/skin-mui':
         specifier: 1.0.1
-        version: 1.0.1(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 1.0.1
+      '@rttui/skin-mui':
+        specifier: 1.0.2
+        version: 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-table':
         specifier: ^8.20.6
         version: 8.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -62,11 +62,11 @@ importers:
   minimal:
     dependencies:
       '@rttui/core':
-        specifier: 1.0.1
-        version: 1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: 1.0.2
+        version: 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@rttui/fixtures':
-        specifier: 1.0.0
-        version: 1.0.0
+        specifier: 1.0.1
+        version: 1.0.1
       '@tanstack/react-table':
         specifier: ^8.20.6
         version: 8.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -110,17 +110,17 @@ importers:
         specifier: ^6.4.8
         version: 6.4.9(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@rttui/core':
-        specifier: 1.0.1
-        version: 1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: 1.0.2
+        version: 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@rttui/fixtures':
-        specifier: 1.0.0
-        version: 1.0.0
+        specifier: 1.0.1
+        version: 1.0.1
       '@rttui/skin-anocca':
-        specifier: 1.0.1
-        version: 1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: 1.0.2
+        version: 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@rttui/skin-mui':
-        specifier: 1.0.1
-        version: 1.0.1(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: 1.0.2
+        version: 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-table':
         specifier: ^8.20.6
         version: 8.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -654,17 +654,17 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rttui/core@1.0.1':
-    resolution: {integrity: sha512-K4CLzhIy/57Rn12JXz2gpS9ZYzqg0AW6H9b+pdpyGvA09tUJUos1nmqPALhHBy/G2U302FR/xMbpIoiggjhE0Q==}
+  '@rttui/core@1.0.2':
+    resolution: {integrity: sha512-xa2HnRmgiRva10nqCzQ5Mk6pBZ636g5ghy7cRaM6e6JHKk8gyvJYf+ovUbTK9UJEcf5xI0zFkTGfifdxL4XO5A==}
 
-  '@rttui/fixtures@1.0.0':
-    resolution: {integrity: sha512-6YG0tu2zOsQIJGiFzKRZa3nqjpNtzLqqVmSgH8O/yzpAo6qJKbj5suKZn7ep/qwlq7n70aXFZTwqhrroWAtoEQ==}
+  '@rttui/fixtures@1.0.1':
+    resolution: {integrity: sha512-BuyZWNKZ3W4YLM7xMBOUdP+o9tvgLJ7prdt7Idg8Q2Qg5XZZvUe35oFTqsaQbYdVBgF2+23zkIOWyifz+KswWg==}
 
-  '@rttui/skin-anocca@1.0.1':
-    resolution: {integrity: sha512-e6koqR9fft0w4l9yeovfke3pQqG4MFSkaDOet4Si8qJJqFq6g/eY1zkEqHSwx01UrCr9bZsM2CLnYzxOhl9yIA==}
+  '@rttui/skin-anocca@1.0.2':
+    resolution: {integrity: sha512-fURYs1NyMJ5mYfFeZRzhfKaNcZyysAAkT270wJq7OEMsjiRqiGTF3Dlw5fkix9TG8ueCGnlaN/kotOFnx6poFw==}
 
-  '@rttui/skin-mui@1.0.1':
-    resolution: {integrity: sha512-9ImXcX95Ft4Hr+laOCzHR66VGRhnL7Iv/h+K3l5H2vZP3VwGKbuYhxOGUqfed4GPZjEAbwuQQW7av/PAq9Vz2Q==}
+  '@rttui/skin-mui@1.0.2':
+    resolution: {integrity: sha512-sVZ8TnHsKgdiWLV0o2mbpxwzrYvezXBlzVKKl9HMGwbq+ECV6TeAk9kciCoS8saBN0NrZLVtFjeoiU1r4EznMQ==}
 
   '@tanstack/react-table@8.21.2':
     resolution: {integrity: sha512-11tNlEDTdIhMJba2RBH+ecJ9l1zgS2kjmexDPAraulc8jeNA4xocSNeyzextT0XJyASil4XsCYlJmf5jEWAtYg==}
@@ -1464,7 +1464,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.38.0':
     optional: true
 
-  '@rttui/core@1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@rttui/core@1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/react-table': 8.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-virtual': 3.13.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1472,28 +1472,21 @@ snapshots:
       - react
       - react-dom
 
-  '@rttui/fixtures@1.0.0': {}
+  '@rttui/fixtures@1.0.1': {}
 
-  '@rttui/skin-anocca@1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@rttui/skin-anocca@1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@rttui/core': 1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@rttui/core': 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@rttui/skin-mui@1.0.1(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@rttui/skin-mui@1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@emotion/react': 11.14.0(@types/react@19.0.12)(react@19.1.0)
-      '@emotion/styled': 11.14.0(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react@19.1.0)
-      '@mui/icons-material': 6.4.9(@mui/material@6.4.9(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/react@19.0.12)(react@19.1.0)
-      '@mui/material': 6.4.9(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react@19.1.0))(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@rttui/core': 1.0.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@rttui/core': 1.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     transitivePeerDependencies:
-      - '@mui/material-pigment-css'
-      - '@types/react'
       - react
       - react-dom
-      - supports-color
 
   '@tanstack/react-table@8.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
