@@ -1,11 +1,23 @@
 import { Link } from '@tanstack/react-router';
+import { useTheme } from '@/contexts/ThemeContext';
+import logoFullDark from '@/assets/logos/logo-full-dark.svg';
+import logoFullLight from '@/assets/logos/logo-full-light.svg';
+import logoIconDark from '@/assets/logos/logo-icon-dark.svg';
+import logoIconLight from '@/assets/logos/logo-icon-light.svg';
 
 export function HomePage() {
+  const { theme } = useTheme();
+  const logoFull = theme === "light" ? logoFullLight : logoFullDark;
+  const logoIcon = theme === "light" ? logoIconLight : logoIconDark;
+
   return (
     <div>
       <div className="bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
           <div className="text-center">
+            <div className="flex justify-center mb-8">
+              <img src={logoFull} alt="React TanStack Table UI" className="h-16" />
+            </div>
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
               <span className="block">React TanStack Table UI</span>
               <span className="block text-primary-600">Powerful virtualized tables for React</span>
@@ -17,7 +29,7 @@ export function HomePage() {
               <div className="rounded-md shadow">
                 <Link
                   to="/docs/getting-started"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
+                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 dark:text-white dark:bg-primary-600 dark:hover:bg-primary-700 md:py-4 md:text-lg md:px-10"
                 >
                   Get started
                 </Link>

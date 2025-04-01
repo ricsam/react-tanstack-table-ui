@@ -1,16 +1,23 @@
 import { Link, Outlet } from '@tanstack/react-router';
 import { useTheme } from '@/contexts/ThemeContext';
+import logoFullDark from '@/assets/logos/logo-full-dark.svg';
+import logoFullLight from '@/assets/logos/logo-full-light.svg';
+import logoIconDark from '@/assets/logos/logo-icon-dark.svg';
+import logoIconLight from '@/assets/logos/logo-icon-light.svg';
 
 export function RootLayout() {
   const { theme, toggleTheme } = useTheme();
+  const logoFull = theme === 'light' ? logoFullLight : logoFullDark;
+  const logoIcon = theme === 'light' ? logoIconLight : logoIconDark;
 
   return (
     <div className="min-h-screen flex bg-white dark:bg-gray-900">
       {/* Sidebar */}
       <aside className="w-64 h-screen sticky top-0 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 flex flex-col">
         <div className="flex-shrink-0 p-4">
-          <Link to="/" className="text-xl font-bold text-primary-600 dark:text-primary-400">
-            React TanStack Table UI
+          <Link to="/" className="flex items-center">
+            <img src={logoIcon} alt="React TanStack Table UI" className="h-8 w-8 md:hidden" />
+            <img src={logoFull} alt="React TanStack Table UI" className="h-8 hidden md:block" />
           </Link>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">

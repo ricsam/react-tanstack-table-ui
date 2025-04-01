@@ -53,7 +53,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
       {
         extends: "./tsconfig.json",
         compilerOptions: {
-          module: "preserve",
+          module: "ESNext",
           outDir: "dist/mjs",
         },
       },
