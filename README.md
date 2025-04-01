@@ -14,10 +14,7 @@ A collection of components and utilities for building powerful, customizable tab
 
 ```bash
 # Install core package
-npm install @rttui/core
-
-# Install a skin (optional)
-npm install @rttui/skin-mui
+npm install @rttui/core @tanstack/react-table
 ```
 
 ## Getting Started
@@ -25,48 +22,97 @@ npm install @rttui/skin-mui
 Here's a basic example of how to use React TanStack Table UI:
 
 ```tsx
-import { createTable, useTable } from '@rttui/core';
-import { defaultSkin, lightModeVars } from '@rttui/core';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { defaultSkin, lightModeVars, ReactTanstackTableUi } from '@rttui/core';
 
-// Define your data type
 type Person = {
-  id: number;
-  name: string;
-  age: number;
-  email: string;
-};
+  firstName: string
+  lastName: string
+  age: number
+  visits: number
+  status: string
+  progress: number
+}
 
-// Create your table instance
-const table = createTable<Person>({
-  columns: [
-    {
-      accessorKey: 'name',
-      header: 'Name',
-    },
-    {
-      accessorKey: 'age',
-      header: 'Age',
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email',
-    },
-  ],
-});
+const defaultData: Person[] = [
+  {
+    firstName: 'tanner',
+    lastName: 'linsley',
+    age: 24,
+    visits: 100,
+    status: 'In Relationship',
+    progress: 50,
+  },
+  {
+    firstName: 'tandy',
+    lastName: 'miller',
+    age: 40,
+    visits: 40,
+    status: 'Single',
+    progress: 80,
+  },
+  {
+    firstName: 'joe',
+    lastName: 'dirte',
+    age: 45,
+    visits: 20,
+    status: 'Complicated',
+    progress: 10,
+  },
+]
+
+const columnHelper = createColumnHelper<Person>()
+
+const columns = [
+  columnHelper.accessor('firstName', {
+    cell: info => info.getValue(),
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor(row => row.lastName, {
+    id: 'lastName',
+    cell: info => <i>{info.getValue()}</i>,
+    header: () => <span>Last Name</span>,
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('age', {
+    header: () => 'Age',
+    cell: info => info.renderValue(),
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('visits', {
+    header: () => <span>Visits</span>,
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('status', {
+    header: 'Status',
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('progress', {
+    header: 'Profile Progress',
+    footer: info => info.column.id,
+  }),
+]
 
 // Use the table in your component
 function MyTable() {
-  const tableInstance = useTable(table, {
-    data: [
-      { id: 1, name: 'John Doe', age: 30, email: 'john@example.com' },
-      { id: 2, name: 'Jane Smith', age: 25, email: 'jane@example.com' },
-      // ... more data
-    ],
-  });
+  const [data, _setData] = React.useState(() => [...defaultData])
+  const rerender = React.useReducer(() => ({}), {})[1]
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
 
   return (
     <div className="h-[400px] w-full" style={lightModeVars}>
-      <Table
+      <ReactTanstackTableUi
         table={tableInstance}
         width={800}
         height={400}
