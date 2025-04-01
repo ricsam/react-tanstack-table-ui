@@ -13,6 +13,8 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.8",
-    "@tanstack/react-table": "^8.20.6"
+    "@tanstack/react-table": "^8.20.6",
+    "@swc/cli": "^0.6.0",
+    "@swc/core": "^1.11.16"
   }
 }

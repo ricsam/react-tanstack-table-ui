@@ -24,9 +24,12 @@ export const TableBody = ({
 
   const pinnedTop = rows.filter((row) => row.isPinned === "start");
   const pinnedBottom = rows.filter((row) => row.isPinned === "end");
+
   return (
     <skin.TableBody>
-      <skin.PinnedRows position="top" pinned={pinnedTop}>{loop(pinnedTop)}</skin.PinnedRows>
+      <skin.PinnedRows position="top" pinned={pinnedTop}>
+        {loop(pinnedTop)}
+      </skin.PinnedRows>
 
       <div style={{ height: offsetTop }} className="offset-top"></div>
 
@@ -34,7 +37,9 @@ export const TableBody = ({
 
       <div style={{ height: offsetBottom }} className="offset-bottom"></div>
 
-      <skin.PinnedRows position="bottom" pinned={pinnedBottom}>{loop(pinnedBottom)}</skin.PinnedRows>
+      <skin.PinnedRows position="bottom" pinned={pinnedBottom}>
+        {loop(pinnedBottom)}
+      </skin.PinnedRows>
     </skin.TableBody>
   );
 };

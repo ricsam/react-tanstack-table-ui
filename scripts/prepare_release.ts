@@ -48,36 +48,6 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
   );
 
   await Bun.write(
-    path.join(packageDir, "tsconfig.mjs.json"),
-    JSON.stringify(
-      {
-        extends: "./tsconfig.json",
-        compilerOptions: {
-          module: "ESNext",
-          outDir: "dist/mjs",
-        },
-      },
-      null,
-      2,
-    ),
-  );
-
-  await Bun.write(
-    path.join(packageDir, "tsconfig.cjs.json"),
-    JSON.stringify(
-      {
-        extends: "./tsconfig.json",
-        compilerOptions: {
-          module: "commonjs",
-          outDir: "dist/cjs",
-        },
-      },
-      null,
-      2,
-    ),
-  );
-
-  await Bun.write(
     path.join(packageDir, "tsconfig.types.json"),
     JSON.stringify(
       {
@@ -94,6 +64,32 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     ),
   );
 
+  for (const [type, extension] of [
+    ["es6", "mjs"],
+    ["commonjs", "cjs"],
+  ] as const) {
+    await Bun.write(
+      path.join(packageDir, `.swcrc.${extension}.json`),
+      JSON.stringify(
+        {
+          $schema: "https://swc.rs/schema.json",
+          module: {
+            type,
+            outFileExtension: extension,
+          },
+          jsc: {
+            target: "esnext",
+            parser: {
+              syntax: "typescript",
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+  }
+
   const runTsc = async (tsconfig: string) => {
     const { stdout, stderr, exitCode } = await $`pnpm exec tsc -p ${tsconfig}`
       .cwd(packageDir)
@@ -103,21 +99,69 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
       console.error(stderr.toString());
       console.log(stdout.toString());
       return false;
-    } else {
-      const output = stdout.toString();
-      if (output.trim() !== "") {
-        console.log(output);
-      }
-      return true;
     }
+    const output = stdout.toString();
+    if (output.trim() !== "") {
+      console.log(output);
+    }
+    return true;
+  };
+  const runSwc = async (swcrc: string, outDir: string, extension: string) => {
+    const { stdout, stderr, exitCode } =
+      await $`pnpm exec swc ./src --config-file ${swcrc} --out-dir ${outDir} --out-file-extension ${extension} -s --ignore '**/*.test.ts' --strip-leading-paths`
+        .cwd(packageDir)
+        .nothrow();
+
+    if (exitCode !== 0) {
+      console.error(stderr.toString());
+      console.log(stdout.toString());
+      return false;
+    }
+    const output = stdout.toString();
+    if (output.trim() !== "") {
+      console.log(output);
+    }
+    return true;
+  };
+
+  const runBunBundle = async (type: "cjs" | "mjs") => {
+    let entryPoint: string | undefined;
+    for (const ext of [".ts", ".tsx"]) {
+      if (await Bun.file(path.join(packageDir, "src", "index" + ext)).exists()) {
+        entryPoint = ext;
+        break;
+      }
+    }
+    if (!entryPoint) {
+      throw new Error("No entry point found");
+    }
+    await Bun.build({
+      entrypoints: [path.join(packageDir, "src", "index" + entryPoint)],
+      outdir: path.join(packageDir, "dist", type),
+      minify: false,
+      sourcemap: "external",
+      format: type === "mjs" ? "esm" : "cjs",
+      external: [
+        "react",
+        "react-dom",
+        "@tanstack/react-table",
+        "@tanstack/react-virtual",
+        "@mui/material",
+        "@mui/icons-material",
+        "@rttui/core",
+      ],
+    });
+    return true;
   };
 
   await $`rm -rf dist`.cwd(packageDir);
 
   const success = (
     await Promise.all([
-      runTsc("tsconfig.mjs.json"),
-      runTsc("tsconfig.cjs.json"),
+      // runSwc(".swcrc.mjs.json", "dist/mjs", "mjs"),
+      // runSwc(".swcrc.cjs.json", "dist/cjs", "cjs"),
+      runBunBundle("mjs"),
+      runBunBundle("cjs"),
       runTsc("tsconfig.types.json"),
     ])
   ).every((s) => s);
@@ -160,7 +204,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     },
     publishConfig: {
       access: "public",
-    }
+    },
   });
 
   await Bun.write(

@@ -7,5 +7,10 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "happy-dom",
+    browser: {
+      enabled: true,
+      provider: "playwright",
+      instances: [{ browser: "chromium" }],
+    },
   },
 });

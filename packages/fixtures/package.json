@@ -7,6 +7,8 @@
     "@tanstack/react-table": "^8.20.6",
     "@types/react": "^19.0.7",
     "react": "^19.0.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "@swc/cli": "^0.6.0",
+    "@swc/core": "^1.11.16"
   }
 }

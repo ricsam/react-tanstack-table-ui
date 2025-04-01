@@ -69,11 +69,7 @@ export const TableRow = React.memo(function TableRow({
             isPinned={isPinned}
             flatIndex={flatIndex}
           >
-            <skin.PinnedCols
-              position="left"
-              pinned={stickyLeft}
-              type={'body'}
-            >
+            <skin.PinnedCols position="left" pinned={stickyLeft} type={"body"}>
               {loop(stickyLeft)}
             </skin.PinnedCols>
             <div style={{ width: headerGroup.offsetLeft }}></div>
@@ -84,7 +80,7 @@ export const TableRow = React.memo(function TableRow({
             <skin.PinnedCols
               position="right"
               pinned={stickyRight}
-              type={'body'}
+              type={"body"}
             >
               {loop(stickyRight)}
             </skin.PinnedCols>

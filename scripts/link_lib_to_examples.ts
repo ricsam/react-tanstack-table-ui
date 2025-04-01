@@ -1,21 +1,25 @@
+import { Glob } from "bun";
 import fs from "fs";
 import path from "path";
 
 // Get all example directories
-const examplesDir = path.join(process.cwd(), "examples");
-const examples = fs.readdirSync(examplesDir);
+const pkgJsonGlob = new Glob("*/package.json");
 
-const localPackages = fs.readdirSync(path.join(process.cwd(), "packages"));
+const examplesDir = path.join(process.cwd(), "examples");
+const packageDir = path.join(process.cwd(), "packages");
 
 // For each example, remove the installed package and create symlink to local package
-for (const localPackage of localPackages) {
-  for (const example of examples) {
-    const nodeModulesPath = path.join(examplesDir, example, "node_modules");
-    const localPackagePath = path.join(
-      process.cwd(),
-      "packages",
-      localPackage,
-    );
+for await (const localPackage of pkgJsonGlob.scan({
+  cwd: packageDir,
+  absolute: true,
+})) {
+  for await (const example of pkgJsonGlob.scan({
+    cwd: examplesDir,
+    absolute: true,
+  })) {
+    const dirname = path.dirname(example);
+    const nodeModulesPath = path.join(dirname, "node_modules");
+    const localPackagePath = path.dirname(localPackage);
     const packageJsonPath = path.join(localPackagePath, "package.json");
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
@@ -33,7 +37,7 @@ for (const localPackage of localPackages) {
     // Create symlink to local package
     fs.symlinkSync(localPackagePath, packagePath, "junction");
 
-    console.log(`Linked ${packageName} to ${example}`);
+    console.log(`Linked ${packageName} to ${path.basename(dirname)}`);
   }
 }
 
