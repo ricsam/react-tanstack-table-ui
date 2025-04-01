@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routes';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './contexts/theme_provider';
 import './index.css';
 
 // Create a new router instance

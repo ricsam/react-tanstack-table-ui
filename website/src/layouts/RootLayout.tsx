@@ -1,5 +1,5 @@
 import { Link, Outlet } from '@tanstack/react-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from "@/contexts/use_theme";
 import logoFullDark from '@/assets/logos/logo-full-dark.svg';
 import logoFullLight from '@/assets/logos/logo-full-light.svg';
 import logoIconDark from '@/assets/logos/logo-icon-dark.svg';
@@ -61,7 +61,7 @@ export function RootLayout() {
               Core Concepts
             </h3>
             <Link
-              to="/docs/skins"
+              to="/examples/skins"
               className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
               activeProps={{
                 className: "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
@@ -70,7 +70,7 @@ export function RootLayout() {
               Skins
             </Link>
             <Link
-              to="/docs/virtualization"
+              to="/examples/virtual"
               className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
               activeProps={{
                 className: "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
@@ -79,7 +79,7 @@ export function RootLayout() {
               Virtualization
             </Link>
             <Link
-              to="/docs/drag-and-drop"
+              to="/examples/customization"
               className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
               activeProps={{
                 className: "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
@@ -113,13 +113,13 @@ export function RootLayout() {
               Skins Example
             </Link>
             <Link
-              to="/examples/dnd"
+              to="/examples/filtering"
               className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
               activeProps={{
                 className: "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
               }}
             >
-              Drag and Drop
+              Filtering
             </Link>
           </div>
 

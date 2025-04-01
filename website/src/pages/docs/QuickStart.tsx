@@ -1,5 +1,4 @@
-import React from 'react';
-import { CodeBlock } from '../../components/CodeBlock';
+import { CodeBlock } from "../../components/CodeBlock";
 
 export function QuickStartPage() {
   const basicExample = `import React from 'react';
@@ -170,25 +169,35 @@ function MyAnoccaTable() {
   return (
     <div className="prose max-w-none">
       <h1>Quick Start</h1>
-      
+
       <p>
-        This guide will help you quickly set up React TanStack Table UI in your project. We'll cover how to use the main <code>{'<ReactTanstackTableUi />'}</code> component and the <code>useVirtualHeader</code> hook.
+        This guide will help you quickly set up React TanStack Table UI in your
+        project. We'll cover how to use the main{" "}
+        <code>{"<ReactTanstackTableUi />"}</code> component and the{" "}
+        <code>useVirtualHeader</code> hook.
       </p>
-      
+
       <h2>Basic Usage</h2>
-      
+
       <p>
-        The primary component you'll use is <code>{'<ReactTanstackTableUi />'}</code>, which provides a complete table solution with virtualization support.
+        The primary component you'll use is{" "}
+        <code>{"<ReactTanstackTableUi />"}</code>, which provides a complete
+        table solution with virtualization support.
       </p>
-      
-      <CodeBlock code={basicExample} language="tsx" className="bg-gray-800 text-white p-4" />
-      
+
+      <CodeBlock
+        code={basicExample}
+        language="tsx"
+        className="bg-gray-800 text-white p-4"
+      />
+
       <h2>Configuration Options</h2>
-      
+
       <p>
-        The <code>{'<ReactTanstackTableUi />'}</code> component accepts several props to customize its behavior:
+        The <code>{"<ReactTanstackTableUi />"}</code> component accepts several
+        props to customize its behavior:
       </p>
-      
+
       <table>
         <thead>
           <tr>
@@ -200,106 +209,205 @@ function MyAnoccaTable() {
         </thead>
         <tbody>
           <tr>
-            <td><code>table</code></td>
-            <td><code>Table&lt;T&gt;</code></td>
+            <td>
+              <code>table</code>
+            </td>
+            <td>
+              <code>Table&lt;T&gt;</code>
+            </td>
             <td>TanStack table instance</td>
             <td>Yes</td>
           </tr>
           <tr>
-            <td><code>width</code></td>
-            <td><code>number</code></td>
+            <td>
+              <code>width</code>
+            </td>
+            <td>
+              <code>number</code>
+            </td>
             <td>Width of the table in pixels</td>
             <td>Yes</td>
           </tr>
           <tr>
-            <td><code>height</code></td>
-            <td><code>number</code></td>
+            <td>
+              <code>height</code>
+            </td>
+            <td>
+              <code>number</code>
+            </td>
             <td>Height of the table in pixels</td>
             <td>Yes</td>
           </tr>
           <tr>
-            <td><code>rowOverscan</code></td>
-            <td><code>number</code></td>
-            <td>Number of rows to render outside of the visible area (default: <code>10</code>)</td>
+            <td>
+              <code>rowOverscan</code>
+            </td>
+            <td>
+              <code>number</code>
+            </td>
+            <td>
+              Number of rows to render outside of the visible area (default:{" "}
+              <code>10</code>)
+            </td>
             <td>No</td>
           </tr>
           <tr>
-            <td><code>columnOverscan</code></td>
-            <td><code>number</code></td>
-            <td>Number of columns to render outside of the visible area (default: <code>3</code>)</td>
+            <td>
+              <code>columnOverscan</code>
+            </td>
+            <td>
+              <code>number</code>
+            </td>
+            <td>
+              Number of columns to render outside of the visible area (default:{" "}
+              <code>3</code>)
+            </td>
             <td>No</td>
           </tr>
           <tr>
-            <td><code>skin</code></td>
-            <td><code>Skin</code></td>
-            <td>Custom skin for styling the table (default: <code>defaultSkin</code>)</td>
+            <td>
+              <code>skin</code>
+            </td>
+            <td>
+              <code>Skin</code>
+            </td>
+            <td>
+              Custom skin for styling the table (default:{" "}
+              <code>defaultSkin</code>)
+            </td>
             <td>No</td>
           </tr>
           <tr>
-            <td><code>rowDndHandler</code></td>
-            <td><code>RowDndHandler&lt;T&gt;</code></td>
+            <td>
+              <code>rowDndHandler</code>
+            </td>
+            <td>
+              <code>RowDndHandler&lt;T&gt;</code>
+            </td>
             <td>Handler for row drag-and-drop functionality</td>
             <td>No</td>
           </tr>
           <tr>
-            <td><code>colDndHandler</code></td>
-            <td><code>ColDndHandler&lt;T&gt;</code></td>
+            <td>
+              <code>colDndHandler</code>
+            </td>
+            <td>
+              <code>ColDndHandler&lt;T&gt;</code>
+            </td>
             <td>Handler for column drag-and-drop functionality</td>
             <td>No</td>
           </tr>
         </tbody>
       </table>
-      
-      <h2>Styling Headers with <code>useVirtualHeader</code></h2>
-      
+
+      <h2>
+        Styling Headers with <code>useVirtualHeader</code>
+      </h2>
+
       <p>
-        If you need to customize the appearance of table headers, especially when using virtualization, you can use the <code>useVirtualHeader</code> hook:
+        If you need to customize the appearance of table headers, especially
+        when using virtualization, you can use the <code>useVirtualHeader</code>{" "}
+        hook:
       </p>
-      
-      <CodeBlock code={customHeaderExample} language="tsx" className="bg-gray-800 text-white p-4" />
-      
-      <h3>Properties available in <code>useVirtualHeader</code></h3>
-      
+
+      <CodeBlock
+        code={customHeaderExample}
+        language="tsx"
+        className="bg-gray-800 text-white p-4"
+      />
+
+      <h3>
+        Properties available in <code>useVirtualHeader</code>
+      </h3>
+
       <p>
         The <code>useVirtualHeader</code> hook provides these properties:
       </p>
-      
+
       <ul>
-        <li><code>type</code>: Either "header" or "footer"</li>
-        <li><code>isDragging</code>: Whether the header is currently being dragged</li>
-        <li><code>isPinned</code>: Whether the header is pinned (and to which side)</li>
-        <li><code>width</code>: The width of the header cell</li>
-        <li><code>dndStyle</code>: CSS styles for drag-and-drop functionality</li>
-        <li><code>headerId</code>: Unique identifier for the header</li>
-        <li><code>headerIndex</code>: Index of the header in the column array</li>
-        <li><code>header</code>: Reference to the original header object</li>
+        <li>
+          <code>type</code>: Either "header" or "footer"
+        </li>
+        <li>
+          <code>isDragging</code>: Whether the header is currently being dragged
+        </li>
+        <li>
+          <code>isPinned</code>: Whether the header is pinned (and to which
+          side)
+        </li>
+        <li>
+          <code>width</code>: The width of the header cell
+        </li>
+        <li>
+          <code>dndStyle</code>: CSS styles for drag-and-drop functionality
+        </li>
+        <li>
+          <code>headerId</code>: Unique identifier for the header
+        </li>
+        <li>
+          <code>headerIndex</code>: Index of the header in the column array
+        </li>
+        <li>
+          <code>header</code>: Reference to the original header object
+        </li>
       </ul>
-      
+
       <h2>Using with Skins</h2>
-      
+
       <p>
-        If you've installed one of our skin packages, you can use their components instead of the core component:
+        If you've installed one of our skin packages, you can use their
+        components instead of the core component:
       </p>
-      
+
       <h3>Material UI Skin</h3>
-      
-      <CodeBlock code={muiSkinExample} language="tsx" className="bg-gray-800 text-white p-4" />
-      
+
+      <CodeBlock
+        code={muiSkinExample}
+        language="tsx"
+        className="bg-gray-800 text-white p-4"
+      />
+
       <h3>Anocca Skin</h3>
-      
-      <CodeBlock code={anoccaSkinExample} language="tsx" className="bg-gray-800 text-white p-4" />
-      
+
+      <CodeBlock
+        code={anoccaSkinExample}
+        language="tsx"
+        className="bg-gray-800 text-white p-4"
+      />
+
       <h2>Next Steps</h2>
-      
-      <p>
-        Now that you're familiar with the basics, you can:
-      </p>
-      
+
+      <p>Now that you're familiar with the basics, you can:</p>
+
       <ul>
-        <li>Check out our <a href="/examples" className="text-primary-600 hover:text-primary-700">Examples</a> for more advanced usage scenarios</li>
-        <li>Read the <a href="/api" className="text-primary-600 hover:text-primary-700">API Reference</a> for detailed documentation of all components and options</li>
-        <li>Learn about <a href="/docs/concepts/virtualization" className="text-primary-600 hover:text-primary-700">Virtualization</a> techniques for large datasets</li>
+        <li>
+          Check out our{" "}
+          <a
+            href="/examples"
+            className="text-primary-600 hover:text-primary-700"
+          >
+            Examples
+          </a>{" "}
+          for more advanced usage scenarios
+        </li>
+        <li>
+          Read the{" "}
+          <a href="/api" className="text-primary-600 hover:text-primary-700">
+            API Reference
+          </a>{" "}
+          for detailed documentation of all components and options
+        </li>
+        <li>
+          Learn about{" "}
+          <a
+            href="/docs/concepts/virtualization"
+            className="text-primary-600 hover:text-primary-700"
+          >
+            Virtualization
+          </a>{" "}
+          techniques for large datasets
+        </li>
       </ul>
     </div>
   );
-} 
+}

@@ -36,7 +36,7 @@ export function DocsIndexPage() {
         
         <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
           <h3 className="text-xl font-semibold mb-2">
-            <Link to="/docs/concepts/table" className="text-primary-600 hover:text-primary-700">
+            <Link to="/docs/getting-started" className="text-primary-600 hover:text-primary-700">
               Core Concepts
             </Link>
           </h3>

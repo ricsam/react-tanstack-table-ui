@@ -1,12 +1,14 @@
-import React from 'react';
-import { PrimaryLinkButton } from '@/components/PrimaryLinkButton';
+import { PrimaryLinkButton } from "@/components/PrimaryLinkButton";
 
 export function SkinsExample() {
   const example = {
-    title: 'Custom Skins Example',
-    description: 'Explore different skin options including Material UI and Anocca themes.',
-    stackblitzUrl: 'https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/skins?embed=1&theme=dark&preset=node&file=src/app.tsx',
-    codesandboxUrl: 'https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/skins',
+    title: "Custom Skins Example",
+    description:
+      "Explore different skin options including Material UI and Anocca themes.",
+    stackblitzUrl:
+      "https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/skins?embed=1&theme=dark&preset=node&file=src/app.tsx",
+    codesandboxUrl:
+      "https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/skins",
   };
 
   return (
@@ -17,25 +19,20 @@ export function SkinsExample() {
       </div>
 
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{example.title}</h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-300">{example.description}</p>
-        </div>
-        
         <div className="flex space-x-4 px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
           <PrimaryLinkButton href={example.stackblitzUrl}>
             Open in StackBlitz
           </PrimaryLinkButton>
-          <a 
+          <a
             href={example.codesandboxUrl}
-            target="_blank" 
+            target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Open in CodeSandbox
           </a>
         </div>
-        
+
         <div className="w-full h-[600px] overflow-hidden">
           <iframe
             src={example.stackblitzUrl}
@@ -48,4 +45,4 @@ export function SkinsExample() {
       </div>
     </div>
   );
-} 
+}
