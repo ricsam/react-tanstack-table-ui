@@ -3,11 +3,7 @@
   "version": "1.0.1",
   "main": "./src/index.tsx",
   "dependencies": {
-    "@rttui/core": "workspace:*",
-    "@mui/icons-material": "6",
-    "@mui/material": "6",
-    "@emotion/react": "11",
-    "@emotion/styled": "11"
+    "@rttui/core": "workspace:^"
   },
   "devDependencies": {
     "@types/react": "^19.0.7",

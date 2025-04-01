@@ -1,17 +1,62 @@
 # React TanStack Table UI
 
-https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/app.tsx
+A collection of components and utilities for building powerful, customizable tables with TanStack Table and virtual scrolling support.
 
-https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&file=src/app.tsx
+## Features
 
+- 🚀 Based on [TanStack Table](https://tanstack.com/table) (formerly React Table v8)
+- 📜 Virtual scrolling support via [TanStack Virtual](https://tanstack.com/virtual)
+- 🎨 Multiple skins (Material UI, Anocca, and more)
+- 🔌 Extensible architecture for custom skins
+- 📦 Modular packages for flexible integration
 
-# Repository structure
+## Quick Start
 
-## Scripts
-* `link_lib_to_examples.ts` after running pnpm install, we will have the published package from npm in the examples node_modules folder. To test the examples while developing the main packages the react-tanstack-table-ui folders needs to be removed from node_modules and replaced by a symlink to the packages/react-tanstack-table-ui folder
+```bash
+# Install core package
+npm install @rttui/core
 
-## Packages
-The packages published to npm. The package.json files are adapted for development. When publishing new package.json files are generated for npm.
+# Install a skin (optional)
+npm install @rttui/skin-mui
+```
+
+## Documentation
+
+Visit our [documentation site](https://rttui-docs.vercel.app) for comprehensive guides, examples, and API references.
 
 ## Examples
-These are consumed by stackblitz and are thus static in the tsconfig and package.json
+
+Try our interactive examples:
+
+- [Full Example](https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/app.tsx)
+- [Codesandbox](https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&file=src/app.tsx)
+
+## Repository Structure
+
+### Packages
+
+- `core`: Core functionality and base components
+- `skin-mui`: Material UI implementation
+- `skin-anocca`: Anocca-themed components
+- `fixtures`: Test fixtures and utilities
+- `docs`: Documentation website
+
+### Examples
+
+Example projects demonstrating various use cases:
+
+- `full`: Complete example with all features
+- `minimal`: Minimal setup example
+- `skins`: Examples of different visual themes
+
+### Scripts
+
+- `link_lib_to_examples.ts`: Development utility to link local packages to examples
+
+## Contributing
+
+Contributions are welcome! Please check the [contributing guidelines](CONTRIBUTING.md) for more information.
+
+## License
+
+MIT

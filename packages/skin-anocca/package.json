@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "main": "./src/index.tsx",
   "dependencies": {
-    "@rttui/core": "workspace:*"
+    "@rttui/core": "workspace:^"
   },
   "devDependencies": {
     "@types/react": "^19.0.7",
