@@ -2,3 +2,4 @@ packages:
   - packages/*
   - scripts
   - website
+  - test/*
