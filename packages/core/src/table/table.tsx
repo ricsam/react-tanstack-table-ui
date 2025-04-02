@@ -69,7 +69,7 @@ function Body() {
       <skin.TableHeader>
         {headerGroups.map((headerGroup) => {
           return (
-            <HeaderGroup {...headerGroup} key={headerGroup.id} type="header" />
+            <HeaderGroup key={headerGroup.id} {...headerGroup} type="header" />
           );
         })}
       </skin.TableHeader>
@@ -83,7 +83,7 @@ function Body() {
       <skin.TableFooter>
         {footerGroups.map((footerGroup) => {
           return (
-            <HeaderGroup {...footerGroup} key={footerGroup.id} type="footer" />
+            <HeaderGroup key={footerGroup.id} {...footerGroup} type="footer" />
           );
         })}
       </skin.TableFooter>

@@ -1,6 +1,6 @@
 import { $, Glob } from "bun";
 import path from "path";
-
+import fs from "fs/promises";
 const glob = new Glob("*/package.json");
 
 const projectRoot = path.join(__dirname, "../");
@@ -64,32 +64,6 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     ),
   );
 
-  for (const [type, extension] of [
-    ["es6", "mjs"],
-    ["commonjs", "cjs"],
-  ] as const) {
-    await Bun.write(
-      path.join(packageDir, `.swcrc.${extension}.json`),
-      JSON.stringify(
-        {
-          $schema: "https://swc.rs/schema.json",
-          module: {
-            type,
-            outFileExtension: extension,
-          },
-          jsc: {
-            target: "esnext",
-            parser: {
-              syntax: "typescript",
-            },
-          },
-        },
-        null,
-        2,
-      ),
-    );
-  }
-
   const runTsc = async (tsconfig: string) => {
     const { stdout, stderr, exitCode } = await $`pnpm exec tsc -p ${tsconfig}`
       .cwd(packageDir)
@@ -106,51 +80,54 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     }
     return true;
   };
-  const runSwc = async (swcrc: string, outDir: string, extension: string) => {
-    const { stdout, stderr, exitCode } =
-      await $`pnpm exec swc ./src --config-file ${swcrc} --out-dir ${outDir} --out-file-extension ${extension} -s --ignore '**/*.test.ts' --strip-leading-paths`
-        .cwd(packageDir)
-        .nothrow();
 
-    if (exitCode !== 0) {
-      console.error(stderr.toString());
-      console.log(stdout.toString());
-      return false;
-    }
-    const output = stdout.toString();
-    if (output.trim() !== "") {
-      console.log(output);
-    }
-    return true;
-  };
+  const runBunBundleRec = async (type: "cjs" | "mjs") => {
+    const tsGlob = new Glob("**/*.{ts,tsx}");
+    for await (const file of tsGlob.scan({
+      cwd: path.join(packageDir, "src"),
+    })) {
+      await Bun.build({
+        entrypoints: [path.join(packageDir, "src", file)],
+        outdir: path.join(packageDir, "dist", type, path.dirname(file)),
+        sourcemap: "external",
+        format: type === "mjs" ? "esm" : "cjs",
+        packages: "external",
+        external: ["*"],
+        naming: `[name].${type}`,
+        target: "browser",
+        env: "inline",
+        plugins: [
+          {
+            name: "extension-plugin",
+            setup(build) {
+              build.onLoad(
+                { filter: /\.tsx?$/, namespace: "file" },
+                async (args) => {
+                  let content = await Bun.file(args.path).text();
+                  const extension = type;
+                  content = content.replace(
+                    /(im|ex)port\s[\w{}/*\s,]+from\s['"](?:\.\.?\/)+?[^.'"]+(?=['"];?)/gm,
+                    `$&.${extension}`,
+                  );
 
-  const runBunBundle = async (type: "cjs" | "mjs") => {
-    let entryPoint: string | undefined;
-    for (const ext of [".ts", ".tsx"]) {
-      if (await Bun.file(path.join(packageDir, "src", "index" + ext)).exists()) {
-        entryPoint = ext;
-        break;
-      }
+                  // replace e.g. `import('./foo')` with `import('./foo.js')`
+                  content = content.replace(
+                    /import\(['"](?:\.\.?\/)+?[^.'"]+(?=['"];?)/gm,
+                    `$&.${extension}`,
+                  );
+
+                  return {
+                    contents: content,
+                    loader: args.path.endsWith(".tsx") ? "tsx" : "ts",
+                  };
+                },
+              );
+            },
+          },
+        ],
+      });
     }
-    if (!entryPoint) {
-      throw new Error("No entry point found");
-    }
-    await Bun.build({
-      entrypoints: [path.join(packageDir, "src", "index" + entryPoint)],
-      outdir: path.join(packageDir, "dist", type),
-      minify: false,
-      sourcemap: "external",
-      format: type === "mjs" ? "esm" : "cjs",
-      external: [
-        "react",
-        "react-dom",
-        "@tanstack/react-table",
-        "@tanstack/react-virtual",
-        "@mui/material",
-        "@mui/icons-material",
-        "@rttui/core",
-      ],
-    });
+
     return true;
   };
 
@@ -158,10 +135,8 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
 
   const success = (
     await Promise.all([
-      // runSwc(".swcrc.mjs.json", "dist/mjs", "mjs"),
-      // runSwc(".swcrc.cjs.json", "dist/cjs", "cjs"),
-      runBunBundle("mjs"),
-      runBunBundle("cjs"),
+      runBunBundleRec("mjs"),
+      runBunBundleRec("cjs"),
       runTsc("tsconfig.types.json"),
     ])
   ).every((s) => s);
@@ -192,14 +167,14 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
 
   delete packageJson.devDependencies;
   Object.assign(packageJson, {
-    main: "./dist/cjs/index.js",
-    module: "./dist/mjs/index.js",
+    main: "./dist/cjs/index.cjs",
+    module: "./dist/mjs/index.mjs",
     types: "./dist/types/index.d.ts",
     exports: {
       ".": {
         types: "./dist/types/index.d.ts",
-        require: "./dist/cjs/index.js",
-        import: "./dist/mjs/index.js",
+        require: "./dist/cjs/index.cjs",
+        import: "./dist/mjs/index.mjs",
       },
     },
     publishConfig: {

@@ -1,5 +1,11 @@
 # @rttui/fixtures
 
+## 1.0.3
+
+### Patch Changes
+
+- new build method
+
 ## 1.0.2
 
 ### Patch Changes
