@@ -1,5 +1,13 @@
 # @rttui/skin-mui
 
+## 1.0.3
+
+### Patch Changes
+
+- 51c73d3: build with bun build instead
+- Updated dependencies [51c73d3]
+  - @rttui/core@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes

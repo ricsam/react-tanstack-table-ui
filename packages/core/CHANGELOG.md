@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.3
+
+### Patch Changes
+
+- 51c73d3: build with bun build instead
+
 ## 1.0.2
 
 ### Patch Changes
