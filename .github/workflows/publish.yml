@@ -19,7 +19,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm knip
       - run: pnpm -r exec tsc --noEmit
-      - run: pnpm run prepare
+      - run: pnpm run prepare-release
       - run: pnpm --filter @rttui/test-lib-import exec playwright install --with-deps
       - run: pnpm --filter @rttui/test-lib-import exec vitest
   publish:
@@ -36,7 +36,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm knip
       - run: pnpm -r exec tsc --noEmit
-      - run: pnpm run prepare
+      - run: pnpm run prepare-release
       - run: pnpm --filter @rttui/test-lib-import exec playwright install --with-deps
       - run: pnpm --filter @rttui/test-lib-import exec vitest
       - run: |
