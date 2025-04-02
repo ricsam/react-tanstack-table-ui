@@ -157,7 +157,7 @@ export function RootLayout() {
               )}
             </button>
             <a
-              href="https://github.com/ricsam/virtualized-table"
+              href="https://github.com/ricsam/react-tanstack-table-ui"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"

@@ -126,7 +126,7 @@ For more advanced features like:
 - Drag and drop functionality
 - Column resizing and reordering
 
-Check out our [documentation](https://rttui-docs.vercel.app) and [examples](https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full).
+Check out our [documentation](https://rttui-docs.vercel.app) and [examples](https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/full).
 
 ## Documentation
 
@@ -136,8 +136,8 @@ Visit our [documentation site](https://rttui-docs.vercel.app) for comprehensive 
 
 Try our interactive examples:
 
-- [Full Example](https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/app.tsx)
-- [Codesandbox](https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&file=src/app.tsx)
+- [Full Example](https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/app.tsx)
+- [Codesandbox](https://codesandbox.io/p/devbox/github/ricsam/react-tanstack-table-ui/tree/main/examples/full?embed=1&theme=dark&file=src/app.tsx)
 
 ## Repository Structure
 

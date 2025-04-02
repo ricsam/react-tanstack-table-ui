@@ -77,7 +77,7 @@ export function DocsIndexPage() {
       <ul>
         <li>
           <a 
-            href="https://github.com/ricsam/virtualized-table/issues" 
+            href="https://github.com/ricsam/react-tanstack-table-ui/issues" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-primary-600 hover:text-primary-700"
@@ -87,7 +87,7 @@ export function DocsIndexPage() {
         </li>
         <li>
           <a 
-            href="https://github.com/ricsam/virtualized-table/discussions" 
+            href="https://github.com/ricsam/react-tanstack-table-ui/discussions" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-primary-600 hover:text-primary-700"

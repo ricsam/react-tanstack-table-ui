@@ -6,9 +6,9 @@ export function CustomizationExample() {
     description:
       "Customize your table with custom cell renderers and header styles.",
     stackblitzUrl:
-      "https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/custom.tsx",
+      "https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/custom.tsx",
     codesandboxUrl:
-      "https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/full",
+      "https://codesandbox.io/p/devbox/github/ricsam/react-tanstack-table-ui/tree/main/examples/full",
   };
 
   return (

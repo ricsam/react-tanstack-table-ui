@@ -14,7 +14,7 @@ A comprehensive example showcasing all features of the React TanStack Table UI:
 - Custom cell rendering
 - Advanced filtering capabilities
 
-[Try on StackBlitz](https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/app.tsx)
+[Try on StackBlitz](https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/app.tsx)
 
 ### Minimal Example (`examples/minimal`)
 

@@ -6,9 +6,9 @@ export function FilteringExample() {
     description:
       "Learn how to implement column filtering and sorting in your tables.",
     stackblitzUrl:
-      "https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/filtering.tsx",
+      "https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/filtering.tsx",
     codesandboxUrl:
-      "https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/full",
+      "https://codesandbox.io/p/devbox/github/ricsam/react-tanstack-table-ui/tree/main/examples/full",
   };
 
   return (

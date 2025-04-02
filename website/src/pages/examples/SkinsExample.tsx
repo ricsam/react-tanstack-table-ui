@@ -6,9 +6,9 @@ export function SkinsExample() {
     description:
       "Explore different skin options including Material UI and Anocca themes.",
     stackblitzUrl:
-      "https://stackblitz.com/github/ricsam/virtualized-table/tree/main/examples/skins?embed=1&theme=dark&preset=node&file=src/app.tsx",
+      "https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/skins?embed=1&theme=dark&preset=node&file=src/app.tsx",
     codesandboxUrl:
-      "https://codesandbox.io/p/devbox/github/ricsam/virtualized-table/tree/main/examples/skins",
+      "https://codesandbox.io/p/devbox/github/ricsam/react-tanstack-table-ui/tree/main/examples/skins",
   };
 
   return (

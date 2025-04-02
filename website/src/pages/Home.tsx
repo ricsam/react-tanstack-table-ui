@@ -41,7 +41,7 @@ export function HomePage() {
               </div>
               <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                 <a
-                  href="https://github.com/ricsam/virtualized-table"
+                  href="https://github.com/ricsam/react-tanstack-table-ui"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center px-8 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 md:py-4 md:text-lg md:px-10"
