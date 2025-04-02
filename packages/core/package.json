@@ -7,7 +7,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tanstack/react-table": "8",
     "@tanstack/react-virtual": "3"
   },
   "devDependencies": {
