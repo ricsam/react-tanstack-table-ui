@@ -20,6 +20,7 @@ jobs:
       - run: pnpm knip
       - run: pnpm -r exec tsc --noEmit
       - run: bun run scripts/prepare_release.ts
+      - run: pnpm --filter @rttui/test-lib-import exec playwright install
       - run: pnpm --filter @rttui/test-lib-import exec vitest
   publish:
     name: Publish
@@ -36,6 +37,7 @@ jobs:
       - run: pnpm knip
       - run: pnpm -r exec tsc --noEmit
       - run: bun run scripts/prepare_release.ts
+      - run: pnpm --filter @rttui/test-lib-import exec playwright install
       - run: pnpm --filter @rttui/test-lib-import exec vitest
       - run: |
           echo '@ricsam:registry=https://registry.npmjs.org' >> .npmrc
