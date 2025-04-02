@@ -1,16 +1,14 @@
-import { PinPos } from "../types";
+import { VirtualHeader } from "./virtual_header/types";
 
 /**
  * when we are only rendering a window of columns while maintaining a scrollbar we need to move the elements as we remove elements to the left
  * we are assuming that the columns are rendered in order, so pinned left, followed by non-pinned, followed by pinned right
  */
 export function getColVirtualizedOffsets({
-  virtualColumns,
-  getIsPinned,
+  headers,
   totalSize,
 }: {
-  virtualColumns: { index: number; start: number; end: number }[];
-  getIsPinned: (vcIndex: number) => PinPos;
+  headers: VirtualHeader[];
   totalSize: number;
 }) {
   let offsetLeft = 0;
@@ -19,9 +17,9 @@ export function getColVirtualizedOffsets({
   {
     let lastPinned: undefined | number;
     let firstNonPinned: undefined | number;
-    for (let i = 0; i < virtualColumns.length; i++) {
-      const vc = virtualColumns[i];
-      if (getIsPinned(vc.index) === "start") {
+    for (let i = 0; i < headers.length; i++) {
+      const vc = headers[i];
+      if (vc.isPinned === "start" && vc.header) {
         lastPinned = i;
       } else {
         firstNonPinned = i;
@@ -30,9 +28,9 @@ export function getColVirtualizedOffsets({
     }
 
     if (typeof firstNonPinned !== "undefined") {
-      offsetLeft = virtualColumns[firstNonPinned].start;
+      offsetLeft = headers[firstNonPinned].start
       if (typeof lastPinned !== "undefined") {
-        offsetLeft -= virtualColumns[lastPinned].end;
+        offsetLeft -= headers[lastPinned].end;
       }
     }
   }
@@ -40,12 +38,12 @@ export function getColVirtualizedOffsets({
     // from right to left
     let lastPinned: undefined | number;
     let firstNonPinned: undefined | number;
-    for (let i = virtualColumns.length - 1; i >= 0; i--) {
-      const vc = virtualColumns[i];
+    for (let i = headers.length - 1; i >= 0; i--) {
+      const vc = headers[i];
       if (!vc) {
-        console.log(vc, virtualColumns, i);
+        console.log(vc, headers, i);
       }
-      if (getIsPinned(vc.index) === "end") {
+      if (vc.isPinned === "end") {
         lastPinned = i;
       } else {
         firstNonPinned = i;
@@ -76,10 +74,10 @@ export function getColVirtualizedOffsets({
     // a.start - i.end
 
     if (typeof firstNonPinned !== "undefined") {
-      offsetRight = totalSize - virtualColumns[firstNonPinned].end;
+      offsetRight = totalSize - headers[firstNonPinned].end;
       if (typeof lastPinned !== "undefined") {
         offsetRight =
-          virtualColumns[lastPinned].start - virtualColumns[firstNonPinned].end;
+          headers[lastPinned].start - headers[firstNonPinned].end;
       }
     }
   }

@@ -8,6 +8,8 @@ export function HeaderCell({
   dndStyle,
   header,
   type,
+  headerIndex,
+  headerId
 }: VirtualHeader & {
   type: "header" | "footer";
 }) {
@@ -19,6 +21,8 @@ export function HeaderCell({
     <div
       className="th"
       ref={ref}
+      data-header-index={headerIndex}
+      data-header-id={headerId}
       style={{
         opacity: isDragging ? 0.8 : 1,
         transition: "none",

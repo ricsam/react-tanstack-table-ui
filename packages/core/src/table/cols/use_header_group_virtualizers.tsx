@@ -28,37 +28,46 @@ const getVirtualHeaderGroup = (
   const getVirtualHeader = (header: Header<any, unknown>): VirtualHeader => {
     const isPinned = getIsPinned(header);
 
+    const width = header.getSize();
     return {
       header,
       headerId: header.id,
       isDragging: false,
       isPinned: mapColumnPinningPositionToPinPos(isPinned),
       dndStyle: {},
-      width: header.getSize(),
+      width,
       headerIndex: header.index,
       type,
+      start: header.getStart(),
+      end: header.getStart() + width,
     };
   };
 
+  const headers = virtualColumns.map((vc) => {
+    const header = group.headers[vc.index];
+    return getVirtualHeader(header);
+  });
+
   const { offsetLeft, offsetRight } = getColVirtualizedOffsets({
-    virtualColumns,
-    getIsPinned(vcIndex) {
-      const header = group.headers[vcIndex];
-      return mapColumnPinningPositionToPinPos(getIsPinned(header));
-    },
+    headers,
     totalSize,
   });
 
   return {
     id: group.id,
-    headers: virtualColumns.map((vc) => {
-      const header = group.headers[vc.index];
-      return getVirtualHeader(header);
-    }),
+    headers,
     offsetLeft,
     offsetRight,
     headerGroup: group,
   };
+};
+
+type HeaderIndex = {
+  headerIndex: number;
+  groupIndex: number;
+  columnId: string;
+  headerId: string;
+  header: Header<any, unknown>;
 };
 
 export function useHeaderGroupVirtualizers(props: {
@@ -68,21 +77,19 @@ export function useHeaderGroupVirtualizers(props: {
   const { tableContainerRef, table, config } = useTableContext();
   const tableState = table.getState();
   const { filteredHeaderGroups, headerIndices } = React.useMemo(() => {
-    const headerIndices: Record<
-      string,
-      undefined | { headerIndex: number; groupIndex: number }
-    > = {};
+    const headerIndices: Record<string, undefined | HeaderIndex> = {};
     const filteredHeaderGroups: HeaderGroup<any>[] = [];
+
     props.headerGroups.forEach((group) => {
       let hasVisibleHeader = false;
-      const groupHeaderIndices: Record<
-        string,
-        { headerIndex: number; groupIndex: number }
-      > = {};
+      const groupHeaderIndices: Record<string, HeaderIndex> = {};
       group.headers.forEach((header, j) => {
         groupHeaderIndices[header.column.id] = {
           headerIndex: j,
           groupIndex: filteredHeaderGroups.length,
+          columnId: header.column.id,
+          headerId: header.id,
+          header,
         };
         if (header.column.columnDef[props.type]) {
           hasVisibleHeader = true;
@@ -199,13 +206,12 @@ export function useHeaderGroupVirtualizers(props: {
       if (!indices) {
         return;
       }
-      const { headerIndex, groupIndex } = indices;
+      const { headerIndex, groupIndex, header } = indices;
 
       const virtualizer = headerColVirtualizers.current[groupIndex];
-      virtualizer.resizeItem(
-        headerIndex,
-        tableState.columnSizing[columnResizingInfo.isResizingColumn],
-      );
+      const headerSize = header.getSize();
+
+      virtualizer.resizeItem(headerIndex, headerSize);
     }
   }, [
     columnResizingInfo.isResizingColumn,
@@ -252,5 +258,10 @@ export function useHeaderGroupVirtualizers(props: {
     return getVirtualHeaderGroup(group, virtualColumns, totalSize, props.type);
   });
 
-  return virtualHeaderGroupCache.update(virtualHeaderGroups, tableState);
+  const result = virtualHeaderGroupCache.update(
+    virtualHeaderGroups,
+    tableState,
+  );
+
+  return result;
 }

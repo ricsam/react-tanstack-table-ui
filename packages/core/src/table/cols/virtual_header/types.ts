@@ -11,4 +11,6 @@ export type VirtualHeader = {
   headerId: string;
   headerIndex: number;
   header?: Header<any, any>;
+  start: number;
+  end: number;
 };

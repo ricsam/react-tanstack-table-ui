@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.6
+
+### Patch Changes
+
+- fix header virtualization after resizing
+
 ## 1.0.5
 
 ### Patch Changes
