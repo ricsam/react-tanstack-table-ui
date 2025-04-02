@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.5
+
+### Patch Changes
+
+- Fix build
+
 ## 1.0.4
 
 ### Patch Changes

@@ -86,6 +86,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     for await (const file of tsGlob.scan({
       cwd: path.join(packageDir, "src"),
     })) {
+      process.env.NODE_ENV = "production";
       await Bun.build({
         entrypoints: [path.join(packageDir, "src", file)],
         outdir: path.join(packageDir, "dist", type, path.dirname(file)),
@@ -95,7 +96,6 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
         external: ["*"],
         naming: `[name].${type}`,
         target: "browser",
-        env: "inline",
         plugins: [
           {
             name: "extension-plugin",
