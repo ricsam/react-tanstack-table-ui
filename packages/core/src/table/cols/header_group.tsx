@@ -1,12 +1,12 @@
-import { HeaderGroup as HeaderGroupType } from "@tanstack/react-table";
-import { VirtualHeader } from "./virtual_header/types";
 import { useTableContext } from "../table_context";
+import { CombinedHeaderGroup } from "../types";
 import { VirtualHeaderContext } from "./virtual_header/context";
+import { VirtualHeader } from "./virtual_header/types";
 export type VirtualHeaderGroup = {
   offsetLeft: number;
   offsetRight: number;
   headers: VirtualHeader[];
-  headerGroup: HeaderGroupType<any>;
+  headerGroup: CombinedHeaderGroup;
   id: string;
 };
 

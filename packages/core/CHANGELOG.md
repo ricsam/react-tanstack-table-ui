@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.7
+
+### Patch Changes
+
+- Better col virtualization when pinning, and new tailwind theme
+
 ## 1.0.6
 
 ### Patch Changes

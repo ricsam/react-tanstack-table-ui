@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint .",
     "knip": "knip",
-    "prepare-release": "NODE_ENV=production bun ./scripts/prepare_release.ts"
+    "prepare-release": "NODE_ENV=production bun ./scripts/prepare_release.ts",
+    "precommit-check": "pnpm lint && pnpm knip && pnpm -r exec tsc --noEmit"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

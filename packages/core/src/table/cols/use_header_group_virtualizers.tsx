@@ -1,4 +1,4 @@
-import { Header, HeaderGroup } from "@tanstack/react-table";
+import { Header } from "@tanstack/react-table";
 import {
   defaultRangeExtractor,
   observeElementOffset,
@@ -11,6 +11,7 @@ import React from "react";
 import { flushSync } from "react-dom";
 import { getIsPinned, mapColumnPinningPositionToPinPos } from "../../utils";
 import { useTableContext } from "../table_context";
+import { CombinedHeaderGroup } from "../types";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { VirtualHeaderGroup } from "./header_group";
 import { VirtualHeader } from "./virtual_header/types";
@@ -20,7 +21,7 @@ const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
 const getVirtualHeaderGroup = (
-  group: HeaderGroup<any>,
+  group: CombinedHeaderGroup,
   virtualColumns: VirtualItem[],
   totalSize: number,
   type: "header" | "footer",
@@ -71,14 +72,14 @@ type HeaderIndex = {
 };
 
 export function useHeaderGroupVirtualizers(props: {
-  headerGroups: HeaderGroup<any>[];
+  headerGroups: CombinedHeaderGroup[];
   type: "footer" | "header";
 }) {
   const { tableContainerRef, table, config } = useTableContext();
   const tableState = table.getState();
   const { filteredHeaderGroups, headerIndices } = React.useMemo(() => {
     const headerIndices: Record<string, undefined | HeaderIndex> = {};
-    const filteredHeaderGroups: HeaderGroup<any>[] = [];
+    const filteredHeaderGroups: CombinedHeaderGroup[] = [];
 
     props.headerGroups.forEach((group) => {
       let hasVisibleHeader = false;
@@ -107,7 +108,7 @@ export function useHeaderGroupVirtualizers(props: {
   }, [props.headerGroups, props.type]);
 
   const baseColVirtOpts = (
-    headerGroup: HeaderGroup<any>,
+    headerGroup: CombinedHeaderGroup,
   ): Pick<
     VirtualizerOptions<HTMLDivElement, Element>,
     | "getScrollElement"

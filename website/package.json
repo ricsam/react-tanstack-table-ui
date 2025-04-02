@@ -13,10 +13,13 @@
     "@rttui/core": "workspace:*",
     "@rttui/skin-mui": "workspace:*",
     "@rttui/skin-anocca": "workspace:*",
+    "@rttui/skin-tailwind": "workspace:*",
     "@tanstack/react-router": "^1.15.10",
     "@tanstack/router-devtools": "^1.15.10",
+    "@tanstack/react-table": "^8.20.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-use-measure": "^2.1.7"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
