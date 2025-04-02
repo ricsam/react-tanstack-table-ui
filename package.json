@@ -33,9 +33,7 @@
       ".github/**/*"
     ],
     "ignoreDependencies": [
-      "prettier",
-      "@swc/cli",
-      "@swc/core"
+      "prettier"
     ]
   }
 }
