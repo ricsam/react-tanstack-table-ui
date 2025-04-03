@@ -1,12 +1,17 @@
-import { type Skin, useTableContext, useTableCssVars } from "@rttui/core";
+import {
+  type Skin,
+  useRow,
+  useTableContext,
+  useTableCssVars,
+} from "@rttui/core";
 import React from "react";
 import { TableHeaderCell } from "./TableHeaderCell";
-
+import { clsx } from "./clsx";
 
 export const TailwindSkin: Skin = {
   rowHeight: 36,
   headerRowHeight: 56,
-  footerRowHeight: 36,
+  footerRowHeight: 56,
   OuterContainer: ({ children }) => {
     const { width, height, tableContainerRef } = useTableContext();
     const cssVars = useTableCssVars();
@@ -35,7 +40,8 @@ export const TailwindSkin: Skin = {
         className="table-scroller absolute"
         style={{
           width: "var(--table-width)",
-          height: "calc(var(--table-height) + var(--header-height) + var(--footer-height))",
+          height:
+            "calc(var(--table-height) + var(--header-height) + var(--footer-height))",
         }}
       ></div>
     );
@@ -43,7 +49,7 @@ export const TailwindSkin: Skin = {
   TableHeader: ({ children }) => {
     return (
       <div
-        className="thead sticky top-0 z-10 border-b border-gray-300 dark:border-gray-700 bg-white/75 dark:bg-gray-800/75 backdrop-blur-sm backdrop-filter"
+        className="thead sticky top-0 z-10 border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
         style={{
           width: "var(--table-width)",
         }}
@@ -69,12 +75,13 @@ export const TailwindSkin: Skin = {
   HeaderRow: ({ children }) => {
     return (
       <div
-        className="flex divide-x divide-y divide-gray-200 dark:divide-gray-700"
+        className="flex divide-y divide-gray-200 dark:divide-gray-700"
         style={{
           height: "var(--header-row-height)",
           boxSizing: "border-box",
         }}
       >
+        <div className={clsx("absolute inset-y-0 left-0 w-0.5")} />
         {children}
       </div>
     );
@@ -85,7 +92,7 @@ export const TailwindSkin: Skin = {
   TableBody: ({ children }) => {
     return (
       <div
-        className="table-body relative divide-y divide-gray-200 dark:divide-gray-800"
+        className="table-body relative"
         style={{
           width: "var(--table-width)",
           backgroundColor: "var(--table-bg-color)",
@@ -100,13 +107,10 @@ export const TailwindSkin: Skin = {
       return null;
     }
 
-    const style: React.CSSProperties = {
-      position: "sticky",
-      zIndex: 3,
-    };
+    const style: React.CSSProperties = {};
 
     if (position === "top") {
-      style.top = "var(--header-height)";
+      style.top = "calc(var(--header-height) + 1px)";
       style.boxShadow =
         "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
     } else if (position === "bottom") {
@@ -117,7 +121,7 @@ export const TailwindSkin: Skin = {
 
     return (
       <div
-        className={`sticky-${position}-rows bg-white/75 dark:bg-gray-800/75 backdrop-blur-sm backdrop-filter`}
+        className={`sticky-${position}-rows bg-white dark:bg-gray-800 sticky z-10`}
         style={style}
       >
         {children}
@@ -137,20 +141,18 @@ export const TailwindSkin: Skin = {
 
     if (position === "left") {
       style.left = 0;
-      style.boxShadow =
-        "4px 0 6px -1px rgba(0, 0, 0, 0.1), 6px 0 4px -1px rgba(0, 0, 0, 0.06)";
     } else if (position === "right") {
       style.right = 0;
       style.borderLeft = "1px solid var(--table-border-color)";
-      style.boxShadow =
-        "-4px 0 6px -1px rgba(0, 0, 0, 0.1), -6px 0 4px -1px rgba(0, 0, 0, 0.06)";
     }
 
     return (
       <div
-        className={type !== "body"
-          ? `sticky-${position}-cols bg-white/75 dark:bg-gray-800/75 backdrop-blur-sm backdrop-filter`
-          : ""}
+        className={
+          type !== "body"
+            ? `sticky-${position}-cols bg-white dark:bg-gray-800`
+            : ""
+        }
         style={style}
       >
         {children}
@@ -160,31 +162,46 @@ export const TailwindSkin: Skin = {
   TableRowWrapper: React.forwardRef(
     ({ children, flatIndex, dndStyle }, ref) => {
       return (
-        <div data-index={flatIndex} ref={ref} style={dndStyle} className="flex">
+        <div data-index={flatIndex} ref={ref} style={dndStyle}>
           {children}
         </div>
       );
-    }
+    },
   ),
   TableRow: ({ children, flatIndex }) => {
     const vars: Record<string, string> = {
-      "--table-cell-bg": flatIndex % 2 === 0 ? "var(--table-row-bg)" : "var(--table-row-alt-bg)",
+      "--table-cell-bg":
+        flatIndex % 2 === 0 ? "var(--table-row-bg)" : "var(--table-row-alt-bg)",
     };
+
+    const { row } = useRow();
+
+    const selected = row.getIsSelected();
 
     return (
       <div
-        className="relative flex divide-x divide-gray-200 dark:divide-gray-700"
+        className={`relative flex ${
+          selected ? "bg-indigo-50 dark:bg-indigo-900/20" : ""
+        }`}
         style={{
           width: "var(--table-width)",
           height: "var(--row-height)",
           boxSizing: "border-box",
           zIndex: 1,
-          backgroundColor: flatIndex % 2 === 0
-            ? "var(--table-row-bg)"
-            : "var(--table-row-alt-bg)",
+          backgroundColor: !selected
+            ? flatIndex % 2 === 0
+              ? "var(--table-row-bg)"
+              : "var(--table-row-alt-bg)"
+            : undefined,
           ...vars,
         }}
       >
+        <div
+          className={clsx(
+            "absolute inset-y-0 left-0 w-0.5",
+            selected ? "bg-indigo-600 dark:bg-indigo-500" : "",
+          )}
+        />
         {children}
       </div>
     );
@@ -192,7 +209,7 @@ export const TailwindSkin: Skin = {
   TableRowExpandedContent: ({ children }) => {
     return (
       <div
-        className="expanded-row p-4"
+        className="expanded-row"
         style={{
           backgroundColor: "var(--table-row-bg)",
           borderBottom: "1px solid var(--table-border-color)",
@@ -204,19 +221,21 @@ export const TailwindSkin: Skin = {
   },
   Cell: ({ children, header }) => {
     const { isPinned } = header;
+    const { row } = useRow();
+    const selected = row.getIsSelected();
+
     return (
       <div
-        className="td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis"
+        className={`td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis border-r border-gray-200 dark:border-gray-700 ${
+          selected ? "text-gray-900 dark:text-white" : ""
+        }`}
         style={{
           height: "var(--row-height)",
           width: header.width,
           zIndex: isPinned ? 5 : 0,
           boxSizing: "border-box",
           flexShrink: 0,
-          backgroundColor: "var(--table-cell-bg)",
-          borderRight: isPinned
-            ? "1px solid var(--table-border-color)"
-            : "none",
+          backgroundColor: selected ? undefined : "var(--table-cell-bg)",
         }}
       >
         {children}

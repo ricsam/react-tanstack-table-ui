@@ -1,10 +1,7 @@
 import { defaultSkin, lightModeVars, ReactTanstackTableUi } from "@rttui/core";
 import { MuiSkin } from "@rttui/skin-mui";
 import React from "react";
-import {
-  defaultTableConfig,
-  TableConfig,
-} from "./table_config";
+import { defaultTableConfig, TableConfig } from "./table_config";
 import { TableConfigPanel } from "./table_config_panel";
 import { useConfigurableTable } from "./use_configurable_table";
 
@@ -57,6 +54,13 @@ export function App() {
           height={800}
           table={table as any}
           skin={activeSkin}
+          renderSubComponent={({ row }) => {
+            return (
+              <pre style={{ fontSize: "10px", textAlign: "left" }}>
+                <code>{JSON.stringify(row.original, null, 2)}</code>
+              </pre>
+            );
+          }}
         />
       </div>
 

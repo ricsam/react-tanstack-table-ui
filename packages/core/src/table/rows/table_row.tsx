@@ -4,8 +4,9 @@ import { VirtualCell } from "../cols/virtual_cell";
 import { VirtualHeader } from "../cols/virtual_header/types";
 import { useTableContext } from "../table_context";
 import { PinPos } from "../types";
-import { useRowContext } from "./row_context";
+import { useVirtualRowContext } from "./virtual_row_context";
 import { RowRefContext } from "./row_ref_context";
+import { RowContext } from "./row_context";
 
 export type VirtualRow = {
   dndStyle: CSSProperties;
@@ -23,9 +24,10 @@ export const TableRow = function TableRow({
   isPinned,
 }: VirtualRow) {
   const visibileCells = row.getVisibleCells();
-  const { skin } = useTableContext();
+  const { skin, renderSubComponent } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
-  const { mainHeaderGroup: headerGroup, rowVirtualizer } = useRowContext();
+  const { mainHeaderGroup: headerGroup, rowVirtualizer } =
+    useVirtualRowContext();
 
   const loop = (headers: VirtualHeader[]) => {
     return (
@@ -39,8 +41,16 @@ export const TableRow = function TableRow({
       </>
     );
   };
+  let subComponent: React.ReactNode | undefined;
+  let isExpanded: boolean =
+    Boolean(row.subRows.length === 0 && row.getIsExpanded() && renderSubComponent);
 
-  const isExpanded = row.subRows.length === 0 && row.getIsExpanded();
+  if (isExpanded && renderSubComponent) {
+    subComponent = renderSubComponent({ row });
+    if (subComponent) {
+      isExpanded = true;
+    }
+  }
 
   const stickyLeft = headerGroup.headers.filter(
     (header) => header.isPinned === "start",
@@ -52,54 +62,52 @@ export const TableRow = function TableRow({
   return (
     <>
       <RowRefContext.Provider value={rowRef}>
-        <skin.TableRowWrapper
-          isDragging={isDragging}
-          isPinned={isPinned}
-          flatIndex={flatIndex}
-          dndStyle={dndStyle}
-          ref={(el) => {
-            rowRef.current = el;
-            if (isExpanded) {
-              rowVirtualizer.measureElement(el);
-            }
-          }}
-        >
-          <skin.TableRow
+        <RowContext.Provider value={React.useMemo(() => ({ row }), [row])}>
+          <skin.TableRowWrapper
             isDragging={isDragging}
             isPinned={isPinned}
             flatIndex={flatIndex}
+            dndStyle={dndStyle}
+            ref={(el) => {
+              rowRef.current = el;
+              if (isExpanded) {
+                rowVirtualizer.measureElement(el);
+              }
+            }}
           >
-            <skin.PinnedCols position="left" pinned={stickyLeft} type={"body"}>
-              {loop(stickyLeft)}
-            </skin.PinnedCols>
-            <div style={{ width: headerGroup.offsetLeft }}></div>
-            {loop(
-              headerGroup.headers.filter((cell) => cell.isPinned === false),
-            )}
-            <div style={{ width: headerGroup.offsetRight }}></div>
-            <skin.PinnedCols
-              position="right"
-              pinned={stickyRight}
-              type={"body"}
+            <skin.TableRow
+              isDragging={isDragging}
+              isPinned={isPinned}
+              flatIndex={flatIndex}
             >
-              {loop(stickyRight)}
-            </skin.PinnedCols>
-          </skin.TableRow>
-          {isExpanded && (
-            <skin.TableRowExpandedContent>
-              {renderSubComponent({ row })}
-            </skin.TableRowExpandedContent>
-          )}
-        </skin.TableRowWrapper>
+              <skin.PinnedCols
+                position="left"
+                pinned={stickyLeft}
+                type={"body"}
+              >
+                {loop(stickyLeft)}
+              </skin.PinnedCols>
+              <div style={{ width: headerGroup.offsetLeft }}></div>
+              {loop(
+                headerGroup.headers.filter((cell) => cell.isPinned === false),
+              )}
+              <div style={{ width: headerGroup.offsetRight }}></div>
+              <skin.PinnedCols
+                position="right"
+                pinned={stickyRight}
+                type={"body"}
+              >
+                {loop(stickyRight)}
+              </skin.PinnedCols>
+            </skin.TableRow>
+            {isExpanded && (
+              <skin.TableRowExpandedContent>
+                {subComponent}
+              </skin.TableRowExpandedContent>
+            )}
+          </skin.TableRowWrapper>
+        </RowContext.Provider>
       </RowRefContext.Provider>
     </>
-  );
-};
-
-const renderSubComponent = ({ row }: { row: Row<any> }) => {
-  return (
-    <pre style={{ fontSize: "10px", textAlign: "left" }}>
-      <code>{JSON.stringify(row.original, null, 2)}</code>
-    </pre>
   );
 };

@@ -24,9 +24,8 @@ export function TableHeaderCell({
         zIndex: isPinned ? 11 : 10,
         flexShrink: 0,
         boxSizing: "border-box",
-        backgroundColor: isPinned ? "var(--table-header-bg)/75" : "transparent",
-        backdropFilter: "blur(8px)",
-        borderRight: isPinned ? "1px solid var(--table-border-color)" : "none",
+        backgroundColor: "transparent",
+        borderRight: "1px solid var(--table-border-color)",
       }}
     >
       <div className="flex-1 flex justify-start">

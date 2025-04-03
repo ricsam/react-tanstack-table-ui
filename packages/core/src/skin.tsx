@@ -1,7 +1,7 @@
 import React, { CSSProperties } from "react";
 import { useTableContext } from "./table/table_context";
 import { useColContext } from "./table/cols/col_context";
-import { useRowContext } from "./table/rows/row_context";
+import { useVirtualRowContext } from "./table/rows/virtual_row_context";
 import { VirtualHeader } from "./table/cols/virtual_header/types";
 import { PinPos } from "./table/types";
 import { VirtualRow } from "./table/rows/table_row";
@@ -53,7 +53,7 @@ export type Skin = {
 
 export function useTableCssVars(): Record<string, string> {
   const { table, skin } = useTableContext();
-  const { rowVirtualizer } = useRowContext();
+  const { rowVirtualizer } = useVirtualRowContext();
   const { footerGroups, headerGroups } = useColContext();
 
   return {

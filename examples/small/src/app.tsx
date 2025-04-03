@@ -48,7 +48,18 @@ export function App() {
         ...lightModeVars,
       }}
     >
-      <ReactTanstackTableUi width={600} height={400} table={table} />
+      <ReactTanstackTableUi
+        width={600}
+        height={400}
+        table={table}
+        renderSubComponent={({ row }) => {
+          return (
+            <pre style={{ fontSize: "10px", textAlign: "left" }}>
+              <code>{JSON.stringify(row.original, null, 2)}</code>
+            </pre>
+          );
+        }}
+      />
     </div>
   );
 }

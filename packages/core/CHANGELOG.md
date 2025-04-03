@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.10
+
+### Patch Changes
+
+- update theme
+
 ## 1.0.9
 
 ### Patch Changes

@@ -1,11 +1,12 @@
 import React from "react";
 
 
-export const CellTextBold: React.FC<{ children: React.ReactNode; }> = ({
+export const CellTextBold: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
+  className,
 }) => {
   return (
-    <span className="text-sm font-medium text-gray-900 dark:text-white">
+    <span className={`text-sm font-medium ${className}`}>
       {children}
     </span>
   );

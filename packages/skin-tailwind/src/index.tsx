@@ -8,6 +8,7 @@ export { CellText } from "./CellText";
 
 export { TailwindSkin } from "./TailwindSkin";
 
+export { Checkbox } from "./Checkbox";
 export { CellTextBold } from "./CellTextBold";
 export { CellCurrency } from "./CellCurrency";
 export { CellBadge } from "./CellBadge";

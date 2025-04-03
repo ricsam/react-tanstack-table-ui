@@ -8,10 +8,10 @@ import {
 import React, { CSSProperties } from "react";
 import { useColContext } from "../cols/col_context";
 import { useTableContext } from "../table_context";
-import { RowContext } from "./row_context";
+import { VirtualRowContext } from "./virtual_row_context";
 import { VirtualRow } from "./table_row";
 
-export const RowProvider = ({ children }: { children: React.ReactNode }) => {
+export const VirtualRowProvider = ({ children }: { children: React.ReactNode }) => {
   const { table, tableContainerRef, skin, config } = useTableContext();
 
   /* to be implemented
@@ -124,7 +124,7 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
   // const cachedVirtualRows = rowCache.update(virtualRows, table.getState());
 
   return (
-    <RowContext.Provider
+    <VirtualRowContext.Provider
       value={{
         moveResult: null,
         rowIds,
@@ -146,7 +146,7 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
       }}
     >
       {children}
-    </RowContext.Provider>
+    </VirtualRowContext.Provider>
   );
 };
 

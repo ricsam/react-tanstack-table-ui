@@ -7,15 +7,18 @@ import {
   CellCurrency,
   CellText,
   CellTextBold,
-  TailwindSkin,
+  Checkbox,
   darkModeVars,
   lightModeVars,
+  TailwindSkin,
 } from "@rttui/skin-tailwind";
 import { Link } from "@tanstack/react-router";
 import {
   ColumnDef,
   createColumnHelper,
   getCoreRowModel,
+  getExpandedRowModel,
+  Row,
   useReactTable,
 } from "@tanstack/react-table";
 import React, { useCallback, useDeferredValue, useMemo, useState } from "react";
@@ -25,6 +28,15 @@ import useMeasure from "react-use-measure";
 const generateRowData = (rowIndex: number) => {
   const statuses = ["Active", "Inactive", "Pending"];
   const roles = ["Admin", "Editor", "Viewer", "User", "Manager"];
+  const performanceScores = [
+    { score: 95, label: "Excellent" },
+    { score: 75, label: "Good" },
+    { score: 50, label: "Average" },
+    { score: 25, label: "Poor" },
+  ];
+
+  // Choose a performance score based on row index
+  const performance = performanceScores[rowIndex % performanceScores.length];
 
   return {
     id: `${rowIndex}`,
@@ -38,17 +50,20 @@ const generateRowData = (rowIndex: number) => {
     startDate: new Date(2020, rowIndex % 12, (rowIndex % 28) + 1)
       .toISOString()
       .split("T")[0],
+    performance: performance,
     // More fields can be dynamically added based on column count
   };
 };
+
+type Person = ReturnType<typeof generateRowData>;
 
 export function HomePage() {
   const { theme } = useTheme();
   const logoFull = theme === "light" ? logoFullLight : logoFullDark;
 
   // State for controlling row and column counts
-  const [rowCount, setRowCount] = useState(100);
-  const [columnCount, setColumnCount] = useState(10);
+  const [rowCount, setRowCount] = useState(300);
+  const [columnCount, setColumnCount] = useState(20);
 
   // Measure the table container size
   const [tableContainerRef, tableContainerBounds] = useMeasure({
@@ -68,8 +83,6 @@ export function HomePage() {
     );
   }, [deferredRowCount]);
 
-  type Person = (typeof data)[0];
-
   const deferredColumnCount = useDeferredValue(columnCount);
 
   // Generate columns based on columnCount
@@ -79,10 +92,154 @@ export function HomePage() {
     // Basic columns that always exist
     const baseColumns: ColumnDef<Person, any>[] = [
       columnHelper.accessor("name", {
+        header: ({ table }) => (
+          <div className="flex items-center gap-2.5">
+            <Checkbox
+              {...{
+                checked: table.getIsAllRowsSelected(),
+                indeterminate: table.getIsSomeRowsSelected(),
+                onChange: table.getToggleAllRowsSelectedHandler(),
+              }}
+            />
+
+            <span>Name</span>
+          </div>
+        ),
+        cell: ({ row, getValue }) => (
+          <div
+            className="flex items-center gap-2"
+            style={{ paddingLeft: `${row.depth * 20}px` }}
+          >
+            {/* Selection checkbox */}
+            <Checkbox
+              {...{
+                checked: row.getIsSelected(),
+                disabled: !row.getCanSelect(),
+                indeterminate: row.getIsSomeSelected(),
+                onChange: row.getToggleSelectedHandler(),
+              }}
+            />
+
+            {/* Expand/collapse button */}
+            {row.getCanExpand() ? (
+              <button
+                onClick={row.getToggleExpandedHandler()}
+                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                {row.getIsExpanded() ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                )}
+              </button>
+            ) : (
+              <span className="inline-flex items-center justify-center w-6 h-6">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+              </span>
+            )}
+
+            {/* Pin buttons */}
+            {row.getIsPinned() ? (
+              <button
+                onClick={() => row.pin(false, true, true)}
+                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <div className="flex">
+                <button
+                  onClick={() => row.pin("top", true, true)}
+                  className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 15.75l7.5-7.5 7.5 7.5"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => row.pin("bottom", true, true)}
+                  className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* Name content */}
+            {row.getIsSelected() ? (
+              <CellTextBold className="text-indigo-600 dark:text-indigo-500">
+                {getValue()}
+              </CellTextBold>
+            ) : (
+              <CellText>{getValue()}</CellText>
+            )}
+          </div>
+        ),
         id: "name",
-        header: "Name",
-        footer: "Name",
-        cell: (info) => <CellTextBold>{info.getValue()}</CellTextBold>,
+        size: 300, // Increased size to accommodate all controls
       }),
       columnHelper.accessor("email", {
         id: "email",
@@ -119,6 +276,39 @@ export function HomePage() {
         header: "Age",
         footer: "Age",
         cell: (info) => <CellText>{info.getValue()}</CellText>,
+      }),
+      columnHelper.accessor("performance", {
+        id: "performance",
+        header: "Performance",
+        footer: "Performance",
+        cell: (info) => {
+          const performance = info.getValue();
+          const color =
+            performance.score >= 80
+              ? "green"
+              : performance.score >= 60
+                ? "blue"
+                : performance.score >= 40
+                  ? "yellow"
+                  : "red";
+
+          return (
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  color === "green"
+                    ? "bg-green-500"
+                    : color === "blue"
+                      ? "bg-blue-500"
+                      : color === "yellow"
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
+                }`}
+              />
+              <CellText>{performance.label}</CellText>
+            </div>
+          );
+        },
       }),
     ];
 
@@ -183,10 +373,13 @@ export function HomePage() {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: () => true,
     enableColumnResizing: true,
     columnResizeMode: "onChange",
     getRowId: (row: Person) => row.id,
     enableColumnPinning: true,
+    enableRowSelection: true,
     enableRowPinning: true,
   });
 
@@ -207,6 +400,11 @@ export function HomePage() {
     },
     [],
   );
+
+  const [innerContainerSizeRef, innerContainerSize] = useMeasure({
+    debounce: 100,
+    scroll: false,
+  });
 
   return (
     <div>
@@ -334,7 +532,7 @@ export function HomePage() {
 
       {/* Live Demo Section */}
       <div className="py-16 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
             <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
               Live Demo
@@ -349,7 +547,7 @@ export function HomePage() {
           </div>
 
           {/* Sliders for controlling table dimensions */}
-          <div className="mb-8 flex flex-col md:flex-row gap-8 justify-center">
+          <div className="mb-8 flex flex-col md:flex-row gap-8 justify-center max-w-7xl mx-auto">
             <div className="w-full md:w-1/2">
               <label
                 htmlFor="rowSlider"
@@ -408,6 +606,24 @@ export function HomePage() {
                 width={tableWidth}
                 height={tableHeight}
                 skin={TailwindSkin}
+                underlay={
+                  <div
+                    style={{
+                      position: "absolute",
+                      pointerEvents: "none",
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      zIndex: -1,
+                      visibility: "hidden",
+                    }}
+                    ref={innerContainerSizeRef}
+                  ></div>
+                }
+                renderSubComponent={({ row }) => {
+                  return <Details row={row} width={innerContainerSize.width} />;
+                }}
               />
             </div>
           </div>
@@ -419,6 +635,278 @@ export function HomePage() {
             >
               Explore more examples
             </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Details({ row, width }: { row: Row<Person>; width: number }) {
+  const person = row.original;
+
+  return (
+    <div
+      className="px-6 pb-6 bg-white dark:bg-gray-800 ring-1 ring-gray-900/5 w-full border-t border-gray-200 dark:border-gray-700 sticky left-0"
+      style={{ width }}
+    >
+      <div className="flex items-start gap-6">
+        {/* Content container */}
+        <div className="flex-1 min-w-0">
+          {/* Header with name, email and status */}
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                {person.name}
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {person.email}
+              </p>
+            </div>
+            <div
+              className={`rounded-md px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+                person.status === "Active"
+                  ? "bg-green-50 text-green-600 ring-green-600/20 dark:bg-green-900/20 dark:text-green-400"
+                  : person.status === "Inactive"
+                    ? "bg-red-50 text-red-600 ring-red-600/20 dark:bg-red-900/20 dark:text-red-400"
+                    : "bg-yellow-50 text-yellow-600 ring-yellow-600/20 dark:bg-yellow-900/20 dark:text-yellow-400"
+              }`}
+            >
+              {person.status}
+            </div>
+          </div>
+
+          {/* Main information grid */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div className="grid grid-cols-6 gap-x-8 gap-y-4">
+              {/* Role info */}
+              <div className="col-span-1 flex items-start gap-2">
+                <div className="flex-none mt-0.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Role
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {person.role}
+                  </p>
+                </div>
+              </div>
+
+              {/* Department info */}
+              <div className="col-span-1 flex items-start gap-2">
+                <div className="flex-none mt-0.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Department
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {person.department}
+                  </p>
+                </div>
+              </div>
+
+              {/* Start date info */}
+              <div className="col-span-1 flex items-start gap-2">
+                <div className="flex-none mt-0.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Start Date
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {person.startDate}
+                  </p>
+                </div>
+              </div>
+
+              {/* Age info */}
+              <div className="col-span-1 flex items-start gap-2">
+                <div className="flex-none mt-0.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.055 4.024.165C17.155 8.51 18 9.473 18 10.608v2.513m-3-4.87v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.38a48.474 48.474 0 00-6-.37c-2.032 0-4.034.125-6 .37m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.17c0 .62-.504 1.124-1.125 1.124H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265zm-3 0a.375.375 0 11-.53 0L9 2.845l.265.265zm6 0a.375.375 0 11-.53 0L15 2.845l.265.265z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Age
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {person.age}
+                  </p>
+                </div>
+              </div>
+
+              {/* Salary info */}
+              <div className="col-span-1 flex items-start gap-2">
+                <div className="flex-none mt-0.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Salary
+                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    ${person.salary.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* ID info */}
+              <div className="col-span-1 flex items-start gap-2">
+                <div className="flex-none mt-0.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">ID</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    #{person.id}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance section and actions */}
+          <div className="grid grid-cols-4 gap-x-8 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="col-span-3">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="font-medium text-gray-900 dark:text-gray-100">
+                  Performance
+                </span>
+                <span
+                  className={`
+                  ${
+                    person.performance.score >= 80
+                      ? "text-green-600 dark:text-green-400"
+                      : person.performance.score >= 60
+                        ? "text-blue-600 dark:text-blue-400"
+                        : person.performance.score >= 40
+                          ? "text-yellow-600 dark:text-yellow-400"
+                          : "text-red-600 dark:text-red-400"
+                  }
+                `}
+                >
+                  {person.performance.label}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full ${
+                    person.performance.score >= 80
+                      ? "bg-green-500"
+                      : person.performance.score >= 60
+                        ? "bg-blue-500"
+                        : person.performance.score >= 40
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                  }`}
+                  style={{
+                    width: `${person.performance.score}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+            <div className="col-span-1 flex items-center justify-end space-x-2">
+              <button className="inline-flex items-center rounded-md bg-white dark:bg-gray-800 px-2 py-1 text-xs font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Details
+              </button>
+              <button className="inline-flex items-center rounded-md bg-primary-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-primary-500">
+                Edit
+              </button>
+            </div>
           </div>
         </div>
       </div>

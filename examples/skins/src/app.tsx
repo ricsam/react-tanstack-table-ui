@@ -81,6 +81,13 @@ export function App() {
             height={1600}
             table={table as Table<any>}
             skin={activeSkin}
+            renderSubComponent={({ row }) => {
+              return (
+                <pre style={{ fontSize: "10px", textAlign: "left" }}>
+                  <code>{JSON.stringify(row.original, null, 2)}</code>
+                </pre>
+              );
+            }}
           />
         </div>
       </ThemeProvider>
