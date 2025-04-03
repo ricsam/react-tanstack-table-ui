@@ -1,4 +1,3 @@
-import React, { CSSProperties } from "react";
 import {
   defaultRangeExtractor,
   measureElement,
@@ -6,9 +5,11 @@ import {
   useVirtualizer,
   Virtualizer,
 } from "@tanstack/react-virtual";
+import React, { CSSProperties } from "react";
 import { useColContext } from "../cols/col_context";
 import { useTableContext } from "../table_context";
 import { RowContext } from "./row_context";
+import { VirtualRow } from "./table_row";
 
 export const RowProvider = ({ children }: { children: React.ReactNode }) => {
   const { table, tableContainerRef, skin, config } = useTableContext();
@@ -89,16 +90,38 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
     ),
   });
 
-  const virtualRows = rowVirtualizer.getVirtualItems();
-
   const { offsetTop, offsetBottom } = getRowVirtualizedOffsets({
-    virtualColumns: virtualRows,
+    virtualColumns: rowVirtualizer.getVirtualItems(),
     getIsPinned(vcIndex) {
       const row = rows[vcIndex];
       return !!row.getIsPinned();
     },
     totalSize: rowVirtualizer.getTotalSize(),
   });
+
+  const virtualRows = rowVirtualizer
+    .getVirtualItems()
+    .map((item): VirtualRow => {
+      const row = rows[item.index];
+      const pinned = row.getIsPinned();
+      const dndStyle: CSSProperties = {};
+
+      return {
+        row,
+        flatIndex: rowIds.indexOf(row.id),
+        isDragging: false,
+        isPinned:
+          pinned === "bottom" ? "end" : pinned === "top" ? "start" : false,
+        dndStyle,
+      };
+    });
+
+  // wip if we make the virtualRows contain start and size info
+  // const [rowCache] = React.useState(() => {
+  //   const rowCache = new VirtualRowCache();
+  //   return rowCache;
+  // });
+  // const cachedVirtualRows = rowCache.update(virtualRows, table.getState());
 
   return (
     <RowContext.Provider
@@ -109,20 +132,8 @@ export const RowProvider = ({ children }: { children: React.ReactNode }) => {
           const row = table.getRow(rowId);
           return rowVirtualizer.measurementsCache[row.index].start;
         },
-        rows: rowVirtualizer.getVirtualItems().map((item) => {
-          const row = rows[item.index];
-          const pinned = row.getIsPinned();
-          const dndStyle: CSSProperties = {};
-
-          return {
-            row,
-            flatIndex: rowIds.indexOf(row.id),
-            isDragging: false,
-            isPinned:
-              pinned === "bottom" ? "end" : pinned === "top" ? "start" : false,
-            dndStyle,
-          };
-        }),
+        rows: virtualRows,
+        // rows: cachedVirtualRows,
         setIsDragging(_dragState) {
           // to be implemented
         },

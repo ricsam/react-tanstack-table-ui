@@ -1,39 +1,6 @@
-import { VirtualHeader } from "./virtual_header/types";
+import { shallowEqual } from "../../utils";
 import { VirtualHeaderGroup } from "./header_group";
-import { TableState } from "@tanstack/react-table";
-// Helper for shallow equality on objects (for dndStyle)
-function shallowEqual(
-  objA: any,
-  objB: any,
-  excludeKeys?: string | string[],
-): boolean {
-  if (objA === objB) return true;
-  if (!objA || !objB || typeof objA !== "object" || typeof objB !== "object")
-    return false;
-
-  // Convert single key to array for consistent handling
-  const excludeKeysArr = excludeKeys
-    ? Array.isArray(excludeKeys)
-      ? excludeKeys
-      : [excludeKeys]
-    : [];
-
-  const keysA = Object.keys(objA);
-  const keysB = Object.keys(objB);
-
-  // Filter out excluded keys for length comparison
-  const filteredKeysA = keysA.filter((key) => !excludeKeysArr.includes(key));
-  const filteredKeysB = keysB.filter((key) => !excludeKeysArr.includes(key));
-
-  if (filteredKeysA.length !== filteredKeysB.length) return false;
-
-  // Only compare non-excluded keys
-  for (const key of filteredKeysA) {
-    if (objA[key] !== objB[key]) return false;
-  }
-
-  return true;
-}
+import { VirtualHeader } from "./virtual_header/types";
 
 export class VirtualHeaderGroupCache {
   // Cache for header groups keyed by group.id
@@ -41,21 +8,13 @@ export class VirtualHeaderGroupCache {
   // Cache for overall result array (if nothing changed, we can return the same reference)
   private lastResult: VirtualHeaderGroup[] | null = null;
 
-  private prevState: TableState | null = null;
-
   /**
    * Updates the cache with the new header groups.
    * If nothing changes, returns the same array reference.
    * For each header group, only headers that have actually updated are new objects.
    */
-  public update(
-    newGroups: VirtualHeaderGroup[],
-    state: TableState,
-  ): VirtualHeaderGroup[] {
+  public update(newGroups: VirtualHeaderGroup[]): VirtualHeaderGroup[] {
     let changed = false;
-
-    const prevState = this.prevState;
-    this.prevState = state;
 
     const updatedGroups = newGroups.map((newGroup) => {
       const cachedGroup = this.groupCache.get(newGroup.id);
@@ -84,20 +43,12 @@ export class VirtualHeaderGroupCache {
 
         if (
           cachedHeader &&
-          prevState &&
           shallowEqual(cachedHeader, newHeader, ["dndStyle"]) &&
-          shallowEqual(cachedHeader.dndStyle, newHeader.dndStyle) &&
-          // prevState is the same as the current state
-          (prevState.columnSizingInfo.isResizingColumn ===
-            state.columnSizingInfo.isResizingColumn ||
-            // or it is resizing, but this is not the column that is being resized (shallow equal check previously ensures that the headerId is the same)
-            (prevState.columnSizingInfo.isResizingColumn !==
-              cachedHeader.headerId &&
-              state.columnSizingInfo.isResizingColumn !== newHeader.headerId))
+          shallowEqual(cachedHeader.dndStyle, newHeader.dndStyle)
         ) {
-          // Reuse cached header
           return cachedHeader;
         }
+
         // Otherwise, mark that headers have changed and use the new header.
         headersChanged = true;
         return newHeader;
@@ -107,7 +58,9 @@ export class VirtualHeaderGroupCache {
       let sameOrder = true;
       if (cachedGroup.headers.length === newHeadersMapped.length) {
         for (let i = 0; i < cachedGroup.headers.length; i++) {
-          if (cachedGroup.headers[i] !== newHeadersMapped[i]) {
+          if (
+            cachedGroup.headers[i].headerId !== newHeadersMapped[i].headerId
+          ) {
             sameOrder = false;
             break;
           }
@@ -117,9 +70,10 @@ export class VirtualHeaderGroupCache {
       }
 
       // Final headers: if nothing changed (including order), reuse the cached headers array.
-      const finalHeaders = sameOrder ? cachedGroup.headers : newHeadersMapped;
+      let finalHeaders = cachedGroup.headers;
       if (headersChanged || !sameOrder) {
         groupChanged = true;
+        finalHeaders = newHeadersMapped;
       }
 
       if (groupChanged) {
@@ -141,7 +95,7 @@ export class VirtualHeaderGroupCache {
         changed = true;
       } else {
         for (let i = 0; i < updatedGroups.length; i++) {
-          if (updatedGroups[i] !== this.lastResult[i]) {
+          if (updatedGroups[i].id !== this.lastResult[i].id) {
             changed = true;
             break;
           }

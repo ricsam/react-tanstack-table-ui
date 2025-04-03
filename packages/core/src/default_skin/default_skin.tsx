@@ -234,42 +234,55 @@ export const defaultSkin: Skin = {
           border: "1px solid var(--table-border-color)",
           borderTop: 0,
           backgroundColor: "var(--table-row-bg)",
-        }}
-      >
-        {children}
-      </div>
-    );
-  },
-  Cell: ({ children, header }) => {
-    const { isDragging, isPinned } = header;
-    return (
-      <div
-        className="drag-along-cell td"
-        style={{
-          opacity: isDragging ? 0.8 : 1,
-          width: header.width,
           overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          zIndex: isDragging || isPinned ? 5 : 0,
-          backgroundColor: "var(--table-pinned-cell-bg)",
-          borderRight: "1px solid var(--table-border-color)",
-          boxSizing: "border-box",
-          flexShrink: 0,
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          gap: "4px",
-          paddingLeft: "8px",
-          margin: 0,
-          borderTop: 0,
-          paddingRight: "8px",
-          //   ...header.stickyStyle,
-          ...header.dndStyle,
         }}
       >
         {children}
       </div>
     );
   },
+  Cell: React.memo(
+    ({ children, header }) => {
+      const { isDragging, isPinned } = header;
+      return (
+        <div
+          className="drag-along-cell td"
+          style={{
+            opacity: isDragging ? 0.8 : 1,
+            width: header.width,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            zIndex: isDragging || isPinned ? 5 : 0,
+            backgroundColor: "var(--table-pinned-cell-bg)",
+            borderRight: "1px solid var(--table-border-color)",
+            boxSizing: "border-box",
+            flexShrink: 0,
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            gap: "4px",
+            paddingLeft: "8px",
+            margin: 0,
+            borderTop: 0,
+            paddingRight: "8px",
+            //   ...header.stickyStyle,
+            ...header.dndStyle,
+          }}
+        >
+          {children}
+        </div>
+      );
+    },
+    (prevProps, nextProps) => {
+      return false;
+      return (
+        prevProps.header.isDragging === nextProps.header.isDragging &&
+        prevProps.header.isPinned === nextProps.header.isPinned &&
+        prevProps.header.width === nextProps.header.width &&
+        prevProps.header.dndStyle === nextProps.header.dndStyle &&
+        prevProps.children === nextProps.children
+      );
+    },
+  ),
 };

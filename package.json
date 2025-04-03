@@ -30,6 +30,7 @@
     "ignore": [
       "scripts/**/*",
       "packages/core/src/utils.ts",
+      "packages/core/src/table/rows/virtual_row_cache.ts",
       "examples/**/*",
       "website/**/*",
       ".github/**/*"

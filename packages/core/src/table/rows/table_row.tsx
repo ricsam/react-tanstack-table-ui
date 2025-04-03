@@ -15,7 +15,7 @@ export type VirtualRow = {
   flatIndex: number;
 };
 
-export const TableRow = React.memo(function TableRow({
+export const TableRow = function TableRow({
   dndStyle,
   row,
   isDragging,
@@ -94,7 +94,7 @@ export const TableRow = React.memo(function TableRow({
       </RowRefContext.Provider>
     </>
   );
-});
+};
 
 const renderSubComponent = ({ row }: { row: Row<any> }) => {
   return (

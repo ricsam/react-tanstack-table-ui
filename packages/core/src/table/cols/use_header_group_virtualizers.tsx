@@ -14,7 +14,7 @@ import { useTableContext } from "../table_context";
 import { CombinedHeaderGroup } from "../types";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { VirtualHeaderGroup } from "./header_group";
-import { VirtualHeader } from "./virtual_header/types";
+import { HeaderIndex, VirtualHeader } from "./virtual_header/types";
 import { VirtualHeaderGroupCache } from "./virtual_header_group_cache";
 
 const useIsomorphicLayoutEffect =
@@ -26,7 +26,11 @@ const getVirtualHeaderGroup = (
   totalSize: number,
   type: "header" | "footer",
 ): VirtualHeaderGroup => {
-  const getVirtualHeader = (header: Header<any, unknown>): VirtualHeader => {
+  const getVirtualHeader = (
+    header: Header<any, unknown>,
+    headerIndex: number,
+    start: number,
+  ): VirtualHeader => {
     const isPinned = getIsPinned(header);
 
     const width = header.getSize();
@@ -37,16 +41,17 @@ const getVirtualHeaderGroup = (
       isPinned: mapColumnPinningPositionToPinPos(isPinned),
       dndStyle: {},
       width,
-      headerIndex: header.index,
+      headerIndex,
       type,
-      start: header.getStart(),
-      end: header.getStart() + width,
+      start,
+      end: start + width,
+      columnId: header.column.id,
     };
   };
 
   const headers = virtualColumns.map((vc) => {
     const header = group.headers[vc.index];
-    return getVirtualHeader(header);
+    return getVirtualHeader(header, vc.index, vc.start);
   });
 
   const { offsetLeft, offsetRight } = getColVirtualizedOffsets({
@@ -63,14 +68,6 @@ const getVirtualHeaderGroup = (
   };
 };
 
-type HeaderIndex = {
-  headerIndex: number;
-  groupIndex: number;
-  columnId: string;
-  headerId: string;
-  header: Header<any, unknown>;
-};
-
 export function useHeaderGroupVirtualizers(props: {
   headerGroups: CombinedHeaderGroup[];
   type: "footer" | "header";
@@ -85,6 +82,9 @@ export function useHeaderGroupVirtualizers(props: {
       let hasVisibleHeader = false;
       const groupHeaderIndices: Record<string, HeaderIndex> = {};
       group.headers.forEach((header, j) => {
+        if (groupHeaderIndices[header.column.id]) {
+          console.log("Duplicate column id", header.column.id);
+        }
         groupHeaderIndices[header.column.id] = {
           headerIndex: j,
           groupIndex: filteredHeaderGroups.length,
@@ -259,10 +259,7 @@ export function useHeaderGroupVirtualizers(props: {
     return getVirtualHeaderGroup(group, virtualColumns, totalSize, props.type);
   });
 
-  const result = virtualHeaderGroupCache.update(
-    virtualHeaderGroups,
-    tableState,
-  );
+  const result = virtualHeaderGroupCache.update(virtualHeaderGroups);
 
   return result;
 }

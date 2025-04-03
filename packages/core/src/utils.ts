@@ -119,3 +119,37 @@ export function findDifferentKeys(
 
   return differentKeys;
 }
+
+// Helper for shallow equality on objects (for dndStyle)
+export function shallowEqual(
+  objA: any,
+  objB: any,
+  excludeKeys?: string | string[],
+): boolean {
+  if (objA === objB) return true;
+  if (!objA || !objB || typeof objA !== "object" || typeof objB !== "object")
+    return false;
+
+  // Convert single key to array for consistent handling
+  const excludeKeysArr = excludeKeys
+    ? Array.isArray(excludeKeys)
+      ? excludeKeys
+      : [excludeKeys]
+    : [];
+
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
+
+  // Filter out excluded keys for length comparison
+  const filteredKeysA = keysA.filter((key) => !excludeKeysArr.includes(key));
+  const filteredKeysB = keysB.filter((key) => !excludeKeysArr.includes(key));
+
+  if (filteredKeysA.length !== filteredKeysB.length) return false;
+
+  // Only compare non-excluded keys
+  for (const key of filteredKeysA) {
+    if (objA[key] !== objB[key]) return false;
+  }
+
+  return true;
+}

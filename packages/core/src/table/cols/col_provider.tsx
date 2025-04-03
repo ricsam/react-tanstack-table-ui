@@ -28,6 +28,13 @@ const combinedHeaderGroups = (
 export const ColProvider = ({ children }: { children: React.ReactNode }) => {
   const { table } = useTableContext();
   const state = table.getState();
+
+  const dependencies: any[] = [
+    state.columnPinning,
+    state.columnOrder,
+    state.columnVisibility,
+  ];
+
   const headerGroups: VirtualHeaderGroup[] = useHeaderGroupVirtualizers({
     headerGroups: React.useMemo(() => {
       return combinedHeaderGroups(
@@ -36,19 +43,20 @@ export const ColProvider = ({ children }: { children: React.ReactNode }) => {
         table.getRightHeaderGroups(),
       );
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [table, state]),
+    }, dependencies),
     type: "header",
   });
   const footerGroups: VirtualHeaderGroup[] = useHeaderGroupVirtualizers({
     headerGroups: React.useMemo(
-      () =>
-        combinedHeaderGroups(
+      () => {
+        return combinedHeaderGroups(
           table.getLeftFooterGroups(),
           table.getCenterFooterGroups(),
           table.getRightFooterGroups(),
-        ),
+        );
+      },
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [table, state],
+      dependencies,
     ),
     type: "footer",
   });
@@ -73,7 +81,7 @@ export const ColProvider = ({ children }: { children: React.ReactNode }) => {
   if (!mainHeaderGroup) {
     throw new Error("Implement me using the body virtualizer");
   }
-
+  // console.log("headerGroups", headerGroups, mainHeaderGroup);
   return (
     <ColContext.Provider
       value={React.useMemo(() => {

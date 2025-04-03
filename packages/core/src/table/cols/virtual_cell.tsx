@@ -1,10 +1,9 @@
 import { Cell, flexRender } from "@tanstack/react-table";
-import React from "react";
 import { useTableContext } from "../table_context";
 import { VirtualHeaderContext } from "./virtual_header/context";
 import { VirtualHeader } from "./virtual_header/types";
 
-export const VirtualCell = React.memo(function VirtualizedCell({
+export const VirtualCell = function VirtualizedCell({
   cell,
   header,
 }: {
@@ -21,4 +20,4 @@ export const VirtualCell = React.memo(function VirtualizedCell({
       </skin.Cell>
     </VirtualHeaderContext.Provider>
   );
-});
+};
