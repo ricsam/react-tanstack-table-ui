@@ -75,23 +75,23 @@ export function useHeaderGroupVirtualizers(props: {
   const { tableContainerRef, table, config } = useTableContext();
   const tableState = table.getState();
   const { filteredHeaderGroups, headerIndices } = React.useMemo(() => {
-    const headerIndices: Record<string, undefined | HeaderIndex> = {};
+    const headerIndices: Record<string, undefined | HeaderIndex[]> = {};
     const filteredHeaderGroups: CombinedHeaderGroup[] = [];
 
     props.headerGroups.forEach((group) => {
       let hasVisibleHeader = false;
-      const groupHeaderIndices: Record<string, HeaderIndex> = {};
+      const groupHeaderIndices: Record<string, HeaderIndex[]> = {};
       group.headers.forEach((header, j) => {
-        if (groupHeaderIndices[header.column.id]) {
-          console.log("Duplicate column id", header.column.id);
+        if (!groupHeaderIndices[header.column.id]) {
+          groupHeaderIndices[header.column.id] = [];
         }
-        groupHeaderIndices[header.column.id] = {
+        groupHeaderIndices[header.column.id].push({
           headerIndex: j,
           groupIndex: filteredHeaderGroups.length,
           columnId: header.column.id,
           headerId: header.id,
           header,
-        };
+        });
         if (header.column.columnDef[props.type]) {
           hasVisibleHeader = true;
         }
@@ -207,12 +207,12 @@ export function useHeaderGroupVirtualizers(props: {
       if (!indices) {
         return;
       }
-      const { headerIndex, groupIndex, header } = indices;
+      indices.forEach(({ headerIndex, groupIndex, header }) => {
+        const virtualizer = headerColVirtualizers.current[groupIndex];
+        const headerSize = header.getSize();
 
-      const virtualizer = headerColVirtualizers.current[groupIndex];
-      const headerSize = header.getSize();
-
-      virtualizer.resizeItem(headerIndex, headerSize);
+        virtualizer.resizeItem(headerIndex, headerSize);
+      });
     }
   }, [
     columnResizingInfo.isResizingColumn,

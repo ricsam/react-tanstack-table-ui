@@ -29,11 +29,7 @@ export const ColProvider = ({ children }: { children: React.ReactNode }) => {
   const { table } = useTableContext();
   const state = table.getState();
 
-  const dependencies: any[] = [
-    state.columnPinning,
-    state.columnOrder,
-    state.columnVisibility,
-  ];
+  const dependencies: any[] = [table, state];
 
   const headerGroups: VirtualHeaderGroup[] = useHeaderGroupVirtualizers({
     headerGroups: React.useMemo(() => {
