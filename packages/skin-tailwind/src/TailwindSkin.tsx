@@ -4,7 +4,7 @@ import {
   useTableContext,
   useTableCssVars,
 } from "@rttui/core";
-import React from "react";
+import React, { CSSProperties } from "react";
 import { TableHeaderCell } from "./TableHeaderCell";
 import { clsx } from "./clsx";
 
@@ -12,22 +12,35 @@ export const TailwindSkin: Skin = {
   rowHeight: 36,
   headerRowHeight: 56,
   footerRowHeight: 56,
-  OuterContainer: ({ children }) => {
-    const { width, height, tableContainerRef } = useTableContext();
+  OverlayContainer: ({ children }) => {
+    const { width, height } = useTableContext();
     const cssVars = useTableCssVars();
-
     return (
       <div
-        ref={tableContainerRef}
-        className="outer-container overflow-auto relative rounded-md shadow-md"
+        className="rttui-overlay-container relative overflow-hidden rounded-md shadow-md"
         style={{
           width: width + "px",
           height: height + "px",
+          ...cssVars,
+        }}
+      >
+        {children}
+      </div>
+    );
+  },
+  OuterContainer: ({ children }) => {
+    const { tableContainerRef } = useTableContext();
+    return (
+      <div
+        ref={tableContainerRef}
+        className="outer-container overflow-auto relative"
+        style={{
+          width: "var(--table-container-width)",
+          height: "var(--table-container-height)",
           contain: "paint",
           willChange: "transform",
           color: "var(--table-text-color)",
           backgroundColor: "var(--table-bg-color)",
-          ...cssVars,
         }}
       >
         {children}
@@ -143,7 +156,6 @@ export const TailwindSkin: Skin = {
       style.left = 0;
     } else if (position === "right") {
       style.right = 0;
-      style.borderLeft = "1px solid var(--table-border-color)";
     }
 
     return (
@@ -196,12 +208,12 @@ export const TailwindSkin: Skin = {
           ...vars,
         }}
       >
-        <div
+        {/* <div
           className={clsx(
             "absolute inset-y-0 left-0 w-0.5",
             selected ? "bg-indigo-600 dark:bg-indigo-500" : "",
           )}
-        />
+        /> */}
         {children}
       </div>
     );
@@ -219,19 +231,20 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  Cell: ({ children, header }) => {
+  Cell: React.forwardRef(({ children, header, isMeasuring }, ref) => {
     const { isPinned } = header;
     const { row } = useRow();
     const selected = row.getIsSelected();
 
     return (
       <div
+        ref={ref}
         className={`td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis border-r border-gray-200 dark:border-gray-700 ${
           selected ? "text-gray-900 dark:text-white" : ""
         }`}
         style={{
           height: "var(--row-height)",
-          width: header.width,
+          width: isMeasuring ? "auto" : header.width,
           zIndex: isPinned ? 5 : 0,
           boxSizing: "border-box",
           flexShrink: 0,
@@ -240,6 +253,35 @@ export const TailwindSkin: Skin = {
       >
         {children}
       </div>
+    );
+  }),
+  PinnedColsOverlay: ({ position }) => {
+    const { table } = useTableContext();
+    if (!table.getIsSomeColumnsPinned(position)) {
+      return null;
+    }
+    const width =
+      position === "left"
+        ? table.getLeftTotalSize()
+        : table.getRightTotalSize();
+
+    const style: CSSProperties = { width, [position]: 0 };
+
+    if (position === "left") {
+      style.boxShadow =
+        "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+      style.borderRight = "1px solid var(--table-border-color)";
+    } else if (position === "right") {
+      style.boxShadow =
+        "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+    }
+    return (
+      <div
+        className={clsx(
+          `pinned-${position}-overlay sticky top-0 bottom-0 z-20 pointer-events-none`,
+        )}
+        style={style}
+      />
     );
   },
 };

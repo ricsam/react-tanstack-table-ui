@@ -1,16 +1,20 @@
-import type { VirtualHeader } from "@rttui/core";
+import { useMeasureHeader, type VirtualHeader } from "@rttui/core";
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
 
-
 export function TableHeaderCell({
-  headerId, isPinned, width, header, type,
+  headerId,
+  isPinned,
+  width,
+  header,
+  type,
 }: VirtualHeader & {
   type: "header" | "footer";
 }) {
   const ref = React.useRef<HTMLDivElement>(null);
   const canPin = header?.column.getCanPin();
   const canResize = header?.column.getCanResize();
+  const measureHeader = useMeasureHeader();
 
   return (
     <div
@@ -118,11 +122,16 @@ export function TableHeaderCell({
       {canResize && header && (
         <div
           {...{
-            onDoubleClick: () => header.column.resetSize(),
+            // onDoubleClick: () => header.column.resetSize(),
+            onDoubleClick: () => {
+              measureHeader(header);
+            },
+
             onMouseDown: header.getResizeHandler(),
             onTouchStart: header.getResizeHandler(),
             className: `absolute top-0 right-0 h-full w-1 cursor-col-resize transition-opacity opacity-0 hover:opacity-50 hover:w-1 bg-indigo-500 dark:bg-indigo-400 ${header.column.getIsResizing() ? "opacity-50 w-1" : ""}`,
-          }} />
+          }}
+        />
       )}
     </div>
   );

@@ -13,16 +13,19 @@ export type Skin = {
   OuterContainer: React.FC<{ children: React.ReactNode }>;
   TableScroller: React.FC;
 
-
   HeaderCell: React.FC<VirtualHeader>;
-  HeaderRow: React.FC<{ children: React.ReactNode, type: "header" | "footer" }>;
+  HeaderRow: React.FC<{ children: React.ReactNode; type: "header" | "footer" }>;
 
   TableHeader: React.FC<{ children: React.ReactNode }>;
   TableFooter: React.FC<{ children: React.ReactNode }>;
 
   TableBody: React.FC<{ children: React.ReactNode }>;
 
-  PinnedRows: React.FC<{ children: React.ReactNode, position: "top" | "bottom", pinned: VirtualRow[] }>;
+  PinnedRows: React.FC<{
+    children: React.ReactNode;
+    position: "top" | "bottom";
+    pinned: VirtualRow[];
+  }>;
 
   TableRowWrapper: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> & {
@@ -45,18 +48,29 @@ export type Skin = {
     children: React.ReactNode;
     position: "left" | "right";
     pinned: VirtualHeader[];
-    type: 'header' | 'footer' | 'body'
+    type: "header" | "footer" | "body";
   }>;
 
-  Cell: React.FC<{ children: React.ReactNode; header: VirtualHeader }>;
+  Cell: React.ForwardRefExoticComponent<
+    React.RefAttributes<HTMLDivElement> & {
+      children: React.ReactNode;
+      header: VirtualHeader;
+      isMeasuring: boolean;
+    }
+  >;
+
+  PinnedColsOverlay?: React.FC<{ position: "left" | "right" }>;
+  OverlayContainer: React.FC<{ children: React.ReactNode }>;
 };
 
 export function useTableCssVars(): Record<string, string> {
-  const { table, skin } = useTableContext();
+  const { table, skin, width, height } = useTableContext();
   const { rowVirtualizer } = useVirtualRowContext();
   const { footerGroups, headerGroups } = useColContext();
 
   return {
+    "--table-container-width": width + "px",
+    "--table-container-height": height + "px",
     "--table-width": table.getTotalSize() + "px",
     "--table-height": rowVirtualizer.getTotalSize() + "px",
     "--row-height": skin.rowHeight + "px",

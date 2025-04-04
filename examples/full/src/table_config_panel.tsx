@@ -31,6 +31,7 @@ export const TableConfigPanel = ({
     { key: "draggable", name: "Draggable Rows" },
     { key: "filtering", name: "Column Filtering" },
     { key: "sorting", name: "Column Sorting" },
+    { key: "pinning", name: "Column Pinning" },
   ] as const;
 
   return (
@@ -96,13 +97,14 @@ export const TableConfigPanel = ({
             onChange={(e) =>
               onChange({
                 ...config,
-                skin: e.target.value as "default" | "mui",
+                skin: e.target.value as "default" | "mui" | "anocca",
               })
             }
             style={{ width: "100%", padding: "5px" }}
           >
             <option value="default">Default Skin</option>
             <option value="mui">Material UI Skin</option>
+            <option value="anocca">Anocca Skin</option>
           </select>
         </div>
 

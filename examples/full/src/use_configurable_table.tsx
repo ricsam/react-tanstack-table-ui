@@ -2,6 +2,7 @@ import {
   ColumnDef,
   ColumnFiltersState,
   ColumnOrderState,
+  HeaderContext,
   SortingState,
   createColumnHelper,
   getCoreRowModel,
@@ -14,9 +15,9 @@ import React from "react";
 import { Filter } from "./filter_components";
 import { IndeterminateCheckbox } from "./indeterminate_checkbox";
 import { RowDragHandleCell } from "./row_drag_handle_cell";
+import { SortIndicator } from "./sort_indicator";
 import { TableConfig } from "./table_config";
 import { useBigTable } from "./use_big_table";
-import { SortIndicator } from "./sort_indicator";
 
 // Import types from SmallData from use_small_table
 type SmallData = {
@@ -139,42 +140,92 @@ export const useConfigurableTable = (config: TableConfig) => {
       title: string,
       filterVariant: "text" | "select" | "range" = "text",
     ) => {
-      return ({ column }: { column: any }) => (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            padding: "8px 0",
-            gap: 4,
-            alignItems: "center",
-          }}
-        >
+      return ({ column, header }: HeaderContext<SmallData, any>) => {
+        const canDrag = config.features.draggable;
+        const canPin = config.features.pinning;
+        const isPinned = column.getIsPinned();
+
+        return (
           <div
             style={{
               display: "flex",
+              flexDirection: "row",
+              padding: "8px 0",
+              gap: 4,
               alignItems: "center",
-              cursor: config.features.sorting ? "pointer" : "default",
-              padding: "4px 0",
-              fontWeight: "bold",
             }}
-            onClick={
-              config.features.sorting
-                ? column.getToggleSortingHandler()
-                : undefined
-            }
           >
-            {title}
-            {config.features.sorting && (
-              <SortIndicator sorted={column.getIsSorted()} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                cursor: config.features.sorting ? "pointer" : "default",
+                padding: "4px 0",
+                fontWeight: "bold",
+              }}
+              onClick={
+                config.features.sorting
+                  ? column.getToggleSortingHandler()
+                  : undefined
+              }
+            >
+              {title}
+              {config.features.sorting && (
+                <SortIndicator sorted={column.getIsSorted()} />
+              )}
+            </div>
+            {config.features.filtering && column.getCanFilter() && (
+              <div style={{ marginTop: "6px", width: "100%" }}>
+                <Filter column={column} variant={filterVariant} />
+              </div>
+            )}
+            {canDrag && canPin && (
+              <div className="flex gap-1 justify-center">
+                {isPinned !== "left" ? (
+                  <button
+                    className="border rounded px-2"
+                    onClick={() => {
+                      if (!header) {
+                        return;
+                      }
+                      header.column.pin("left");
+                    }}
+                  >
+                    {"<="}
+                  </button>
+                ) : null}
+                {isPinned ? (
+                  <button
+                    className="border rounded px-2"
+                    onClick={() => {
+                      if (!header) {
+                        return;
+                      }
+                      header.column.pin(false);
+                      // table.resetColumnSizing(true);
+                    }}
+                  >
+                    X
+                  </button>
+                ) : null}
+                {isPinned !== "right" ? (
+                  <button
+                    className="border rounded px-2"
+                    onClick={() => {
+                      if (!header) {
+                        return;
+                      }
+                      header.column.pin("right");
+                    }}
+                  >
+                    {"=>"}
+                  </button>
+                ) : null}
+              </div>
             )}
           </div>
-          {config.features.filtering && column.getCanFilter() && (
-            <div style={{ marginTop: "6px", width: "100%" }}>
-              <Filter column={column} variant={filterVariant} />
-            </div>
-          )}
-        </div>
-      );
+        );
+      };
     };
 
     const columnHelper = createColumnHelper<SmallData>();

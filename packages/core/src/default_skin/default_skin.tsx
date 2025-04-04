@@ -29,9 +29,26 @@ export const defaultSkin: Skin = {
   rowHeight: 32,
   headerRowHeight: 32,
   footerRowHeight: 32,
+  OverlayContainer: ({ children }) => {
+    const { width, height } = useTableContext();
+    const cssVars = useTableCssVars();
+    return (
+      <div
+        className="rttui-overlay-container"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          width: width + "px",
+          height: height + "px",
+          ...cssVars,
+        }}
+      >
+        {children}
+      </div>
+    );
+  },
   OuterContainer: ({ children }) => {
     const { width, height, tableContainerRef } = useTableContext();
-    const cssVars = useTableCssVars();
 
     return (
       <div
@@ -46,7 +63,6 @@ export const defaultSkin: Skin = {
           willChange: "transform",
           color: "var(--table-text-color)",
           backgroundColor: "var(--table-bg-color)",
-          ...cssVars,
         }}
       >
         {children}
@@ -198,13 +214,11 @@ export const defaultSkin: Skin = {
     },
   ),
   TableRow: ({ children, isDragging, isPinned, flatIndex }) => {
-    const { table } = useTableContext();
-
     const style: CSSProperties = {
       position: "relative",
       opacity: isDragging ? 0.8 : 1,
       zIndex: isDragging ? 1 : 0,
-      width: table.getTotalSize(),
+      width: "var(--table-width)",
       display: "flex",
       height: "var(--row-height)",
       margin: 0,

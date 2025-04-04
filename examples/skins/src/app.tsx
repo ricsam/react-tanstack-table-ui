@@ -52,7 +52,7 @@ export function App() {
     <DefaultThemeProvider theme={theme}>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <div style={{ textAlign: "center" }}>
+        <div style={{ textAlign: "center", paddingLeft: "80px", paddingTop: "20px" }}>
           <div style={{ marginBottom: "20px", ...twStyle }}>
             <select
               value={theme}

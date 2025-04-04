@@ -6,11 +6,12 @@ export interface TableConfig {
     selectable: boolean;
     columnGroups: boolean;
     draggable: boolean;
+    pinning: boolean;
     filtering: boolean;
     sorting: boolean;
   };
   dataSize: "small" | "big";
-  skin: "default" | "mui";
+  skin: "default" | "mui" | "anocca";
 }
 
 export const defaultTableConfig: TableConfig = {
@@ -21,6 +22,7 @@ export const defaultTableConfig: TableConfig = {
     selectable: false,
     columnGroups: false,
     draggable: true,
+    pinning: true,
     filtering: false,
     sorting: false,
   },
@@ -42,6 +44,8 @@ export function getFeatureDescription(feature: keyof TableConfig["features"]): s
       return "Filter table data by column values";
     case "sorting":
       return "Sort table by clicking column headers";
+    case "pinning":
+      return "Pin columns to the left or right";
     default:
       return "";
   }
@@ -53,7 +57,7 @@ export function getConfigSummary(config: TableConfig): string {
     .map(([key]) => key)
     .join(", ");
 
-  const skinInfo = `${config.skin === "default" ? "Default" : "Material UI"} skin`;
+  const skinInfo = `${config.skin === "default" ? "Default" : config.skin === "mui" ? "Material UI" : "Anocca"} skin`;
   const dataInfo = config.dataSize === "big" ? "Large dataset" : `${config.rowCount} rows, ${config.columnCount} columns`;
   
   return `${dataInfo} with ${skinInfo}${features ? ` and ${features}` : ""}`;

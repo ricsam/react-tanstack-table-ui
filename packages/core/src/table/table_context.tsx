@@ -1,6 +1,7 @@
 import { Row, Table } from "@tanstack/react-table";
 import React from "react";
 import { Skin } from "../skin";
+import { MeasureData } from "./types";
 
 type TableConfig = {
   columnOverscan: number;
@@ -16,6 +17,8 @@ type TableContextType = {
   skin: Skin;
   config: TableConfig;
   renderSubComponent?: (args: { row: Row<any> }) => React.ReactNode;
+  onMeasureCallback: undefined | ((measureData: MeasureData) => void);
+  measureCells: (cb: (measureData: MeasureData) => void) => void;
 };
 
 export const TableContext = React.createContext<TableContextType | undefined>(

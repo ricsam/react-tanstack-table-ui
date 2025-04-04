@@ -1,5 +1,13 @@
 # @rttui/skin-anocca
 
+## 1.0.11
+
+### Patch Changes
+
+- Better styling and auto measure columns
+- Updated dependencies
+  - @rttui/core@1.0.11
+
 ## 1.0.10
 
 ### Patch Changes

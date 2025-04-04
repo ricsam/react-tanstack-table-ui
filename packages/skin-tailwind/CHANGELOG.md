@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.5
+
+### Patch Changes
+
+- Better styling and auto measure columns
+- Updated dependencies
+  - @rttui/core@1.0.11
+
 ## 0.0.4
 
 ### Patch Changes

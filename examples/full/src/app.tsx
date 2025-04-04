@@ -1,5 +1,6 @@
 import { defaultSkin, lightModeVars, ReactTanstackTableUi } from "@rttui/core";
 import { MuiSkin } from "@rttui/skin-mui";
+import { AnoccaSkin } from "@rttui/skin-anocca";
 import React from "react";
 import { defaultTableConfig, TableConfig } from "./table_config";
 import { TableConfigPanel } from "./table_config_panel";
@@ -15,6 +16,8 @@ export function App() {
     switch (tableConfig.skin) {
       case "mui":
         return MuiSkin;
+      case "anocca":
+        return AnoccaSkin;
       default:
         return defaultSkin;
     }

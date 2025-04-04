@@ -1,6 +1,5 @@
 import { ChevronLeft, ChevronRight, Close } from "@mui/icons-material";
 import {
-  alpha,
   Box,
   Paper,
   SxProps,
@@ -19,9 +18,26 @@ const MuiSkin: Skin = {
   rowHeight: 52,
   headerRowHeight: 56,
   footerRowHeight: 52,
-  OuterContainer: ({ children }) => {
-    const { width, height, tableContainerRef } = useTableContext();
+  OverlayContainer: ({ children }) => {
+    const { width, height } = useTableContext();
     const cssVars = useTableCssVars();
+    return (
+      <div
+        className="rttui-overlay-container"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          width: width + "px",
+          height: height + "px",
+          ...cssVars,
+        }}
+      >
+        {children}
+      </div>
+    );
+  },
+  OuterContainer: ({ children }) => {
+    const { tableContainerRef } = useTableContext();
 
     return (
       <Paper
@@ -30,29 +46,12 @@ const MuiSkin: Skin = {
         elevation={2}
         sx={{
           overflow: "auto",
-          width: width + "px",
-          height: height + "px",
+          width: "var(--table-container-width)",
+          height: "var(--table-container-height)",
           position: "relative",
           contain: "paint",
           willChange: "transform",
           borderRadius: 1,
-          ...cssVars,
-          "&::-webkit-scrollbar": {
-            width: "8px",
-            height: "8px",
-          },
-          "&::-webkit-scrollbar-track": {
-            backgroundColor: "transparent",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            backgroundColor: (theme) =>
-              alpha(theme.palette.text.secondary, 0.3),
-            borderRadius: "4px",
-            "&:hover": {
-              backgroundColor: (theme) =>
-                alpha(theme.palette.text.secondary, 0.5),
-            },
-          },
         }}
       >
         {children}
@@ -254,15 +253,16 @@ const MuiSkin: Skin = {
       </TableRow>
     );
   },
-  Cell: ({ children, header }) => {
+  Cell: React.forwardRef(({ children, header, isMeasuring }, ref) => {
     const { isPinned } = header;
     return (
       <TableCell
         className="td"
         component="div"
+        ref={ref}
         sx={{
           height: "var(--row-height)",
-          width: header.width,
+          width: isMeasuring ? "auto" : header.width,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -285,7 +285,7 @@ const MuiSkin: Skin = {
         {children}
       </TableCell>
     );
-  },
+  }),
 };
 
 function TableHeaderCell({

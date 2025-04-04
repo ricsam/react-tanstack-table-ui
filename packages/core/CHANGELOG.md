@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.11
+
+### Patch Changes
+
+- Better styling and auto measure columns
+
 ## 1.0.10
 
 ### Patch Changes

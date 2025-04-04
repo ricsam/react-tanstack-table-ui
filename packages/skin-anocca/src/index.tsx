@@ -16,16 +16,33 @@ import {
   useTableCssVars,
   VirtualHeader,
 } from "@rttui/core";
-import React from "react";
+import React, { CSSProperties } from "react";
 import { flexRender } from "@tanstack/react-table";
 
 const AnoccaSkin: Skin = {
   rowHeight: 32,
   headerRowHeight: 32,
   footerRowHeight: 32,
-  OuterContainer: ({ children }) => {
-    const { width, height, tableContainerRef } = useTableContext();
+  OverlayContainer: ({ children }) => {
+    const { width, height } = useTableContext();
     const cssVars = useTableCssVars();
+    return (
+      <div
+        className="rttui-overlay-container"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          width: width + "px",
+          height: height + "px",
+          ...cssVars,
+        }}
+      >
+        {children}
+      </div>
+    );
+  },
+  OuterContainer: ({ children }) => {
+    const { tableContainerRef } = useTableContext();
 
     return (
       <Paper
@@ -34,13 +51,12 @@ const AnoccaSkin: Skin = {
         elevation={2}
         sx={{
           overflow: "auto",
-          width: width + "px",
-          height: height + "px",
+          width: "var(--table-container-width)",
+          height: "var(--table-container-height)",
           position: "relative",
           contain: "paint",
           willChange: "transform",
           borderRadius: 1,
-          ...cssVars,
         }}
       >
         {children}
@@ -157,13 +173,8 @@ const AnoccaSkin: Skin = {
 
     if (position === "left") {
       style.left = 0;
-      style.boxShadow =
-        "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
     } else if (position === "right") {
       style.right = 0;
-      style.borderLeft = (theme) => `1px solid ${theme.palette.divider}`;
-      style.boxShadow =
-        "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
     }
 
     return (
@@ -246,15 +257,16 @@ const AnoccaSkin: Skin = {
       </TableRow>
     );
   },
-  Cell: ({ children, header }) => {
+  Cell: React.forwardRef(({ children, header, isMeasuring }, ref) => {
     const { isPinned } = header;
     return (
       <TableCell
         className="td"
         component="div"
+        ref={ref}
         sx={{
           height: "var(--row-height)",
-          width: header.width,
+          width: isMeasuring ? "auto" : header.width,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -285,6 +297,36 @@ const AnoccaSkin: Skin = {
         {children}
       </TableCell>
     );
+  }),
+  PinnedColsOverlay: ({ position }) => {
+    const { table } = useTableContext();
+    if (!table.getIsSomeColumnsPinned(position)) {
+      return null;
+    }
+    const width =
+      position === "left"
+        ? table.getLeftTotalSize()
+        : table.getRightTotalSize();
+
+    const style: CSSProperties = {
+      width,
+      [position]: 0,
+      position: "sticky",
+      top: 0,
+      bottom: 0,
+      zIndex: 20,
+      pointerEvents: "none",
+    };
+
+    if (position === "left") {
+      style.boxShadow =
+        "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+      style.borderRight = "1px solid var(--table-border-color)";
+    } else if (position === "right") {
+      style.boxShadow =
+        "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+    }
+    return <div className={`pinned-${position}-overlay`} style={style} />;
   },
 };
 

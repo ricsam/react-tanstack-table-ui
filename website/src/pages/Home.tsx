@@ -1,7 +1,7 @@
 import logoFullDark from "@/assets/logos/logo-full-dark.svg";
 import logoFullLight from "@/assets/logos/logo-full-light.svg";
 import { useTheme } from "@/contexts/use_theme";
-import { ReactTanstackTableUi } from "@rttui/core";
+import { ReactTanstackTableUi, useTableContext } from "@rttui/core";
 import {
   CellBadge,
   CellCurrency,
@@ -63,17 +63,13 @@ export function HomePage() {
 
   // State for controlling row and column counts
   const [rowCount, setRowCount] = useState(300);
-  const [columnCount, setColumnCount] = useState(20);
+  const [columnCount, setColumnCount] = useState(40);
 
   // Measure the table container size
   const [tableContainerRef, tableContainerBounds] = useMeasure({
     debounce: 50,
     scroll: false,
   });
-
-  // Calculate table dimensions - using 16:9 aspect ratio (width * 9/16)
-  const tableWidth = tableContainerBounds.width || 800;
-  const tableHeight = tableWidth * (9 / 16);
 
   const deferredRowCount = useDeferredValue(rowCount);
   // Generate rows based on rowCount
@@ -381,6 +377,9 @@ export function HomePage() {
     enableColumnPinning: true,
     enableRowSelection: true,
     enableRowPinning: true,
+    defaultColumn: {
+      size: 100,
+    },
   });
 
   // Apply theme-specific styles
@@ -601,30 +600,35 @@ export function HomePage() {
             style={{ ...themeVars }}
           >
             <div ref={tableContainerRef} className="absolute inset-0">
-              <ReactTanstackTableUi
-                table={table}
-                width={tableWidth}
-                height={tableHeight}
-                skin={TailwindSkin}
-                underlay={
-                  <div
-                    style={{
-                      position: "absolute",
-                      pointerEvents: "none",
-                      left: 0,
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      zIndex: -1,
-                      visibility: "hidden",
-                    }}
-                    ref={innerContainerSizeRef}
-                  ></div>
-                }
-                renderSubComponent={({ row }) => {
-                  return <Details row={row} width={innerContainerSize.width} />;
-                }}
-              />
+              {tableContainerBounds.width && tableContainerBounds.height ? (
+                <ReactTanstackTableUi
+                  table={table}
+                  width={tableContainerBounds.width}
+                  height={tableContainerBounds.height}
+                  skin={TailwindSkin}
+                  autoSizeColumns
+                  underlay={
+                    <div
+                      style={{
+                        position: "absolute",
+                        pointerEvents: "none",
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        zIndex: -1,
+                        visibility: "hidden",
+                      }}
+                      ref={innerContainerSizeRef}
+                    ></div>
+                  }
+                  renderSubComponent={({ row }) => {
+                    return (
+                      <Details row={row} width={innerContainerSize.width} />
+                    );
+                  }}
+                />
+              ) : null}
             </div>
           </div>
 
@@ -644,11 +648,14 @@ export function HomePage() {
 
 function Details({ row, width }: { row: Row<Person>; width: number }) {
   const person = row.original;
-
+  const { table } = useTableContext();
   return (
     <div
-      className="px-6 pb-6 bg-white dark:bg-gray-800 ring-1 ring-gray-900/5 w-full border-t border-gray-200 dark:border-gray-700 sticky left-0"
-      style={{ width }}
+      className="px-6 pb-6 bg-white dark:bg-gray-800 ring-1 ring-gray-900/5 w-full border-t border-gray-200 dark:border-gray-700 sticky"
+      style={{
+        width: width - table.getLeftTotalSize() - table.getRightTotalSize(),
+        left: table.getLeftTotalSize(),
+      }}
     >
       <div className="flex items-start gap-6">
         {/* Content container */}
