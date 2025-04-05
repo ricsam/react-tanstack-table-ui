@@ -39,6 +39,9 @@
     ],
     "ignoreDependencies": [
       "prettier"
+    ],
+    "ignoreBinaries": [
+      "vite"
     ]
   }
 }

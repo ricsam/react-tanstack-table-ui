@@ -9,6 +9,22 @@ import { ExamplesPage } from "@/pages/examples/Index";
 import { StaticExample } from "@/pages/examples/StaticExample";
 import { HomePage } from "@/pages/Home";
 import { createRootRoute, createRoute } from "@tanstack/react-router";
+import { examples } from "@/data/examples";
+
+// Skins pages
+import { DefaultSkinPage } from "@/pages/skins/DefaultSkin";
+import { AnoccaSkinPage } from "@/pages/skins/AnoccaSkin";
+import { MuiSkinPage } from "@/pages/skins/MuiSkin";
+import { TailwindSkinPage } from "@/pages/skins/TailwindSkin";
+import { TailwindComponentsPage } from "@/pages/skins/TailwindComponents";
+
+// Core concepts pages
+import { ColumnAutoSizingPage } from "@/pages/core-concepts/ColumnAutoSizing";
+import { TableAutoSizingPage } from "@/pages/core-concepts/TableAutoSizing";
+import { ToggleColPinningPage } from "@/pages/core-concepts/ToggleColPinning";
+import { ToggleRowPinningPage } from "@/pages/core-concepts/ToggleRowPinning";
+import { HeaderGroupsPage } from "@/pages/core-concepts/HeaderGroups";
+import { AddResizerPage } from "@/pages/core-concepts/AddResizer";
 
 // Root route with the main layout
 export const rootRoute = createRootRoute({
@@ -57,6 +73,86 @@ export const quickStartRoute = createRoute({
   component: QuickStartPage,
 });
 
+// Skins routes
+export const skinsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "skins",
+  component: DocsLayout,
+});
+
+export const defaultSkinRoute = createRoute({
+  getParentRoute: () => skinsRoute,
+  path: "default",
+  component: DefaultSkinPage,
+});
+
+export const anoccaSkinRoute = createRoute({
+  getParentRoute: () => skinsRoute,
+  path: "anocca",
+  component: AnoccaSkinPage,
+});
+
+export const muiSkinRoute = createRoute({
+  getParentRoute: () => skinsRoute,
+  path: "mui",
+  component: MuiSkinPage,
+});
+
+export const tailwindSkinRoute = createRoute({
+  getParentRoute: () => skinsRoute,
+  path: "tailwind",
+  component: TailwindSkinPage,
+});
+
+export const tailwindComponentsRoute = createRoute({
+  getParentRoute: () => skinsRoute,
+  path: "tailwind/components",
+  component: TailwindComponentsPage,
+});
+
+// Core concepts routes
+export const coreConcepts = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "core-concepts",
+  component: DocsLayout,
+});
+
+export const columnAutoSizingRoute = createRoute({
+  getParentRoute: () => coreConcepts,
+  path: "column-auto-sizing",
+  component: ColumnAutoSizingPage,
+});
+
+export const tableAutoSizingRoute = createRoute({
+  getParentRoute: () => coreConcepts,
+  path: "table-auto-sizing",
+  component: TableAutoSizingPage,
+});
+
+export const toggleColPinningRoute = createRoute({
+  getParentRoute: () => coreConcepts,
+  path: "toggle-col-pinning",
+  component: ToggleColPinningPage,
+});
+
+export const toggleRowPinningRoute = createRoute({
+  getParentRoute: () => coreConcepts,
+  path: "toggle-row-pinning",
+  component: ToggleRowPinningPage,
+});
+
+export const headerGroupsRoute = createRoute({
+  getParentRoute: () => coreConcepts,
+  path: "header-groups",
+  component: HeaderGroupsPage,
+});
+
+export const addResizerRoute = createRoute({
+  getParentRoute: () => coreConcepts,
+  path: "add-resizer",
+  component: AddResizerPage,
+});
+
 // Examples index page
 export const examplesRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -64,61 +160,21 @@ export const examplesRoute = createRoute({
   component: ExamplesPage,
 });
 
-export const fullExampleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "examples/full",
-  component: StaticExample,
-  staticData: {
-    example: {
-      title: "Full Example",
-      description: "A full example of how to use the library.",
-      dirName: "full",
-      mainFile: "src/app.tsx",
+// Create example routes dynamically based on the examples data
+const exampleRoutes = Object.values(examples).map((example) => {
+  return createRoute({
+    getParentRoute: () => rootRoute,
+    path: `examples/${example.id}`,
+    component: StaticExample,
+    staticData: {
+      example: {
+        title: example.title,
+        description: example.description,
+        dirName: example.dirName,
+        mainFile: example.mainFile,
+      },
     },
-  },
-});
-
-export const minimalExampleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "examples/minimal",
-  component: StaticExample,
-  staticData: {
-    example: {
-      title: "Minimal Example",
-      description: "A minimal example of how to use the library.",
-      dirName: "minimal",
-      mainFile: "src/app.tsx",
-    },
-  },
-});
-
-export const skinsExampleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "examples/skins",
-  staticData: {
-    example: {
-      title: "Custom Skins Example",
-      description:
-        "Explore different skin options including Material UI and Anocca themes.",
-      dirName: "skins",
-      mainFile: "src/app.tsx",
-    },
-  },
-  component: StaticExample,
-});
-
-export const smallExampleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "examples/small",
-  component: StaticExample,
-  staticData: {
-    example: {
-      title: "Small Example",
-      description: "A small example of how to use the library.",
-      dirName: "small",
-      mainFile: "src/app.tsx",
-    },
-  },
+  });
 });
 
 // API reference page
@@ -137,10 +193,22 @@ export const routeTree = rootRoute.addChildren([
     installationRoute,
     quickStartRoute,
   ]),
+  skinsRoute.addChildren([
+    defaultSkinRoute,
+    anoccaSkinRoute,
+    muiSkinRoute,
+    tailwindSkinRoute,
+    tailwindComponentsRoute,
+  ]),
+  coreConcepts.addChildren([
+    columnAutoSizingRoute,
+    tableAutoSizingRoute,
+    toggleColPinningRoute,
+    toggleRowPinningRoute,
+    headerGroupsRoute,
+    addResizerRoute,
+  ]),
   examplesRoute,
-  fullExampleRoute,
-  minimalExampleRoute,
-  smallExampleRoute,
-  skinsExampleRoute,
+  ...exampleRoutes,
   apiRoute,
 ]);

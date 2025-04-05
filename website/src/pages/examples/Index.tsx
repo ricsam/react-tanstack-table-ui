@@ -1,39 +1,5 @@
 import { Link } from "@tanstack/react-router";
-
-// Define the type for an individual example
-type Example = {
-  title: string;
-  description: string;
-  path: string;
-};
-
-// Examples data
-const examples: Record<string, Example> = {
-  minimal: {
-    title: "Minimal Example",
-    description:
-      "A minimal example of how to use the library.",
-    path: "/examples/minimal",
-  },
-  small: {
-    title: "Small Example",
-    description:
-      "A small example of how to use the library.",
-    path: "/examples/small",
-  },
-  full: {
-    title: "Full Example",
-    description:
-      "A full example of how to use the library.",
-    path: "/examples/full",
-  },
-  skins: {
-    title: "Custom Skins Example",
-    description:
-      "Explore different skin options including Material UI and Anocca themes.",
-    path: "/examples/skins",
-  },
-};
+import { examplesArray } from "@/data/examples";
 
 export function ExamplesPage() {
   return (
@@ -47,9 +13,9 @@ export function ExamplesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Object.entries(examples).map(([key, example]) => (
+        {examplesArray.map((example) => (
           <Link
-            key={key}
+            key={example.id}
             to={example.path}
             className="block bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden hover:shadow-md transition-shadow"
           >

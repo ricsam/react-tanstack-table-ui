@@ -5,6 +5,8 @@ import logoFullLight from "@/assets/logos/logo-full-light.svg";
 import logoIconDark from "@/assets/logos/logo-icon-dark.svg";
 import logoIconLight from "@/assets/logos/logo-icon-light.svg";
 import { useState, useEffect } from "react";
+import { SidebarSection } from "@/components/Sidebar/SidebarSection";
+import { navigation } from "@/data/navigation";
 
 export function RootLayout() {
   const { theme, toggleTheme } = useTheme();
@@ -88,45 +90,20 @@ export function RootLayout() {
           )}
         </div>
         <nav
-          className={`flex-1 px-2 py-4 ${sidebarOpen ? "space-y-1" : "space-y-4"} overflow-y-auto`}
+          className={`flex-1 px-2 py-4 ${sidebarOpen ? "space-y-2" : "space-y-4"} overflow-y-auto`}
         >
-          {/* Getting Started - only show text if sidebar is open */}
+          {/* Expanded Sidebar */}
           {sidebarOpen && (
-            <div className="space-y-1">
-              <h3 className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Getting Started
-              </h3>
-              <Link
-                to="/docs/getting-started"
-                className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                activeProps={{
-                  className:
-                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                }}
-              >
-                Introduction
-              </Link>
-              <Link
-                to="/docs/installation"
-                className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                activeProps={{
-                  className:
-                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                }}
-              >
-                Installation
-              </Link>
-              <Link
-                to="/docs/quickstart"
-                className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                activeProps={{
-                  className:
-                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                }}
-              >
-                Quick Start
-              </Link>
-            </div>
+            <>
+              {navigation.map((section) => (
+                <SidebarSection
+                  key={section.title}
+                  title={section.title}
+                  items={"children" in section ? section.children : []}
+                  defaultExpanded
+                />
+              ))}
+            </>
           )}
 
           {/* Icons-only view when collapsed */}
@@ -139,7 +116,7 @@ export function RootLayout() {
                   className:
                     "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                 }}
-                title="Introduction"
+                title="Documentation"
               >
                 <svg
                   className="w-5 h-5"
@@ -152,6 +129,52 @@ export function RootLayout() {
                     strokeLinejoin="round"
                     strokeWidth={2}
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </Link>
+              <Link
+                to="/core-concepts/column-auto-sizing"
+                className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                activeProps={{
+                  className:
+                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                }}
+                title="Core Concepts"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                  />
+                </svg>
+              </Link>
+              <Link
+                to="/skins/default"
+                className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                activeProps={{
+                  className:
+                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
+                }}
+                title="Skins"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
                   />
                 </svg>
               </Link>
@@ -202,85 +225,6 @@ export function RootLayout() {
                 </svg>
               </Link>
             </div>
-          )}
-
-          {/* Core Concepts and other sections - only show if sidebar is open */}
-          {sidebarOpen && (
-            <>
-              <div className="space-y-1">
-                <h3 className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Core Concepts
-                </h3>
-                <Link
-                  to="/examples/minimal"
-                  className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                  activeProps={{
-                    className:
-                      "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                  }}
-                >
-                  Minimal
-                </Link>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Examples
-                </h3>
-                <Link
-                  to="/examples/minimal"
-                  className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                  activeProps={{
-                    className:
-                      "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                  }}
-                >
-                  Minimal
-                </Link>
-                <Link
-                  to="/examples/skins"
-                  className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                  activeProps={{
-                    className:
-                      "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                  }}
-                >
-                  Skins
-                </Link>
-                <Link
-                  to="/examples/full"
-                  className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                  activeProps={{
-                    className:
-                      "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                  }}
-                >
-                  Full
-                </Link>
-                <Link
-                  to="/examples/small"
-                  className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  Small
-                </Link>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  API Reference
-                </h3>
-                <Link
-                  to="/api"
-                  className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                  activeProps={{
-                    className:
-                      "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                  }}
-                >
-                  API Reference
-                </Link>
-              </div>
-            </>
           )}
         </nav>
         <div

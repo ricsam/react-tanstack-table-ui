@@ -40,7 +40,7 @@ export function StaticExample() {
 
   const stackblitzUrl = `https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/${example.dirName}?embed=1&theme=dark&preset=node&file=${example.mainFile}`;
   const codesandboxUrl = `https://codesandbox.io/p/devbox/github/ricsam/react-tanstack-table-ui/tree/main/examples/${example.dirName}?embed=1&theme=dark&file=${example.mainFile}`;
-  const distUrl = `/static_examples/${example.dirName}/index.html`;
+  const distUrl = `https://rttui-docs.vercel.app/static_examples/${example.dirName}/index.html`;
 
   const tabs: Tab[] = [
     {
@@ -61,7 +61,10 @@ export function StaticExample() {
   ];
 
   return (
-    <div className="flex flex-col h-full w-full" key={activeTab + example.dirName}>
+    <div
+      className="flex flex-col h-full w-full"
+      key={activeTab + example.dirName}
+    >
       <div className="prose dark:prose-invert p-4 sm:p-6 lg:p-8 mb-2">
         <h1 className="text-2xl sm:text-3xl mb-2">{example.title}</h1>
         <p className="mb-4">{example.description}</p>
