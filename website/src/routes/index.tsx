@@ -5,12 +5,8 @@ import { GettingStartedPage } from "@/pages/docs/GettingStarted";
 import { DocsIndexPage } from "@/pages/docs/Index";
 import { InstallationPage } from "@/pages/docs/Installation";
 import { QuickStartPage } from "@/pages/docs/QuickStart";
-import { BasicExample } from "@/pages/examples/BasicExample";
-import { CustomizationExample } from "@/pages/examples/CustomizationExample";
-import { FilteringExample } from "@/pages/examples/FilteringExample";
 import { ExamplesPage } from "@/pages/examples/Index";
-import { SkinsExample } from "@/pages/examples/SkinsExample";
-import { VirtualExample } from "@/pages/examples/VirtualExample";
+import { StaticExample } from "@/pages/examples/StaticExample";
 import { HomePage } from "@/pages/Home";
 import { createRootRoute, createRoute } from "@tanstack/react-router";
 
@@ -68,35 +64,61 @@ export const examplesRoute = createRoute({
   component: ExamplesPage,
 });
 
-// Individual example routes
-export const basicExampleRoute = createRoute({
+export const fullExampleRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "examples/basic",
-  component: BasicExample,
+  path: "examples/full",
+  component: StaticExample,
+  staticData: {
+    example: {
+      title: "Full Example",
+      description: "A full example of how to use the library.",
+      dirName: "full",
+      mainFile: "src/app.tsx",
+    },
+  },
 });
 
-export const virtualExampleRoute = createRoute({
+export const minimalExampleRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "examples/virtual",
-  component: VirtualExample,
+  path: "examples/minimal",
+  component: StaticExample,
+  staticData: {
+    example: {
+      title: "Minimal Example",
+      description: "A minimal example of how to use the library.",
+      dirName: "minimal",
+      mainFile: "src/app.tsx",
+    },
+  },
 });
 
 export const skinsExampleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "examples/skins",
-  component: SkinsExample,
+  staticData: {
+    example: {
+      title: "Custom Skins Example",
+      description:
+        "Explore different skin options including Material UI and Anocca themes.",
+      dirName: "skins",
+      mainFile: "src/app.tsx",
+    },
+  },
+  component: StaticExample,
 });
 
-export const filteringExampleRoute = createRoute({
+export const smallExampleRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "examples/filtering",
-  component: FilteringExample,
-});
-
-export const customizationExampleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "examples/customization",
-  component: CustomizationExample,
+  path: "examples/small",
+  component: StaticExample,
+  staticData: {
+    example: {
+      title: "Small Example",
+      description: "A small example of how to use the library.",
+      dirName: "small",
+      mainFile: "src/app.tsx",
+    },
+  },
 });
 
 // API reference page
@@ -116,10 +138,9 @@ export const routeTree = rootRoute.addChildren([
     quickStartRoute,
   ]),
   examplesRoute,
-  basicExampleRoute,
-  virtualExampleRoute,
+  fullExampleRoute,
+  minimalExampleRoute,
+  smallExampleRoute,
   skinsExampleRoute,
-  filteringExampleRoute,
-  customizationExampleRoute,
   apiRoute,
 ]);

@@ -9,35 +9,29 @@ type Example = {
 
 // Examples data
 const examples: Record<string, Example> = {
-  basic: {
-    title: "Basic Table Example",
+  minimal: {
+    title: "Minimal Example",
     description:
-      "A simple table with basic functionality showing how to get started with React TanStack Table UI.",
-    path: "/examples/basic",
+      "A minimal example of how to use the library.",
+    path: "/examples/minimal",
   },
-  virtual: {
-    title: "Virtual Scrolling Example",
+  small: {
+    title: "Small Example",
     description:
-      "Efficiently render large datasets with virtual scrolling to maintain performance.",
-    path: "/examples/virtual",
+      "A small example of how to use the library.",
+    path: "/examples/small",
+  },
+  full: {
+    title: "Full Example",
+    description:
+      "A full example of how to use the library.",
+    path: "/examples/full",
   },
   skins: {
     title: "Custom Skins Example",
     description:
       "Explore different skin options including Material UI and Anocca themes.",
     path: "/examples/skins",
-  },
-  filtering: {
-    title: "Filtering and Sorting Example",
-    description:
-      "Learn how to implement column filtering and sorting in your tables.",
-    path: "/examples/filtering",
-  },
-  customization: {
-    title: "Customization Example",
-    description:
-      "Customize your table with custom cell renderers and header styles.",
-    path: "/examples/customization",
   },
 };
 
