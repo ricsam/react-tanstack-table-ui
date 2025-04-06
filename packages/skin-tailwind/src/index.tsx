@@ -9,11 +9,13 @@ export { CellText } from "./CellText";
 export { TailwindSkin } from "./TailwindSkin";
 export { Resizer } from "./Resizer";
 export { HeaderPinButtons } from "./HeaderPinButtons";
-
+export { ExpandButton } from "./ExpandButton";
+export { RowPinButtons } from "./RowPinButtons";
 export { Checkbox } from "./Checkbox";
 export { CellTextBold } from "./CellTextBold";
 export { CellCurrency } from "./CellCurrency";
 export { CellBadge } from "./CellBadge";
+export { Cell } from "./Cell";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { darkModeVars, lightModeVars } from "./vars";

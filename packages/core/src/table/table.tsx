@@ -31,6 +31,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   renderSubComponent?: (args: { row: Row<T> }) => React.ReactNode;
   underlay?: React.ReactNode;
   autoSizeColumns?: boolean;
+  disableScroll?: boolean;
 }) {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -121,6 +122,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           renderSubComponent: props.renderSubComponent,
           onMeasureCallback: onMeasureCb,
           measureCells,
+          disableScroll: props.disableScroll,
         }),
         [
           props.width,
@@ -132,6 +134,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           table,
           onMeasureCb,
           measureCells,
+          props.disableScroll,
         ],
       )}
     >
@@ -164,17 +167,19 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
 
         <skin.TableScroller />
 
-        <skin.TableHeader>
-          {headerGroups.map((headerGroup) => {
-            return (
+        {headerGroups.length > 0 && (
+          <skin.TableHeader>
+            {headerGroups.map((headerGroup) => {
+              return (
               <HeaderGroup
                 key={headerGroup.id}
                 {...headerGroup}
                 type="header"
               />
-            );
-          })}
-        </skin.TableHeader>
+              );
+            })}
+          </skin.TableHeader>
+        )}
 
         {body}
 
@@ -197,18 +202,19 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
             </MeasureCellProvider>
           </div>
         )}
-
-        <skin.TableFooter>
-          {footerGroups.map((footerGroup) => {
-            return (
-              <HeaderGroup
-                key={footerGroup.id}
-                {...footerGroup}
-                type="footer"
-              />
-            );
-          })}
-        </skin.TableFooter>
+        {footerGroups.length > 0 && (
+          <skin.TableFooter>
+            {footerGroups.map((footerGroup) => {
+              return (
+                <HeaderGroup
+                  key={footerGroup.id}
+                  {...footerGroup}
+                  type="footer"
+                />
+              );
+            })}
+          </skin.TableFooter>
+        )}
         {skin.PinnedColsOverlay && (
           <div
             style={{
@@ -217,7 +223,7 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
               left: 0,
               width: "var(--table-width)",
               height:
-                "max(var(--table-height) + var(--header-height) + var(--footer-height), var(--table-container-height))",
+                "max(var(--table-height) + var(--header-height) + var(--footer-height), 100%)",
               backgroundColor: "transparent",
               zIndex: 1000,
               display: "flex",

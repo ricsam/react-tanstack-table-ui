@@ -1,19 +1,19 @@
-import { CodeBlock } from "../../components/CodeBlock";
+import { useTheme } from "@/contexts/use_theme";
+import { decorateColumnHelper, ReactTanstackTableUi } from "@rttui/core";
+import {
+  CellCode,
+  CellText,
+  darkModeVars,
+  lightModeVars,
+  TailwindSkin,
+} from "@rttui/skin-tailwind";
 import {
   createColumnHelper,
-  useReactTable,
   getCoreRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
-import { ReactTanstackTableUi } from "@rttui/core";
-import {
-  CellText,
-  CellCode,
-  TailwindSkin,
-  lightModeVars,
-  darkModeVars,
-} from "@rttui/skin-tailwind";
 import useMeasure from "react-use-measure";
-import { useTheme } from "@/contexts/use_theme";
+import { CodeBlock } from "../../components/CodeBlock";
 
 type Prop = {
   id: string;
@@ -103,9 +103,25 @@ const data: Prop[] = [
     description: "Render a sub-component for each row",
     required: false,
   },
+  {
+    id: "12",
+    name: "disableScroll",
+    type: "boolean",
+    description: "Disable the scrollbar",
+    required: false,
+  },
 ];
 
-const columnHelper = createColumnHelper<Prop>();
+const columnHelper = decorateColumnHelper(createColumnHelper<Prop>(), {
+  header: (original) => {
+    return (
+      <div className="flex items-center gap-2">
+        {original}
+        {/* <HeaderPinButtons {...props} /> */}
+      </div>
+    );
+  },
+});
 const columns = [
   columnHelper.accessor("name", {
     header: "Name",
@@ -130,6 +146,7 @@ const columns = [
     cell: (props) => {
       return <CellText>{props.getValue() ? "Yes" : "No"}</CellText>;
     },
+    size: 80,
     meta: {
       autoSize: false,
     },
@@ -265,7 +282,14 @@ function MyAnoccaTable() {
         props to customize its behavior:
       </p>
 
-      <div className="w-full aspect-video relative" style={themeVars}>
+      <div
+        className="w-full relative"
+        style={{
+          ...themeVars,
+          height:
+            TailwindSkin.headerRowHeight + TailwindSkin.rowHeight * data.length,
+        }}
+      >
         <div ref={wrapperRef} className="absolute inset-0">
           {wrapperBounds.width && wrapperBounds.height && (
             <ReactTanstackTableUi
@@ -274,10 +298,107 @@ function MyAnoccaTable() {
               height={wrapperBounds.height}
               skin={TailwindSkin}
               autoSizeColumns
+              disableScroll
             />
           )}
         </div>
       </div>
+
+      <h2>
+        <pre>table</pre>
+      </h2>
+
+      <p>
+        The <code>table</code> prop is the TanStack table instance that you
+        created. ReactTanstackTableUi is compatible with most TanStack Table
+        features, but certain options will impact the behavior of the UI:
+      </p>
+      <CodeBlock language="tsx">
+        {`const table = useReactTable({
+  data,
+  columns,
+  getCoreRowModel: getCoreRowModel(), // required
+  getRowId: (row) => row.id, // required - rttui needs stable row identifiers
+  
+  // Row expansion features
+  getExpandedRowModel: getExpandedRowModel(), // enables expandable rows
+  getRowCanExpand: () => true, // controls which rows can be expanded
+  getSubRows: (row) => row.subRows, // defines hierarchical data structure
+  
+  // Column features
+  enableColumnResizing: true, // enables column resizing
+  columnResizeMode: "onChange", // recommended for smooth resizing experience
+  defaultColumn: { // optional column defaults
+    minSize: 60,
+    maxSize: 800,
+  },
+  
+  // Pinning features
+  enableColumnPinning: true, // enables column pinning
+  enableRowPinning: true, // enables row pinning
+  keepPinnedRows: true, // keeps pinned rows in view
+  
+  // Selection features
+  enableRowSelection: true, // enables row selection
+});`}
+      </CodeBlock>
+
+      <h2>
+        <pre>width, height</pre>
+      </h2>
+
+      <p>
+        The <code>width</code> and <code>height</code> are required. If you want
+        the table to fill the container you can use the following technique:
+      </p>
+
+      <CodeBlock language="tsx">
+        {`import useMeasure from 'react-use-measure';
+
+const [wrapperRef, wrapperBounds] = useMeasure();
+
+<div style={{ width: '100%', aspectRatio: '16/9' }}>
+  <div ref={wrapperRef} className="absolute inset-0">
+    {wrapperBounds.width && wrapperBounds.height && (
+      <ReactTanstackTableUi
+        table={table}
+        width={wrapperBounds.width}
+        height={wrapperBounds.height}
+      />
+    )}
+  </div>
+</div>
+`}
+      </CodeBlock>
+
+      <p>
+        If you want a fixed height table, you can use the following technique:
+      </p>
+
+      <CodeBlock language="tsx">
+        {`import useMeasure from 'react-use-measure';
+
+const [wrapperRef, wrapperBounds] = useMeasure();
+const height =
+  TailwindSkin.headerRowHeight +
+  TailwindSkin.footerRowHeight +
+  TailwindSkin.rowHeight * data.length;
+
+<div style={{ width: '100%', height }}>
+  <div ref={wrapperRef} className="absolute inset-0">
+    {wrapperBounds.width && (
+      <ReactTanstackTableUi
+        table={table}
+        width={wrapperBounds.width}
+        height={height}
+        skin={TailwindSkin}
+        disableScroll
+        autoSizeColumns
+      />
+    )}
+  </div>
+</div>`}
+      </CodeBlock>
 
       {/* <table>
         <thead>

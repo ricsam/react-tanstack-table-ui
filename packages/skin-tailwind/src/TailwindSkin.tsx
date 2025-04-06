@@ -29,11 +29,14 @@ export const TailwindSkin: Skin = {
     );
   },
   OuterContainer: ({ children }) => {
-    const { tableContainerRef } = useTableContext();
+    const { tableContainerRef, disableScroll } = useTableContext();
     return (
       <div
         ref={tableContainerRef}
-        className="outer-container overflow-auto relative"
+        className={clsx(
+          "outer-container overflow-auto relative",
+          disableScroll && "overflow-hidden",
+        )}
         style={{
           width: "var(--table-container-width)",
           height: "var(--table-container-height)",
@@ -208,12 +211,6 @@ export const TailwindSkin: Skin = {
           ...vars,
         }}
       >
-        {/* <div
-          className={clsx(
-            "absolute inset-y-0 left-0 w-0.5",
-            selected ? "bg-indigo-600 dark:bg-indigo-500" : "",
-          )}
-        /> */}
         {children}
       </div>
     );
@@ -240,7 +237,7 @@ export const TailwindSkin: Skin = {
       <div
         ref={ref}
         className={`td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis border-r border-gray-200 dark:border-gray-700 ${
-          selected ? "text-gray-900 dark:text-white" : ""
+          selected ? "text-gray-900 dark:text-white bg-indigo-50 dark:bg-indigo-900" : ""
         }`}
         style={{
           height: "var(--row-height)",

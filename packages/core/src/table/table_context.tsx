@@ -19,6 +19,7 @@ type TableContextType = {
   renderSubComponent?: (args: { row: Row<any> }) => React.ReactNode;
   onMeasureCallback: undefined | ((measureData: MeasureData) => void);
   measureCells: (cb: (measureData: MeasureData) => void) => void;
+  disableScroll?: boolean;
 };
 
 export const TableContext = React.createContext<TableContextType | undefined>(

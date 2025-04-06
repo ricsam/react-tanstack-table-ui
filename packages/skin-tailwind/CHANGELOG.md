@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.7
+
+### Patch Changes
+
+- add option to disable scroll and fix css bug
+- Updated dependencies
+  - @rttui/core@1.0.13
+
 ## 0.0.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.13
+
+### Patch Changes
+
+- add option to disable scroll and fix css bug
+
 ## 1.0.12
 
 ### Patch Changes

@@ -7,16 +7,16 @@ import {
   useTableContext,
 } from "@rttui/core";
 import {
+  Cell,
   CellBadge,
   CellCurrency,
   CellText,
-  CellTextBold,
   Checkbox,
   darkModeVars,
+  HeaderPinButtons,
   lightModeVars,
   Resizer,
   TailwindSkin,
-  HeaderPinButtons,
 } from "@rttui/skin-tailwind";
 import { Link } from "@tanstack/react-router";
 import {
@@ -123,137 +123,9 @@ export function HomePage() {
           </div>
         ),
         cell: ({ row, getValue }) => (
-          <div
-            className="flex items-center gap-2"
-            style={{ paddingLeft: `${row.depth * 20}px` }}
-          >
-            {/* Selection checkbox */}
-            <Checkbox
-              {...{
-                checked: row.getIsSelected(),
-                disabled: !row.getCanSelect(),
-                indeterminate: row.getIsSomeSelected(),
-                onChange: row.getToggleSelectedHandler(),
-              }}
-            />
-
-            {/* Expand/collapse button */}
-            {row.getCanExpand() ? (
-              <button
-                onClick={row.getToggleExpandedHandler()}
-                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                {row.getIsExpanded() ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4 text-gray-600 dark:text-gray-400"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4 text-gray-600 dark:text-gray-400"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                    />
-                  </svg>
-                )}
-              </button>
-            ) : (
-              <span className="inline-flex items-center justify-center w-6 h-6">
-                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              </span>
-            )}
-
-            {/* Pin buttons */}
-            {row.getIsPinned() ? (
-              <button
-                onClick={() => row.pin(false, true, true)}
-                className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-4 h-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            ) : (
-              <div className="flex">
-                <button
-                  onClick={() => row.pin("top", true, true)}
-                  className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 15.75l7.5-7.5 7.5 7.5"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => row.pin("bottom", true, true)}
-                  className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                    />
-                  </svg>
-                </button>
-              </div>
-            )}
-
-            {/* Name content */}
-            {row.getIsSelected() ? (
-              <CellTextBold className="text-indigo-600 dark:text-indigo-500">
-                {getValue()}
-              </CellTextBold>
-            ) : (
-              <CellText>{getValue()}</CellText>
-            )}
-          </div>
+          <Cell row={row} highlightSelected checkbox expandButton pinButtons>
+            {getValue()}
+          </Cell>
         ),
         id: "name",
         size: 300, // Increased size to accommodate all controls
