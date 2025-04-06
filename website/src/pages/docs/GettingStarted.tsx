@@ -1,4 +1,5 @@
 import { CodeBlock } from '@/components/CodeBlock';
+import { Link } from '@tanstack/react-router';
 
 export function GettingStartedPage() {
   return (
@@ -17,27 +18,21 @@ export function GettingStartedPage() {
       </p>
       
       <CodeBlock
-        code={`# npm
-npm install @rttui/core
-
-# yarn
-yarn add @rttui/core
-
-# pnpm
-pnpm add @rttui/core`}
+        code={`npm i @rttui/core @tanstack/react-table@8`}
         language="bash"
       />
       
       <p className="mt-4">
-        Additionally, you might want to install one of the available skins:
+        Additionally, you might want to install one of the available{" "}
+        <Link to="/skins">skins</Link>. Please read the guide for the skin you would like to use:
       </p>
-      
+
       <CodeBlock
         code={`# Material UI skin
-npm install @rttui/skin-mui
+npm i @rttui/skin-mui @mui/material @emotion/react @emotion/styled
 
-# Anocca skin
-npm install @rttui/skin-anocca`}
+# Tailwind skin
+npm i @rttui/skin-tailwind`}
         language="bash"
       />
       
@@ -49,125 +44,97 @@ npm install @rttui/skin-anocca`}
       
       <CodeBlock
         code={`import React from 'react';
-import { createTable } from '@rttui/core';
+import { ReactTanstackTableUi, useTableContext } from "@rttui/core";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 
-// Define your data type
 type Person = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  age: number;
-};
+  firstName: string
+  lastName: string
+  age: number
+  visits: number
+  status: string
+  progress: number
+}
 
-// Create a table definition for your data type
-const table = createTable<Person>();
+const data: Person[] = [
+  {
+    firstName: 'tanner',
+    lastName: 'linsley',
+    age: 24,
+    visits: 100,
+    status: 'In Relationship',
+    progress: 50,
+  },
+  {
+    firstName: 'tandy',
+    lastName: 'miller',
+    age: 40,
+    visits: 40,
+    status: 'Single',
+    progress: 80,
+  },
+  {
+    firstName: 'joe',
+    lastName: 'dirte',
+    age: 45,
+    visits: 20,
+    status: 'Complicated',
+    progress: 10,
+  },
+]
 
-// Define some test data
-const data = [
-  { id: '1', firstName: 'John', lastName: 'Doe', age: 30 },
-  { id: '2', firstName: 'Jane', lastName: 'Smith', age: 25 },
-  { id: '3', firstName: 'Bob', lastName: 'Johnson', age: 45 },
-];
+const columnHelper = createColumnHelper<Person>()
+
+const columns = [
+  columnHelper.accessor('firstName', {
+    cell: info => info.getValue(),
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor(row => row.lastName, {
+    id: 'lastName',
+    cell: info => <i>{info.getValue()}</i>,
+    header: () => <span>Last Name</span>,
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('age', {
+    header: () => 'Age',
+    cell: info => info.renderValue(),
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('visits', {
+    header: () => <span>Visits</span>,
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('status', {
+    header: 'Status',
+    footer: info => info.column.id,
+  }),
+  columnHelper.accessor('progress', {
+    header: 'Profile Progress',
+    footer: info => info.column.id,
+  }),
+]
 
 function MyTable() {
-  // Define columns
-  const columns = React.useMemo(
-    () => [
-      table.createDataColumn('firstName', {
-        header: 'First Name',
-        cell: (info) => info.getValue(),
-      }),
-      table.createDataColumn('lastName', {
-        header: 'Last Name',
-        cell: (info) => info.getValue(),
-      }),
-      table.createDataColumn('age', {
-        header: 'Age',
-        cell: (info) => info.getValue(),
-      }),
-    ],
-    []
-  );
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
 
   // Use the table hooks and render the table
   return (
     <div>
-      <table.Table
-        data={data}
-        columns={columns}
-      />
+      <ReactTanstackTableUi table={table} width={800} height={400} />
     </div>
   );
 }
 
 export default MyTable;`}
-        language="tsx"
-      />
-      
-      <h2 className="mt-8">Using a Skin</h2>
-      
-      <p>
-        To use a skin like Material UI, first install the skin package along with Material UI:
-      </p>
-      
-      <CodeBlock
-        code={`npm install @rttui/skin-mui @mui/material @emotion/react @emotion/styled`}
-        language="bash"
-      />
-      
-      <p className="mt-4">
-        Then, modify your code to use the MUI skin:
-      </p>
-      
-      <CodeBlock
-        code={`import React from 'react';
-import { MuiTable } from '@rttui/skin-mui';
-
-// Define your data type
-type Person = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  age: number;
-};
-
-// Define some test data
-const data = [
-  { id: '1', firstName: 'John', lastName: 'Doe', age: 30 },
-  { id: '2', firstName: 'Jane', lastName: 'Smith', age: 25 },
-  { id: '3', firstName: 'Bob', lastName: 'Johnson', age: 45 },
-];
-
-function MyMuiTable() {
-  // Define columns
-  const columns = React.useMemo(
-    () => [
-      {
-        accessorKey: 'firstName',
-        header: 'First Name',
-      },
-      {
-        accessorKey: 'lastName',
-        header: 'Last Name',
-      },
-      {
-        accessorKey: 'age',
-        header: 'Age',
-      },
-    ],
-    []
-  );
-
-  // Render the MUI skinned table
-  return (
-    <MuiTable
-      data={data}
-      columns={columns}
-    />
-  );
-}
-
-export default MyMuiTable;`}
         language="tsx"
       />
       

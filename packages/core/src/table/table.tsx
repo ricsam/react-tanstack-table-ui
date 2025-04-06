@@ -1,4 +1,4 @@
-import { Row, Table } from "@tanstack/react-table";
+import { Row, RowData, Table } from "@tanstack/react-table";
 import React from "react";
 import { defaultSkin } from "../default_skin/default_skin";
 import { ColDndHandler, RowDndHandler } from "../dnd_handler";
@@ -11,7 +11,13 @@ import { useVirtualRowContext } from "./rows/virtual_row_context";
 import { VirtualRowProvider } from "./rows/virtual_row_provider";
 import { TableBody } from "./table_body";
 import { TableContext, useTableContext } from "./table_context";
-import { MeasureData } from "./types";
+import { CellRefs, MeasureData } from "./types";
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    autoSize?: boolean;
+  }
+}
 
 export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   table: Table<T>;
@@ -28,6 +34,13 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
 }) {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
+
+  if (table.getIsSomeColumnsPinned() && !table.options.enableColumnPinning) {
+    throw new Error(
+      "column pinning will not work unless enableColumnPinning is set to true",
+    );
+  }
+
   const [onMeasureCb, setOnMeasureCb] = React.useState<
     undefined | ((measureData: MeasureData) => void)
   >(undefined);
@@ -43,8 +56,12 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
     [],
   );
 
-  const tableRef = React.useRef(table);
-  tableRef.current = table;
+  const refsValue = {
+    width: props.width,
+    table,
+  };
+  const refs = React.useRef(refsValue);
+  refs.current = refsValue;
 
   React.useEffect(() => {
     if (!props.autoSizeColumns) {
@@ -52,14 +69,35 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
     }
 
     const onMeasureCb = ({ cols }: MeasureData) => {
-      tableRef.current.setColumnSizing((prev) => {
+      refs.current.table.setColumnSizing((prev) => {
         const newSizing = { ...prev };
+        let totalSize = 0;
+
+        const colsToAutoSize = new Map<string, CellRefs[string][]>();
         cols.forEach((col, colId) => {
           if (!col) {
             return;
           }
-          newSizing[colId] = Math.max(...col.map(({ rect }) => rect.width));
+          const tsCol = refs.current.table.getColumn(colId);
+          if (tsCol?.columnDef.meta?.autoSize !== false) {
+            colsToAutoSize.set(colId, col);
+          } else {
+            totalSize += tsCol.getSize();
+          }
         });
+
+        colsToAutoSize.forEach((col, colId) => {
+          const colWidth = Math.max(...col.map(({ rect }) => rect.width));
+          totalSize += colWidth;
+          newSizing[colId] = colWidth;
+        });
+        if (totalSize < refs.current.width) {
+          const delta = refs.current.width - totalSize;
+          const perColumnDelta = delta / colsToAutoSize.size;
+          colsToAutoSize.forEach((_, colId) => {
+            newSizing[colId] += perColumnDelta;
+          });
+        }
         return newSizing;
       });
     };
@@ -178,7 +216,8 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
               top: 0,
               left: 0,
               width: "var(--table-width)",
-              height: "var(--table-height)",
+              height:
+                "max(var(--table-height) + var(--header-height) + var(--footer-height), var(--table-container-height))",
               backgroundColor: "transparent",
               zIndex: 1000,
               display: "flex",

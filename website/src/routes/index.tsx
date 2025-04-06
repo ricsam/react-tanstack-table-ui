@@ -3,8 +3,7 @@ import { RootLayout } from "@/layouts/RootLayout";
 import { APIPage } from "@/pages/api/Index";
 import { GettingStartedPage } from "@/pages/docs/GettingStarted";
 import { DocsIndexPage } from "@/pages/docs/Index";
-import { InstallationPage } from "@/pages/docs/Installation";
-import { QuickStartPage } from "@/pages/docs/QuickStart";
+import { OptionsPage } from "@/pages/docs/Options";
 import { ExamplesPage } from "@/pages/examples/Index";
 import { StaticExample } from "@/pages/examples/StaticExample";
 import { HomePage } from "@/pages/Home";
@@ -17,6 +16,7 @@ import { AnoccaSkinPage } from "@/pages/skins/AnoccaSkin";
 import { MuiSkinPage } from "@/pages/skins/MuiSkin";
 import { TailwindSkinPage } from "@/pages/skins/TailwindSkin";
 import { TailwindComponentsPage } from "@/pages/skins/TailwindComponents";
+import { SkinsLandingPage } from "@/pages/skins/SkinsLandingPage";
 
 // Core concepts pages
 import { ColumnAutoSizingPage } from "@/pages/core-concepts/ColumnAutoSizing";
@@ -59,54 +59,47 @@ export const gettingStartedRoute = createRoute({
   component: GettingStartedPage,
 });
 
-// Installation page
-export const installationRoute = createRoute({
+// Options page
+export const optionsRoute = createRoute({
   getParentRoute: () => docsRoute,
-  path: "installation",
-  component: InstallationPage,
-});
-
-// Quick start page
-export const quickStartRoute = createRoute({
-  getParentRoute: () => docsRoute,
-  path: "quickstart",
-  component: QuickStartPage,
+  path: "options",
+  component: OptionsPage,
 });
 
 // Skins routes
 export const skinsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "skins",
-  component: DocsLayout,
+  component: SkinsLandingPage,
 });
 
 export const defaultSkinRoute = createRoute({
-  getParentRoute: () => skinsRoute,
-  path: "default",
+  getParentRoute: () => rootRoute,
+  path: "skins/default",
   component: DefaultSkinPage,
 });
 
 export const anoccaSkinRoute = createRoute({
-  getParentRoute: () => skinsRoute,
-  path: "anocca",
+  getParentRoute: () => rootRoute,
+  path: "skins/anocca",
   component: AnoccaSkinPage,
 });
 
 export const muiSkinRoute = createRoute({
-  getParentRoute: () => skinsRoute,
-  path: "mui",
+  getParentRoute: () => rootRoute,
+  path: "skins/mui",
   component: MuiSkinPage,
 });
 
 export const tailwindSkinRoute = createRoute({
-  getParentRoute: () => skinsRoute,
-  path: "tailwind",
+  getParentRoute: () => rootRoute,
+  path: "skins/tailwind",
   component: TailwindSkinPage,
 });
 
 export const tailwindComponentsRoute = createRoute({
-  getParentRoute: () => skinsRoute,
-  path: "tailwind/components",
+  getParentRoute: () => rootRoute,
+  path: "skins/tailwind/components",
   component: TailwindComponentsPage,
 });
 
@@ -190,16 +183,14 @@ export const routeTree = rootRoute.addChildren([
   docsRoute.addChildren([
     docsIndexRoute,
     gettingStartedRoute,
-    installationRoute,
-    quickStartRoute,
+    optionsRoute,
   ]),
-  skinsRoute.addChildren([
-    defaultSkinRoute,
-    anoccaSkinRoute,
-    muiSkinRoute,
-    tailwindSkinRoute,
-    tailwindComponentsRoute,
-  ]),
+  skinsRoute,
+  defaultSkinRoute,
+  anoccaSkinRoute,
+  muiSkinRoute,
+  tailwindSkinRoute,
+  tailwindComponentsRoute,
   coreConcepts.addChildren([
     columnAutoSizingRoute,
     tableAutoSizingRoute,

@@ -1,7 +1,11 @@
 import logoFullDark from "@/assets/logos/logo-full-dark.svg";
 import logoFullLight from "@/assets/logos/logo-full-light.svg";
 import { useTheme } from "@/contexts/use_theme";
-import { ReactTanstackTableUi, useTableContext } from "@rttui/core";
+import {
+  decorateColumnHelper,
+  ReactTanstackTableUi,
+  useTableContext,
+} from "@rttui/core";
 import {
   CellBadge,
   CellCurrency,
@@ -10,7 +14,9 @@ import {
   Checkbox,
   darkModeVars,
   lightModeVars,
+  Resizer,
   TailwindSkin,
+  HeaderPinButtons,
 } from "@rttui/skin-tailwind";
 import { Link } from "@tanstack/react-router";
 import {
@@ -21,7 +27,13 @@ import {
   Row,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useCallback, useDeferredValue, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import useMeasure from "react-use-measure";
 
 // Function to generate random data
@@ -60,6 +72,7 @@ type Person = ReturnType<typeof generateRowData>;
 export function HomePage() {
   const { theme } = useTheme();
   const logoFull = theme === "light" ? logoFullLight : logoFullDark;
+  const demoSectionRef = useRef<HTMLDivElement>(null);
 
   // State for controlling row and column counts
   const [rowCount, setRowCount] = useState(300);
@@ -83,7 +96,15 @@ export function HomePage() {
 
   // Generate columns based on columnCount
   const columns = useMemo(() => {
-    const columnHelper = createColumnHelper<Person>();
+    const columnHelper = decorateColumnHelper(createColumnHelper<Person>(), {
+      header: (original, props) => (
+        <div className="flex items-center gap-2">
+          {original}
+          <HeaderPinButtons header={props.header} />
+          <Resizer header={props.header} />
+        </div>
+      ),
+    });
 
     // Basic columns that always exist
     const baseColumns: ColumnDef<Person, any>[] = [
@@ -240,19 +261,16 @@ export function HomePage() {
       columnHelper.accessor("email", {
         id: "email",
         header: "Email",
-        footer: "Email",
         cell: (info) => <CellText>{info.getValue()}</CellText>,
       }),
       columnHelper.accessor("role", {
         id: "role",
         header: "Role",
-        footer: "Role",
         cell: (info) => <CellText>{info.getValue()}</CellText>,
       }),
       columnHelper.accessor("status", {
         id: "status",
         header: "Status",
-        footer: "Status",
         cell: (info) => (
           <CellBadge
             color={
@@ -270,13 +288,14 @@ export function HomePage() {
       columnHelper.accessor("age", {
         id: "age",
         header: "Age",
-        footer: "Age",
         cell: (info) => <CellText>{info.getValue()}</CellText>,
       }),
       columnHelper.accessor("performance", {
         id: "performance",
         header: "Performance",
-        footer: "Performance",
+        meta: {
+          autoSize: false,
+        },
         cell: (info) => {
           const performance = info.getValue();
           const color =
@@ -330,7 +349,6 @@ export function HomePage() {
           columnHelper.accessor(field.id as any, {
             id: uniqueColumnId,
             header: `${field.name} ${groupIndex > 0 ? groupIndex + 1 : ""}`,
-            footer: `${field.name} ${groupIndex > 0 ? groupIndex + 1 : ""}`,
             cell:
               field.id === "salary"
                 ? (info) => <CellCurrency value={info.getValue()} />
@@ -342,24 +360,21 @@ export function HomePage() {
 
     // Add column grouping for demonstration purposes
     const groupedColumns = [
-      {
+      columnHelper.group({
         id: "group_user_info",
         header: "User Information",
-        footer: "User Info Summary",
         columns: baseColumns.slice(0, 2),
-      },
-      {
+      }),
+      columnHelper.group({
         id: "group_access_details",
         header: "Access Details",
-        footer: "Access Summary",
         columns: baseColumns.slice(2, 4),
-      },
-      {
-        id: "group_personal_info",
-        header: "Personal Info",
-        footer: "Personal Summary",
+      }),
+      columnHelper.group({
+        id: "group_employment_info",
+        header: "Employment Info",
         columns: baseColumns.slice(4),
-      },
+      }),
     ];
 
     return groupedColumns;
@@ -379,6 +394,51 @@ export function HomePage() {
     enableRowPinning: true,
     defaultColumn: {
       size: 100,
+    },
+    initialState: {
+      columnSizing: {
+        name: 196.6640625,
+        email: 182.890625,
+        role: 77.0859375,
+        status: 83.9921875,
+        age: 35.09375,
+        performance: 156.7,
+        salary: 97.0546875,
+        department: 61.1875,
+        startDate: 99.9765625,
+        salary_2: 97.0546875,
+        department_2: 61.1875,
+      },
+      columnSizingInfo: {
+        startOffset: null,
+        startSize: null,
+        deltaOffset: null,
+        deltaPercentage: null,
+        isResizingColumn: false,
+        columnSizingStart: [],
+      },
+      rowSelection: {},
+      rowPinning: {
+        top: ["7"],
+        bottom: ["9"],
+      },
+      expanded: {
+        "4": true,
+        "10": true,
+      },
+      grouping: [],
+      sorting: [],
+      columnFilters: [],
+      columnPinning: {
+        left: ["email"],
+        right: ["salary"],
+      },
+      columnOrder: [],
+      columnVisibility: {},
+      pagination: {
+        pageIndex: 0,
+        pageSize: 10,
+      },
     },
   });
 
@@ -405,6 +465,10 @@ export function HomePage() {
     scroll: false,
   });
 
+  const scrollToDemoSection = useCallback(() => {
+    demoSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
   return (
     <div>
       <div className="bg-white dark:bg-gray-900">
@@ -429,7 +493,7 @@ export function HomePage() {
               support.
             </p>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-              <div className="rounded-md shadow">
+              <div className="rounded-md whitespace-nowrap">
                 <Link
                   to="/docs/getting-started"
                   className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 dark:text-white dark:bg-primary-600 dark:hover:bg-primary-700 md:py-4 md:text-lg md:px-10"
@@ -437,7 +501,7 @@ export function HomePage() {
                   Get started
                 </Link>
               </div>
-              <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
+              <div className="mt-3 rounded-md whitespace-nowrap sm:mt-0 sm:ml-3">
                 <a
                   href="https://github.com/ricsam/react-tanstack-table-ui"
                   target="_blank"
@@ -447,6 +511,31 @@ export function HomePage() {
                   GitHub
                 </a>
               </div>
+            </div>
+
+            {/* Scroll down button - moved to bottom of hero with animation */}
+            <div className="mt-16 flex justify-center">
+              <button
+                onClick={scrollToDemoSection}
+                className="group flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-500 transition-colors"
+              >
+                <span className="text-sm font-medium pb-2">
+                  See it in action
+                </span>
+                <div className="animate-bounce bg-primary-600 dark:bg-primary-500 p-2 w-10 h-10 ring-1 ring-primary-700 dark:ring-primary-600 shadow-lg rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                  </svg>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -530,7 +619,7 @@ export function HomePage() {
       </div>
 
       {/* Live Demo Section */}
-      <div className="py-16 bg-white dark:bg-gray-900">
+      <div ref={demoSectionRef} className="py-16 bg-white dark:bg-gray-900">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
             <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
@@ -635,7 +724,7 @@ export function HomePage() {
           <div className="mt-8 text-center">
             <Link
               to="/examples"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white dark:text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700"
             >
               Explore more examples
             </Link>

@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.12
+
+### Patch Changes
+
+- add header decorator util and move some components from the header cell in the tw theme
+
 ## 1.0.11
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.6
+
+### Patch Changes
+
+- add header decorator util and move some components from the header cell in the tw theme
+- Updated dependencies
+  - @rttui/core@1.0.12
+
 ## 0.0.5
 
 ### Patch Changes

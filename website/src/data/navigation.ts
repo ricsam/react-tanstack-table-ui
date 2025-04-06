@@ -17,8 +17,7 @@ export const navigation: NavItem[] = [
     title: "Getting Started",
     children: [
       { title: "Introduction", path: "/docs/getting-started" },
-      { title: "Installation", path: "/docs/installation" },
-      { title: "Quick Start", path: "/docs/quickstart" },
+      { title: "Options", path: "/docs/options" },
     ],
   },
   {

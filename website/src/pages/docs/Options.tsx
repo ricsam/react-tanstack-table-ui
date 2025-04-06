@@ -1,65 +1,142 @@
 import { CodeBlock } from "../../components/CodeBlock";
+import {
+  createColumnHelper,
+  useReactTable,
+  getCoreRowModel,
+} from "@tanstack/react-table";
+import { ReactTanstackTableUi } from "@rttui/core";
+import {
+  CellText,
+  CellCode,
+  TailwindSkin,
+  lightModeVars,
+  darkModeVars,
+} from "@rttui/skin-tailwind";
+import useMeasure from "react-use-measure";
+import { useTheme } from "@/contexts/use_theme";
 
-export function QuickStartPage() {
-  const basicExample = `import React from 'react';
-import { ReactTanstackTableUi } from '@rttui/core';
-import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
-
-// Define your data type
-type Person = {
+type Prop = {
   id: string;
-  firstName: string;
-  lastName: string;
-  age: number;
+  name: string;
+  type: string;
+  description: string;
+  required: boolean;
 };
 
-// Sample data
-const data: Person[] = [
-  { id: '1', firstName: 'John', lastName: 'Doe', age: 30 },
-  { id: '2', firstName: 'Jane', lastName: 'Smith', age: 25 },
-  { id: '3', firstName: 'Bob', lastName: 'Johnson', age: 45 },
-  // Add more data as needed
+const data: Prop[] = [
+  {
+    id: "1",
+    name: "table",
+    type: "Table&lt;T&gt;",
+    description: "TanStack table instance",
+    required: true,
+  },
+  {
+    id: "2",
+    name: "width",
+    type: "number",
+    description: "Width of the table in pixels",
+    required: true,
+  },
+  {
+    id: "3",
+    name: "height",
+    type: "number",
+    description: "Height of the table in pixels",
+    required: true,
+  },
+  {
+    id: "4",
+    name: "rowOverscan",
+    type: "number",
+    description:
+      "Number of rows to render outside of the visible area (default: 10)",
+    required: false,
+  },
+  {
+    id: "5",
+    name: "columnOverscan",
+    type: "number",
+    description:
+      "Number of columns to render outside of the visible area (default: 3)",
+    required: false,
+  },
+  {
+    id: "6",
+    name: "skin",
+    type: "Skin",
+    description: "Custom skin for styling the table (default: defaultSkin)",
+    required: false,
+  },
+  {
+    id: "7",
+    name: "rowDndHandler",
+    type: "RowDndHandler&lt;T&gt;",
+    description: "Handler for row drag-and-drop functionality",
+    required: false,
+  },
+  {
+    id: "8",
+    name: "colDndHandler",
+    type: "ColDndHandler&lt;T&gt;",
+    description: "Handler for column drag-and-drop functionality",
+    required: false,
+  },
+  {
+    id: "9",
+    name: "autoSizeColumns",
+    type: "boolean",
+    description: "Whether to automatically size the columns",
+    required: false,
+  },
+  {
+    id: "10",
+    name: "underlay",
+    type: "React.ReactNode",
+    description: "Custom underlay for the table",
+    required: false,
+  },
+  {
+    id: "11",
+    name: "renderSubComponent",
+    type: "(args: { row: Row<T> }) => React.ReactNode",
+    description: "Render a sub-component for each row",
+    required: false,
+  },
 ];
 
-// Column definitions
+const columnHelper = createColumnHelper<Prop>();
 const columns = [
-  {
-    accessorKey: 'firstName',
-    header: 'First Name',
-  },
-  {
-    accessorKey: 'lastName',
-    header: 'Last Name',
-  },
-  {
-    accessorKey: 'age',
-    header: 'Age',
-  },
+  columnHelper.accessor("name", {
+    header: "Name",
+    cell: (props) => {
+      return <CellText>{props.getValue()}</CellText>;
+    },
+  }),
+  columnHelper.accessor("type", {
+    header: "Type",
+    cell: (props) => {
+      return <CellCode code={props.getValue()} />;
+    },
+  }),
+  columnHelper.accessor("description", {
+    header: "Description",
+    cell: (props) => {
+      return <CellText>{props.getValue()}</CellText>;
+    },
+  }),
+  columnHelper.accessor("required", {
+    header: "Required",
+    cell: (props) => {
+      return <CellText>{props.getValue() ? "Yes" : "No"}</CellText>;
+    },
+    meta: {
+      autoSize: false,
+    },
+  }),
 ];
 
-function MyTable() {
-  // Create a table instance
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  return (
-    <div style={{ height: '400px', width: '100%' }}>
-      <ReactTanstackTableUi
-        table={table}
-        width={800}
-        height={400}
-        rowOverscan={10}
-        columnOverscan={3}
-      />
-    </div>
-  );
-}
-
-export default MyTable;`;
-
+export function OptionsPage() {
   const customHeaderExample = `import React from 'react';
 import { ReactTanstackTableUi, useVirtualHeader } from '@rttui/core';
 import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
@@ -166,39 +243,43 @@ function MyAnoccaTable() {
   );
 }`;
 
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
+    enableColumnPinning: true,
+  });
+
+  const [wrapperRef, wrapperBounds] = useMeasure();
+
+  const { theme } = useTheme();
+  const themeVars = theme === "light" ? lightModeVars : darkModeVars;
+
   return (
     <div className="prose max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1>Quick Start</h1>
-
-      <p>
-        This guide will help you quickly set up React TanStack Table UI in your
-        project. We'll cover how to use the main{" "}
-        <code>{"<ReactTanstackTableUi />"}</code> component and the{" "}
-        <code>useVirtualHeader</code> hook.
-      </p>
-
-      <h2>Basic Usage</h2>
-
-      <p>
-        The primary component you'll use is{" "}
-        <code>{"<ReactTanstackTableUi />"}</code>, which provides a complete
-        table solution with virtualization support.
-      </p>
-
-      <CodeBlock
-        code={basicExample}
-        language="tsx"
-        className="bg-gray-800 text-white p-4"
-      />
-
-      <h2>Configuration Options</h2>
+      <h1>Options</h1>
 
       <p>
         The <code>{"<ReactTanstackTableUi />"}</code> component accepts several
         props to customize its behavior:
       </p>
 
-      <table>
+      <div className="w-full aspect-video relative" style={themeVars}>
+        <div ref={wrapperRef} className="absolute inset-0">
+          {wrapperBounds.width && wrapperBounds.height && (
+            <ReactTanstackTableUi
+              table={table}
+              width={wrapperBounds.width}
+              height={wrapperBounds.height}
+              skin={TailwindSkin}
+              autoSizeColumns
+            />
+          )}
+        </div>
+      </div>
+
+      {/* <table>
         <thead>
           <tr>
             <th>Prop</th>
@@ -298,7 +379,7 @@ function MyAnoccaTable() {
             <td>No</td>
           </tr>
         </tbody>
-      </table>
+      </table> */}
 
       <h2>
         Styling Headers with <code>useVirtualHeader</code>

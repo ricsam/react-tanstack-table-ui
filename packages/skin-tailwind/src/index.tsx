@@ -7,6 +7,8 @@ export { CellTag } from "./CellTag";
 export { CellText } from "./CellText";
 
 export { TailwindSkin } from "./TailwindSkin";
+export { Resizer } from "./Resizer";
+export { HeaderPinButtons } from "./HeaderPinButtons";
 
 export { Checkbox } from "./Checkbox";
 export { CellTextBold } from "./CellTextBold";

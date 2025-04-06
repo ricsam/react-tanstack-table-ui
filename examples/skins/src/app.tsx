@@ -7,7 +7,11 @@ import { DefaultThemeProvider } from "./default_theme_provider";
 import { useBigTable } from "./use_big_table";
 import { useHashState } from "./use_hash_state";
 import { Table } from "@tanstack/react-table";
-import { TailwindSkin, darkModeVars, lightModeVars } from "@rttui/skin-tailwind";
+import {
+  TailwindSkin,
+  darkModeVars,
+  lightModeVars,
+} from "@rttui/skin-tailwind";
 
 export function App() {
   const { table } = useBigTable();
@@ -52,8 +56,15 @@ export function App() {
     <DefaultThemeProvider theme={theme}>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <div style={{ textAlign: "center", paddingLeft: "80px", paddingTop: "20px" }}>
-          <div style={{ marginBottom: "20px", ...twStyle }}>
+        <div
+          style={{
+            textAlign: "center",
+            paddingLeft: "80px",
+            paddingTop: "20px",
+            ...twStyle,
+          }}
+        >
+          <div style={{ marginBottom: "20px" }}>
             <select
               value={theme}
               onChange={(e) => setTheme(e.target.value as "light" | "dark")}
@@ -66,7 +77,9 @@ export function App() {
             <select
               value={skin}
               onChange={(e) =>
-                setSkin(e.target.value as "mui" | "anocca" | "default" | "tailwind")
+                setSkin(
+                  e.target.value as "mui" | "anocca" | "default" | "tailwind",
+                )
               }
             >
               <option value="mui">Material UI Skin</option>
