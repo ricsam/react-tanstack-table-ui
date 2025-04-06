@@ -26,7 +26,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.8.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "react-use-measure": "^2.1.7"
   },
   "devDependencies": {
     "postcss": "^8.4.35",
