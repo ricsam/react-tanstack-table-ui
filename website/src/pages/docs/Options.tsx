@@ -2,6 +2,7 @@ import { useTheme } from "@/contexts/use_theme";
 import { decorateColumnHelper, ReactTanstackTableUi } from "@rttui/core";
 import {
   CellCode,
+  CellLink,
   CellText,
   darkModeVars,
   lightModeVars,
@@ -21,6 +22,7 @@ type Prop = {
   type: string;
   description: string;
   required: boolean;
+  section?: string;
 };
 
 const data: Prop[] = [
@@ -30,6 +32,7 @@ const data: Prop[] = [
     type: "Table&lt;T&gt;",
     description: "TanStack table instance",
     required: true,
+    section: "#table",
   },
   {
     id: "2",
@@ -37,6 +40,7 @@ const data: Prop[] = [
     type: "number",
     description: "Width of the table in pixels",
     required: true,
+    section: "#width-height",
   },
   {
     id: "3",
@@ -44,6 +48,7 @@ const data: Prop[] = [
     type: "number",
     description: "Height of the table in pixels",
     required: true,
+    section: "#width-height",
   },
   {
     id: "4",
@@ -126,7 +131,22 @@ const columns = [
   columnHelper.accessor("name", {
     header: "Name",
     cell: (props) => {
-      return <CellText>{props.getValue()}</CellText>;
+      const section = props.row.original.section;
+      return section ? (
+        <CellLink
+          href={section}
+          onClick={(ev) => {
+            ev.preventDefault();
+            document
+              .querySelector(section)
+              ?.scrollIntoView({ behavior: "smooth" });
+          }}
+        >
+          {props.getValue()}
+        </CellLink>
+      ) : (
+        <CellText>{props.getValue()}</CellText>
+      );
     },
   }),
   columnHelper.accessor("type", {
@@ -304,7 +324,7 @@ function MyAnoccaTable() {
         </div>
       </div>
 
-      <h2>
+      <h2 id="table">
         <pre>table</pre>
       </h2>
 
@@ -343,7 +363,7 @@ function MyAnoccaTable() {
 });`}
       </CodeBlock>
 
-      <h2>
+      <h2 id="width-height">
         <pre>width, height</pre>
       </h2>
 
