@@ -166,6 +166,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
   }
 
   delete packageJson.devDependencies;
+  delete packageJson.type;
   Object.assign(packageJson, {
     main: "./dist/cjs/index.cjs",
     module: "./dist/mjs/index.mjs",

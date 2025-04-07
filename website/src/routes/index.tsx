@@ -13,8 +13,11 @@ import { examples } from "@/data/examples";
 // Skins pages
 import { DefaultSkinPage } from "@/pages/skins/DefaultSkin";
 import { AnoccaSkinPage } from "@/pages/skins/AnoccaSkin";
+import { AnoccaStorybookPage } from "@/pages/skins/AnoccaStorybook";
 import { MuiSkinPage } from "@/pages/skins/MuiSkin";
+import { MuiStorybookPage } from "@/pages/skins/MuiStorybook";
 import { TailwindSkinPage } from "@/pages/skins/TailwindSkin";
+import { TailwindStorybookPage } from "@/pages/skins/TailwindStorybook";
 import { TailwindComponentsPage } from "@/pages/skins/TailwindComponents";
 import { SkinsLandingPage } from "@/pages/skins/SkinsLandingPage";
 
@@ -85,16 +88,34 @@ export const anoccaSkinRoute = createRoute({
   component: AnoccaSkinPage,
 });
 
+export const anoccaStorybookRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "skins/anocca/storybook",
+  component: AnoccaStorybookPage,
+});
+
 export const muiSkinRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "skins/mui",
   component: MuiSkinPage,
 });
 
+export const muiStorybookRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "skins/mui/storybook",
+  component: MuiStorybookPage,
+});
+
 export const tailwindSkinRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "skins/tailwind",
   component: TailwindSkinPage,
+});
+
+export const tailwindStorybookRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "skins/tailwind/storybook",
+  component: TailwindStorybookPage,
 });
 
 export const tailwindComponentsRoute = createRoute({
@@ -188,8 +209,11 @@ export const routeTree = rootRoute.addChildren([
   skinsRoute,
   defaultSkinRoute,
   anoccaSkinRoute,
+  anoccaStorybookRoute,
   muiSkinRoute,
+  muiStorybookRoute,
   tailwindSkinRoute,
+  tailwindStorybookRoute,
   tailwindComponentsRoute,
   coreConcepts.addChildren([
     columnAutoSizingRoute,

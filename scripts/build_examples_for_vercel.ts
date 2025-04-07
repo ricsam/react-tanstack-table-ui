@@ -16,3 +16,19 @@ for await (const pkg of glob.scan({ absolute: true })) {
     cp -r dist/* ${websiteDir}
   `.cwd(path.dirname(pkg));
 }
+
+const skinStorybookGlob = new Glob("packages/skin-*/.storybook/main.ts");
+for await (const storybook of skinStorybookGlob.scan({ absolute: true })) {
+  const packageDir = path.join(path.dirname(storybook), "..");
+  const base = "/static_sb/" + path.basename(packageDir);
+
+  await $`
+    pnpm run build-storybook
+  `.cwd(packageDir);
+
+  const websiteDir = path.join(process.cwd(), "website", "public", base);
+  await $`
+    mkdir -p ${websiteDir}
+    cp -r storybook-static/* ${websiteDir}
+  `.cwd(packageDir);
+}

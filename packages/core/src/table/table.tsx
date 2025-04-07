@@ -32,6 +32,9 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   underlay?: React.ReactNode;
   autoSizeColumns?: boolean;
   disableScroll?: boolean;
+  pinColsRelativeTo?: "cols" | "table";
+  pinRowsRelativeTo?: "rows" | "table";
+  autoSizeColsBy?: "header" | "cell" | "both";
 }) {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -123,6 +126,9 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           onMeasureCallback: onMeasureCb,
           measureCells,
           disableScroll: props.disableScroll,
+          pinColsRelativeTo: props.pinColsRelativeTo ?? "cols",
+          pinRowsRelativeTo: props.pinRowsRelativeTo ?? "rows",
+          autoSizeColsBy: props.autoSizeColsBy ?? "cell",
         }),
         [
           props.width,
@@ -135,6 +141,9 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           onMeasureCb,
           measureCells,
           props.disableScroll,
+          props.pinColsRelativeTo,
+          props.pinRowsRelativeTo,
+          props.autoSizeColsBy,
         ],
       )}
     >
@@ -148,7 +157,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
 };
 
 function Body({ underlay }: { underlay?: React.ReactNode }) {
-  const { skin, onMeasureCallback } = useTableContext();
+  const { skin, onMeasureCallback, pinColsRelativeTo } = useTableContext();
   const { rows, offsetBottom, offsetTop } = useVirtualRowContext();
   const { footerGroups, headerGroups } = useColContext();
 
@@ -171,11 +180,11 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
           <skin.TableHeader>
             {headerGroups.map((headerGroup) => {
               return (
-              <HeaderGroup
-                key={headerGroup.id}
-                {...headerGroup}
-                type="header"
-              />
+                <HeaderGroup
+                  key={headerGroup.id}
+                  {...headerGroup}
+                  type="header"
+                />
               );
             })}
           </skin.TableHeader>
@@ -221,7 +230,7 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
               position: "absolute",
               top: 0,
               left: 0,
-              width: "var(--table-width)",
+              width: pinColsRelativeTo === "table" ? "max(var(--table-width), 100%)" : "var(--table-width)",
               height:
                 "max(var(--table-height) + var(--header-height) + var(--footer-height), 100%)",
               backgroundColor: "transparent",

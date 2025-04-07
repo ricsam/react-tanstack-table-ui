@@ -31,7 +31,6 @@ const AnoccaSkin: Skin = {
         className="rttui-overlay-container"
         style={{
           position: "relative",
-          overflow: "hidden",
           width: width + "px",
           height: height + "px",
           ...cssVars,
@@ -88,6 +87,10 @@ const AnoccaSkin: Skin = {
           zIndex: 2,
           backgroundColor: (theme) => theme.palette.background.paper,
           boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          alignItems: "stretch",
         }}
       >
         {children}
@@ -121,7 +124,14 @@ const AnoccaSkin: Skin = {
       <TableBody
         component="div"
         className="table-body"
-        sx={{ position: "relative", width: "var(--table-width)" }}
+        sx={{
+          position: "relative",
+          width: "var(--table-width)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          alignItems: "stretch",
+        }}
       >
         {children}
       </TableBody>
@@ -206,6 +216,11 @@ const AnoccaSkin: Skin = {
           sx={{
             ...dndStyle,
             ...vars,
+            width: "var(--table-width)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            alignItems: "stretch",
           }}
           data-index={flatIndex}
           ref={ref}
@@ -228,6 +243,14 @@ const AnoccaSkin: Skin = {
           zIndex: 1,
           boxSizing: "border-box",
           backgroundColor: "var(--row-background-color)",
+          "&:hover": {
+            backgroundColor: (theme) => {
+              // Always use solid background colors for all cells on hover
+              return theme.palette.mode === "dark"
+                ? "#1e1e52" // Dark blue solid color
+                : "#E3F2FD"; // Light blue solid color
+            },
+          },
         }}
       >
         {children}
@@ -257,47 +280,62 @@ const AnoccaSkin: Skin = {
       </TableRow>
     );
   },
-  Cell: React.forwardRef(({ children, header, isMeasuring }, ref) => {
-    const { isPinned } = header;
-    return (
-      <TableCell
-        className="td"
-        component="div"
-        ref={ref}
-        sx={{
-          height: "var(--row-height)",
-          width: isMeasuring ? "auto" : header.width,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          zIndex: isPinned ? 5 : 0,
-          boxSizing: "border-box",
-          alignItems: "center",
-          gap: "8px",
-          display: "flex",
-          justifyContent: "flex-start",
-          alignContent: "center",
-          padding: "6px 12px",
-          backgroundColor: "var(--row-background-color)",
-          borderBottom: "none",
-          flexShrink: 0,
-          position: "relative",
-          borderRight: (theme) => `1px solid ${theme.palette.divider}`,
-          ".table-row:hover &": {
-            backgroundColor: (theme) => {
-              // Always use solid background colors for all cells on hover
-              return theme.palette.mode === "dark"
-                ? "#1e1e52" // Dark blue solid color
-                : "#E3F2FD"; // Light blue solid color
+  Cell: React.forwardRef(
+    (
+      { children, header, isMeasuring, isLastPinned, isLast, isLastCenter },
+      ref,
+    ) => {
+      const { isPinned } = header;
+      const { table } = useTableContext();
+      return (
+        <TableCell
+          className="td"
+          component="div"
+          ref={ref}
+          sx={{
+            height: "var(--row-height)",
+            width: isMeasuring ? "auto" : header.width,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            zIndex: isPinned ? 5 : 0,
+            boxSizing: "border-box",
+            alignItems: "center",
+            gap: "8px",
+            display: "flex",
+            justifyContent: "flex-start",
+            alignContent: "center",
+            padding: "6px 12px",
+            backgroundColor: "var(--row-background-color)",
+            borderBottom: "none",
+            flexShrink: 0,
+            position: "relative",
+            borderRight:
+              ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+              !isLast &&
+              !(isLastCenter && table.getIsSomeColumnsPinned("right"))
+                ? (theme) => `1px solid ${theme.palette.divider}`
+                : undefined,
+            borderLeft:
+              isPinned === "end" && !isLastPinned
+                ? (theme) => `1px solid ${theme.palette.divider}`
+                : undefined,
+            ".table-row:hover &": {
+              backgroundColor: (theme) => {
+                // Always use solid background colors for all cells on hover
+                return theme.palette.mode === "dark"
+                  ? "#1e1e52" // Dark blue solid color
+                  : "#E3F2FD"; // Light blue solid color
+              },
+              zIndex: isPinned ? 2 : 0,
             },
-            zIndex: isPinned ? 2 : 0,
-          },
-        }}
-      >
-        {children}
-      </TableCell>
-    );
-  }),
+          }}
+        >
+          {children}
+        </TableCell>
+      );
+    },
+  ),
   PinnedColsOverlay: ({ position }) => {
     const { table } = useTableContext();
     if (!table.getIsSomeColumnsPinned(position)) {
@@ -321,7 +359,6 @@ const AnoccaSkin: Skin = {
     if (position === "left") {
       style.boxShadow =
         "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
-      style.borderRight = "1px solid var(--table-border-color)";
     } else if (position === "right") {
       style.boxShadow =
         "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
@@ -336,9 +373,19 @@ function TableHeaderCell({
   width,
   header,
   type,
+  isLast,
+  isLastPinned,
+  isLastCenter,
 }: VirtualHeader & {
   type: "header" | "footer";
+  isLast: boolean;
+  isFirst: boolean;
+  isLastPinned: boolean;
+  isFirstPinned: boolean;
+  isFirstCenter: boolean;
+  isLastCenter: boolean;
 }) {
+  const { table } = useTableContext();
   return (
     <TableCell
       component="div"
@@ -364,7 +411,16 @@ function TableHeaderCell({
         backgroundColor: isPinned
           ? (theme) => theme.palette.background.paper
           : "transparent",
-        borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+        borderRight:
+          ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+          !isLast &&
+          !(isLastCenter && table.getIsSomeColumnsPinned("right"))
+            ? (theme) => `1px solid ${theme.palette.divider}`
+            : undefined,
+        borderLeft:
+          isPinned === "end" && !isLastPinned
+            ? (theme) => `1px solid ${theme.palette.divider}`
+            : undefined,
       }}
     >
       <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>

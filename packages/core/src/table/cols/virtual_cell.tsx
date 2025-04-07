@@ -7,9 +7,21 @@ import { useMeasureCellContext } from "../../measure_cell_context";
 export const VirtualCell = function VirtualizedCell({
   cell,
   header,
+  isLastPinned,
+  isFirstPinned,
+  isLast,
+  isFirst,
+  isFirstCenter,
+  isLastCenter,
 }: {
   cell: Cell<any, unknown>;
   header: VirtualHeader;
+  isLastPinned: boolean;
+  isFirstPinned: boolean;
+  isLast: boolean;
+  isFirst: boolean;
+  isFirstCenter: boolean;
+  isLastCenter: boolean;
 }) {
   const ctx = useTableContext();
   const { skin } = ctx;
@@ -23,6 +35,12 @@ export const VirtualCell = function VirtualizedCell({
       <skin.Cell
         header={header}
         isMeasuring={Boolean(measuring)}
+        isLastPinned={isLastPinned}
+        isFirstPinned={isFirstPinned}
+        isLast={isLast}
+        isFirst={isFirst}
+        isFirstCenter={isFirstCenter}
+        isLastCenter={isLastCenter}
         ref={
           measuring
             ? (ref) => {

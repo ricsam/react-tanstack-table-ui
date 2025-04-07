@@ -38,7 +38,8 @@
       ".github/**/*"
     ],
     "ignoreDependencies": [
-      "prettier"
+      "prettier",
+      "@storybook/blocks"
     ],
     "ignoreBinaries": [
       "vite"

@@ -20,6 +20,9 @@ type TableContextType = {
   onMeasureCallback: undefined | ((measureData: MeasureData) => void);
   measureCells: (cb: (measureData: MeasureData) => void) => void;
   disableScroll?: boolean;
+  pinColsRelativeTo: "cols" | "table";
+  pinRowsRelativeTo: "rows" | "table";
+  autoSizeColsBy: "header" | "cell" | "both";
 };
 
 export const TableContext = React.createContext<TableContextType | undefined>(

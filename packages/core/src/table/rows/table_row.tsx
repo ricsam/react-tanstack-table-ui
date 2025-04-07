@@ -24,26 +24,66 @@ export const TableRow = function TableRow({
   isPinned,
 }: VirtualRow) {
   const visibileCells = row.getVisibleCells();
-  const { skin, renderSubComponent } = useTableContext();
+  const { skin, renderSubComponent, pinColsRelativeTo } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
   const { mainHeaderGroup: headerGroup, rowVirtualizer } =
     useVirtualRowContext();
 
-  const loop = (headers: VirtualHeader[]) => {
+  const allHeaders = headerGroup.headers;
+
+  const loop = (headers: VirtualHeader[], pinned: PinPos) => {
     return (
       <>
-        {headers.map((virtualHeader) => {
+        {headers.map((virtualHeader, index) => {
           const cell = visibileCells[virtualHeader.headerIndex];
+          let isLastPinned = false;
+          let isFirstPinned = false;
+          if (pinned === "start") {
+            isLastPinned = index === headers.length - 1;
+            isFirstPinned = index === 0;
+          } else if (pinned === "end") {
+            isLastPinned = index === 0;
+            isFirstPinned = index === headers.length - 1;
+          }
+          let isLast = false;
+          let isFirst = false;
+          if (allHeaders[0].headerId === virtualHeader.headerId) {
+            isFirst = true;
+          }
+          if (
+            allHeaders[allHeaders.length - 1].headerId ===
+            virtualHeader.headerId
+          ) {
+            isLast = true;
+          }
+          let isFirstCenter = false;
+          let isLastCenter = false;
+          if (pinned === false) {
+            isLastCenter = index === headers.length - 1;
+            isFirstCenter = index === 0;
+          }
+
           return (
-            <VirtualCell key={cell.id} cell={cell} header={virtualHeader} />
+            <VirtualCell
+              key={cell.id}
+              cell={cell}
+              header={virtualHeader}
+              isLastPinned={isLastPinned}
+              isFirstPinned={isFirstPinned}
+              isLast={isLast}
+              isFirst={isFirst}
+              isFirstCenter={isFirstCenter}
+              isLastCenter={isLastCenter}
+            />
           );
         })}
       </>
     );
   };
   let subComponent: React.ReactNode | undefined;
-  let isExpanded: boolean =
-    Boolean(row.subRows.length === 0 && row.getIsExpanded() && renderSubComponent);
+  let isExpanded: boolean = Boolean(
+    row.subRows.length === 0 && row.getIsExpanded() && renderSubComponent,
+  );
 
   if (isExpanded && renderSubComponent) {
     subComponent = renderSubComponent({ row });
@@ -85,19 +125,38 @@ export const TableRow = function TableRow({
                 pinned={stickyLeft}
                 type={"body"}
               >
-                {loop(stickyLeft)}
+                {loop(stickyLeft, "start")}
               </skin.PinnedCols>
-              <div style={{ width: headerGroup.offsetLeft }}></div>
+              <div
+                style={{
+                  minWidth: headerGroup.offsetLeft,
+                  flexShrink: 0,
+                }}
+              ></div>
               {loop(
                 headerGroup.headers.filter((cell) => cell.isPinned === false),
+                false,
               )}
-              <div style={{ width: headerGroup.offsetRight }}></div>
+              <div
+                style={
+                  pinColsRelativeTo === "table"
+                    ? {
+                        minWidth: headerGroup.offsetRight,
+                        flexShrink: 0,
+                        flexGrow: 1,
+                      }
+                    : {
+                        width: headerGroup.offsetRight,
+                        flexShrink: 0,
+                      }
+                }
+              ></div>
               <skin.PinnedCols
                 position="right"
                 pinned={stickyRight}
                 type={"body"}
               >
-                {loop(stickyRight)}
+                {loop(stickyRight, "end")}
               </skin.PinnedCols>
             </skin.TableRow>
             {isExpanded && (
