@@ -12,7 +12,7 @@ export function TableAutoSizingPage() {
 
       <h2>Basic Usage</h2>
       <p>
-        To enable table auto sizing, use the <code>autoSize</code> prop when rendering your table:
+        To enable table auto sizing, use the <code>autoCrush</code> prop when rendering your table:
       </p>
 
       <CodeBlock language="tsx">
@@ -24,7 +24,7 @@ function ResponsiveTable() {
       <VirtualizedTable
         columns={columns}
         data={data}
-        autoSize={true}
+        autoCrush={true}
         // Other props...
       />
     </div>
@@ -41,17 +41,17 @@ function ResponsiveTable() {
       <CodeBlock language="tsx">
 {`// CSS approach
 <div className="h-screen w-full"> {/* Full viewport height */}
-  <VirtualizedTable autoSize={true} ... />
+  <VirtualizedTable autoCrush={true} ... />
 </div>
 
 // Inline style approach
 <div style={{ height: 500, width: '100%' }}>
-  <VirtualizedTable autoSize={true} ... />
+  <VirtualizedTable autoCrush={true} ... />
 </div>
 
 // Fixed dimensions
 <div style={{ height: 400, width: 800 }}>
-  <VirtualizedTable autoSize={true} ... />
+  <VirtualizedTable autoCrush={true} ... />
 </div>`}
       </CodeBlock>
 
@@ -63,7 +63,7 @@ function ResponsiveTable() {
       <CodeBlock language="tsx">
 {`<VirtualizedTable
   // Basic auto sizing
-  autoSize={true}
+  autoCrush={true}
   
   // Set a minimum width for the table
   minWidth={600}
@@ -106,7 +106,7 @@ function ResizableTable() {
       
       <div style={{ height: containerHeight, width: '100%' }}>
         <VirtualizedTable
-          autoSize={true}
+          autoCrush={true}
           columns={columns}
           data={data}
         />
@@ -144,7 +144,7 @@ function ResizableTable() {
       <CodeBlock language="tsx">
 {`<VirtualizedTable
   // Auto size the table to fit its container
-  autoSize={true}
+  autoCrush={true}
   
   // Also enable column auto sizing
   enableColumnAutoSizing={true}
@@ -167,7 +167,7 @@ function ResizableTable() {
 
       <CodeBlock language="tsx">
 {`<VirtualizedTable
-  autoSize={true}
+  autoCrush={true}
   
   // Possible values:
   // - 'auto': Calculate based on content (up to maxHeight)

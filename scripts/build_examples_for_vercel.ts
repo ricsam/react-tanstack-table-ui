@@ -1,23 +1,23 @@
 import { $, Glob } from "bun";
 import path from "path";
-// const glob = new Glob("examples/*/package.json");
+const glob = new Glob("examples/*/package.json");
 
-// for await (const pkg of glob.scan({ absolute: true })) {
-//   const packageJson = JSON.parse(await Bun.file(pkg).text());
-//   const base = "/static_examples/" + path.basename(path.dirname(pkg));
-//   packageJson.viteBase = base;
-//   await Bun.write(pkg, JSON.stringify(packageJson, null, 2));
-//   console.log("building example", path.dirname(pkg));
-//   await $`
-//     pnpm run build
-//   `.cwd(path.dirname(pkg));
-//   const websiteDir = path.join(process.cwd(), "website", "public", base);
-//   console.log("copying example to website", path.relative(process.cwd(), websiteDir));
-//   await $`
-//     mkdir -p ${websiteDir}
-//     cp -r dist/* ${websiteDir}
-//   `.cwd(path.dirname(pkg));
-// }
+for await (const pkg of glob.scan({ absolute: true })) {
+  const packageJson = JSON.parse(await Bun.file(pkg).text());
+  const base = "/static_examples/" + path.basename(path.dirname(pkg));
+  packageJson.viteBase = base;
+  await Bun.write(pkg, JSON.stringify(packageJson, null, 2));
+  console.log("building example", path.dirname(pkg));
+  await $`
+    pnpm run build
+  `.cwd(path.dirname(pkg));
+  const websiteDir = path.join(process.cwd(), "website", "public", base);
+  console.log("copying example to website", path.relative(process.cwd(), websiteDir));
+  await $`
+    mkdir -p ${websiteDir}
+    cp -r dist/* ${websiteDir}
+  `.cwd(path.dirname(pkg));
+}
 
 const skinStorybookGlob = new Glob("packages/skin-*/.storybook/main.ts");
 for await (const storybook of skinStorybookGlob.scan({
@@ -27,6 +27,11 @@ for await (const storybook of skinStorybookGlob.scan({
   const packageDir = path.resolve(path.dirname(storybook), "..");
   const base = "/static_sb/" + path.basename(packageDir);
 
+  const packageJsonPath = path.join(packageDir, "package.json");
+  const packageJson = JSON.parse(await Bun.file(packageJsonPath).text());
+  packageJson.viteBase = base;
+  await Bun.write(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  
   console.log("building skin storybook", path.dirname(storybook));
 
   await $`

@@ -1,34 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Box } from "@mui/material";
-import { decorateColumnHelper } from "@rttui/core";
-import { createColumnHelper, getCoreRowModel } from "@tanstack/react-table";
+import { getCoreRowModel } from "@tanstack/react-table";
 import { AnoccaSkin } from "..";
-import { HeaderPinButtons } from "../HeaderPinButtons";
 import { ReactTanstackTableUi } from "./ReactTanstackTableUiStoryComponent";
-
-type Person = {
-  id: string;
-  name: string;
-  age: number;
-  city: string;
-} & Record<`col${number}`, string>;
-
-const data: Person[] = [
-  { id: "1", name: "John", age: 20, city: "New York" },
-  { id: "2", name: "Jane", age: 21, city: "Los Angeles" },
-  { id: "3", name: "Jim", age: 22, city: "Chicago" },
-];
-
-const bigData: Person[] = Array.from({ length: 1000 }, (_, i) => ({
-  id: i.toString(),
-  name: `Person ${i}`,
-  age: 20 + i,
-  city: `City ${i}`,
-  ...Object.fromEntries(
-    Array.from({ length: 100 }, (_, j) => [`col${j}`, `Value ${i}-${j}`]),
-  ),
-}));
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -40,163 +14,102 @@ const meta = {
   },
   // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
-    tableOptions: { control: "object" },
-    uiOptions: { control: "object" },
+    data: { control: "select" },
+    columns: { control: "select" },
+    pinColsRelativeTo: { control: "select", options: ["cols", "table"] },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
-    uiOptions: {
-      width: 600,
-      height: 400,
-      skin: AnoccaSkin,
-      autoSizeColumns: true,
-    },
-    tableOptions: {
-      columns: [],
-      data: [],
-      getCoreRowModel: getCoreRowModel(),
-    },
+    width: 600,
+    height: 400,
+    skin: AnoccaSkin,
+    autoCrushColumns: false,
+    data: "big",
+    columns: "few",
+    getCoreRowModel: getCoreRowModel(),
+    pinColsRelativeTo: "cols",
+    fillAvailableSpaceAfterCrush: false,
+    enableColumnPinning: true,
+    scrollbarWidth: 16,
   },
 } satisfies Meta<typeof ReactTanstackTableUi>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const columnHelper = decorateColumnHelper(createColumnHelper<Person>(), {
-  header: (original) => (
-    <Box sx={{ display: "flex", gap: 2 }}>
-      {original}
-      <HeaderPinButtons />
-    </Box>
-  ),
-});
-
-const columns = [
-  columnHelper.accessor("name", {
-    header: "Name",
-  }),
-  columnHelper.accessor("age", {
-    header: "Age",
-  }),
-  columnHelper.accessor("city", {
-    header: "City",
-  }),
-];
-
-const manyColumns = [
-  ...columns,
-  ...Array.from({ length: 100 }, (_, i) =>
-    columnHelper.accessor(`col${i}`, {
-      header: `Column ${i}`,
-      cell: (info) => info.getValue(),
-    }),
-  ),
-];
-
-// More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const AutoSizeColumns: Story = {
+export const Basic: Story = {
   args: {
-    tableOptions: {
-      columns,
-      data,
-      getCoreRowModel: getCoreRowModel(),
-      enableColumnResizing: true,
-      enableColumnPinning: true,
-    },
-    uiOptions: {
-      width: 600,
-      height: 400,
-      skin: AnoccaSkin,
-      autoSizeColumns: true,
-    },
+    enableColumnPinning: true,
+    autoCrushColumns: false,
+    fillAvailableSpaceAfterCrush: false,
+    pinColsRelativeTo: "cols",
   },
 };
 
-// More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const AutoSizeColumnsPinRelativeToCols: Story = {
+export const AutoCrushColumns: Story = {
   args: {
-    tableOptions: {
-      columns,
-      data,
-      getCoreRowModel: getCoreRowModel(),
-      enableColumnResizing: true,
-      enableColumnPinning: true,
-    },
-    uiOptions: {
-      width: 600,
-      height: 400,
-      skin: AnoccaSkin,
-      autoSizeColumns: true,
-      pinColsRelativeTo: "cols",
-    },
+    autoCrushColumns: true,
   },
 };
 
-// More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const PinRelativeToCols: Story = {
+export const AutoCrushColumnsExceptName: Story = {
   args: {
-    tableOptions: {
-      columns,
-      data,
-      getCoreRowModel: getCoreRowModel(),
-      enableColumnResizing: true,
-      enableColumnPinning: true,
-      initialState: {
-        columnPinning: {
-          right: ["city"],
-        },
+    autoCrushColumns: true,
+    meta: {
+      name: {
+        autoCrush: false,
       },
     },
-    uiOptions: {
-      width: 600,
-      height: 400,
-      skin: AnoccaSkin,
+  },
+};
+
+export const PinRelativeToCols: Story = {
+  args: {
+    autoCrushColumns: true,
+    pinColsRelativeTo: "cols",
+    initialState: {
+      columnPinning: {
+        right: ["city"],
+      },
     },
   },
 };
 
 export const PinRelativeToTable: Story = {
   args: {
-    tableOptions: {
-      columns,
-      data,
-      getCoreRowModel: getCoreRowModel(),
-      enableColumnResizing: true,
-      enableColumnPinning: true,
-      initialState: {
-        columnPinning: {
-          right: ["city"],
-        },
+    autoCrushColumns: true,
+    pinColsRelativeTo: "table",
+    initialState: {
+      columnPinning: {
+        right: ["city"],
       },
-    },
-    uiOptions: {
-      width: 600,
-      height: 400,
-      skin: AnoccaSkin,
-      pinColsRelativeTo: "table",
     },
   },
 };
 
-export const PinRelativeToTableWithBigData: Story = {
+export const FillAvailableSpaceAfterCrush: Story = {
   args: {
-    tableOptions: {
-      columns: manyColumns,
-      data: bigData,
-      getCoreRowModel: getCoreRowModel(),
-      enableColumnResizing: true,
-      enableColumnPinning: true,
-      initialState: {
-        columnPinning: {
-          right: ["city"],
-        },
+    autoCrushColumns: true,
+    fillAvailableSpaceAfterCrush: true,
+  },
+};
+
+export const FillAvailableSpaceAfterCrushExceptName: Story = {
+  args: {
+    autoCrushColumns: true,
+    fillAvailableSpaceAfterCrush: true,
+    meta: {
+      name: {
+        fillAvailableSpaceAfterCrush: false,
       },
     },
-    uiOptions: {
-      width: 600,
-      height: 400,
-      skin: AnoccaSkin,
-      pinColsRelativeTo: "table",
-    },
+  },
+};
+
+export const FillAvailableSpaceAfterCrushWithoutSpecifiedScrollbarWidth: Story = {
+  args: {
+    autoCrushColumns: true,
+    fillAvailableSpaceAfterCrush: true,
+    scrollbarWidth: 0,
   },
 };

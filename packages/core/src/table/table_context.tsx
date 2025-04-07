@@ -22,7 +22,7 @@ type TableContextType = {
   disableScroll?: boolean;
   pinColsRelativeTo: "cols" | "table";
   pinRowsRelativeTo: "rows" | "table";
-  autoSizeColsBy: "header" | "cell" | "both";
+  crushMinSizeBy: "header" | "cell" | "both";
 };
 
 export const TableContext = React.createContext<TableContextType | undefined>(

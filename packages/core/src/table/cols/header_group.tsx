@@ -77,17 +77,24 @@ export function HeaderGroup({
       <skin.PinnedCols position="left" pinned={pinnedLeft} type={type}>
         {loop(pinnedLeft, "start")}
       </skin.PinnedCols>
-      <div style={{ minWidth: offsetLeft, flexShrink: 0 }}></div>
+      <div style={{ width: offsetLeft, flexShrink: 0 }}></div>
       {loop(
         headers.filter((header) => header.isPinned === false),
         false,
       )}
       <div
-        style={{
-          minWidth: offsetRight,
-          flexShrink: 0,
-          flexGrow: pinColsRelativeTo === "table" ? 1 : 0,
-        }}
+        style={
+          pinColsRelativeTo === "table"
+            ? {
+                minWidth: offsetRight,
+                flexShrink: 0,
+                flexGrow: 1,
+              }
+            : {
+                width: offsetRight,
+                flexShrink: 0,
+              }
+        }
       ></div>
       <skin.PinnedCols position="right" pinned={pinnedRight} type={type}>
         {loop(pinnedRight, "end")}

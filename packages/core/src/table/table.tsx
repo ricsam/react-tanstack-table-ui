@@ -15,7 +15,8 @@ import { CellRefs, MeasureData } from "./types";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
-    autoSize?: boolean;
+    autoCrush?: boolean;
+    fillAvailableSpaceAfterCrush?: boolean;
   }
 }
 
@@ -30,11 +31,13 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   columnOverscan?: number;
   renderSubComponent?: (args: { row: Row<T> }) => React.ReactNode;
   underlay?: React.ReactNode;
-  autoSizeColumns?: boolean;
+  autoCrushColumns?: boolean;
   disableScroll?: boolean;
   pinColsRelativeTo?: "cols" | "table";
   pinRowsRelativeTo?: "rows" | "table";
-  autoSizeColsBy?: "header" | "cell" | "both";
+  crushMinSizeBy?: "header" | "cell" | "both";
+  fillAvailableSpaceAfterCrush?: boolean;
+  scrollbarWidth?: number;
 }) {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -61,14 +64,14 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   );
 
   const refsValue = {
-    width: props.width,
     table,
+    props
   };
   const refs = React.useRef(refsValue);
   refs.current = refsValue;
 
   React.useEffect(() => {
-    if (!props.autoSizeColumns) {
+    if (!props.autoCrushColumns) {
       return;
     }
 
@@ -77,37 +80,43 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
         const newSizing = { ...prev };
         let totalSize = 0;
 
-        const colsToAutoSize = new Map<string, CellRefs[string][]>();
+        const colsToCrush = new Map<string, CellRefs[string][]>();
+        const colsThatCanFill = new Set<string>();
         cols.forEach((col, colId) => {
           if (!col) {
             return;
           }
           const tsCol = refs.current.table.getColumn(colId);
-          if (tsCol?.columnDef.meta?.autoSize !== false) {
-            colsToAutoSize.set(colId, col);
+          if (tsCol?.columnDef.meta?.autoCrush !== false) {
+            colsToCrush.set(colId, col);
           } else {
             totalSize += tsCol.getSize();
           }
+          if (tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false) {
+            colsThatCanFill.add(colId);
+          }
         });
 
-        colsToAutoSize.forEach((col, colId) => {
+        colsToCrush.forEach((col, colId) => {
           const colWidth = Math.max(...col.map(({ rect }) => rect.width));
           totalSize += colWidth;
           newSizing[colId] = colWidth;
         });
-        if (totalSize < refs.current.width) {
-          const delta = refs.current.width - totalSize;
-          const perColumnDelta = delta / colsToAutoSize.size;
-          colsToAutoSize.forEach((_, colId) => {
+        const totalWidth = refs.current.props.width - (refs.current.props.scrollbarWidth ?? 0);
+        if (refs.current.props.fillAvailableSpaceAfterCrush && totalSize < totalWidth) {
+          const delta = totalWidth - totalSize;
+          const perColumnDelta = delta / colsThatCanFill.size;
+          colsThatCanFill.forEach((colId) => {
             newSizing[colId] += perColumnDelta;
           });
         }
         return newSizing;
       });
     };
-
-    measureCells(onMeasureCb);
-  }, [measureCells, props.autoSizeColumns]);
+    if (props.autoCrushColumns) {
+      measureCells(onMeasureCb);
+    }
+  }, [measureCells, props.autoCrushColumns]);
 
   return (
     <TableContext.Provider
@@ -128,7 +137,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           disableScroll: props.disableScroll,
           pinColsRelativeTo: props.pinColsRelativeTo ?? "cols",
           pinRowsRelativeTo: props.pinRowsRelativeTo ?? "rows",
-          autoSizeColsBy: props.autoSizeColsBy ?? "cell",
+          crushMinSizeBy: props.crushMinSizeBy ?? "cell",
         }),
         [
           props.width,
@@ -143,7 +152,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           props.disableScroll,
           props.pinColsRelativeTo,
           props.pinRowsRelativeTo,
-          props.autoSizeColsBy,
+          props.crushMinSizeBy,
         ],
       )}
     >
@@ -230,7 +239,10 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
               position: "absolute",
               top: 0,
               left: 0,
-              width: pinColsRelativeTo === "table" ? "max(var(--table-width), 100%)" : "var(--table-width)",
+              width:
+                pinColsRelativeTo === "table"
+                  ? "max(var(--table-width), 100%)"
+                  : "var(--table-width)",
               height:
                 "max(var(--table-height) + var(--header-height) + var(--footer-height), 100%)",
               backgroundColor: "transparent",

@@ -12,7 +12,7 @@ export function ColumnAutoSizingPage() {
 
       <h2>Basic Usage</h2>
       <p>
-        To enable column auto sizing, you need to use the <code>autoSize</code> property
+        To enable column auto sizing, you need to use the <code>autoCrush</code> property
         when creating your column definitions:
       </p>
 
@@ -25,11 +25,11 @@ const columns = [
   columnHelper.accessor('firstName', {
     header: 'First Name',
     // Enable auto sizing for this column
-    autoSize: true,
+    autoCrush: true,
   }),
   columnHelper.accessor('lastName', {
     header: 'Last Name',
-    autoSize: true,
+    autoCrush: true,
   }),
   // Other columns...
 ];
@@ -58,7 +58,7 @@ function PersonTable() {
       <CodeBlock language="tsx">
 {`columnHelper.accessor('firstName', {
   header: 'First Name',
-  autoSize: true,
+  autoCrush: true,
   minSize: 100, // Minimum width in pixels
 })`}
       </CodeBlock>
@@ -71,7 +71,7 @@ function PersonTable() {
       <CodeBlock language="tsx">
 {`columnHelper.accessor('firstName', {
   header: 'First Name',
-  autoSize: true,
+  autoCrush: true,
   maxSize: 300, // Maximum width in pixels
 })`}
       </CodeBlock>
@@ -84,7 +84,7 @@ function PersonTable() {
       <CodeBlock language="tsx">
 {`columnHelper.accessor('firstName', {
   header: 'First Name',
-  autoSize: true,
+  autoCrush: true,
   size: 150, // Initial width in pixels
 })`}
       </CodeBlock>

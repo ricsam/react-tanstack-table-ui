@@ -89,7 +89,7 @@ const data: Prop[] = [
   },
   {
     id: "9",
-    name: "autoSizeColumns",
+    name: "autoCrushColumns",
     type: "boolean",
     description: "Whether to automatically size the columns",
     required: false,
@@ -168,7 +168,7 @@ const columns = [
     },
     size: 80,
     meta: {
-      autoSize: false,
+      autoCrush: false,
     },
   }),
 ];
@@ -317,7 +317,7 @@ function MyAnoccaTable() {
               width={wrapperBounds.width}
               height={wrapperBounds.height}
               skin={TailwindSkin}
-              autoSizeColumns
+              autoCrushColumns
               disableScroll
             />
           )}
@@ -413,7 +413,7 @@ const height =
         height={height}
         skin={TailwindSkin}
         disableScroll
-        autoSizeColumns
+        autoCrushColumns
       />
     )}
   </div>

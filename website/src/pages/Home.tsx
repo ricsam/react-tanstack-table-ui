@@ -166,7 +166,7 @@ export function HomePage() {
         id: "performance",
         header: "Performance",
         meta: {
-          autoSize: false,
+          autoCrush: false,
         },
         cell: (info) => {
           const performance = info.getValue();
@@ -567,7 +567,7 @@ export function HomePage() {
                   width={tableContainerBounds.width}
                   height={tableContainerBounds.height}
                   skin={TailwindSkin}
-                  autoSizeColumns
+                  autoCrushColumns
                   underlay={
                     <div
                       style={{
