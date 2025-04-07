@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+website/public/static_sb
+website/public/static_examples
+storybook-static

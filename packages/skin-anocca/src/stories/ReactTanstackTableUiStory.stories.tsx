@@ -12,7 +12,7 @@ type Person = {
   name: string;
   age: number;
   city: string;
-};
+} & Record<`col${number}`, string>;
 
 const data: Person[] = [
   { id: "1", name: "John", age: 20, city: "New York" },
@@ -25,6 +25,9 @@ const bigData: Person[] = Array.from({ length: 1000 }, (_, i) => ({
   name: `Person ${i}`,
   age: 20 + i,
   city: `City ${i}`,
+  ...Object.fromEntries(
+    Array.from({ length: 100 }, (_, j) => [`col${j}`, `Value ${i}-${j}`]),
+  ),
 }));
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
@@ -78,6 +81,16 @@ const columns = [
   columnHelper.accessor("city", {
     header: "City",
   }),
+];
+
+const manyColumns = [
+  ...columns,
+  ...Array.from({ length: 100 }, (_, i) =>
+    columnHelper.accessor(`col${i}`, {
+      header: `Column ${i}`,
+      cell: (info) => info.getValue(),
+    }),
+  ),
 ];
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
@@ -168,7 +181,7 @@ export const PinRelativeToTable: Story = {
 export const PinRelativeToTableWithBigData: Story = {
   args: {
     tableOptions: {
-      columns,
+      columns: manyColumns,
       data: bigData,
       getCoreRowModel: getCoreRowModel(),
       enableColumnResizing: true,
