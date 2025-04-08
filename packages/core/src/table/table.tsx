@@ -82,10 +82,9 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
     const onMeasureCb = ({ cols }: MeasureData) => {
       refs.current.table.setColumnSizing((prev) => {
         const newSizing = { ...prev };
-        let totalSize = 0;
 
         const colsToCrush = new Map<string, CellRefs>();
-        const colsThatCanFill = new Set<string>();
+
         cols.forEach((col, colId) => {
           if (!col) {
             return;
@@ -93,11 +92,6 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           const tsCol = refs.current.table.getColumn(colId);
           if (tsCol?.columnDef.meta?.autoCrush !== false) {
             colsToCrush.set(colId, col);
-          } else {
-            totalSize += tsCol.getSize();
-          }
-          if (tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false) {
-            colsThatCanFill.add(colId);
           }
         });
 
@@ -116,7 +110,6 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
               })
               .map(({ rect }) => rect.width),
           );
-          totalSize += colWidth;
           newSizing[colId] = colWidth;
         });
 
@@ -155,6 +148,26 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
         //#endregion
         const totalWidth =
           refs.current.props.width - (refs.current.props.scrollbarWidth ?? 0);
+
+        const leafCols = new Set<string>();
+        cols.forEach((_, colId) => {
+          const tsCol = refs.current.table.getColumn(colId);
+          if (tsCol) {
+            tsCol.getLeafColumns().forEach((leafCol) => {
+              leafCols.add(leafCol.id);
+            });
+          }
+        });
+        let totalSize = 0;
+        const colsThatCanFill = new Set<string>();
+        
+        leafCols.forEach((colId) => {
+          totalSize += newSizing[colId];
+          const tsCol = refs.current.table.getColumn(colId);
+          if (tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false) {
+            colsThatCanFill.add(colId);
+          }
+        });
         if (
           refs.current.props.fillAvailableSpaceAfterCrush &&
           totalSize < totalWidth

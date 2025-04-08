@@ -149,6 +149,47 @@ export const FillAvailableSpaceAfterCrushExceptName: Story = {
   },
 };
 
+export const FillAvailableSpaceAfterCrushWithTwoHeaderRows: Story = {
+  args: {
+    autoCrushColumns: true,
+    fillAvailableSpaceAfterCrush: true,
+    withTwoHeaderRows: true,
+  },
+};
+export const FillAvailableSpaceAfterCrushWithHeaderGroups: Story = {
+  args: {
+    autoCrushColumns: true,
+    fillAvailableSpaceAfterCrush: true,
+    withHeaderGroups: true,
+  },
+};
+export const FillAvailableSpaceAfterCrushWithHeaderGroupsExceptName: Story = {
+  args: {
+    autoCrushColumns: true,
+    fillAvailableSpaceAfterCrush: true,
+    withHeaderGroups: true,
+    meta: {
+      name: {
+        fillAvailableSpaceAfterCrush: false,
+      },
+    },
+  },
+};
+
+export const FillAvailableSpaceAfterCrushWithTwoHeaderRowsExceptName: Story = {
+  args: {
+    autoCrushColumns: true,
+    fillAvailableSpaceAfterCrush: true,
+    withTwoHeaderRows: true,
+    meta: {
+      name: {
+        fillAvailableSpaceAfterCrush: false,
+      },
+    },
+  },
+};
+
+
 export const FillAvailableSpaceAfterCrushWithoutSpecifiedScrollbarWidth: Story =
   {
     args: {

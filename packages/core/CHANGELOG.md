@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.17
+
+### Patch Changes
+
+- update crush algo
+
 ## 1.0.16
 
 ### Patch Changes

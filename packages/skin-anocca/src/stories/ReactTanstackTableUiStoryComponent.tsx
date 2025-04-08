@@ -1,4 +1,10 @@
-import { Box, ScopedCssBaseline, ThemeProvider, Typography } from "@mui/material";
+import {
+  Box,
+  ScopedCssBaseline,
+  TextField,
+  ThemeProvider,
+  Typography,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
   decorateColumnHelper,
@@ -43,6 +49,8 @@ export const ReactTanstackTableUi = (
     data: "big" | "small";
     columns: "many" | "few";
     meta?: Record<string, ColumnMeta<Person, string>>;
+    withTwoHeaderRows?: boolean;
+    withHeaderGroups?: boolean;
   } & Omit<TableOptions<Person>, "data" | "columns"> &
     Omit<React.ComponentProps<typeof TableComponent>, "table">,
 ) => {
@@ -59,8 +67,9 @@ export const ReactTanstackTableUi = (
       ),
     });
 
-    const fewColumns = [
+    const fewColumns: ColumnDef<Person>[] = [
       columnHelper.accessor("name", {
+        id: "name",
         header: "Name",
         cell: (info) => (
           <Box sx={{ display: "flex", gap: 2, flex: 1 }}>
@@ -72,30 +81,84 @@ export const ReactTanstackTableUi = (
         meta: props.meta?.["name"],
       }),
       columnHelper.accessor("age", {
+        id: "age",
         header: "Age",
         meta: props.meta?.["age"],
-        cell: (info) => <Typography variant="body2">{info.getValue()}</Typography>,
+        cell: (info) => (
+          <Typography variant="body2">{info.getValue()}</Typography>
+        ),
         size: 50,
       }),
       columnHelper.accessor("city", {
+        id: "city",
         header: "City",
         meta: props.meta?.["city"],
-        cell: (info) => <Typography variant="body2">{info.getValue()}</Typography>,
+        cell: (info) => (
+          <Typography variant="body2">{info.getValue()}</Typography>
+        ),
       }),
     ];
 
-    const manyColumns = [
+    const manyColumns: ColumnDef<Person>[] = [
       ...fewColumns,
       ...Array.from({ length: 100 }, (_, i) =>
         columnHelper.accessor(`col${i}`, {
+          id: `col${i}`,
           header: `Column ${i}`,
-          cell: (info) => <Typography variant="body2">{info.getValue()}</Typography>,
+          cell: (info) => (
+            <Typography variant="body2">{info.getValue()}</Typography>
+          ),
         }),
       ),
     ];
 
-    return props.columns === "few" ? fewColumns : manyColumns;
-  }, [props.columns, props.enableColumnPinning, props.enableRowPinning, props.meta]);
+    const cols = props.columns === "few" ? fewColumns : manyColumns;
+
+    if (props.withHeaderGroups) {
+      cols.splice(
+        0,
+        2,
+        columnHelper.group({
+          id: `personal-info`,
+          header: "Personal Info",
+          columns: cols.slice(0, 2),
+        }),
+      );
+    }
+
+    if (props.withTwoHeaderRows) {
+      return cols.map((col) => {
+        const newCol: ColumnDef<Person> | undefined = col.id
+          ? {
+              ...col,
+              id: col.id,
+              header: () => (
+                <TextField
+                  placeholder="Search..."
+                  slotProps={{
+                    input: { sx: { height: "20px", width: "150px" } },
+                  }}
+                />
+              ),
+            }
+          : undefined;
+        const subColumns: ColumnDef<Person>[] = newCol ? [newCol] : [];
+        return columnHelper.group({
+          id: `group-${col.id}`,
+          header: col.header,
+          columns: subColumns,
+        });
+      });
+    }
+    return cols;
+  }, [
+    props.columns,
+    props.enableColumnPinning,
+    props.enableRowPinning,
+    props.meta,
+    props.withTwoHeaderRows,
+    props.withHeaderGroups,
+  ]);
 
   const table = useReactTable({
     ...props,
