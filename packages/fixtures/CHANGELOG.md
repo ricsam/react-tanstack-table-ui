@@ -1,5 +1,11 @@
 # @rttui/fixtures
 
+## 1.0.5
+
+### Patch Changes
+
+- fix build process a bit
+
 ## 1.0.4
 
 ### Patch Changes

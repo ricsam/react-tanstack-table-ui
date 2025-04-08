@@ -1,5 +1,13 @@
 # @rttui/skin-mui
 
+## 1.0.16
+
+### Patch Changes
+
+- fix build process a bit
+- Updated dependencies
+  - @rttui/core@1.0.16
+
 ## 1.0.15
 
 ### Patch Changes

@@ -192,6 +192,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     publishConfig: {
       access: "public",
     },
+    files: ["dist"],
   });
 
   await Bun.write(
