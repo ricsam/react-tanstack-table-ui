@@ -20,3 +20,7 @@ export type MeasureData = {
   cells: CellRefs;
   cols: Map<string, CellRefs | undefined>;
 };
+
+export type RttuiRef = {
+  autoSizeColumns: () => void;
+};

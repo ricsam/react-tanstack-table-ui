@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.18
+
+### Patch Changes
+
+- add tableRef
+
 ## 1.0.17
 
 ### Patch Changes

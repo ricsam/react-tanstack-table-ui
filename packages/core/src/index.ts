@@ -16,6 +16,7 @@ import { useRow } from "./table/rows/row_context";
 import { useCrushHeader } from "./use_crush_header";
 import { decorateColumnHelper } from "./decorate_column_helper";
 import type { HeaderDecorator, CellDecorator } from "./decorate_column_helper";
+import type { RttuiRef } from "./table/types";
 export {
   ReactTanstackTableUi,
   useVirtualRowContext,
@@ -31,4 +32,4 @@ export {
   useCrushHeader,
   decorateColumnHelper,
 };
-export type { Skin, VirtualHeader, HeaderDecorator, CellDecorator };
+export type { Skin, VirtualHeader, HeaderDecorator, CellDecorator, RttuiRef };
