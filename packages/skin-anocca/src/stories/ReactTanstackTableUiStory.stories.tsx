@@ -34,7 +34,6 @@ const meta = {
     getCoreRowModel: getCoreRowModel(),
     pinColsRelativeTo: "cols",
     fillAvailableSpaceAfterCrush: false,
-    enableColumnPinning: true,
     scrollbarWidth: 16,
     getRowId: (row) => row.id,
   },
@@ -74,6 +73,7 @@ export const AutoCrushColumns: Story = {
 export const AutoCrushColumnsExceptName: Story = {
   args: {
     autoCrushColumns: true,
+    enableColumnPinning: true,
     meta: {
       name: {
         autoCrush: false,
@@ -97,6 +97,7 @@ export const PinRelativeToCols: Story = {
   args: {
     autoCrushColumns: true,
     pinColsRelativeTo: "cols",
+    enableColumnPinning: true,
     initialState: {
       columnPinning: {
         right: ["city"],
@@ -109,6 +110,7 @@ export const PinRelativeToTable: Story = {
   args: {
     autoCrushColumns: true,
     pinColsRelativeTo: "table",
+    enableColumnPinning: true,
     initialState: {
       columnPinning: {
         right: ["city"],
@@ -187,8 +189,7 @@ export const CanPinRowsRelativeToTable: Story = {
 export const SizeByLargestHeader: Story = {
   args: {
     autoCrushColumns: true,
-    crushMinSizeBy: "header",
-    enableColumnPinning: true,
+    crushMinSizeBy: "cell",
   },
 };
 

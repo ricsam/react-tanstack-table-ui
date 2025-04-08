@@ -65,7 +65,7 @@ export const ReactTanstackTableUi = (
         cell: (info) => (
           <Box sx={{ display: "flex", gap: 2, flex: 1 }}>
             <Typography variant="body2">{info.getValue()}</Typography>
-            <Box sx={{ flexGrow: 1 }} />
+            {props.enableRowPinning && <Box sx={{ flexGrow: 1 }} />}
             {props.enableRowPinning && <RowPinButtons row={info.row} />}
           </Box>
         ),

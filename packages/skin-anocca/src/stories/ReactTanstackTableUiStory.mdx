@@ -19,7 +19,7 @@ columnHelper.accessor("age", {
 
 ### Auto crush columns
 
-You can also use the `autoCrushColumns` prop to automatically crush columns to fit the available space.
+You can also use the `autoCrushColumns` prop to automatically crush columns to fit the largest header in the column.
 
 ```tsx
 <ReactTanstackTableUi
@@ -27,7 +27,7 @@ You can also use the `autoCrushColumns` prop to automatically crush columns to f
 />
 ```
 
-To prevent a perticular column from being crushed, you can set the `autoCrush` meta option to `false`.
+To prevent a particular column from being crushed, you can set the `autoCrush` meta option to `false`.
 
 ```tsx
 columnHelper.accessor("name", {
@@ -37,6 +37,40 @@ columnHelper.accessor("name", {
 ```
 
 <Canvas of={RttuiStories.AutoCrushColumnsExceptName} />
+
+### Crush behavior
+
+By default the crush behavior is to crush the column based on the largest header.
+You can change this by setting the `crushMinSizeBy` prop to `header`, `cell` or `both`.
+
+```tsx
+<ReactTanstackTableUi
+  autoCrushColumns
+  crushMinSizeBy="cell"
+/>
+```
+
+<Story of={RttuiStories.SizeByLargestHeader} />
+
+You can also use meta to configure the crush behavior for a particular column.
+
+```tsx
+columnHelper.accessor("age", {
+  header: "Age",
+  meta: { crushMinSizeBy: "cell" },
+});
+
+<ReactTanstackTableUi
+  autoCrushColumns
+  enableColumnPinning
+  crushMinSizeBy="header"
+/>
+```
+
+<Story of={RttuiStories.SizeByLargestHeaderWithMeta} />
+
+<br /><br />
+
 
 ### Fill available space after crush
 
@@ -53,7 +87,7 @@ you can set the `autoCrushColumns` prop to `true` and set the `fillAvailableSpac
 />
 ```
 
-To prevent a perticular column from being expanded, you can set the `fillAvailableSpaceAfterCrush` meta option to `false`.
+To prevent a particular column from being expanded, you can set the `fillAvailableSpaceAfterCrush` meta option to `false`.
 
 ```ts
 columnHelper.accessor("name", {
@@ -63,29 +97,6 @@ columnHelper.accessor("name", {
 ```
 
 <Canvas of={RttuiStories.FillAvailableSpaceAfterCrushExceptName} />
-
-### Size by largest header
-
-If you want the columns to be sized by the largest header, you can set the `crushMinSizeBy` prop to `header`.
-
-```tsx
-<ReactTanstackTableUi crushMinSizeBy="header" />
-```
-
-<Story of={RttuiStories.SizeByLargestHeader} />
-
-You can also use meta to configure the crush behavior for a perticular column.
-
-```ts
-columnHelper.accessor("age", {
-  header: "Age",
-  meta: { crushMinSizeBy: "cell" },
-})
-```
-
-<Story of={RttuiStories.SizeByLargestHeaderWithMeta} />
-
-<br /><br />
 
 # Column Pinning
  
