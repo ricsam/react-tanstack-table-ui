@@ -12,11 +12,13 @@ import { VirtualRowProvider } from "./rows/virtual_row_provider";
 import { TableBody } from "./table_body";
 import { TableContext, useTableContext } from "./table_context";
 import { CellRefs, MeasureData } from "./types";
+import { getSubHeaders } from "../utils";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     autoCrush?: boolean;
     fillAvailableSpaceAfterCrush?: boolean;
+    crushMinSizeBy?: "header" | "cell" | "both";
   }
 }
 
@@ -62,10 +64,12 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
       }),
     [],
   );
+  const crushMinSizeBy = props.crushMinSizeBy ?? "header";
 
   const refsValue = {
     table,
-    props
+    props,
+    crushMinSizeBy,
   };
   const refs = React.useRef(refsValue);
   refs.current = refsValue;
@@ -80,7 +84,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
         const newSizing = { ...prev };
         let totalSize = 0;
 
-        const colsToCrush = new Map<string, CellRefs[string][]>();
+        const colsToCrush = new Map<string, CellRefs>();
         const colsThatCanFill = new Set<string>();
         cols.forEach((col, colId) => {
           if (!col) {
@@ -98,12 +102,63 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
         });
 
         colsToCrush.forEach((col, colId) => {
-          const colWidth = Math.max(...col.map(({ rect }) => rect.width));
+          const tsCol = refs.current.table.getColumn(colId);
+          const crushMinSizeBy =
+            tsCol?.columnDef.meta?.crushMinSizeBy ??
+            refs.current.crushMinSizeBy;
+          const colWidth = Math.max(
+            ...Object.values(col)
+              .filter(({ type }) => {
+                if (crushMinSizeBy === "both") {
+                  return true;
+                }
+                return type === crushMinSizeBy;
+              })
+              .map(({ rect }) => rect.width),
+          );
           totalSize += colWidth;
           newSizing[colId] = colWidth;
         });
-        const totalWidth = refs.current.props.width - (refs.current.props.scrollbarWidth ?? 0);
-        if (refs.current.props.fillAvailableSpaceAfterCrush && totalSize < totalWidth) {
+
+        //#region size by largest header
+        // maybe add one more option to crushMinSizeBy to size by largest header, but for now it is enabled by default
+        colsToCrush.forEach((col, colId) => {
+          Object.values(col).forEach((cell) => {
+            if (cell.type === "header") {
+              const header = cell.header;
+              if (header) {
+                const crushMinSizeBy =
+                  header.column.columnDef.meta?.crushMinSizeBy ??
+                  refs.current.crushMinSizeBy;
+                if (crushMinSizeBy === "cell") {
+                  return;
+                }
+                const headerWidth = newSizing[colId];
+                let leafTotal = 0;
+                const leafs = getSubHeaders(header);
+                leafs.forEach((h) => {
+                  leafTotal += newSizing[h.column.id];
+                });
+
+                if (leafTotal < headerWidth) {
+                  const diff = headerWidth - leafTotal;
+                  const perCol = diff / leafs.length;
+                  leafs.forEach((h) => {
+                    newSizing[h.column.id] = newSizing[h.column.id] + perCol;
+                  });
+                }
+              }
+            }
+          });
+        });
+
+        //#endregion
+        const totalWidth =
+          refs.current.props.width - (refs.current.props.scrollbarWidth ?? 0);
+        if (
+          refs.current.props.fillAvailableSpaceAfterCrush &&
+          totalSize < totalWidth
+        ) {
           const delta = totalWidth - totalSize;
           const perColumnDelta = delta / colsThatCanFill.size;
           colsThatCanFill.forEach((colId) => {
@@ -137,7 +192,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           disableScroll: props.disableScroll,
           pinColsRelativeTo: props.pinColsRelativeTo ?? "cols",
           pinRowsRelativeTo: props.pinRowsRelativeTo ?? "rows",
-          crushMinSizeBy: props.crushMinSizeBy ?? "cell",
+          crushMinSizeBy,
         }),
         [
           props.width,
@@ -152,7 +207,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           props.disableScroll,
           props.pinColsRelativeTo,
           props.pinRowsRelativeTo,
-          props.crushMinSizeBy,
+          crushMinSizeBy,
         ],
       )}
     >
@@ -170,12 +225,40 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
   const { rows, offsetBottom, offsetTop } = useVirtualRowContext();
   const { footerGroups, headerGroups } = useColContext();
 
-  const body = (
-    <TableBody
-      rows={rows}
-      offsetBottom={offsetBottom}
-      offsetTop={offsetTop}
-    ></TableBody>
+  const content = (
+    <>
+      {headerGroups.length > 0 && (
+        <skin.TableHeader>
+          {headerGroups.map((headerGroup) => {
+            return (
+              <HeaderGroup
+                key={headerGroup.id}
+                {...headerGroup}
+                type="header"
+              />
+            );
+          })}
+        </skin.TableHeader>
+      )}
+      <TableBody
+        rows={rows}
+        offsetBottom={offsetBottom}
+        offsetTop={offsetTop}
+      ></TableBody>
+      {footerGroups.length > 0 && (
+        <skin.TableFooter>
+          {footerGroups.map((footerGroup) => {
+            return (
+              <HeaderGroup
+                key={footerGroup.id}
+                {...footerGroup}
+                type="footer"
+              />
+            );
+          })}
+        </skin.TableFooter>
+      )}
+    </>
   );
 
   return (
@@ -185,21 +268,7 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
 
         <skin.TableScroller />
 
-        {headerGroups.length > 0 && (
-          <skin.TableHeader>
-            {headerGroups.map((headerGroup) => {
-              return (
-                <HeaderGroup
-                  key={headerGroup.id}
-                  {...headerGroup}
-                  type="header"
-                />
-              );
-            })}
-          </skin.TableHeader>
-        )}
-
-        {body}
+        {content}
 
         {onMeasureCallback && (
           <div
@@ -216,23 +285,11 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
             }}
           >
             <MeasureCellProvider onMeasureCallback={onMeasureCallback}>
-              {body}
+              {content}
             </MeasureCellProvider>
           </div>
         )}
-        {footerGroups.length > 0 && (
-          <skin.TableFooter>
-            {footerGroups.map((footerGroup) => {
-              return (
-                <HeaderGroup
-                  key={footerGroup.id}
-                  {...footerGroup}
-                  type="footer"
-                />
-              );
-            })}
-          </skin.TableFooter>
-        )}
+
         {skin.PinnedColsOverlay && (
           <div
             style={{

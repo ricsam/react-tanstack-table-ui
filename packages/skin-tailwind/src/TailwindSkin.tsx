@@ -102,9 +102,9 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  HeaderCell: (props) => {
-    return <TableHeaderCell {...props} />;
-  },
+  HeaderCell: React.forwardRef((props, ref) => {
+    return <TableHeaderCell {...props} ref={ref} />;
+  }),
   TableBody: ({ children }) => {
     return (
       <div
@@ -239,6 +239,7 @@ export const TailwindSkin: Skin = {
         className={`td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis border-r border-gray-200 dark:border-gray-700 ${
           selected ? "text-gray-900 dark:text-white bg-indigo-50 dark:bg-indigo-900" : ""
         }`}
+        data-column-id={header.columnId}
         style={{
           height: "var(--row-height)",
           width: isMeasuring ? "auto" : header.width,

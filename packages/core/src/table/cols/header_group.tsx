@@ -1,7 +1,7 @@
 import { useTableContext } from "../table_context";
 import { CombinedHeaderGroup, PinPos } from "../types";
-import { VirtualHeaderContext } from "./virtual_header/context";
 import { VirtualHeader } from "./virtual_header/types";
+import { VirtualHeaderCell } from "./virtual_header_cell";
 export type VirtualHeaderGroup = {
   offsetLeft: number;
   offsetRight: number;
@@ -49,17 +49,16 @@ export function HeaderGroup({
           }
 
           return (
-            <VirtualHeaderContext.Provider value={header} key={header.headerId}>
-              <skin.HeaderCell
-                {...header}
-                isLastPinned={isLastPinned}
-                isFirstPinned={isFirstPinned}
-                isLast={isLast}
-                isFirst={isFirst}
-                isFirstCenter={isFirstCenter}
-                isLastCenter={isLastCenter}
-              />
-            </VirtualHeaderContext.Provider>
+            <VirtualHeaderCell
+              key={header.headerId}
+              header={header}
+              isLastPinned={isLastPinned}
+              isFirstPinned={isFirstPinned}
+              isLast={isLast}
+              isFirst={isFirst}
+              isFirstCenter={isFirstCenter}
+              isLastCenter={isLastCenter}
+            />
           );
         })}
       </>

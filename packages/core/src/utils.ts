@@ -44,7 +44,7 @@ export const mapColumnPinningPositionToPinPos = (
   }
   return "end";
 };
-const getSubHeaders = (header: Header<any, unknown>) => {
+export const getSubHeaders = (header: Header<any, unknown>) => {
   const subHeaders: Header<any, unknown>[] = [];
   const appendSubHeaders = (header: Header<any, unknown>) => {
     if (header.subHeaders.length > 0) {

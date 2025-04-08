@@ -116,9 +116,9 @@ const AnoccaSkin: Skin = {
     );
   },
   HeaderRow: TableHeaderRow,
-  HeaderCell: (props) => {
-    return <TableHeaderCell {...props} />;
-  },
+  HeaderCell: React.forwardRef((props, ref) => {
+    return <TableHeaderCell {...props} ref={ref} />;
+  }),
   TableBody: ({ children }) => {
     return (
       <TableBody
@@ -127,6 +127,7 @@ const AnoccaSkin: Skin = {
         sx={{
           position: "relative",
           width: "var(--table-width)",
+          height: "var(--table-height)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-start",
@@ -300,6 +301,8 @@ const AnoccaSkin: Skin = {
             whiteSpace: "nowrap",
             zIndex: isPinned ? 5 : 0,
             boxSizing: "border-box",
+            fontSize: "0.875rem",
+            color: "text.primary",
             alignItems: "center",
             gap: "8px",
             display: "flex",
@@ -367,70 +370,81 @@ const AnoccaSkin: Skin = {
   },
 };
 
-function TableHeaderCell({
-  headerId,
-  isPinned,
-  width,
-  header,
-  type,
-  isLast,
-  isLastPinned,
-  isLastCenter,
-}: VirtualHeader & {
-  type: "header" | "footer";
-  isLast: boolean;
-  isFirst: boolean;
-  isLastPinned: boolean;
-  isFirstPinned: boolean;
-  isFirstCenter: boolean;
-  isLastCenter: boolean;
-}) {
-  const { table } = useTableContext();
-  return (
-    <TableCell
-      component="div"
-      className="th"
-      data-header-id={headerId}
-      data-is-pinned={isPinned}
-      sx={{
-        transition: "background-color 0.2s ease",
-        whiteSpace: "nowrap",
-        zIndex: isPinned ? 1 : 0,
-        display: "flex",
-        overflow: "hidden",
-        height: "var(--header-row-height)",
-        width,
-        position: "relative",
-        flexShrink: 0,
-        alignItems: "center",
-        gap: "8px",
-        justifyContent: "space-between",
-        padding: "6px 12px",
-        boxSizing: "border-box",
-        fontWeight: 600,
-        backgroundColor: isPinned
-          ? (theme) => theme.palette.background.paper
-          : "transparent",
-        borderRight:
-          ((isPinned === "start" && !isLastPinned) || !isPinned) &&
-          !isLast &&
-          !(isLastCenter && table.getIsSomeColumnsPinned("right"))
-            ? (theme) => `1px solid ${theme.palette.divider}`
-            : undefined,
-        borderLeft:
-          isPinned === "end" && !isLastPinned
-            ? (theme) => `1px solid ${theme.palette.divider}`
-            : undefined,
-      }}
-    >
-      <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-        {header && !header.isPlaceholder
-          ? flexRender(header.column.columnDef[type], header.getContext())
-          : null}
-      </div>
-    </TableCell>
-  );
-}
+const TableHeaderCell = React.forwardRef<
+  HTMLDivElement,
+  VirtualHeader & {
+    type: "header" | "footer";
+    isLast: boolean;
+    isFirst: boolean;
+    isLastPinned: boolean;
+    isFirstPinned: boolean;
+    isLastCenter: boolean;
+    isFirstCenter: boolean;
+    isMeasuring: boolean;
+  }
+>(
+  (
+    {
+      headerId,
+      isPinned,
+      width,
+      header,
+      type,
+      isLast,
+      isLastPinned,
+      isLastCenter,
+      isMeasuring,
+    },
+    ref,
+  ) => {
+    const { table } = useTableContext();
+    return (
+      <TableCell
+        ref={ref}
+        component="div"
+        className="th"
+        data-header-id={headerId}
+        data-is-pinned={isPinned}
+        sx={{
+          transition: "background-color 0.2s ease",
+          whiteSpace: "nowrap",
+          zIndex: isPinned ? 1 : 0,
+          display: "flex",
+          overflow: "hidden",
+          height: "var(--header-row-height)",
+          width: isMeasuring ? "auto" : width,
+          position: "relative",
+          flexShrink: 0,
+          alignItems: "center",
+          gap: "8px",
+          justifyContent: "space-between",
+          padding: "6px 12px",
+          boxSizing: "border-box",
+          fontWeight: 600,
+          backgroundColor: isPinned
+            ? (theme) => theme.palette.background.paper
+            : "transparent",
+          borderRight:
+            ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+            !isLast &&
+            !(isLastCenter && table.getIsSomeColumnsPinned("right"))
+              ? (theme) => `1px solid ${theme.palette.divider}`
+              : undefined,
+          borderLeft:
+            isPinned === "end" && !isLastPinned
+              ? (theme) => `1px solid ${theme.palette.divider}`
+              : undefined,
+        }}
+      >
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
+          {header && !header.isPlaceholder
+            ? flexRender(header.column.columnDef[type], header.getContext())
+            : null}
+        </div>
+      </TableCell>
+    );
+  },
+);
 
 export { AnoccaSkin };
 

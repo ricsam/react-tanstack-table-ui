@@ -1,0 +1,42 @@
+import { Canvas, Meta, Story, Source, Controls } from '@storybook/blocks';
+import { Box } from '@mui/material';
+ 
+import * as ColumnPinningStories from './ReactTanstackTableUiStory.stories';
+ 
+<Meta of={ColumnPinningStories} />
+
+# ⚠️ No scrollbar width specified
+We get a horizontal scrollbar because we don't specify the width of the vertical scrollbar.
+```tsx
+<ReactTanstackTableUi
+  autoCrushColumns
+  fillAvailableSpaceAfterCrush
+/>
+```
+<Box sx={{
+  '*::-webkit-scrollbar': { width: '16px' },
+  '*::-webkit-scrollbar-track': { backgroundColor: 'yellow' },
+  '*::-webkit-scrollbar-thumb': { backgroundColor: 'blue' },
+}}
+>
+  <Story of={ColumnPinningStories.FillAvailableSpaceAfterCrushWithoutSpecifiedScrollbarWidth} />
+</Box>
+<br /><br />
+# ✅ Scrollbar width specified
+We specify the width of the vertical scrollbar and we correctly only see a vertical scrollbar.
+```tsx
+<ReactTanstackTableUi
+  autoCrushColumns
+  fillAvailableSpaceAfterCrush
+  scrollbarWidth={16}
+/>
+```
+<Box sx={{
+  '*::-webkit-scrollbar': { width: '16px' },
+  '*::-webkit-scrollbar-track': { backgroundColor: 'yellow' },
+  '*::-webkit-scrollbar-thumb': { backgroundColor: 'blue' },
+}}
+>
+  <Story of={ColumnPinningStories.FillAvailableSpaceAfterCrushExceptName} />
+</Box>
+

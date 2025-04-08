@@ -13,7 +13,7 @@ import {
 } from "./default_skin/default_skin";
 import { useVirtualHeader } from "./table/cols/virtual_header/context";
 import { useRow } from "./table/rows/row_context";
-import { useMeasureHeader } from "./use_measure_header";
+import { useCrushHeader } from "./use_crush_header";
 import { decorateColumnHelper } from "./decorate_column_helper";
 import type { HeaderDecorator, CellDecorator } from "./decorate_column_helper";
 export {
@@ -28,7 +28,7 @@ export {
   darkModeVars,
   lightModeVars,
   useVirtualHeader,
-  useMeasureHeader,
+  useCrushHeader,
   decorateColumnHelper,
 };
 export type { Skin, VirtualHeader, HeaderDecorator, CellDecorator };

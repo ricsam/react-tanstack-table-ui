@@ -2,26 +2,23 @@ import { type VirtualHeader } from "@rttui/core";
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
 
-export function TableHeaderCell({
-  headerId,
-  isPinned,
-  width,
-  header,
-  type,
-}: VirtualHeader & {
-  type: "header" | "footer";
-}) {
-  const ref = React.useRef<HTMLDivElement>(null);
-
+export const TableHeaderCell = React.forwardRef<
+  HTMLDivElement,
+  VirtualHeader & {
+    type: "header" | "footer";
+    isMeasuring: boolean;
+  }
+>(({ headerId, isPinned, width, header, type, columnId, isMeasuring }, ref) => {
   return (
     <div
       className="th relative flex items-center px-2 py-3.5 text-sm font-semibold text-gray-900 dark:text-white overflow-hidden whitespace-nowrap hover:bg-gray-100 dark:hover:bg-gray-800"
       data-header-id={headerId}
       data-is-pinned={isPinned}
+      data-column-id={columnId}
       ref={ref}
       style={{
         height: "var(--header-row-height)",
-        width,
+        width: isMeasuring ? "auto" : width,
         zIndex: isPinned ? 11 : 10,
         flexShrink: 0,
         boxSizing: "border-box",
@@ -36,4 +33,4 @@ export function TableHeaderCell({
       </div>
     </div>
   );
-}
+});

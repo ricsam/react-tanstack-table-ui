@@ -1,8 +1,6 @@
-import { Cell } from "@tanstack/react-table";
 import React from "react";
-import { MeasureCellContext } from "./measure_cell_context";
-import { CellRefs } from "./table/types";
-import { MeasureData } from "./table/types";
+import { MeasureCellContext, MeasuredCell } from "./measure_cell_context";
+import { CellRefs, MeasureData } from "./table/types";
 
 export const MeasureCellProvider = ({
   children,
@@ -13,9 +11,7 @@ export const MeasureCellProvider = ({
 }) => {
   const elRefs = React.useRef<CellRefs>({});
   const cellRefs = React.useRef<Set<string>>(new Set());
-  const colRefs = React.useRef<Map<string, CellRefs[string][] | undefined>>(
-    new Map(),
-  );
+  const colRefs = React.useRef<Map<string, CellRefs | undefined>>(new Map());
   const measuredCount = React.useRef(0);
   const registerCell = (cellId: string) => {
     if (!cellRefs.current.has(cellId)) {
@@ -25,19 +21,28 @@ export const MeasureCellProvider = ({
   };
 
   const storeRef = React.useCallback(
-    (el: HTMLDivElement | null, cell: Cell<any, any>) => {
-      if (!cellRefs.current.has(cell.id)) {
-        throw new Error(`Cell ${cell.id} not registered`);
+    (
+      el: HTMLDivElement | null,
+      measuredCell: MeasuredCell,
+    ) => {
+      if (!cellRefs.current.has(measuredCell.id)) {
+        throw new Error(`Cell ${measuredCell.id} not registered`);
       }
       if (!el) {
         return;
       }
-      elRefs.current[cell.id] = { el, cell, rect: el.getBoundingClientRect() };
-      const currentCol = colRefs.current.get(cell.column.id);
+      elRefs.current[measuredCell.id] = {
+        ...measuredCell,
+        rect: el.getBoundingClientRect(),
+        el,
+      };
+      const currentCol = colRefs.current.get(measuredCell.columnId);
       if (!currentCol) {
-        colRefs.current.set(cell.column.id, [elRefs.current[cell.id]]);
+        colRefs.current.set(measuredCell.columnId, {
+          [measuredCell.id]: elRefs.current[measuredCell.id],
+        });
       } else {
-        currentCol.push(elRefs.current[cell.id]);
+        currentCol[measuredCell.id] = elRefs.current[measuredCell.id];
       }
       measuredCount.current--;
       if (measuredCount.current === 0) {

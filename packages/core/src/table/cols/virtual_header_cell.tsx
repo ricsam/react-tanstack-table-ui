@@ -1,11 +1,9 @@
-import { Cell, flexRender } from "@tanstack/react-table";
+import { useMeasureCellContext } from "../../measure_cell_context";
 import { useTableContext } from "../table_context";
 import { VirtualHeaderContext } from "./virtual_header/context";
 import { VirtualHeader } from "./virtual_header/types";
-import { useMeasureCellContext } from "../../measure_cell_context";
 
-export const VirtualCell = function VirtualizedCell({
-  cell,
+export function VirtualHeaderCell({
   header,
   isLastPinned,
   isFirstPinned,
@@ -14,7 +12,6 @@ export const VirtualCell = function VirtualizedCell({
   isFirstCenter,
   isLastCenter,
 }: {
-  cell: Cell<any, unknown>;
   header: VirtualHeader;
   isLastPinned: boolean;
   isFirstPinned: boolean;
@@ -23,39 +20,35 @@ export const VirtualCell = function VirtualizedCell({
   isFirstCenter: boolean;
   isLastCenter: boolean;
 }) {
-  const ctx = useTableContext();
-  const { skin } = ctx;
-
   const measuring = useMeasureCellContext();
+  const { skin } = useTableContext();
   if (measuring) {
-    measuring.registerCell(cell.id);
+    measuring.registerCell(header.headerId);
   }
   return (
-    <VirtualHeaderContext.Provider value={header}>
-      <skin.Cell
-        header={header}
-        isMeasuring={Boolean(measuring)}
+    <VirtualHeaderContext.Provider value={header} key={header.headerId}>
+      <skin.HeaderCell
+        {...header}
         isLastPinned={isLastPinned}
         isFirstPinned={isFirstPinned}
         isLast={isLast}
         isFirst={isFirst}
         isFirstCenter={isFirstCenter}
         isLastCenter={isLastCenter}
+        isMeasuring={Boolean(measuring)}
         ref={
           measuring
             ? (ref) => {
                 measuring.storeRef(ref, {
-                  type: "cell",
-                  id: cell.id,
-                  columnId: cell.column.id,
-                  cell,
+                  type: "header",
+                  id: header.headerId,
+                  columnId: header.columnId,
+                  header: header.header,
                 });
               }
             : undefined
         }
-      >
-        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-      </skin.Cell>
+      />
     </VirtualHeaderContext.Provider>
   );
-};
+}

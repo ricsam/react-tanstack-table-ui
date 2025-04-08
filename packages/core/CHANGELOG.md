@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.15
+
+### Patch Changes
+
+- Improve column sizing API
+
 ## 1.0.14
 
 ### Patch Changes

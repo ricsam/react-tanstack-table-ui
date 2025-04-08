@@ -1,4 +1,5 @@
-import { Cell, Header, HeaderGroup } from "@tanstack/react-table";
+import { Header, HeaderGroup } from "@tanstack/react-table";
+import { MeasuredCell } from "../measure_cell_context";
 
 export type PinPos = false | "start" | "end";
 export type CombinedHeaderGroup = {
@@ -9,10 +10,13 @@ export type CombinedHeaderGroup = {
 
 export type CellRefs = Record<
   string,
-  { el: HTMLDivElement; cell: Cell<any, any>; rect: DOMRect }
+  {
+    el: HTMLDivElement;
+    rect: DOMRect;
+  } & MeasuredCell
 >;
 
 export type MeasureData = {
   cells: CellRefs;
-  cols: Map<string, CellRefs[string][] | undefined>;
+  cols: Map<string, CellRefs | undefined>;
 };

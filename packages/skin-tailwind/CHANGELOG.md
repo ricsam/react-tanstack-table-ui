@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.9
+
+### Patch Changes
+
+- Improve column sizing API
+- Updated dependencies
+  - @rttui/core@1.0.15
+
 ## 0.0.8
 
 ### Patch Changes

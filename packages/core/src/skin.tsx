@@ -13,15 +13,17 @@ export type Skin = {
   OuterContainer: React.FC<{ children: React.ReactNode }>;
   TableScroller: React.FC;
 
-  HeaderCell: React.FC<
-    VirtualHeader & {
-      isLastPinned: boolean;
-      isFirstPinned: boolean;
-      isLast: boolean;
-      isFirst: boolean;
-      isFirstCenter: boolean;
-      isLastCenter: boolean;
-    }
+  HeaderCell: React.ForwardRefExoticComponent<
+    React.RefAttributes<HTMLDivElement> &
+      VirtualHeader & {
+        isLastPinned: boolean;
+        isFirstPinned: boolean;
+        isLast: boolean;
+        isFirst: boolean;
+        isFirstCenter: boolean;
+        isLastCenter: boolean;
+        isMeasuring: boolean;
+      }
   >;
   HeaderRow: React.FC<{ children: React.ReactNode; type: "header" | "footer" }>;
 
@@ -79,19 +81,26 @@ export type Skin = {
 };
 
 export function useTableCssVars(): Record<string, string> {
-  const { table, skin, width, height, pinColsRelativeTo } = useTableContext();
+  const { table, skin, width, height, pinColsRelativeTo, pinRowsRelativeTo } =
+    useTableContext();
   const { rowVirtualizer } = useVirtualRowContext();
   const { footerGroups, headerGroups } = useColContext();
 
   return {
     "--table-container-width": width + "px",
     "--table-container-height": height + "px",
-    "--table-width": pinColsRelativeTo === "table" ? `max(100%, ${table.getTotalSize()}px)` : table.getTotalSize() + "px",
-    "--table-height": rowVirtualizer.getTotalSize() + "px",
     "--row-height": skin.rowHeight + "px",
     "--header-row-height": skin.headerRowHeight + "px",
     "--footer-row-height": skin.footerRowHeight + "px",
     "--header-height": headerGroups.length * skin.headerRowHeight + "px",
     "--footer-height": footerGroups.length * skin.footerRowHeight + "px",
+    "--table-width":
+      pinColsRelativeTo === "table"
+        ? `max(100%, ${table.getTotalSize()}px)`
+        : table.getTotalSize() + "px",
+    "--table-height":
+      pinRowsRelativeTo === "table"
+        ? `max(calc(100% - var(--header-height) - var(--footer-height)), ${rowVirtualizer.getTotalSize()}px)`
+        : rowVirtualizer.getTotalSize() + "px",
   };
 }

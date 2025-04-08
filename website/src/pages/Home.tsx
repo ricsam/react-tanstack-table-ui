@@ -98,8 +98,8 @@ export function HomePage() {
   const columns = useMemo(() => {
     const columnHelper = decorateColumnHelper(createColumnHelper<Person>(), {
       header: (original, props) => (
-        <div className="flex items-center gap-2">
-          {original}
+        <div className="flex items-center gap-2 flex-1">
+          <div className="flex-1">{original}</div>
           <HeaderPinButtons header={props.header} />
           <Resizer header={props.header} />
         </div>
@@ -568,6 +568,7 @@ export function HomePage() {
                   height={tableContainerBounds.height}
                   skin={TailwindSkin}
                   autoCrushColumns
+                  crushMinSizeBy="header"
                   underlay={
                     <div
                       style={{

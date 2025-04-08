@@ -1,4 +1,4 @@
-import { Box, ScopedCssBaseline, ThemeProvider } from "@mui/material";
+import { Box, ScopedCssBaseline, ThemeProvider, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import {
   decorateColumnHelper,
@@ -14,7 +14,7 @@ import {
 } from "@tanstack/react-table";
 import { HeaderPinButtons } from "../HeaderPinButtons";
 import React from "react";
-
+import { RowPinButtons } from "../RowPinButtons";
 type Person = {
   id: string;
   name: string;
@@ -54,7 +54,7 @@ export const ReactTanstackTableUi = (
       header: (original) => (
         <Box sx={{ display: "flex", gap: 2 }}>
           {original}
-          <HeaderPinButtons />
+          {props.enableColumnPinning && <HeaderPinButtons />}
         </Box>
       ),
     });
@@ -62,15 +62,25 @@ export const ReactTanstackTableUi = (
     const fewColumns = [
       columnHelper.accessor("name", {
         header: "Name",
+        cell: (info) => (
+          <Box sx={{ display: "flex", gap: 2, flex: 1 }}>
+            <Typography variant="body2">{info.getValue()}</Typography>
+            <Box sx={{ flexGrow: 1 }} />
+            {props.enableRowPinning && <RowPinButtons row={info.row} />}
+          </Box>
+        ),
         meta: props.meta?.["name"],
       }),
       columnHelper.accessor("age", {
         header: "Age",
         meta: props.meta?.["age"],
+        cell: (info) => <Typography variant="body2">{info.getValue()}</Typography>,
+        size: 50,
       }),
       columnHelper.accessor("city", {
         header: "City",
         meta: props.meta?.["city"],
+        cell: (info) => <Typography variant="body2">{info.getValue()}</Typography>,
       }),
     ];
 
@@ -79,13 +89,13 @@ export const ReactTanstackTableUi = (
       ...Array.from({ length: 100 }, (_, i) =>
         columnHelper.accessor(`col${i}`, {
           header: `Column ${i}`,
-          cell: (info) => info.getValue(),
+          cell: (info) => <Typography variant="body2">{info.getValue()}</Typography>,
         }),
       ),
     ];
 
     return props.columns === "few" ? fewColumns : manyColumns;
-  }, [props.columns, props.meta]);
+  }, [props.columns, props.enableColumnPinning, props.enableRowPinning, props.meta]);
 
   const table = useReactTable({
     ...props,

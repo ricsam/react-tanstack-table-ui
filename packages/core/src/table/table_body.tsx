@@ -10,7 +10,7 @@ export const TableBody = ({
   offsetTop: number;
   offsetBottom: number;
 }) => {
-  const { skin } = useTableContext();
+  const { skin, pinRowsRelativeTo } = useTableContext();
 
   const loop = (rows: VirtualRow[]) => {
     return (
@@ -31,11 +31,21 @@ export const TableBody = ({
         {loop(pinnedTop)}
       </skin.PinnedRows>
 
-      <div style={{ height: offsetTop }} className="offset-top"></div>
+      <div
+        style={{ height: offsetTop, flexShrink: 0 }}
+        className="offset-top"
+      ></div>
 
       {loop(rows.filter((row) => row.isPinned === false))}
 
-      <div style={{ height: offsetBottom }} className="offset-bottom"></div>
+      <div
+        style={
+          pinRowsRelativeTo === "rows"
+            ? { height: offsetBottom, flexShrink: 0 }
+            : { minHeight: offsetBottom, flexShrink: 0, flexGrow: 1 }
+        }
+        className="offset-bottom"
+      ></div>
 
       <skin.PinnedRows position="bottom" pinned={pinnedBottom}>
         {loop(pinnedBottom)}

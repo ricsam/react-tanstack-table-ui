@@ -117,9 +117,9 @@ const MuiSkin: Skin = {
       </TableRow>
     );
   },
-  HeaderCell: (props) => {
-    return <TableHeaderCell {...props} />;
-  },
+  HeaderCell: React.forwardRef((props, ref) => {
+    return <TableHeaderCell {...props} ref={ref} />;
+  }),
   TableBody: ({ children }) => {
     return (
       <TableBody
@@ -288,16 +288,13 @@ const MuiSkin: Skin = {
   }),
 };
 
-function TableHeaderCell({
-  headerId,
-  isPinned,
-  width,
-  header,
-  type,
-}: VirtualHeader & {
-  type: "header" | "footer";
-}) {
-  const ref = React.useRef<HTMLDivElement>(null);
+const TableHeaderCell = React.forwardRef<
+  HTMLDivElement,
+  VirtualHeader & {
+    type: "header" | "footer";
+    isMeasuring?: boolean;
+  }
+>(({ headerId, isPinned, width, header, type, isMeasuring }, ref) => {
   const canPin = header?.column.getCanPin();
   const canResize = header?.column.getCanResize();
 
@@ -315,7 +312,7 @@ function TableHeaderCell({
         display: "flex",
         overflow: "hidden",
         height: "var(--header-row-height)",
-        width,
+        width: isMeasuring ? "auto" : width,
         position: "relative",
         flexShrink: 0,
         alignItems: "center",
@@ -445,6 +442,6 @@ function TableHeaderCell({
       )}
     </TableCell>
   );
-}
+});
 
 export { MuiSkin };

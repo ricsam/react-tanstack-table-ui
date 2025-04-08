@@ -1,0 +1,136 @@
+import { Canvas, Meta, Story, Source, Controls } from '@storybook/blocks';
+ 
+import * as RttuiStories from './ReactTanstackTableUiStory.stories';
+ 
+<Meta of={RttuiStories} />
+
+# Column sizing
+By default columns uses the size defined in the columns. By default that is 150px in tanstack table.
+
+You can override this by setting the `size` prop on the column.
+```tsx
+columnHelper.accessor("age", {
+  header: "Age",
+  size: 50,
+})
+```
+
+<Canvas of={RttuiStories.Basic} />
+
+### Auto crush columns
+
+You can also use the `autoCrushColumns` prop to automatically crush columns to fit the available space.
+
+```tsx
+<ReactTanstackTableUi
+  autoCrushColumns
+/>
+```
+
+To prevent a perticular column from being crushed, you can set the `autoCrush` meta option to `false`.
+
+```tsx
+columnHelper.accessor("name", {
+  header: "Name",
+  meta: { autoCrush: false },
+})
+```
+
+<Canvas of={RttuiStories.AutoCrushColumnsExceptName} />
+
+### Fill available space after crush
+
+If you don't have so many columns and you want the columns to fill all the available space,
+you can set the `autoCrushColumns` prop to `true` and set the `fillAvailableSpaceAfterCrush` prop to `true`.
+[If you don't want a horizontal scrollbar to appear](?path=/docs/reacttanstacktableui--scrollbarwidthspecified) you also need to specify the `scrollbarWidth` prop which is the width of the vertical scrollbar.
+
+
+```tsx
+<ReactTanstackTableUi
+  autoCrushColumns
+  fillAvailableSpaceAfterCrush
+  scrollbarWidth={16}
+/>
+```
+
+To prevent a perticular column from being expanded, you can set the `fillAvailableSpaceAfterCrush` meta option to `false`.
+
+```ts
+columnHelper.accessor("name", {
+  header: "Name",
+  meta: { fillAvailableSpaceAfterCrush: false },
+})
+```
+
+<Canvas of={RttuiStories.FillAvailableSpaceAfterCrushExceptName} />
+
+### Size by largest header
+
+If you want the columns to be sized by the largest header, you can set the `crushMinSizeBy` prop to `header`.
+
+```tsx
+<ReactTanstackTableUi crushMinSizeBy="header" />
+```
+
+<Story of={RttuiStories.SizeByLargestHeader} />
+
+You can also use meta to configure the crush behavior for a perticular column.
+
+```ts
+columnHelper.accessor("age", {
+  header: "Age",
+  meta: { crushMinSizeBy: "cell" },
+})
+```
+
+<Story of={RttuiStories.SizeByLargestHeaderWithMeta} />
+
+<br /><br />
+
+# Column Pinning
+ 
+By default columns are pinned relative to the other columns:
+ 
+<Story of={RttuiStories.PinRelativeToCols} />
+
+```tsx
+<ReactTanstackTableUi
+  autoCrushColumns
+  pinColsRelativeTo="cols"
+/>
+```
+
+You can also pin columns relative to the table:
+
+<Story of={RttuiStories.PinRelativeToTable} />
+
+```tsx
+<ReactTanstackTableUi
+  autoCrushColumns
+  pinColsRelativeTo="table"
+/>
+```
+
+# Row Pinning
+
+By default rows are pinned relative to the other rows:
+
+<Story of={RttuiStories.CanPinRowsRelativeToRows} />
+
+```tsx
+<ReactTanstackTableUi
+  enableRowPinning
+  pinRowsRelativeTo="rows"
+/>
+```
+
+You can also pin rows relative to the table:
+
+<Story of={RttuiStories.CanPinRowsRelativeToTable} />
+
+```tsx
+<ReactTanstackTableUi
+  enableRowPinning
+  pinRowsRelativeTo="table"
+/>
+```

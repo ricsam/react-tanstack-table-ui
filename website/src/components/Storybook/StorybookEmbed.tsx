@@ -3,7 +3,7 @@ interface StorybookEmbedProps {
 }
 
 export function StorybookEmbed({ skin }: StorybookEmbedProps) {
-  const storybookUrl = `https://rttui-docs.vercel.app/static_sb/skin-${skin}/index.html`;
+  const storybookUrl = `https://rttui-docs.vercel.app/static_sb/skin-${skin}/index.html?path=/docs/reacttanstacktableui--docs`;
 
   return (
     <div className="w-full h-[calc(100vh-64px)] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">

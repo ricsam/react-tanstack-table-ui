@@ -116,9 +116,9 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  HeaderCell: (props) => {
-    return <HeaderCell {...props} />;
-  },
+  HeaderCell: React.forwardRef((props, ref) => {
+    return <HeaderCell {...props} ref={ref} />;
+  }),
   TableFooter: ({ children }) => {
     return (
       <div
@@ -256,14 +256,14 @@ export const defaultSkin: Skin = {
     );
   },
   Cell: React.memo(
-    ({ children, header }) => {
+    ({ children, header, isMeasuring }) => {
       const { isDragging, isPinned } = header;
       return (
         <div
           className="drag-along-cell td"
           style={{
             opacity: isDragging ? 0.8 : 1,
-            width: header.width,
+            width: isMeasuring ? "auto" : header.width,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
