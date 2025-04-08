@@ -1,5 +1,11 @@
 # @rttui/skin-anocca
 
+## 1.0.16
+
+### Patch Changes
+
+- fix invalid build
+
 ## 1.0.15
 
 ### Patch Changes

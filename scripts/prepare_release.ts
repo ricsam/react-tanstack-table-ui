@@ -78,6 +78,10 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     if (output.trim() !== "") {
       console.log(output);
     }
+    console.log(
+      `Typescript for ${tsconfig} compiled successfully and produced output in`,
+      path.relative(process.cwd(), path.join(packageDir, "dist", "types")),
+    );
     return true;
   };
 
@@ -86,8 +90,7 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
     for await (const file of tsGlob.scan({
       cwd: path.join(packageDir, "src"),
     })) {
-      process.env.NODE_ENV = "production";
-      await Bun.build({
+      const result = await Bun.build({
         entrypoints: [path.join(packageDir, "src", file)],
         outdir: path.join(packageDir, "dist", type, path.dirname(file)),
         sourcemap: "external",
@@ -126,7 +129,15 @@ for await (const file of glob.scan({ cwd: packagesDir, absolute: true })) {
           },
         ],
       });
+      result.logs.forEach((log) => {
+        console.log(`[${log.level}] ${log.message}`);
+      });
     }
+
+    console.log(
+      "Bun bundle created successfully and produced output in",
+      path.relative(process.cwd(), path.join(packageDir, "dist", type)),
+    );
 
     return true;
   };
