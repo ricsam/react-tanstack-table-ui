@@ -40,7 +40,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   crushMinSizeBy?: "header" | "cell" | "both";
   fillAvailableSpaceAfterCrush?: boolean;
   scrollbarWidth?: number;
-  tableRef?: React.RefObject<RttuiRef>;
+  tableRef?: React.RefObject<RttuiRef | undefined>;
 }) {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
