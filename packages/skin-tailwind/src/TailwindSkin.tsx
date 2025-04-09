@@ -88,7 +88,7 @@ export const TailwindSkin: Skin = {
   HeaderRow: ({ children }) => {
     return (
       <div
-        className="flex divide-y divide-gray-200 dark:divide-gray-700"
+        className="flex border-b border-gray-200 dark:border-gray-700"
         style={{
           height: "var(--header-row-height)",
           boxSizing: "border-box",
@@ -105,10 +105,11 @@ export const TailwindSkin: Skin = {
   TableBody: ({ children }) => {
     return (
       <div
-        className="table-body relative"
+        className="table-body relative flex flex-col items-stretch justify-start"
         style={{
           width: "var(--table-width)",
           backgroundColor: "var(--table-bg-color)",
+          height: "var(--table-height)",
         }}
       >
         {children}
@@ -123,7 +124,7 @@ export const TailwindSkin: Skin = {
     const style: React.CSSProperties = {};
 
     if (position === "top") {
-      style.top = "calc(var(--header-height) + 1px)";
+      style.top = "var(--header-height)";
       style.boxShadow =
         "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
     } else if (position === "bottom") {
@@ -186,25 +187,17 @@ export const TailwindSkin: Skin = {
         flatIndex % 2 === 0 ? "var(--table-row-bg)" : "var(--table-row-alt-bg)",
     };
 
-    const { row } = useRow();
-
-    const selected = row.getIsSelected();
-
     return (
       <div
-        className={`relative flex group ${
-          selected ? "bg-indigo-50 dark:bg-indigo-900/20" : ""
-        }`}
+        className={clsx(
+          `relative flex group/row bg-(--table-cell-bg) bg-[--table-cell-bg] hover:bg-[#E3F2FD] dark:hover:bg-[#1e1e52]`,
+          "border-b border-gray-200 dark:border-gray-700",
+        )}
         style={{
           width: "var(--table-width)",
           height: "var(--row-height)",
           boxSizing: "border-box",
           zIndex: 1,
-          backgroundColor: !selected
-            ? flatIndex % 2 === 0
-              ? "var(--table-row-bg)"
-              : "var(--table-row-alt-bg)"
-            : undefined,
           ...vars,
         }}
       >
@@ -227,7 +220,15 @@ export const TailwindSkin: Skin = {
   },
   Cell: React.forwardRef(
     (
-      { children, header, isMeasuring, isLastPinned, isLast, isLastCenter },
+      {
+        children,
+        header,
+        isMeasuring,
+        isLastPinned,
+        isLast,
+        isLastCenter,
+        isFirst,
+      },
       ref,
     ) => {
       const { isPinned } = header;
@@ -238,11 +239,11 @@ export const TailwindSkin: Skin = {
       return (
         <div
           ref={ref}
-          className={`td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis ${
-            selected
-              ? "text-gray-900 dark:text-white bg-indigo-50 dark:bg-indigo-900"
-              : ""
-          } group-hover:bg-blue-500`}
+          className={clsx(
+            `td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis`,
+            "bg-(--table-cell-bg) bg-[--table-cell-bg] group-hover/row:bg-[#E3F2FD] dark:group-hover/row:bg-[#1e1e52]",
+            `relative border-b border-gray-200 dark:border-gray-700`,
+          )}
           data-column-id={header.columnId}
           style={{
             height: "var(--row-height)",
@@ -250,7 +251,6 @@ export const TailwindSkin: Skin = {
             zIndex: isPinned ? 5 : 0,
             boxSizing: "border-box",
             flexShrink: 0,
-            backgroundColor: selected ? undefined : "var(--table-cell-bg)",
             borderRight:
               ((isPinned === "start" && !isLastPinned) || !isPinned) &&
               !isLast &&
@@ -263,6 +263,9 @@ export const TailwindSkin: Skin = {
                 : undefined,
           }}
         >
+          {isFirst && selected && (
+            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-600" />
+          )}
           {children}
         </div>
       );

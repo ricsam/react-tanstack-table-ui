@@ -121,6 +121,8 @@ export const PinRelativeToTable: Story = {
     autoCrushColumns: true,
     pinColsRelativeTo: "table",
     enableColumnPinning: true,
+    canSelectRows: true,
+    crushMinSizeBy: "both",
     initialState: {
       columnPinning: {
         right: ["city"],

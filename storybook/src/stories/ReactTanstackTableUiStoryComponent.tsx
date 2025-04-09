@@ -17,6 +17,7 @@ import {
 } from "@rttui/skin-anocca";
 import {
   CellText,
+  Checkbox,
   lightModeVars,
   TailwindSkin,
   RowPinButtons as TwRowPinButtons,
@@ -73,6 +74,7 @@ export const ReactTanstackTableUi = (
     meta?: Record<string, ColumnMeta<Person, string>>;
     withTwoHeaderRows?: boolean;
     withHeaderGroups?: boolean;
+    canSelectRows?: boolean;
   } & Omit<TableOptions<Person>, "data" | "columns"> &
     Omit<React.ComponentProps<typeof TableComponent>, "table">,
 ) => {
@@ -81,7 +83,8 @@ export const ReactTanstackTableUi = (
     props.data === "big" ? bigData : props.data === "small" ? smallData : [];
 
   const columns: ColumnDef<Person>[] = React.useMemo(() => {
-    const columnHelper = decorateColumnHelper(createColumnHelper<Person>(), {
+    const originalColumnHelper = createColumnHelper<Person>();
+    const columnHelper = decorateColumnHelper(originalColumnHelper, {
       header: (original) => (
         <Box sx={{ display: "flex", gap: 2 }}>
           {original}
@@ -106,7 +109,7 @@ export const ReactTanstackTableUi = (
                 </Box>
               )
             : (info) => (
-                <div className="flex-1 gap-2">
+                <div className="flex-1 gap-2 flex items-center">
                   <CellText>{info.getValue()}</CellText>
                   {props.enableRowPinning && <div className="flex-1" />}
                   {props.enableRowPinning && <TwRowPinButtons row={info.row} />}
@@ -155,7 +158,7 @@ export const ReactTanstackTableUi = (
       ),
     ];
 
-    const cols = props.columns === "few" ? fewColumns : manyColumns;
+    let cols = props.columns === "few" ? fewColumns : manyColumns;
 
     if (props.withHeaderGroups) {
       cols.splice(
@@ -170,7 +173,7 @@ export const ReactTanstackTableUi = (
     }
 
     if (props.withTwoHeaderRows) {
-      return cols.map((col) => {
+      cols = cols.map((col) => {
         const newCol: ColumnDef<Person> | undefined = col.id
           ? {
               ...col,
@@ -202,6 +205,37 @@ export const ReactTanstackTableUi = (
         });
       });
     }
+    if (props.canSelectRows) {
+      console.log("canSelectRows", props.canSelectRows);
+      cols.splice(
+        0,
+        0,
+        originalColumnHelper.display({
+          id: "selected",
+          header: ({ table }) => (
+            <Checkbox
+              {...{
+                checked: table.getIsAllRowsSelected(),
+                indeterminate: table.getIsSomeRowsSelected(),
+                onChange: table.getToggleAllRowsSelectedHandler(),
+              }}
+            />
+          ),
+          cell: ({ row }) => (
+            <div className="flex items-center">
+              <Checkbox
+                {...{
+                  checked: row.getIsSelected(),
+                  disabled: !row.getCanSelect(),
+                  indeterminate: row.getIsSomeSelected(),
+                  onChange: row.getToggleSelectedHandler(),
+                }}
+              />
+            </div>
+          ),
+        }),
+      );
+    }
     return cols;
   }, [
     props.skin,
@@ -209,6 +243,7 @@ export const ReactTanstackTableUi = (
     props.columns,
     props.withHeaderGroups,
     props.withTwoHeaderRows,
+    props.canSelectRows,
     props.enableColumnPinning,
     props.enableRowPinning,
   ]);

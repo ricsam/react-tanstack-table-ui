@@ -14,7 +14,7 @@ export function Cell({
   highlightSelected,
 }: {
   row: Row<any>;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   checkbox?: boolean;
   expandButton?: boolean;
   pinButtons?: boolean;
