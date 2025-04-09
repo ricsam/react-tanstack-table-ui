@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
+import { TailwindSkin } from "@rttui/skin-tailwind";
 import { getCoreRowModel } from "@tanstack/react-table";
-import { AnoccaSkin } from "..";
 import { ReactTanstackTableUi } from "./ReactTanstackTableUiStoryComponent";
 import { createSourceCode } from "./createSourceCode";
-
+import { AnoccaSkin } from "@rttui/skin-anocca";
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
   title: "ReactTanstackTableUi",
@@ -19,15 +19,25 @@ const meta = {
     columns: { control: "select" },
     pinColsRelativeTo: { control: "select", options: ["cols", "table"] },
     skin: {
-      control: "object",
-      table: { disable: true },
+      control: "select",
+      options: ["@rttui/skin-anocca", "@rttui/skin-tailwind"],
+      description: "The skin to use for the table",
+      table: {
+        defaultValue: {
+          summary: "@rttui/skin-tailwind",
+        },
+      },
+      mapping: {
+        "@rttui/skin-anocca": AnoccaSkin,
+        "@rttui/skin-tailwind": TailwindSkin,
+      },
     },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
     width: 600,
     height: 400,
-    skin: AnoccaSkin,
+    skin: TailwindSkin,
     autoCrushColumns: false,
     data: "big",
     columns: "few",

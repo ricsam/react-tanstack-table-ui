@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@source "../../node_modules/@rttui/skin-tailwind";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  font-family: "Inter", "Inter var";
+}

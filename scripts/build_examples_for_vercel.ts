@@ -19,20 +19,18 @@ for await (const pkg of glob.scan({ absolute: true })) {
   `.cwd(path.dirname(pkg));
 }
 
-const skinStorybookGlob = new Glob("packages/skin-*/.storybook/main.ts");
-for await (const storybook of skinStorybookGlob.scan({
-  absolute: true,
-  dot: true,
-})) {
-  const packageDir = path.resolve(path.dirname(storybook), "..");
-  const base = "/static_sb/" + path.basename(packageDir);
+
+// build storybook for skins
+{
+  const packageDir = path.resolve(process.cwd(), "storybook");
+  const base = "/static_sb/skins";
 
   const packageJsonPath = path.join(packageDir, "package.json");
   const packageJson = JSON.parse(await Bun.file(packageJsonPath).text());
   packageJson.viteBase = base;
   await Bun.write(packageJsonPath, JSON.stringify(packageJson, null, 2));
   
-  console.log("building skin storybook", path.dirname(storybook));
+  console.log("building skin storybook");
 
   await $`
     pnpm run build-storybook

@@ -18,6 +18,7 @@ import {
 } from "@rttui/core";
 import React, { CSSProperties } from "react";
 import { flexRender } from "@tanstack/react-table";
+import { TableHeaderRow } from "./TableHeaderRow";
 
 const AnoccaSkin: Skin = {
   rowHeight: 32,
@@ -448,13 +449,3 @@ const TableHeaderCell = React.forwardRef<
 
 export { AnoccaSkin };
 
-function TableHeaderRow({ children }: { children: React.ReactNode }) {
-  return (
-    <TableRow
-      component="div"
-      sx={{ height: "var(--row-height)", display: "flex" }}
-    >
-      {children}
-    </TableRow>
-  );
-}
