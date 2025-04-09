@@ -48,7 +48,8 @@ export const defaultSkin: Skin = {
     );
   },
   OuterContainer: ({ children }) => {
-    const { width, height, tableContainerRef } = useTableContext();
+    const { width, height, tableContainerRef } =
+      useTableContext();
 
     return (
       <div

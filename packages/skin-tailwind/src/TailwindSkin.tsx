@@ -29,14 +29,11 @@ export const TailwindSkin: Skin = {
     );
   },
   OuterContainer: ({ children }) => {
-    const { tableContainerRef, disableScroll } = useTableContext();
+    const { tableContainerRef } = useTableContext();
     return (
       <div
         ref={tableContainerRef}
-        className={clsx(
-          "outer-container overflow-auto relative",
-          disableScroll && "overflow-hidden",
-        )}
+        className="outer-container relative overflow-auto"
         style={{
           width: "var(--table-container-width)",
           height: "var(--table-container-height)",
@@ -195,7 +192,7 @@ export const TailwindSkin: Skin = {
 
     return (
       <div
-        className={`relative flex ${
+        className={`relative flex group ${
           selected ? "bg-indigo-50 dark:bg-indigo-900/20" : ""
         }`}
         style={{
@@ -228,31 +225,49 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  Cell: React.forwardRef(({ children, header, isMeasuring }, ref) => {
-    const { isPinned } = header;
-    const { row } = useRow();
-    const selected = row.getIsSelected();
+  Cell: React.forwardRef(
+    (
+      { children, header, isMeasuring, isLastPinned, isLast, isLastCenter },
+      ref,
+    ) => {
+      const { isPinned } = header;
+      const { row } = useRow();
+      const selected = row.getIsSelected();
+      const { table } = useTableContext();
 
-    return (
-      <div
-        ref={ref}
-        className={`td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis border-r border-gray-200 dark:border-gray-700 ${
-          selected ? "text-gray-900 dark:text-white bg-indigo-50 dark:bg-indigo-900" : ""
-        }`}
-        data-column-id={header.columnId}
-        style={{
-          height: "var(--row-height)",
-          width: isMeasuring ? "auto" : header.width,
-          zIndex: isPinned ? 5 : 0,
-          boxSizing: "border-box",
-          flexShrink: 0,
-          backgroundColor: selected ? undefined : "var(--table-cell-bg)",
-        }}
-      >
-        {children}
-      </div>
-    );
-  }),
+      return (
+        <div
+          ref={ref}
+          className={`td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis ${
+            selected
+              ? "text-gray-900 dark:text-white bg-indigo-50 dark:bg-indigo-900"
+              : ""
+          } group-hover:bg-blue-500`}
+          data-column-id={header.columnId}
+          style={{
+            height: "var(--row-height)",
+            width: isMeasuring ? "auto" : header.width,
+            zIndex: isPinned ? 5 : 0,
+            boxSizing: "border-box",
+            flexShrink: 0,
+            backgroundColor: selected ? undefined : "var(--table-cell-bg)",
+            borderRight:
+              ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+              !isLast &&
+              !(isLastCenter && table.getIsSomeColumnsPinned("right"))
+                ? `1px solid var(--table-border-color)`
+                : undefined,
+            borderLeft:
+              isPinned === "end" && !isLastPinned
+                ? `1px solid var(--table-border-color)`
+                : undefined,
+          }}
+        >
+          {children}
+        </div>
+      );
+    },
+  ),
   PinnedColsOverlay: ({ position }) => {
     const { table } = useTableContext();
     if (!table.getIsSomeColumnsPinned(position)) {

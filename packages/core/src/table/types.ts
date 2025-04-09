@@ -11,8 +11,7 @@ export type CombinedHeaderGroup = {
 export type CellRefs = Record<
   string,
   {
-    el: HTMLDivElement;
-    rect: DOMRect;
+    width: number;
   } & MeasuredCell
 >;
 

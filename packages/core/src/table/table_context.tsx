@@ -12,14 +12,11 @@ type TableContextType = {
   width: number;
   height: number;
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
-  innerContainerSizeRef?: React.RefObject<HTMLDivElement | null>;
   table: Table<any>;
   skin: Skin;
   config: TableConfig;
   renderSubComponent?: (args: { row: Row<any> }) => React.ReactNode;
-  onMeasureCallback: undefined | ((measureData: MeasureData) => void);
   measureCells: (cb: (measureData: MeasureData) => void) => void;
-  disableScroll?: boolean;
   pinColsRelativeTo: "cols" | "table";
   pinRowsRelativeTo: "rows" | "table";
   crushMinSizeBy: "header" | "cell" | "both";

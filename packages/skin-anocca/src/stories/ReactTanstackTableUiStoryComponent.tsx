@@ -40,13 +40,13 @@ const bigData: Person[] = Array.from({ length: 1000 }, (_, i) => ({
   age: 20 + i,
   city: `City ${i}`,
   ...Object.fromEntries(
-    Array.from({ length: 100 }, (_, j) => [`col${j}`, `Value ${i}-${j}`]),
+    Array.from({ length: 100 }, (_, j) => [`col${j}`, `${i}-${j}`]),
   ),
 }));
 
 export const ReactTanstackTableUi = (
   props: {
-    data: "big" | "small";
+    data: "big" | "small" | "none";
     columns: "many" | "few";
     meta?: Record<string, ColumnMeta<Person, string>>;
     withTwoHeaderRows?: boolean;
@@ -55,7 +55,7 @@ export const ReactTanstackTableUi = (
     Omit<React.ComponentProps<typeof TableComponent>, "table">,
 ) => {
   const theme = useTheme();
-  const data: Person[] = props.data === "big" ? bigData : smallData;
+  const data: Person[] = props.data === "big" ? bigData : props.data === "small" ? smallData : [];
 
   const columns: ColumnDef<Person>[] = React.useMemo(() => {
     const columnHelper = decorateColumnHelper(createColumnHelper<Person>(), {

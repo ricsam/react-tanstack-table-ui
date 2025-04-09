@@ -189,7 +189,6 @@ export const FillAvailableSpaceAfterCrushWithTwoHeaderRowsExceptName: Story = {
   },
 };
 
-
 export const FillAvailableSpaceAfterCrushWithoutSpecifiedScrollbarWidth: Story =
   {
     args: {
@@ -241,8 +240,41 @@ export const SizeByLargestHeaderWithMeta: Story = {
     enableColumnPinning: true,
     meta: {
       age: {
-        crushMinSizeBy: 'cell',
+        crushMinSizeBy: "cell",
       },
     },
+  },
+};
+
+export const WorksWithoutRows: Story = {
+  args: {
+    autoCrushColumns: true,
+    crushMinSizeBy: "both",
+    fillAvailableSpaceAfterCrush: true,
+    scrollbarWidth: 0,
+    data: "none",
+    withHeaderGroups: true,
+  },
+};
+
+export const StaticTable: Story = {
+  args: {
+    data: "small",
+    columns: "few",
+    width: undefined,
+    height: undefined,
+    crushMinSizeBy: "both",
+    autoCrushColumns: true,
+    scrollbarWidth: 0,
+  },
+};
+
+export const MeasureOverscanCols: Story = {
+  args: {
+    data: "big",
+    columns: "many",
+    crushMinSizeBy: "cell",
+    autoCrushColumns: true,
+    autoCrushNumCols: 1000,
   },
 };

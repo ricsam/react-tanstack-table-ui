@@ -20,21 +20,23 @@ export const MeasureCellProvider = ({
     }
   };
 
+  const onMeasureCallbackRef = React.useRef(onMeasureCallback);
+  onMeasureCallbackRef.current = onMeasureCallback;
+
   const storeRef = React.useCallback(
-    (
-      el: HTMLDivElement | null,
-      measuredCell: MeasuredCell,
-    ) => {
+    (el: HTMLDivElement | null, measuredCell: MeasuredCell) => {
       if (!cellRefs.current.has(measuredCell.id)) {
-        throw new Error(`Cell ${measuredCell.id} not registered`);
+        return; // lingering cell
       }
       if (!el) {
         return;
       }
+      if (elRefs.current[measuredCell.id]) {
+        return;
+      }
       elRefs.current[measuredCell.id] = {
         ...measuredCell,
-        rect: el.getBoundingClientRect(),
-        el,
+        width: el.getBoundingClientRect().width,
       };
       const currentCol = colRefs.current.get(measuredCell.columnId);
       if (!currentCol) {
@@ -46,13 +48,13 @@ export const MeasureCellProvider = ({
       }
       measuredCount.current--;
       if (measuredCount.current === 0) {
-        onMeasureCallback({
+        onMeasureCallbackRef.current({
           cells: elRefs.current,
-          cols: colRefs.current,
+          cols: new Map(colRefs.current),
         });
       }
     },
-    [onMeasureCallback],
+    [],
   );
   const getEls = React.useCallback(() => {
     return elRefs.current;

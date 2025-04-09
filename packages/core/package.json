@@ -1,6 +1,6 @@
 {
   "name": "@rttui/core",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {

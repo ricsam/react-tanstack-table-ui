@@ -27,20 +27,20 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   rowDndHandler?: RowDndHandler<T>;
   colDndHandler?: ColDndHandler<T>;
   skin?: Skin;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   rowOverscan?: number;
   columnOverscan?: number;
   renderSubComponent?: (args: { row: Row<T> }) => React.ReactNode;
   underlay?: React.ReactNode;
   autoCrushColumns?: boolean;
-  disableScroll?: boolean;
   pinColsRelativeTo?: "cols" | "table";
   pinRowsRelativeTo?: "rows" | "table";
   crushMinSizeBy?: "header" | "cell" | "both";
   fillAvailableSpaceAfterCrush?: boolean;
   scrollbarWidth?: number;
   tableRef?: React.RefObject<RttuiRef | undefined>;
+  autoCrushNumCols?: number;
 }) {
   const { table } = props;
   const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -67,15 +67,38 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   );
   const crushMinSizeBy = props.crushMinSizeBy ?? "header";
 
+  const skin = props.skin ?? defaultSkin;
+
+  const width = props.width ?? table.getTotalSize();
+
+  const numHeaders = table
+    .getHeaderGroups()
+    .filter((group) =>
+      group.headers.some((header) => header.column.columnDef.header),
+    ).length;
+  const numFooters = table
+    .getFooterGroups()
+    .filter((group) =>
+      group.headers.some((header) => header.column.columnDef.footer),
+    ).length;
+
+  const height =
+    props.height ??
+    skin.headerRowHeight * numHeaders +
+      skin.footerRowHeight * numFooters +
+      skin.rowHeight * table.getRowCount();
+
   const refsValue = {
     table,
     props,
     crushMinSizeBy,
+    width,
+    height,
   };
   const refs = React.useRef(refsValue);
   refs.current = refsValue;
 
-  const onMeasureCb = React.useCallback(({ cols }: MeasureData) => {
+  const crushCols = React.useCallback((cols: MeasureData["cols"]) => {
     refs.current.table.setColumnSizing((prev) => {
       const newSizing = { ...prev };
 
@@ -88,6 +111,8 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
         const tsCol = refs.current.table.getColumn(colId);
         if (tsCol?.columnDef.meta?.autoCrush !== false) {
           colsToCrush.set(colId, col);
+        } else {
+          newSizing[colId] = newSizing[colId] ?? tsCol.getSize();
         }
       });
 
@@ -95,16 +120,28 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
         const tsCol = refs.current.table.getColumn(colId);
         const crushMinSizeBy =
           tsCol?.columnDef.meta?.crushMinSizeBy ?? refs.current.crushMinSizeBy;
-        const colWidth = Math.max(
-          ...Object.values(col)
-            .filter(({ type }) => {
-              if (crushMinSizeBy === "both") {
-                return true;
-              }
-              return type === crushMinSizeBy;
-            })
-            .map(({ rect }) => rect.width),
-        );
+        const cells = Object.values(col);
+        let widths = cells
+          .filter(({ type }) => {
+            if (crushMinSizeBy === "both") {
+              return true;
+            }
+            return type === crushMinSizeBy;
+          })
+          .map(({ width }) => width);
+
+        if (widths.length === 0) {
+          if (cells.length === 0) {
+            widths = [
+              tsCol?.getSize() ??
+                refs.current.props.table.options.defaultColumn?.size ??
+                0,
+            ];
+          } else {
+            widths = cells.map(({ width }) => width);
+          }
+        }
+        const colWidth = Math.max(...widths);
         newSizing[colId] = colWidth;
       });
 
@@ -125,60 +162,87 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
               let leafTotal = 0;
               const leafs = getSubHeaders(header);
               leafs.forEach((h) => {
-                leafTotal += newSizing[h.column.id];
+                leafTotal += newSizing[h.column.id] ?? h.column.getSize();
               });
 
               if (leafTotal < headerWidth) {
                 const diff = headerWidth - leafTotal;
                 const perCol = diff / leafs.length;
                 leafs.forEach((h) => {
-                  newSizing[h.column.id] = newSizing[h.column.id] + perCol;
+                  newSizing[h.column.id] =
+                    (newSizing[h.column.id] ?? h.column.getSize()) + perCol;
                 });
               }
             }
           }
         });
       });
-
       //#endregion
-      const totalWidth =
-        refs.current.props.width - (refs.current.props.scrollbarWidth ?? 0);
 
-      const leafCols = new Set<string>();
-      cols.forEach((_, colId) => {
-        const tsCol = refs.current.table.getColumn(colId);
-        if (tsCol) {
-          tsCol.getLeafColumns().forEach((leafCol) => {
-            leafCols.add(leafCol.id);
-          });
-        }
-      });
-      let totalSize = 0;
-      const colsThatCanFill = new Set<string>();
-
-      leafCols.forEach((colId) => {
-        totalSize += newSizing[colId];
-        const tsCol = refs.current.table.getColumn(colId);
-        if (tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false) {
-          colsThatCanFill.add(colId);
-        }
-      });
-      if (
-        refs.current.props.fillAvailableSpaceAfterCrush &&
-        totalSize < totalWidth
-      ) {
-        const delta = totalWidth - totalSize;
-        const perColumnDelta = delta / colsThatCanFill.size;
-        colsThatCanFill.forEach((colId) => {
-          newSizing[colId] += perColumnDelta;
-        });
-      }
       return newSizing;
     });
   }, []);
 
+  const fillAvailableSpaceAfterCrush = React.useCallback(
+    (cols: MeasureData["cols"]) => {
+      refs.current.table.setColumnSizing((prev) => {
+        const newSizing = { ...prev };
+
+        //#region fill available space after crush
+        const totalWidth =
+          refs.current.width - (refs.current.props.scrollbarWidth ?? 0);
+
+        const leafCols = new Set<string>();
+        cols.forEach((_, colId) => {
+          const tsCol = refs.current.table.getColumn(colId);
+          if (tsCol) {
+            tsCol.getLeafColumns().forEach((leafCol) => {
+              leafCols.add(leafCol.id);
+            });
+          }
+        });
+        let totalSize = 0;
+        const colsThatCanFill = new Set<string>();
+
+        leafCols.forEach((colId) => {
+          const tsCol = refs.current.table.getColumn(colId);
+          totalSize +=
+            newSizing[colId] ??
+            tsCol?.getSize() ??
+            refs.current.props.table.options.defaultColumn?.size ??
+            0;
+          if (tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false) {
+            colsThatCanFill.add(colId);
+          }
+        });
+        if (
+          refs.current.props.fillAvailableSpaceAfterCrush &&
+          totalSize < totalWidth
+        ) {
+          const delta = totalWidth - totalSize;
+          const perColumnDelta = delta / colsThatCanFill.size;
+          colsThatCanFill.forEach((colId) => {
+            newSizing[colId] += perColumnDelta;
+          });
+        }
+        //#endregion
+
+        return newSizing;
+      });
+    },
+    [],
+  );
+
+  const onMeasureCb = React.useCallback(
+    (cols: MeasureData["cols"]) => {
+      crushCols(cols);
+      fillAvailableSpaceAfterCrush(cols);
+    },
+    [crushCols, fillAvailableSpaceAfterCrush],
+  );
+
   const autoSizeColumns = React.useCallback(() => {
-    measureCells(onMeasureCb);
+    measureCells(({ cols }) => onMeasureCb(cols));
   }, [measureCells, onMeasureCb]);
 
   React.useEffect(() => {
@@ -194,60 +258,170 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   }
 
   return (
+    <div
+      className="rttui-table-container"
+      style={{
+        width: width + "px",
+        height: height + "px",
+        position: "relative",
+      }}
+    >
+      {/* For measuring all cols */}
+      {consumerOnMeasureCb && (
+        <div
+          className="rttui-measure-container"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            visibility: "hidden",
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
+        >
+          <MeasureCellProvider onMeasureCallback={consumerOnMeasureCb}>
+            <Entry
+              width={width}
+              height={height}
+              skin={skin}
+              rowOverscan={props.rowOverscan}
+              columnOverscan={props.autoCrushNumCols ?? 50}
+              renderSubComponent={props.renderSubComponent}
+              table={table}
+              isMeasuring={true}
+              measureCells={measureCells}
+              pinColsRelativeTo={props.pinColsRelativeTo}
+              pinRowsRelativeTo={props.pinRowsRelativeTo}
+              crushMinSizeBy={props.crushMinSizeBy}
+              underlay={props.underlay}
+              tableContainerRef={tableContainerRef}
+            />
+          </MeasureCellProvider>
+        </div>
+      )}
+      <Entry
+        width={width}
+        height={height}
+        skin={skin}
+        rowOverscan={props.rowOverscan}
+        columnOverscan={props.columnOverscan}
+        renderSubComponent={props.renderSubComponent}
+        table={table}
+        isMeasuring={false}
+        measureCells={measureCells}
+        pinColsRelativeTo={props.pinColsRelativeTo}
+        pinRowsRelativeTo={props.pinRowsRelativeTo}
+        crushMinSizeBy={props.crushMinSizeBy}
+        underlay={props.underlay}
+        tableContainerRef={tableContainerRef}
+      />
+    </div>
+  );
+};
+
+function Entry({
+  width,
+  height,
+  skin,
+  rowOverscan,
+  columnOverscan,
+  renderSubComponent,
+  table,
+  isMeasuring,
+  measureCells,
+  pinColsRelativeTo,
+  pinRowsRelativeTo,
+  crushMinSizeBy,
+  underlay,
+  tableContainerRef,
+}: {
+  width: number;
+  height: number;
+  skin: Skin;
+  rowOverscan?: number;
+  columnOverscan?: number;
+  renderSubComponent?: (args: { row: Row<any> }) => React.ReactNode;
+  table: Table<any>;
+  isMeasuring: boolean;
+  measureCells: (cb: (measureData: MeasureData) => void) => void;
+  pinColsRelativeTo?: "cols" | "table";
+  pinRowsRelativeTo?: "rows" | "table";
+  crushMinSizeBy?: "header" | "cell" | "both";
+  underlay?: React.ReactNode;
+  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const placeHolderContainerRefWhileMeasuring =
+    React.useRef<HTMLDivElement | null>(null);
+  return (
     <TableContext.Provider
       value={React.useMemo(
         () => ({
-          width: props.width,
-          height: props.height,
-          tableContainerRef: tableContainerRef,
+          width,
+          height,
+          tableContainerRef: isMeasuring
+            ? placeHolderContainerRefWhileMeasuring
+            : tableContainerRef,
           table,
-          skin: props.skin ?? defaultSkin,
+          skin,
           config: {
-            rowOverscan: props.rowOverscan ?? 10,
-            columnOverscan: props.columnOverscan ?? 3,
+            rowOverscan: rowOverscan ?? 10,
+            columnOverscan: columnOverscan ?? 3,
           },
-          renderSubComponent: props.renderSubComponent,
-          onMeasureCallback: consumerOnMeasureCb,
+          renderSubComponent: renderSubComponent,
           measureCells,
-          disableScroll: props.disableScroll,
-          pinColsRelativeTo: props.pinColsRelativeTo ?? "cols",
-          pinRowsRelativeTo: props.pinRowsRelativeTo ?? "rows",
-          crushMinSizeBy,
+          pinColsRelativeTo: pinColsRelativeTo ?? "cols",
+          pinRowsRelativeTo: pinRowsRelativeTo ?? "rows",
+          crushMinSizeBy: crushMinSizeBy ?? "header",
         }),
         [
-          props.width,
-          props.height,
-          props.skin,
-          props.rowOverscan,
-          props.columnOverscan,
-          props.renderSubComponent,
+          width,
+          height,
+          isMeasuring,
+          tableContainerRef,
           table,
-          consumerOnMeasureCb,
+          skin,
+          rowOverscan,
+          columnOverscan,
+          renderSubComponent,
           measureCells,
-          props.disableScroll,
-          props.pinColsRelativeTo,
-          props.pinRowsRelativeTo,
+          pinColsRelativeTo,
+          pinRowsRelativeTo,
           crushMinSizeBy,
         ],
       )}
     >
       <ColProvider>
         <VirtualRowProvider>
-          <Body underlay={props.underlay} />
+          <Body underlay={underlay} isMeasuring={isMeasuring} />
         </VirtualRowProvider>
       </ColProvider>
     </TableContext.Provider>
   );
-};
+}
 
-function Body({ underlay }: { underlay?: React.ReactNode }) {
-  const { skin, onMeasureCallback, pinColsRelativeTo } = useTableContext();
+function Body({
+  underlay,
+  isMeasuring,
+}: {
+  underlay?: React.ReactNode;
+  isMeasuring: boolean;
+}) {
+  const { skin, pinColsRelativeTo, crushMinSizeBy } = useTableContext();
   const { rows, offsetBottom, offsetTop } = useVirtualRowContext();
   const { footerGroups, headerGroups } = useColContext();
 
-  const content = (
-    <>
-      {headerGroups.length > 0 && (
+  const content = () => {
+    let tableHeader: React.ReactNode | undefined;
+    let tableBody: React.ReactNode | undefined;
+    let tableFooter: React.ReactNode | undefined;
+
+    if (
+      headerGroups.length > 0 &&
+      (!isMeasuring || crushMinSizeBy !== "cell")
+    ) {
+      tableHeader = (
         <skin.TableHeader>
           {headerGroups.map((headerGroup) => {
             return (
@@ -259,13 +433,14 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
             );
           })}
         </skin.TableHeader>
-      )}
-      <TableBody
-        rows={rows}
-        offsetBottom={offsetBottom}
-        offsetTop={offsetTop}
-      ></TableBody>
-      {footerGroups.length > 0 && (
+      );
+    }
+
+    if (
+      footerGroups.length > 0 &&
+      (!isMeasuring || crushMinSizeBy !== "cell")
+    ) {
+      tableFooter = (
         <skin.TableFooter>
           {footerGroups.map((footerGroup) => {
             return (
@@ -277,9 +452,27 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
             );
           })}
         </skin.TableFooter>
-      )}
-    </>
-  );
+      );
+    }
+
+    if (rows.length > 0 && (!isMeasuring || crushMinSizeBy !== "header")) {
+      tableBody = (
+        <TableBody
+          rows={rows}
+          offsetBottom={offsetBottom}
+          offsetTop={offsetTop}
+        ></TableBody>
+      );
+    }
+
+    return (
+      <>
+        {tableHeader}
+        {tableBody}
+        {tableFooter}
+      </>
+    );
+  };
 
   return (
     <skin.OverlayContainer>
@@ -288,27 +481,8 @@ function Body({ underlay }: { underlay?: React.ReactNode }) {
 
         <skin.TableScroller />
 
-        {content}
-
-        {onMeasureCallback && (
-          <div
-            className="rtui-measure-container"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              visibility: "hidden",
-              pointerEvents: "none",
-              zIndex: -1,
-            }}
-          >
-            <MeasureCellProvider onMeasureCallback={onMeasureCallback}>
-              {content}
-            </MeasureCellProvider>
-          </div>
-        )}
+        {/* Regular content */}
+        {content()}
 
         {skin.PinnedColsOverlay && (
           <div

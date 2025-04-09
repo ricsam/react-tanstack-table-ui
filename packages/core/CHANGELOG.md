@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.20
+
+### Patch Changes
+
+- add capability to choose number of columns to measure
+
 ## 1.0.19
 
 ### Patch Changes

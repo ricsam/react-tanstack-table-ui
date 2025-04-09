@@ -13,7 +13,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import useMeasure from "react-use-measure";
 import { CodeBlock } from "../../components/CodeBlock";
 
 type Prop = {
@@ -108,13 +107,6 @@ const data: Prop[] = [
     description: "Render a sub-component for each row",
     required: false,
   },
-  {
-    id: "12",
-    name: "disableScroll",
-    type: "boolean",
-    description: "Disable the scrollbar",
-    required: false,
-  },
 ];
 
 const columnHelper = decorateColumnHelper(createColumnHelper<Prop>(), {
@@ -167,9 +159,6 @@ const columns = [
       return <CellText>{props.getValue() ? "Yes" : "No"}</CellText>;
     },
     size: 80,
-    meta: {
-      autoCrush: false,
-    },
   }),
 ];
 
@@ -288,8 +277,6 @@ function MyAnoccaTable() {
     enableColumnPinning: true,
   });
 
-  const [wrapperRef, wrapperBounds] = useMeasure();
-
   const { theme } = useTheme();
   const themeVars = theme === "light" ? lightModeVars : darkModeVars;
 
@@ -306,22 +293,15 @@ function MyAnoccaTable() {
         className="w-full relative"
         style={{
           ...themeVars,
-          height:
-            TailwindSkin.headerRowHeight + TailwindSkin.rowHeight * data.length,
         }}
       >
-        <div ref={wrapperRef} className="absolute inset-0">
-          {wrapperBounds.width && wrapperBounds.height && (
-            <ReactTanstackTableUi
-              table={table}
-              width={wrapperBounds.width}
-              height={wrapperBounds.height}
-              skin={TailwindSkin}
-              autoCrushColumns
-              disableScroll
-            />
-          )}
-        </div>
+        <ReactTanstackTableUi
+          table={table}
+          skin={TailwindSkin}
+          autoCrushColumns
+          fillAvailableSpaceAfterCrush
+          crushMinSizeBy="both"
+        />
       </div>
 
       <h2 id="table">
@@ -412,7 +392,6 @@ const height =
         width={wrapperBounds.width}
         height={height}
         skin={TailwindSkin}
-        disableScroll
         autoCrushColumns
       />
     )}

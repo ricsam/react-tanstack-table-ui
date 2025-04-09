@@ -3,12 +3,17 @@ import { useTableContext } from "./table/table_context";
 import { getSubHeaders } from "./utils";
 
 export const useCrushHeader = () => {
-  const { measureCells, table, crushMinSizeBy: defaultCrushMinSizeBy } = useTableContext();
+  const {
+    measureCells,
+    table,
+    crushMinSizeBy: defaultCrushMinSizeBy,
+  } = useTableContext();
   return (header: Header<any, any>) => {
     measureCells(({ cols }) => {
       table.setColumnSizing((prev) => {
         const newSizing = { ...prev };
-        const crushMinSizeBy = header.column.columnDef.meta?.crushMinSizeBy ?? defaultCrushMinSizeBy;
+        const crushMinSizeBy =
+          header.column.columnDef.meta?.crushMinSizeBy ?? defaultCrushMinSizeBy;
 
         let headerWidth: undefined | number;
         const headerSizing = cols.get(header.column.id);
@@ -21,7 +26,7 @@ export const useCrushHeader = () => {
                 }
                 return type === crushMinSizeBy;
               })
-              .map(({ rect }) => rect.width),
+              .map(({ width }) => width),
           );
         }
 
@@ -40,7 +45,7 @@ export const useCrushHeader = () => {
                 }
                 return type === crushMinSizeBy;
               })
-              .map(({ rect }) => rect.width),
+              .map(({ width }) => width),
           );
           leafTotal += size;
           newSizing[h.column.id] = size;
