@@ -1,12 +1,28 @@
-import { Row } from "@tanstack/react-table";
+import { Cell, Row } from "@tanstack/react-table";
+import { Virtualizer } from "@tanstack/react-virtual";
 import React, { CSSProperties } from "react";
-import { VirtualCell } from "../cols/virtual_cell";
-import { VirtualHeader } from "../cols/virtual_header/types";
+import { TableCell } from "../cols/table_cell";
 import { useTableContext } from "../table_context";
 import { PinPos } from "../types";
-import { useVirtualRowContext } from "./virtual_row_context";
-import { RowRefContext } from "./row_ref_context";
 import { RowContext } from "./row_context";
+import { RowRefContext } from "./row_ref_context";
+
+export type VirtualCell = {
+  id: string;
+  columnId: string;
+  width: number;
+  start: number;
+  end: number;
+  isPinned: PinPos;
+  isLastPinned: boolean;
+  isFirstPinned: boolean;
+  isLast: boolean;
+  isFirst: boolean;
+  isFirstCenter: boolean;
+  isLastCenter: boolean;
+  cell: Cell<any, any>;
+  dndStyle: CSSProperties;
+};
 
 export type VirtualRow = {
   dndStyle: CSSProperties;
@@ -14,68 +30,35 @@ export type VirtualRow = {
   isDragging: boolean;
   isPinned: PinPos;
   flatIndex: number;
+  cells: VirtualCell[];
+  rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
 };
 
-export const TableRow = function TableRow({
-  dndStyle,
-  row,
-  isDragging,
-  flatIndex,
-  isPinned,
-}: VirtualRow) {
-  const visibileCells = row.getVisibleCells();
+export const TableRow = React.memo(function TableRow({
+  row: {
+    dndStyle,
+    row,
+    isDragging,
+    flatIndex,
+    isPinned,
+    cells,
+    rowVirtualizer,
+  },
+  offsetLeft,
+  offsetRight,
+}: {
+  row: VirtualRow;
+  offsetLeft: number;
+  offsetRight: number;
+}) {
   const { skin, renderSubComponent, pinColsRelativeTo } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
-  const { mainHeaderGroup: headerGroup, rowVirtualizer } =
-    useVirtualRowContext();
 
-  const allHeaders = headerGroup.headers;
-
-  const loop = (headers: VirtualHeader[], pinned: PinPos) => {
+  const loop = (cells: VirtualCell[]) => {
     return (
       <>
-        {headers.map((virtualHeader, index) => {
-          const cell = visibileCells[virtualHeader.headerIndex];
-          let isLastPinned = false;
-          let isFirstPinned = false;
-          if (pinned === "start") {
-            isLastPinned = index === headers.length - 1;
-            isFirstPinned = index === 0;
-          } else if (pinned === "end") {
-            isLastPinned = index === 0;
-            isFirstPinned = index === headers.length - 1;
-          }
-          let isLast = false;
-          let isFirst = false;
-          if (allHeaders[0].headerId === virtualHeader.headerId) {
-            isFirst = true;
-          }
-          if (
-            allHeaders[allHeaders.length - 1].headerId ===
-            virtualHeader.headerId
-          ) {
-            isLast = true;
-          }
-          let isFirstCenter = false;
-          let isLastCenter = false;
-          if (pinned === false) {
-            isLastCenter = index === headers.length - 1;
-            isFirstCenter = index === 0;
-          }
-
-          return (
-            <VirtualCell
-              key={cell.id}
-              cell={cell}
-              header={virtualHeader}
-              isLastPinned={isLastPinned}
-              isFirstPinned={isFirstPinned}
-              isLast={isLast}
-              isFirst={isFirst}
-              isFirstCenter={isFirstCenter}
-              isLastCenter={isLastCenter}
-            />
-          );
+        {cells.map((virtualCell) => {
+          return <TableCell key={virtualCell.id} cell={virtualCell} />;
         })}
       </>
     );
@@ -92,12 +75,8 @@ export const TableRow = function TableRow({
     }
   }
 
-  const stickyLeft = headerGroup.headers.filter(
-    (header) => header.isPinned === "start",
-  );
-  const stickyRight = headerGroup.headers.filter(
-    (header) => header.isPinned === "end",
-  );
+  const stickyLeft = cells.filter((cell) => cell.isPinned === "start");
+  const stickyRight = cells.filter((cell) => cell.isPinned === "end");
 
   return (
     <>
@@ -125,28 +104,25 @@ export const TableRow = function TableRow({
                 pinned={stickyLeft}
                 type={"body"}
               >
-                {loop(stickyLeft, "start")}
+                {loop(stickyLeft)}
               </skin.PinnedCols>
               <div
                 style={{
-                  minWidth: headerGroup.offsetLeft,
+                  minWidth: offsetLeft,
                   flexShrink: 0,
                 }}
               ></div>
-              {loop(
-                headerGroup.headers.filter((cell) => cell.isPinned === false),
-                false,
-              )}
+              {loop(cells.filter((cell) => cell.isPinned === false))}
               <div
                 style={
                   pinColsRelativeTo === "table"
                     ? {
-                        minWidth: headerGroup.offsetRight,
+                        minWidth: offsetRight,
                         flexShrink: 0,
                         flexGrow: 1,
                       }
                     : {
-                        width: headerGroup.offsetRight,
+                        width: offsetRight,
                         flexShrink: 0,
                       }
                 }
@@ -156,7 +132,7 @@ export const TableRow = function TableRow({
                 pinned={stickyRight}
                 type={"body"}
               >
-                {loop(stickyRight, "end")}
+                {loop(stickyRight)}
               </skin.PinnedCols>
             </skin.TableRow>
             {isExpanded && (
@@ -169,4 +145,4 @@ export const TableRow = function TableRow({
       </RowRefContext.Provider>
     </>
   );
-};
+});

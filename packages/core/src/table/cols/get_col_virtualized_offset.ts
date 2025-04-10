@@ -1,4 +1,4 @@
-import { VirtualHeader } from "./virtual_header/types";
+import { VirtualHeaderCell } from "./virtual_header/types";
 
 /**
  * when we are only rendering a window of columns while maintaining a scrollbar we need to move the elements as we remove elements to the left
@@ -8,7 +8,7 @@ export function getColVirtualizedOffsets({
   headers,
   totalSize,
 }: {
-  headers: VirtualHeader[];
+  headers: VirtualHeaderCell[];
   totalSize: number;
 }) {
   let offsetLeft = 0;

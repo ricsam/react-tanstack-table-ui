@@ -14,7 +14,7 @@ import {
   Skin,
   useTableContext,
   useTableCssVars,
-  VirtualHeader,
+  VirtualHeaderCell,
 } from "@rttui/core";
 import React, { CSSProperties } from "react";
 import { flexRender } from "@tanstack/react-table";
@@ -282,64 +282,59 @@ const AnoccaSkin: Skin = {
       </TableRow>
     );
   },
-  Cell: React.forwardRef(
-    (
-      { children, header, isMeasuring, isLastPinned, isLast, isLastCenter },
-      ref,
-    ) => {
-      const { isPinned } = header;
-      const { table } = useTableContext();
-      return (
-        <TableCell
-          className="td"
-          component="div"
-          ref={ref}
-          sx={{
-            height: "var(--row-height)",
-            width: isMeasuring ? "auto" : header.width,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            zIndex: isPinned ? 5 : 0,
-            boxSizing: "border-box",
-            fontSize: "0.875rem",
-            color: "text.primary",
-            alignItems: "center",
-            gap: "8px",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignContent: "center",
-            padding: "6px 12px",
-            backgroundColor: "var(--row-background-color)",
-            borderBottom: "none",
-            flexShrink: 0,
-            position: "relative",
-            borderRight:
-              ((isPinned === "start" && !isLastPinned) || !isPinned) &&
-              !isLast &&
-              !(isLastCenter && table.getIsSomeColumnsPinned("right"))
-                ? (theme) => `1px solid ${theme.palette.divider}`
-                : undefined,
-            borderLeft:
-              isPinned === "end" && !isLastPinned
-                ? (theme) => `1px solid ${theme.palette.divider}`
-                : undefined,
-            ".table-row:hover &": {
-              backgroundColor: (theme) => {
-                // Always use solid background colors for all cells on hover
-                return theme.palette.mode === "dark"
-                  ? "#1e1e52" // Dark blue solid color
-                  : "#E3F2FD"; // Light blue solid color
-              },
-              zIndex: isPinned ? 2 : 0,
+  Cell: React.forwardRef(({ children, cell, isMeasuring }, ref) => {
+    const { isPinned, isLastPinned, isLast, isLastCenter, width } = cell;
+    const { table } = useTableContext();
+    return (
+      <TableCell
+        className="td"
+        component="div"
+        ref={ref}
+        sx={{
+          height: "var(--row-height)",
+          width: isMeasuring ? "auto" : width,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          zIndex: isPinned ? 5 : 0,
+          boxSizing: "border-box",
+          fontSize: "0.875rem",
+          color: "text.primary",
+          alignItems: "center",
+          gap: "8px",
+          display: "flex",
+          justifyContent: "flex-start",
+          alignContent: "center",
+          padding: "6px 12px",
+          backgroundColor: "var(--row-background-color)",
+          borderBottom: "none",
+          flexShrink: 0,
+          position: "relative",
+          borderRight:
+            ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+            !isLast &&
+            !(isLastCenter && table.getIsSomeColumnsPinned("right"))
+              ? (theme) => `1px solid ${theme.palette.divider}`
+              : undefined,
+          borderLeft:
+            isPinned === "end" && !isLastPinned
+              ? (theme) => `1px solid ${theme.palette.divider}`
+              : undefined,
+          ".table-row:hover &": {
+            backgroundColor: (theme) => {
+              // Always use solid background colors for all cells on hover
+              return theme.palette.mode === "dark"
+                ? "#1e1e52" // Dark blue solid color
+                : "#E3F2FD"; // Light blue solid color
             },
-          }}
-        >
-          {children}
-        </TableCell>
-      );
-    },
-  ),
+            zIndex: isPinned ? 2 : 0,
+          },
+        }}
+      >
+        {children}
+      </TableCell>
+    );
+  }),
   PinnedColsOverlay: ({ position }) => {
     const { table } = useTableContext();
     if (!table.getIsSomeColumnsPinned(position)) {
@@ -373,7 +368,7 @@ const AnoccaSkin: Skin = {
 
 const TableHeaderCell = React.forwardRef<
   HTMLDivElement,
-  VirtualHeader & {
+  VirtualHeaderCell & {
     type: "header" | "footer";
     isLast: boolean;
     isFirst: boolean;
@@ -448,4 +443,3 @@ const TableHeaderCell = React.forwardRef<
 );
 
 export { AnoccaSkin };
-

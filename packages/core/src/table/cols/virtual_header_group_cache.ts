@@ -1,10 +1,9 @@
 import { shallowEqual } from "../../utils";
 import { VirtualHeaderGroup } from "./header_group";
-import { VirtualHeader } from "./virtual_header/types";
+import { VirtualHeaderCell } from "./virtual_header/types";
 
 export class VirtualHeaderGroupCache {
   // Cache for header groups keyed by group.id
-  private groupCache = new Map<string, VirtualHeaderGroup>();
   // Cache for overall result array (if nothing changed, we can return the same reference)
   private lastResult: VirtualHeaderGroup[] | null = null;
 
@@ -16,11 +15,18 @@ export class VirtualHeaderGroupCache {
   public update(newGroups: VirtualHeaderGroup[]): VirtualHeaderGroup[] {
     let changed = false;
 
+    if (!this.lastResult) {
+      this.lastResult = newGroups;
+      return this.lastResult;
+    }
+
+    const groupCache = new Map<string, VirtualHeaderGroup>();
+    this.lastResult.forEach((group) => groupCache.set(group.id, group));
+
     const updatedGroups = newGroups.map((newGroup) => {
-      const cachedGroup = this.groupCache.get(newGroup.id);
+      const cachedGroup = groupCache.get(newGroup.id);
       // If no cached group, cache the new one immediately.
       if (!cachedGroup) {
-        this.groupCache.set(newGroup.id, newGroup);
         changed = true;
         return newGroup;
       }
@@ -29,11 +35,10 @@ export class VirtualHeaderGroupCache {
       let groupChanged =
         cachedGroup.offsetLeft !== newGroup.offsetLeft ||
         cachedGroup.offsetRight !== newGroup.offsetRight ||
-        cachedGroup.headerGroup !== newGroup.headerGroup ||
         cachedGroup.headers.length !== newGroup.headers.length;
 
       // Build a lookup of the cached headers keyed by headerId.
-      const cachedHeaderMap = new Map<string, VirtualHeader>();
+      const cachedHeaderMap = new Map<string, VirtualHeaderCell>();
       cachedGroup.headers.forEach((h) => cachedHeaderMap.set(h.headerId, h));
 
       // Process headers: if a header exists and its properties are the same, reuse it.
@@ -55,23 +60,24 @@ export class VirtualHeaderGroupCache {
       });
 
       // Check ordering: if the new header array isn't in the same order as before, treat as changed.
-      let sameOrder = true;
-      if (cachedGroup.headers.length === newHeadersMapped.length) {
-        for (let i = 0; i < cachedGroup.headers.length; i++) {
-          if (
-            cachedGroup.headers[i].headerId !== newHeadersMapped[i].headerId
-          ) {
-            sameOrder = false;
-            break;
+      if (!headersChanged) {
+        if (cachedGroup.headers.length === newHeadersMapped.length) {
+          for (let i = 0; i < cachedGroup.headers.length; i++) {
+            if (
+              cachedGroup.headers[i].headerId !== newHeadersMapped[i].headerId
+            ) {
+              headersChanged = true;
+              break;
+            }
           }
+        } else {
+          headersChanged = true;
         }
-      } else {
-        sameOrder = false;
       }
 
       // Final headers: if nothing changed (including order), reuse the cached headers array.
       let finalHeaders = cachedGroup.headers;
-      if (headersChanged || !sameOrder) {
+      if (headersChanged) {
         groupChanged = true;
         finalHeaders = newHeadersMapped;
       }
@@ -82,7 +88,6 @@ export class VirtualHeaderGroupCache {
           ...newGroup,
           headers: finalHeaders,
         };
-        this.groupCache.set(newGroup.id, updatedGroup);
         changed = true;
         return updatedGroup;
       }

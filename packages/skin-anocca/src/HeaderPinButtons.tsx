@@ -3,7 +3,7 @@ import { MdChevronLeft, MdChevronRight, MdClose } from "react-icons/md";
 
 export const HeaderPinButtons = () => {
   const vHeader = useVirtualHeader();
-  const header = vHeader.header;
+  const header = vHeader?.header;
   if (!header) {
     return null;
   }

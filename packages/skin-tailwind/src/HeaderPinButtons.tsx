@@ -9,7 +9,7 @@ export function HeaderPinButtons({ header }: { header: Header<any, any> }) {
     return null;
   }
 
-  const isPinned = virtualHeader.isPinned;
+  const isPinned = virtualHeader?.isPinned;
   return (
     <div className="flex gap-1">
       {isPinned !== "start" ? (

@@ -479,7 +479,8 @@ function Body({
   isMeasuring: boolean;
 }) {
   const { skin, pinColsRelativeTo, crushMinSizeBy } = useTableContext();
-  const { rows, offsetBottom, offsetTop } = useVirtualRowContext();
+  const { rows, offsetBottom, offsetTop, offsetLeft, offsetRight } =
+    useVirtualRowContext();
   const { footerGroups, headerGroups } = useColContext();
 
   const content = () => {
@@ -531,6 +532,8 @@ function Body({
           rows={rows}
           offsetBottom={offsetBottom}
           offsetTop={offsetTop}
+          offsetLeft={offsetLeft}
+          offsetRight={offsetRight}
         ></TableBody>
       );
     }

@@ -2,9 +2,9 @@ import React, { CSSProperties } from "react";
 import { useTableContext } from "./table/table_context";
 import { useColContext } from "./table/cols/col_context";
 import { useVirtualRowContext } from "./table/rows/virtual_row_context";
-import { VirtualHeader } from "./table/cols/virtual_header/types";
+import { VirtualHeaderCell } from "./table/cols/virtual_header/types";
 import { PinPos } from "./table/types";
-import { VirtualRow } from "./table/rows/table_row";
+import { VirtualCell, VirtualRow } from "./table/rows/table_row";
 
 export type Skin = {
   rowHeight: number;
@@ -15,13 +15,7 @@ export type Skin = {
 
   HeaderCell: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> &
-      VirtualHeader & {
-        isLastPinned: boolean;
-        isFirstPinned: boolean;
-        isLast: boolean;
-        isFirst: boolean;
-        isFirstCenter: boolean;
-        isLastCenter: boolean;
+      VirtualHeaderCell & {
         isMeasuring: boolean;
       }
   >;
@@ -58,21 +52,15 @@ export type Skin = {
   PinnedCols: React.FC<{
     children: React.ReactNode;
     position: "left" | "right";
-    pinned: VirtualHeader[];
+    pinned: (VirtualHeaderCell | VirtualCell)[];
     type: "header" | "footer" | "body";
   }>;
 
   Cell: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> & {
       children: React.ReactNode;
-      header: VirtualHeader;
+      cell: VirtualCell;
       isMeasuring: boolean;
-      isLastPinned: boolean;
-      isFirstPinned: boolean;
-      isLast: boolean;
-      isFirst: boolean;
-      isFirstCenter: boolean;
-      isLastCenter: boolean;
     }
   >;
 

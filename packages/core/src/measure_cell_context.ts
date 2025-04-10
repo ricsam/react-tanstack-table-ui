@@ -1,5 +1,5 @@
+import { Header } from "@tanstack/react-table";
 import { createContext, useContext } from "react";
-import { Cell, Header } from "@tanstack/react-table";
 import { CellRefs } from "./table/types";
 
 export type MeasuredCell =
@@ -7,7 +7,6 @@ export type MeasuredCell =
       type: "cell";
       id: string; // cellId
       columnId: string;
-      cell: Cell<any, any>;
     }
   | {
       type: "header";

@@ -2,7 +2,7 @@ import { Header } from "@tanstack/react-table";
 import { CSSProperties } from "react";
 import { PinPos } from "../../types";
 
-export type VirtualHeader = {
+export type VirtualHeaderCell = {
   type: "header" | "footer";
   isDragging: boolean;
   isPinned: PinPos;
@@ -14,6 +14,12 @@ export type VirtualHeader = {
   header?: Header<any, any>;
   start: number;
   end: number;
+  isLastPinned: boolean;
+  isFirstPinned: boolean;
+  isLast: boolean;
+  isFirst: boolean;
+  isFirstCenter: boolean;
+  isLastCenter: boolean;
 };
 
 export type HeaderIndex = {

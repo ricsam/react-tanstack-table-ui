@@ -1,16 +1,15 @@
+import React from "react";
 import { useTableContext } from "../table_context";
-import { CombinedHeaderGroup, PinPos } from "../types";
-import { VirtualHeader } from "./virtual_header/types";
-import { VirtualHeaderCell } from "./virtual_header_cell";
+import { TableHeaderCell } from "./table_header_cell";
+import { VirtualHeaderCell } from "./virtual_header/types";
 export type VirtualHeaderGroup = {
   offsetLeft: number;
   offsetRight: number;
-  headers: VirtualHeader[];
-  headerGroup: CombinedHeaderGroup;
+  headers: VirtualHeaderCell[];
   id: string;
 };
 
-export function HeaderGroup({
+export const HeaderGroup = React.memo(function HeaderGroup({
   offsetLeft,
   offsetRight,
   headers,
@@ -18,48 +17,11 @@ export function HeaderGroup({
 }: VirtualHeaderGroup & {
   type: "header" | "footer";
 }) {
-  const allHeaders = headers;
-  const loop = (headers: VirtualHeader[], pinned: PinPos) => {
+  const loop = (headers: VirtualHeaderCell[]) => {
     const draggableHeader = (
       <>
-        {headers.map((header, index) => {
-          let isLastPinned = false;
-          let isFirstPinned = false;
-          if (pinned === "start") {
-            isLastPinned = index === headers.length - 1;
-            isFirstPinned = index === 0;
-          } else if (pinned === "end") {
-            isLastPinned = index === 0;
-            isFirstPinned = index === headers.length - 1;
-          }
-          let isLast = false;
-          let isFirst = false;
-
-          if (allHeaders[0].headerId === header.headerId) {
-            isFirst = true;
-          }
-          if (allHeaders[allHeaders.length - 1].headerId === header.headerId) {
-            isLast = true;
-          }
-          let isFirstCenter = false;
-          let isLastCenter = false;
-          if (pinned === false) {
-            isLastCenter = index === headers.length - 1;
-            isFirstCenter = index === 0;
-          }
-
-          return (
-            <VirtualHeaderCell
-              key={header.headerId}
-              header={header}
-              isLastPinned={isLastPinned}
-              isFirstPinned={isFirstPinned}
-              isLast={isLast}
-              isFirst={isFirst}
-              isFirstCenter={isFirstCenter}
-              isLastCenter={isLastCenter}
-            />
-          );
+        {headers.map((header) => {
+          return <TableHeaderCell key={header.headerId} header={header} />;
         })}
       </>
     );
@@ -74,13 +36,10 @@ export function HeaderGroup({
   return (
     <skin.HeaderRow type={type}>
       <skin.PinnedCols position="left" pinned={pinnedLeft} type={type}>
-        {loop(pinnedLeft, "start")}
+        {loop(pinnedLeft)}
       </skin.PinnedCols>
       <div style={{ width: offsetLeft, flexShrink: 0 }}></div>
-      {loop(
-        headers.filter((header) => header.isPinned === false),
-        false,
-      )}
+      {loop(headers.filter((header) => header.isPinned === false))}
       <div
         style={
           pinColsRelativeTo === "table"
@@ -96,8 +55,8 @@ export function HeaderGroup({
         }
       ></div>
       <skin.PinnedCols position="right" pinned={pinnedRight} type={type}>
-        {loop(pinnedRight, "end")}
+        {loop(pinnedRight)}
       </skin.PinnedCols>
     </skin.HeaderRow>
   );
-}
+});

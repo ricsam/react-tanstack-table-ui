@@ -1,9 +1,9 @@
 import React from "react";
-import { VirtualHeader } from "../table/cols/virtual_header/types";
+import { VirtualHeaderCell } from "../table/cols/virtual_header/types";
 import { flexRender } from "@tanstack/react-table";
 export const HeaderCell = React.forwardRef<
   HTMLDivElement,
-  VirtualHeader & {
+  VirtualHeaderCell & {
     type: "header" | "footer";
     isMeasuring?: boolean;
   }

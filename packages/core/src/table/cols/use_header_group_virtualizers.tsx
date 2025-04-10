@@ -14,7 +14,7 @@ import { useTableContext } from "../table_context";
 import { CombinedHeaderGroup } from "../types";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { VirtualHeaderGroup } from "./header_group";
-import { HeaderIndex, VirtualHeader } from "./virtual_header/types";
+import { HeaderIndex, VirtualHeaderCell } from "./virtual_header/types";
 import { VirtualHeaderGroupCache } from "./virtual_header_group_cache";
 
 const useIsomorphicLayoutEffect =
@@ -30,10 +30,44 @@ const getVirtualHeaderGroup = (
     header: Header<any, unknown>,
     headerIndex: number,
     start: number,
-  ): VirtualHeader => {
+  ): VirtualHeaderCell => {
     const isPinned = getIsPinned(header);
 
     const width = header.getSize();
+    const allHeaders = group.headers;
+
+    const isIndexPinned = (index: number) =>
+      allHeaders[index] ? getIsPinned(allHeaders[index]) : false;
+
+    let isLastPinned = false;
+    let isFirstPinned = false;
+    if (isPinned === "left") {
+      isLastPinned = !isIndexPinned(headerIndex + 1);
+      isFirstPinned = headerIndex === 0;
+    } else if (isPinned === "right") {
+      isLastPinned = !isIndexPinned(headerIndex - 1);
+      isFirstPinned = headerIndex === allHeaders.length - 1;
+    }
+    let isLast = false;
+    let isFirst = false;
+
+    if (headerIndex === 0) {
+      isFirst = true;
+    }
+    if (headerIndex === allHeaders.length - 1) {
+      isLast = true;
+    }
+    let isFirstCenter = false;
+    let isLastCenter = false;
+    if (isPinned === false) {
+      isLastCenter =
+        !allHeaders[headerIndex + 1] ||
+        isIndexPinned(headerIndex + 1) === "right";
+      isFirstCenter =
+        !allHeaders[headerIndex - 1] ||
+        isIndexPinned(headerIndex - 1) === "left";
+    }
+
     return {
       header,
       headerId: header.id,
@@ -46,6 +80,12 @@ const getVirtualHeaderGroup = (
       start,
       end: start + width,
       columnId: header.column.id,
+      isLastPinned,
+      isFirstPinned,
+      isLast,
+      isFirst,
+      isFirstCenter,
+      isLastCenter,
     };
   };
 
@@ -64,7 +104,6 @@ const getVirtualHeaderGroup = (
     headers,
     offsetLeft,
     offsetRight,
-    headerGroup: group,
   };
 };
 
@@ -151,6 +190,7 @@ export function useHeaderGroupVirtualizers(props: {
   const headerColVirtualizerOptions = filteredHeaderGroups.map(
     (headerGroup): VirtualizerOptions<HTMLDivElement, Element> => {
       return {
+        // todo, don't call here, instead call when headerColVirterOptions is used
         ...baseColVirtOpts(headerGroup),
         count: headerGroup.headers.length,
         estimateSize: (index) => headerGroup.headers[index].getSize(),

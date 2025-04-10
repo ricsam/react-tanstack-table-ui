@@ -10,7 +10,7 @@ import {
   TableRow,
   Theme,
 } from "@mui/material";
-import type { Skin, VirtualHeader } from "@rttui/core";
+import type { Skin, VirtualHeaderCell } from "@rttui/core";
 import { useTableContext, useTableCssVars } from "@rttui/core";
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
@@ -253,8 +253,8 @@ const MuiSkin: Skin = {
       </TableRow>
     );
   },
-  Cell: React.forwardRef(({ children, header, isMeasuring }, ref) => {
-    const { isPinned } = header;
+  Cell: React.forwardRef(({ children, cell, isMeasuring }, ref) => {
+    const { isPinned } = cell;
     return (
       <TableCell
         className="td"
@@ -262,7 +262,7 @@ const MuiSkin: Skin = {
         ref={ref}
         sx={{
           height: "var(--row-height)",
-          width: isMeasuring ? "auto" : header.width,
+          width: isMeasuring ? "auto" : cell.width,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -290,7 +290,7 @@ const MuiSkin: Skin = {
 
 const TableHeaderCell = React.forwardRef<
   HTMLDivElement,
-  VirtualHeader & {
+  VirtualHeaderCell & {
     type: "header" | "footer";
     isMeasuring?: boolean;
   }

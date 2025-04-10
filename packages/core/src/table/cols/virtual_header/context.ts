@@ -1,16 +1,11 @@
 import React from "react";
-import { VirtualHeader } from "./types";
+import { VirtualHeaderCell } from "./types";
 
-
-export const VirtualHeaderContext = React.createContext<VirtualHeader | null>(
-  null
-);
-export const useVirtualHeader = (): VirtualHeader => {
+export const VirtualHeaderContext = React.createContext<
+  VirtualHeaderCell | undefined
+>(undefined);
+export const useVirtualHeader = (): VirtualHeaderCell | undefined => {
   const context = React.useContext(VirtualHeaderContext);
-  if (!context) {
-    throw new Error(
-      "useVirtualHeader must be used within a VirtualHeaderContext"
-    );
-  }
+
   return context;
 };

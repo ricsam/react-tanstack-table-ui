@@ -1,24 +1,13 @@
+import React from "react";
 import { useMeasureCellContext } from "../../measure_cell_context";
 import { useTableContext } from "../table_context";
 import { VirtualHeaderContext } from "./virtual_header/context";
-import { VirtualHeader } from "./virtual_header/types";
+import { VirtualHeaderCell as VirtualHeaderCell } from "./virtual_header/types";
 
-export function VirtualHeaderCell({
+export const TableHeaderCell = React.memo(function TableHeaderCell({
   header,
-  isLastPinned,
-  isFirstPinned,
-  isLast,
-  isFirst,
-  isFirstCenter,
-  isLastCenter,
 }: {
-  header: VirtualHeader;
-  isLastPinned: boolean;
-  isFirstPinned: boolean;
-  isLast: boolean;
-  isFirst: boolean;
-  isFirstCenter: boolean;
-  isLastCenter: boolean;
+  header: VirtualHeaderCell;
 }) {
   const measuring = useMeasureCellContext();
   const { skin } = useTableContext();
@@ -29,12 +18,6 @@ export function VirtualHeaderCell({
     <VirtualHeaderContext.Provider value={header} key={header.headerId}>
       <skin.HeaderCell
         {...header}
-        isLastPinned={isLastPinned}
-        isFirstPinned={isFirstPinned}
-        isLast={isLast}
-        isFirst={isFirst}
-        isFirstCenter={isFirstCenter}
-        isLastCenter={isLastCenter}
         isMeasuring={Boolean(measuring)}
         ref={
           measuring
@@ -51,4 +34,4 @@ export function VirtualHeaderCell({
       />
     </VirtualHeaderContext.Provider>
   );
-}
+});

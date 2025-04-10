@@ -8,10 +8,17 @@ import {
 import React, { CSSProperties } from "react";
 import { useColContext } from "../cols/col_context";
 import { useTableContext } from "../table_context";
+import { VirtualCell, VirtualRow } from "./table_row";
+import { VirtualRowCache } from "./virtual_row_cache";
 import { VirtualRowContext } from "./virtual_row_context";
-import { VirtualRow } from "./table_row";
 
-export const VirtualRowProvider = ({ children }: { children: React.ReactNode }) => {
+const dndStyle: CSSProperties = {};
+
+export const VirtualRowProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const { table, tableContainerRef, skin, config } = useTableContext();
 
   /* to be implemented
@@ -46,21 +53,24 @@ export const VirtualRowProvider = ({ children }: { children: React.ReactNode }) 
   }
   */
 
-  const { mainHeaderGroup, headerGroups, footerGroups } = useColContext();
+  const { mainHeaderGroup } = useColContext();
 
-  const { rows } = table.getRowModel();
+  const allRows = table.getRowModel().rows;
   const rowIds = React.useMemo(() => {
-    return rows.map((row) => row.id);
-  }, [rows]);
+    return allRows.map((row) => row.id);
+  }, [allRows]);
 
   const _refs = { table, rowIds };
   const refs = React.useRef(_refs);
   refs.current = _refs;
 
   const rowVirtualizer = useVirtualizer({
-    count: rows.length,
+    count: allRows.length,
     estimateSize: React.useCallback(() => skin.rowHeight, [skin.rowHeight]),
-    getItemKey: React.useCallback((index: number) => rowIds[index], [rowIds]),
+    getItemKey: React.useCallback(
+      (index: number) => refs.current.rowIds[index],
+      [],
+    ),
     getScrollElement: () => tableContainerRef.current,
     measureElement: React.useCallback(
       (
@@ -74,26 +84,26 @@ export const VirtualRowProvider = ({ children }: { children: React.ReactNode }) 
       [skin.rowHeight],
     ),
     overscan: config.rowOverscan,
-    rangeExtractor: React.useCallback(
-      (range: Range): number[] => {
-        const defaultRange = defaultRangeExtractor(range);
-        const next = new Set(defaultRange);
+    rangeExtractor: React.useCallback((range: Range): number[] => {
+      const defaultRange = defaultRangeExtractor(range);
+      const next = new Set(defaultRange);
 
-        [...table.getTopRows(), ...table.getBottomRows()].forEach((row) => {
-          next.add(rowIds.indexOf(row.id));
-        });
+      [
+        ...refs.current.table.getTopRows(),
+        ...refs.current.table.getBottomRows(),
+      ].forEach((row) => {
+        next.add(refs.current.rowIds.indexOf(row.id));
+      });
 
-        const n = [...next].sort((a, b) => a - b);
-        return n;
-      },
-      [rowIds, table],
-    ),
+      const n = [...next].sort((a, b) => a - b);
+      return n;
+    }, []),
   });
 
   const { offsetTop, offsetBottom } = getRowVirtualizedOffsets({
     virtualColumns: rowVirtualizer.getVirtualItems(),
     getIsPinned(vcIndex) {
-      const row = rows[vcIndex];
+      const row = allRows[vcIndex];
       return !!row.getIsPinned();
     },
     totalSize: rowVirtualizer.getTotalSize(),
@@ -102,9 +112,10 @@ export const VirtualRowProvider = ({ children }: { children: React.ReactNode }) 
   const virtualRows = rowVirtualizer
     .getVirtualItems()
     .map((item): VirtualRow => {
-      const row = rows[item.index];
+      const row = allRows[item.index];
       const pinned = row.getIsPinned();
-      const dndStyle: CSSProperties = {};
+
+      const allCells = row.getVisibleCells();
 
       return {
         row,
@@ -113,37 +124,57 @@ export const VirtualRowProvider = ({ children }: { children: React.ReactNode }) 
         isPinned:
           pinned === "bottom" ? "end" : pinned === "top" ? "start" : false,
         dndStyle,
+        rowVirtualizer,
+
+        cells: mainHeaderGroup.headers.map((header): VirtualCell => {
+          return {
+            id: header.headerId,
+            columnId: header.columnId,
+            cell: allCells[header.headerIndex],
+            isPinned: header.isPinned,
+            isLastPinned: header.isLastPinned,
+            isFirstPinned: header.isFirstPinned,
+            isLast: header.isLast,
+            isFirst: header.isFirst,
+            isFirstCenter: header.isFirstCenter,
+            isLastCenter: header.isLastCenter,
+            width: header.width,
+            start: header.start,
+            end: header.end,
+            dndStyle: {},
+          };
+        }),
       };
     });
 
   // wip if we make the virtualRows contain start and size info
-  // const [rowCache] = React.useState(() => {
-  //   const rowCache = new VirtualRowCache();
-  //   return rowCache;
-  // });
-  // const cachedVirtualRows = rowCache.update(virtualRows, table.getState());
+  const [rowCache] = React.useState(() => {
+    const rowCache = new VirtualRowCache();
+    return rowCache;
+  });
+
+  const cachedVirtualRows = rowCache.update(virtualRows);
+  const rows = cachedVirtualRows;
+
+  const offsetLeft = mainHeaderGroup.offsetLeft;
+  const offsetRight = mainHeaderGroup.offsetRight;
 
   return (
     <VirtualRowContext.Provider
-      value={{
-        moveResult: null,
-        rowIds,
-        getStart(rowId) {
-          const row = table.getRow(rowId);
-          return rowVirtualizer.measurementsCache[row.index].start;
-        },
-        rows: virtualRows,
-        // rows: cachedVirtualRows,
-        setIsDragging(_dragState) {
-          // to be implemented
-        },
-        rowVirtualizer,
-        offsetTop,
-        offsetBottom,
-        mainHeaderGroup: mainHeaderGroup,
-        headerGroups,
-        footerGroups,
-      }}
+      value={React.useMemo((): VirtualRowContext => {
+        return {
+          moveResult: null,
+          rows: rows,
+          setIsDragging(_dragState) {
+            // to be implemented
+          },
+          rowVirtualizer,
+          offsetTop,
+          offsetBottom,
+          offsetLeft,
+          offsetRight,
+        };
+      }, [rows, offsetBottom, offsetLeft, offsetRight, offsetTop, rowVirtualizer])}
     >
       {children}
     </VirtualRowContext.Provider>

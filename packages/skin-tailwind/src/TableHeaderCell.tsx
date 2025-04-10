@@ -1,10 +1,10 @@
-import { type VirtualHeader } from "@rttui/core";
+import { type VirtualHeaderCell } from "@rttui/core";
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
 import { useTableContext } from "@rttui/core";
 export const TableHeaderCell = React.forwardRef<
   HTMLDivElement,
-  VirtualHeader & {
+  VirtualHeaderCell & {
     type: "header" | "footer";
     isMeasuring: boolean;
     isLastPinned: boolean;

@@ -1,21 +1,16 @@
-import { TableState } from "@tanstack/react-table";
 import { shallowEqual } from "../../utils";
-import { VirtualRow } from "./table_row";
+import { VirtualCell, VirtualRow } from "./table_row";
 
 export class VirtualRowCache {
   private lastResult: VirtualRow[] | null = null;
-  private prevState: TableState | null = null;
 
   /**
    * Updates the cache with the new header groups.
    * If nothing changes, returns the same array reference.
    * For each header group, only headers that have actually updated are new objects.
    */
-  public update(newRows: VirtualRow[], state: TableState): VirtualRow[] {
+  public update(newRows: VirtualRow[]): VirtualRow[] {
     let changed = false;
-
-    const prevState = this.prevState;
-    this.prevState = state;
 
     if (!this.lastResult) {
       this.lastResult = newRows;
@@ -31,39 +26,84 @@ export class VirtualRowCache {
     const newRowsMapped = newRows.map((newRow) => {
       const cachedRow = cachedRowMap.get(newRow.row.id);
 
-      if (
-        cachedRow &&
-        prevState &&
-        shallowEqual(cachedRow, newRow, ["dndStyle"]) &&
-        shallowEqual(cachedRow.dndStyle, newRow.dndStyle)
-      ) {
-        // Reuse cached header
-        return cachedRow;
+      if (!cachedRow) {
+        return newRow;
       }
-      // Otherwise, mark that headers have changed and use the new header.
-      changed = true;
-      return newRow;
-    });
 
-    // Check ordering: if the new row array isn't in the same order as before, treat as changed.
-    let sameOrder = true;
-    if (this.lastResult.length === newRowsMapped.length) {
-      for (let i = 0; i < this.lastResult.length; i++) {
-        if (this.lastResult[i].row.id !== newRowsMapped[i].row.id) {
-          sameOrder = false;
-          break;
+      let rowChanged =
+        !shallowEqual(cachedRow, newRow, ["cells", "dndStyle"]) ||
+        !shallowEqual(cachedRow.dndStyle, newRow.dndStyle);
+
+      const cachedCellMap = new Map<string, VirtualCell>();
+      cachedRow.cells.forEach((c) => cachedCellMap.set(c.cell.id, c));
+
+      let cellsChanged = false;
+
+      const newCellsMapped = newRow.cells.map((newCell) => {
+        const cachedCell = cachedCellMap.get(newCell.cell.id);
+
+        if (
+          cachedCell &&
+          shallowEqual(cachedCell, newCell, ["dndStyle"]) &&
+          shallowEqual(cachedCell.dndStyle, newCell.dndStyle)
+        ) {
+          return cachedCell;
+        }
+
+        // Otherwise, mark that headers have changed and use the new header.
+        cellsChanged = true;
+        return newCell;
+      });
+
+      if (!cellsChanged) {
+        if (cachedRow.cells.length === newCellsMapped.length) {
+          for (let i = 0; i < newCellsMapped.length; i++) {
+            if (cachedRow.cells[i].cell.id !== newCellsMapped[i].cell.id) {
+              cellsChanged = true;
+              break;
+            }
+          }
+        } else {
+          cellsChanged = true;
         }
       }
-    } else {
-      sameOrder = false;
+
+      let finalCells = cachedRow.cells;
+      if (cellsChanged) {
+        rowChanged = true;
+        finalCells = newCellsMapped;
+      }
+
+      if (rowChanged) {
+        const updatedRow: VirtualRow = {
+          ...newRow,
+          cells: finalCells,
+        };
+        changed = true;
+        return updatedRow;
+      }
+
+      return cachedRow;
+    });
+
+    if (!changed) {
+      if (this.lastResult.length === newRowsMapped.length) {
+        for (let i = 0; i < this.lastResult.length; i++) {
+          if (this.lastResult[i].row.id !== newRowsMapped[i].row.id) {
+            changed = true;
+            break;
+          }
+        }
+      } else {
+        changed = true;
+      }
     }
 
-    if (changed || !sameOrder) {
+    if (changed) {
       this.lastResult = newRowsMapped;
       return newRowsMapped;
     }
 
-    // Final rows: if nothing changed (including order), reuse the cached rows array.
     return this.lastResult;
   }
 }

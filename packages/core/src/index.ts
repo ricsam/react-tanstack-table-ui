@@ -4,7 +4,7 @@ import { iterateOverColumns } from "./iterate_over_columns";
 import type { Skin } from "./skin";
 import { useTableContext } from "./table/table_context";
 import { useColContext } from "./table/cols/col_context";
-import type { VirtualHeader } from "./table/cols/virtual_header/types";
+import type { VirtualHeaderCell } from "./table/cols/virtual_header/types";
 import { useTableCssVars } from "./skin";
 import {
   defaultSkin,
@@ -12,6 +12,7 @@ import {
   lightModeVars,
 } from "./default_skin/default_skin";
 import { useVirtualHeader } from "./table/cols/virtual_header/context";
+import { useVirtualCell } from "./table/cols/virtual_cell/context";
 import { useRow } from "./table/rows/row_context";
 import { useCrushHeader } from "./use_crush_header";
 import { decorateColumnHelper } from "./decorate_column_helper";
@@ -31,5 +32,6 @@ export {
   useVirtualHeader,
   useCrushHeader,
   decorateColumnHelper,
+  useVirtualCell,
 };
-export type { Skin, VirtualHeader, HeaderDecorator, CellDecorator, RttuiRef };
+export type { Skin, VirtualHeaderCell as VirtualHeaderCell, HeaderDecorator, CellDecorator, RttuiRef };
