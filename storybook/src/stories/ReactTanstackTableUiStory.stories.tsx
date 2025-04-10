@@ -84,9 +84,11 @@ export const AutoCrushColumnsExceptName: Story = {
   args: {
     autoCrushColumns: true,
     enableColumnPinning: true,
-    meta: {
+    columnDefs: {
       name: {
-        autoCrush: false,
+        meta: {
+          autoCrush: false,
+        },
       },
     },
   },
@@ -142,9 +144,11 @@ export const FillAvailableSpaceAfterCrushExceptName: Story = {
   args: {
     autoCrushColumns: true,
     fillAvailableSpaceAfterCrush: true,
-    meta: {
+    columnDefs: {
       name: {
-        fillAvailableSpaceAfterCrush: false,
+        meta: {
+          fillAvailableSpaceAfterCrush: false,
+        },
       },
     },
   },
@@ -180,9 +184,11 @@ export const FillAvailableSpaceAfterCrushWithHeaderGroupsExceptName: Story = {
     autoCrushColumns: true,
     fillAvailableSpaceAfterCrush: true,
     withHeaderGroups: true,
-    meta: {
+    columnDefs: {
       name: {
-        fillAvailableSpaceAfterCrush: false,
+        meta: {
+          fillAvailableSpaceAfterCrush: false,
+        },
       },
     },
   },
@@ -193,9 +199,11 @@ export const FillAvailableSpaceAfterCrushWithTwoHeaderRowsExceptName: Story = {
     autoCrushColumns: true,
     fillAvailableSpaceAfterCrush: true,
     withTwoHeaderRows: true,
-    meta: {
+    columnDefs: {
       name: {
-        fillAvailableSpaceAfterCrush: false,
+        meta: {
+          fillAvailableSpaceAfterCrush: false,
+        },
       },
     },
   },
@@ -250,9 +258,11 @@ export const SizeByLargestHeaderWithMeta: Story = {
     autoCrushColumns: true,
     crushMinSizeBy: "header",
     enableColumnPinning: true,
-    meta: {
+    columnDefs: {
       age: {
-        crushMinSizeBy: "cell",
+        meta: {
+          crushMinSizeBy: "cell",
+        },
       },
     },
   },
@@ -288,5 +298,39 @@ export const MeasureOverscanCols: Story = {
     crushMinSizeBy: "cell",
     autoCrushColumns: true,
     autoCrushNumCols: 1000,
+  },
+};
+
+export const CanExpandRowsWithMaxWidth: Story = {
+  args: {
+    data: "big",
+    columns: "few",
+    autoCrushColumns: true,
+    width: 1200,
+    fillAvailableSpaceAfterCrush: true,
+    columnDefs: {
+      name: {
+        maxSize: 200,
+      },
+    },
+  },
+};
+
+export const CanExpandRowsWithMaxWidthWithHeaderGroups: Story = {
+  args: {
+    data: "big",
+    columns: "few",
+    autoCrushColumns: true,
+    width: 1200,
+    fillAvailableSpaceAfterCrush: true,
+    withHeaderGroups: true,
+    columnDefs: {
+      name: {
+        maxSize: 200,
+      },
+      age: {
+        maxSize: 200,
+      },
+    },
   },
 };

@@ -24,7 +24,6 @@ import {
 } from "@rttui/skin-tailwind";
 import {
   ColumnDef,
-  ColumnMeta,
   createColumnHelper,
   Table,
   TableOptions,
@@ -71,7 +70,7 @@ export const ReactTanstackTableUi = (
   props: {
     data: "big" | "small" | "none";
     columns: "many" | "few";
-    meta?: Record<string, ColumnMeta<Person, string>>;
+    columnDefs?: Record<string, Partial<ColumnDef<Person, unknown>>>;
     withTwoHeaderRows?: boolean;
     withHeaderGroups?: boolean;
     canSelectRows?: boolean;
@@ -115,12 +114,11 @@ export const ReactTanstackTableUi = (
                   {props.enableRowPinning && <TwRowPinButtons row={info.row} />}
                 </div>
               ),
-        meta: props.meta?.["name"],
+        ...props.columnDefs?.["name"],
       }),
       columnHelper.accessor("age", {
         id: "age",
         header: "Age",
-        meta: props.meta?.["age"],
         cell:
           props.skin === AnoccaSkin
             ? (info) => (
@@ -128,17 +126,18 @@ export const ReactTanstackTableUi = (
               )
             : (info) => <CellText>{info.getValue()}</CellText>,
         size: 50,
+        ...props.columnDefs?.["age"],
       }),
       columnHelper.accessor("city", {
         id: "city",
         header: "City",
-        meta: props.meta?.["city"],
         cell:
           props.skin === AnoccaSkin
             ? (info) => (
                 <Typography variant="body2">{info.getValue()}</Typography>
               )
             : (info) => <CellText>{info.getValue()}</CellText>,
+        ...props.columnDefs?.["city"],
       }),
     ];
 
@@ -239,13 +238,13 @@ export const ReactTanstackTableUi = (
     return cols;
   }, [
     props.skin,
-    props.meta,
     props.columns,
     props.withHeaderGroups,
     props.withTwoHeaderRows,
     props.canSelectRows,
     props.enableColumnPinning,
     props.enableRowPinning,
+    props.columnDefs,
   ]);
 
   const table = useReactTable({

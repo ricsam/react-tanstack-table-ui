@@ -1,9 +1,10 @@
-import { Row, RowData, Table } from "@tanstack/react-table";
+import { Column, Row, RowData, Table } from "@tanstack/react-table";
 import React from "react";
 import { defaultSkin } from "../default_skin/default_skin";
 import { ColDndHandler, RowDndHandler } from "../dnd_handler";
 import { MeasureCellProvider } from "../measure_cell_provider";
 import { Skin } from "../skin";
+import { getSubHeaders } from "../utils";
 import { useColContext } from "./cols/col_context";
 import { ColProvider } from "./cols/col_provider";
 import { HeaderGroup } from "./cols/header_group";
@@ -12,7 +13,6 @@ import { VirtualRowProvider } from "./rows/virtual_row_provider";
 import { TableBody } from "./table_body";
 import { TableContext, useTableContext } from "./table_context";
 import { CellRefs, MeasureData, RttuiRef } from "./types";
-import { getSubHeaders } from "../utils";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -98,90 +98,138 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
   const refs = React.useRef(refsValue);
   refs.current = refsValue;
 
-  const crushCols = React.useCallback((cols: MeasureData["cols"]) => {
-    refs.current.table.setColumnSizing((prev) => {
-      const newSizing = { ...prev };
+  const contrainSize = React.useCallback((size: number, col?: Column<any>) => {
+    const maxSize =
+      col?.columnDef?.maxSize ??
+      refs.current.props.table.options.defaultColumn?.maxSize ??
+      Number.POSITIVE_INFINITY;
+    const minSize =
+      col?.columnDef?.minSize ??
+      refs.current.props.table.options.defaultColumn?.minSize ??
+      0;
+    return Math.max(Math.min(Math.max(size, minSize), maxSize), 0);
+  }, []);
 
-      const colsToCrush = new Map<string, CellRefs>();
+  const crushCols = React.useCallback(
+    (cols: MeasureData["cols"]) => {
+      refs.current.table.setColumnSizing((prev) => {
+        const newSizing = { ...prev };
 
-      cols.forEach((col, colId) => {
-        if (!col) {
-          return;
-        }
-        const tsCol = refs.current.table.getColumn(colId);
-        if (tsCol?.columnDef.meta?.autoCrush !== false) {
-          colsToCrush.set(colId, col);
-        } else {
-          newSizing[colId] = newSizing[colId] ?? tsCol.getSize();
-        }
-      });
+        const colsToCrush = new Map<string, CellRefs>();
 
-      colsToCrush.forEach((col, colId) => {
-        const tsCol = refs.current.table.getColumn(colId);
-        const crushMinSizeBy =
-          tsCol?.columnDef.meta?.crushMinSizeBy ?? refs.current.crushMinSizeBy;
-        const cells = Object.values(col);
-        let widths = cells
-          .filter(({ type }) => {
-            if (crushMinSizeBy === "both") {
-              return true;
-            }
-            return type === crushMinSizeBy;
-          })
-          .map(({ width }) => width);
+        const getCrushMinSizeBy = (col?: Column<any>) => {
+          return (
+            col?.columnDef?.meta?.crushMinSizeBy ?? refs.current.crushMinSizeBy
+          );
+        };
 
-        if (widths.length === 0) {
-          if (cells.length === 0) {
-            widths = [
-              tsCol?.getSize() ??
-                refs.current.props.table.options.defaultColumn?.size ??
-                0,
-            ];
-          } else {
-            widths = cells.map(({ width }) => width);
+        cols.forEach((col, colId) => {
+          if (!col) {
+            return;
           }
-        }
-        const colWidth = Math.max(...widths);
-        newSizing[colId] = colWidth;
-      });
-
-      //#region size by largest header
-      // maybe add one more option to crushMinSizeBy to size by largest header, but for now it is enabled by default
-      colsToCrush.forEach((col, colId) => {
-        Object.values(col).forEach((cell) => {
-          if (cell.type === "header") {
-            const header = cell.header;
-            if (header) {
-              const crushMinSizeBy =
-                header.column.columnDef.meta?.crushMinSizeBy ??
-                refs.current.crushMinSizeBy;
-              if (crushMinSizeBy === "cell") {
-                return;
-              }
-              const headerWidth = newSizing[colId];
-              let leafTotal = 0;
-              const leafs = getSubHeaders(header);
-              leafs.forEach((h) => {
-                leafTotal += newSizing[h.column.id] ?? h.column.getSize();
-              });
-
-              if (leafTotal < headerWidth) {
-                const diff = headerWidth - leafTotal;
-                const perCol = diff / leafs.length;
-                leafs.forEach((h) => {
-                  newSizing[h.column.id] =
-                    (newSizing[h.column.id] ?? h.column.getSize()) + perCol;
-                });
-              }
-            }
+          const tsCol = refs.current.table.getColumn(colId);
+          if (tsCol?.columnDef.meta?.autoCrush !== false) {
+            colsToCrush.set(colId, col);
+          } else {
+            newSizing[colId] = contrainSize(
+              newSizing[colId] ?? tsCol.getSize(),
+              tsCol,
+            );
           }
         });
-      });
-      //#endregion
 
-      return newSizing;
-    });
-  }, []);
+        colsToCrush.forEach((col, colId) => {
+          const tsCol = refs.current.table.getColumn(colId);
+          const crushMinSizeBy = getCrushMinSizeBy(tsCol);
+
+          const cells = Object.values(col);
+          let widths = cells
+            .filter(({ type }) => {
+              if (crushMinSizeBy === "both") {
+                return true;
+              }
+              return type === crushMinSizeBy;
+            })
+            .map(({ width }) => width);
+
+          if (widths.length === 0) {
+            if (cells.length === 0) {
+              widths = [
+                tsCol?.getSize() ??
+                  refs.current.props.table.options.defaultColumn?.size ??
+                  0,
+              ];
+            } else {
+              widths = cells.map(({ width }) => width);
+            }
+          }
+          const colWidth = Math.max(...widths);
+          newSizing[colId] = contrainSize(colWidth, tsCol);
+        });
+
+        //#region size by largest header
+        // maybe add one more option to crushMinSizeBy to size by largest header, but for now it is enabled by default
+        colsToCrush.forEach((col, colId) => {
+          Object.values(col).forEach((cell) => {
+            if (cell.type === "header") {
+              const header = cell.header;
+              if (header) {
+                const crushMinSizeBy = getCrushMinSizeBy(header.column);
+                if (crushMinSizeBy === "cell") {
+                  return;
+                }
+                const headerWidth = contrainSize(
+                  newSizing[colId],
+                  header.column,
+                );
+                let leafTotal = 0;
+                const leafs = getSubHeaders(header);
+                leafs.forEach((h) => {
+                  leafTotal += contrainSize(
+                    newSizing[h.column.id] ?? h.column.getSize(),
+                    h.column,
+                  );
+                });
+
+                const nonConstrainedCols = new Set<string>();
+
+                let totalWhenColsAreConstrained = 0;
+
+                if (leafTotal < headerWidth) {
+                  const diff = headerWidth - leafTotal;
+                  const perCol = diff / leafs.length;
+                  leafs.forEach((h) => {
+                    const newSize = Math.max(
+                      (newSizing[h.column.id] ?? h.column.getSize()) + perCol,
+                      0,
+                    );
+                    newSizing[h.column.id] = contrainSize(newSize, h.column);
+
+                    totalWhenColsAreConstrained += newSizing[h.column.id];
+
+                    if (newSize === newSizing[h.column.id]) {
+                      nonConstrainedCols.add(h.column.id);
+                    }
+                  });
+                }
+                if (leafTotal < totalWhenColsAreConstrained) {
+                  const diff = totalWhenColsAreConstrained - leafTotal;
+                  const perCol = diff / nonConstrainedCols.size;
+                  nonConstrainedCols.forEach((colId) => {
+                    newSizing[colId] += perCol;
+                  });
+                }
+              }
+            }
+          });
+        });
+        //#endregion
+
+        return newSizing;
+      });
+    },
+    [contrainSize],
+  );
 
   const fillAvailableSpaceAfterCrush = React.useCallback(
     (cols: MeasureData["cols"]) => {
@@ -202,35 +250,57 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(props: {
           }
         });
         let totalSize = 0;
-        const colsThatCanFill = new Set<string>();
+        const colsThatCanFill = new Set<Column<T, unknown>>();
+
+        const getSize = (colId: string, col?: Column<T, unknown>) => {
+          return (
+            newSizing[colId] ??
+            col?.getSize() ??
+            refs.current.props.table.options.defaultColumn?.size ??
+            0
+          );
+        };
 
         leafCols.forEach((colId) => {
           const tsCol = refs.current.table.getColumn(colId);
-          totalSize +=
-            newSizing[colId] ??
-            tsCol?.getSize() ??
-            refs.current.props.table.options.defaultColumn?.size ??
-            0;
-          if (tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false) {
-            colsThatCanFill.add(colId);
+          totalSize += contrainSize(getSize(colId, tsCol), tsCol);
+          if (
+            tsCol &&
+            tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false
+          ) {
+            colsThatCanFill.add(tsCol);
           }
         });
         if (
           refs.current.props.fillAvailableSpaceAfterCrush &&
           totalSize < totalWidth
         ) {
+          let totalWhenColsAreConstrained = 0;
+          const nonConstrainedCols = new Set<Column<T, unknown>>();
           const delta = totalWidth - totalSize;
           const perColumnDelta = delta / colsThatCanFill.size;
-          colsThatCanFill.forEach((colId) => {
-            newSizing[colId] += perColumnDelta;
+          colsThatCanFill.forEach((col) => {
+            const newSize = getSize(col.id, col) + perColumnDelta;
+            newSizing[col.id] = contrainSize(newSize, col);
+            totalWhenColsAreConstrained += newSizing[col.id];
+            if (newSize === newSizing[col.id]) {
+              nonConstrainedCols.add(col);
+            }
           });
+          if (totalWhenColsAreConstrained < totalWidth) {
+            const diff = totalWidth - totalWhenColsAreConstrained;
+            const perCol = diff / nonConstrainedCols.size;
+            nonConstrainedCols.forEach((col) => {
+              newSizing[col.id] += perCol;
+            });
+          }
         }
         //#endregion
 
         return newSizing;
       });
     },
-    [],
+    [contrainSize],
   );
 
   const onMeasureCb = React.useCallback(

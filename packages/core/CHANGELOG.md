@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.21
+
+### Patch Changes
+
+- Fix fillAvailableSpaceAfterCrush when there are maxSizes
+
 ## 1.0.20
 
 ### Patch Changes
