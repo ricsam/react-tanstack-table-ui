@@ -6,11 +6,13 @@ import {
   Virtualizer,
 } from "@tanstack/react-virtual";
 import React, { CSSProperties } from "react";
-import { useColContext } from "../cols/col_context";
+import { useTableProps, useTableRef } from "../../utils";
+import { useColVirtualizer } from "../hooks/use_col_virtualizer";
 import { useTableContext } from "../table_context";
-import { VirtualCell, VirtualRow } from "./table_row";
+import { VirtualCell, VirtualRow } from "../types";
 import { VirtualRowCache } from "./virtual_row_cache";
-import { VirtualRowContext } from "./virtual_row_context";
+import { RowVirtualizerContext } from "../contexts/RowVirtualizerContext";
+import { RowVirtualizerContextType } from "./row_virtualizer_context_type";
 
 const dndStyle: CSSProperties = {};
 
@@ -19,7 +21,7 @@ export const VirtualRowProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { table, tableContainerRef, skin, config } = useTableContext();
+  const { tableContainerRef, skin, config } = useTableContext();
 
   /* to be implemented
   const [draggedRowId, setDraggedRowId] = React.useState<string | null>(null);
@@ -53,14 +55,20 @@ export const VirtualRowProvider = ({
   }
   */
 
-  const { mainHeaderGroup } = useColContext();
+  const { mainHeaderGroup } = useColVirtualizer();
 
-  const allRows = table.getRowModel().rows;
+  const { allRows } = useTableProps((table) => {
+    const allRows = table.getRowModel().rows;
+    return { allRows };
+  });
+
   const rowIds = React.useMemo(() => {
     return allRows.map((row) => row.id);
   }, [allRows]);
 
-  const _refs = { table, rowIds };
+  const tableRef = useTableRef();
+
+  const _refs = { rowIds };
   const refs = React.useRef(_refs);
   refs.current = _refs;
 
@@ -84,20 +92,23 @@ export const VirtualRowProvider = ({
       [skin.rowHeight],
     ),
     overscan: config.rowOverscan,
-    rangeExtractor: React.useCallback((range: Range): number[] => {
-      const defaultRange = defaultRangeExtractor(range);
-      const next = new Set(defaultRange);
+    rangeExtractor: React.useCallback(
+      (range: Range): number[] => {
+        const defaultRange = defaultRangeExtractor(range);
+        const next = new Set(defaultRange);
 
-      [
-        ...refs.current.table.getTopRows(),
-        ...refs.current.table.getBottomRows(),
-      ].forEach((row) => {
-        next.add(refs.current.rowIds.indexOf(row.id));
-      });
+        [
+          ...tableRef.current.getTopRows(),
+          ...tableRef.current.getBottomRows(),
+        ].forEach((row) => {
+          next.add(refs.current.rowIds.indexOf(row.id));
+        });
 
-      const n = [...next].sort((a, b) => a - b);
-      return n;
-    }, []),
+        const n = [...next].sort((a, b) => a - b);
+        return n;
+      },
+      [tableRef],
+    ),
   });
 
   const { offsetTop, offsetBottom } = getRowVirtualizedOffsets({
@@ -112,14 +123,15 @@ export const VirtualRowProvider = ({
   const virtualRows = rowVirtualizer
     .getVirtualItems()
     .map((item): VirtualRow => {
-      const row = allRows[item.index];
-      const pinned = row.getIsPinned();
-
-      const allCells = row.getVisibleCells();
+      const getRow = () => allRows[item.index];
+      const staticRow = getRow();
+      const pinned = staticRow.getIsPinned();
+      const getAllCells = () => getRow().getVisibleCells();
 
       return {
-        row,
-        flatIndex: rowIds.indexOf(row.id),
+        row: getRow,
+        id: staticRow.id,
+        flatIndex: rowIds.indexOf(staticRow.id),
         isDragging: false,
         isPinned:
           pinned === "bottom" ? "end" : pinned === "top" ? "start" : false,
@@ -128,20 +140,10 @@ export const VirtualRowProvider = ({
 
         cells: mainHeaderGroup.headers.map((header): VirtualCell => {
           return {
-            id: header.headerId,
-            columnId: header.columnId,
-            cell: allCells[header.headerIndex],
-            isPinned: header.isPinned,
-            isLastPinned: header.isLastPinned,
-            isFirstPinned: header.isFirstPinned,
-            isLast: header.isLast,
-            isFirst: header.isFirst,
-            isFirstCenter: header.isFirstCenter,
-            isLastCenter: header.isLastCenter,
-            width: header.width,
-            start: header.start,
-            end: header.end,
+            id: header.id,
+            cell: () => getAllCells()[header.headerIndex],
             dndStyle: {},
+            vheader: header,
           };
         }),
       };
@@ -160,8 +162,8 @@ export const VirtualRowProvider = ({
   const offsetRight = mainHeaderGroup.offsetRight;
 
   return (
-    <VirtualRowContext.Provider
-      value={React.useMemo((): VirtualRowContext => {
+    <RowVirtualizerContext.Provider
+      value={React.useMemo((): RowVirtualizerContextType => {
         return {
           moveResult: null,
           rows: rows,
@@ -174,10 +176,17 @@ export const VirtualRowProvider = ({
           offsetLeft,
           offsetRight,
         };
-      }, [rows, offsetBottom, offsetLeft, offsetRight, offsetTop, rowVirtualizer])}
+      }, [
+        rows,
+        offsetBottom,
+        offsetLeft,
+        offsetRight,
+        offsetTop,
+        rowVirtualizer,
+      ])}
     >
       {children}
-    </VirtualRowContext.Provider>
+    </RowVirtualizerContext.Provider>
   );
 };
 

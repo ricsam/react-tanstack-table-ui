@@ -5,6 +5,7 @@ import {
   decorateColumnHelper,
   ReactTanstackTableUi,
   useTableContext,
+  useTableProps,
 } from "@rttui/core";
 import {
   Cell,
@@ -97,11 +98,11 @@ export function HomePage() {
   // Generate columns based on columnCount
   const columns = useMemo(() => {
     const columnHelper = decorateColumnHelper(createColumnHelper<Person>(), {
-      header: (original, props) => (
+      header: (original) => (
         <div className="flex items-center gap-2 flex-1">
           <div className="flex-1">{original}</div>
-          <HeaderPinButtons header={props.header} />
-          <Resizer header={props.header} />
+          <HeaderPinButtons />
+          <Resizer />
         </div>
       ),
     });
@@ -112,18 +113,18 @@ export function HomePage() {
         header: ({ table }) => (
           <div className="flex items-center gap-2.5">
             <Checkbox
-              {...{
+              getProps={() => ({
                 checked: table.getIsAllRowsSelected(),
                 indeterminate: table.getIsSomeRowsSelected(),
-                onChange: table.getToggleAllRowsSelectedHandler(),
-              }}
+              })}
+              onChange={() => table.getToggleAllRowsSelectedHandler()}
             />
 
             <span>Name</span>
           </div>
         ),
-        cell: ({ row, getValue }) => (
-          <Cell row={row} highlightSelected checkbox expandButton pinButtons>
+        cell: ({ getValue }) => (
+          <Cell highlightSelected checkbox expandButton pinButtons>
             {getValue()}
           </Cell>
         ),
@@ -340,6 +341,13 @@ export function HomePage() {
   const scrollToDemoSection = useCallback(() => {
     demoSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  const renderSubComponent = React.useCallback(
+    (row: Row<Person>) => {
+      return <Details row={row} width={innerContainerSize.width} />;
+    },
+    [innerContainerSize.width],
+  );
 
   return (
     <div>
@@ -563,6 +571,11 @@ export function HomePage() {
             <div ref={tableContainerRef} className="absolute inset-0">
               {tableContainerBounds.width && tableContainerBounds.height ? (
                 <ReactTanstackTableUi
+                  shouldUpdate={{
+                    cell: () => {
+                      return false;
+                    },
+                  }}
                   table={table}
                   width={tableContainerBounds.width}
                   height={tableContainerBounds.height}
@@ -584,11 +597,7 @@ export function HomePage() {
                       ref={innerContainerSizeRef}
                     ></div>
                   }
-                  renderSubComponent={({ row }) => {
-                    return (
-                      <Details row={row} width={innerContainerSize.width} />
-                    );
-                  }}
+                  renderSubComponent={renderSubComponent}
                 />
               ) : null}
             </div>
@@ -610,14 +619,29 @@ export function HomePage() {
 
 function Details({ row, width }: { row: Row<Person>; width: number }) {
   const person = row.original;
-  const { table } = useTableContext();
+  const { loading } = useTableContext();
+  const { leftTotalSize, rightTotalSize } = useTableProps((table) => {
+    return {
+      leftTotalSize: table.getLeftTotalSize(),
+      rightTotalSize: table.getRightTotalSize(),
+    };
+  });
+  const style: React.CSSProperties = {
+    width: width - leftTotalSize - rightTotalSize,
+    left: leftTotalSize,
+    overflow: "hidden",
+    transition: "opacity 0.3s ease-in-out",
+    opacity: 1,
+  };
+
+  if (loading || width === 0) {
+    style.opacity = 0;
+  }
+
   return (
     <div
       className="px-6 pb-6 bg-white dark:bg-gray-800 ring-1 ring-gray-900/5 w-full border-t border-gray-200 dark:border-gray-700 sticky"
-      style={{
-        width: width - table.getLeftTotalSize() - table.getRightTotalSize(),
-        left: table.getLeftTotalSize(),
-      }}
+      style={style}
     >
       <div className="flex items-start gap-6">
         {/* Content container */}

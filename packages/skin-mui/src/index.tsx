@@ -10,9 +10,15 @@ import {
   TableRow,
   Theme,
 } from "@mui/material";
-import type { Skin, VirtualHeaderCell } from "@rttui/core";
-import { useTableContext, useTableCssVars } from "@rttui/core";
-import { flexRender } from "@tanstack/react-table";
+import type { Skin } from "@rttui/core";
+import {
+  useCellProps,
+  useColProps,
+  useColRef,
+  useTableContext,
+  useTableCssVars,
+  useTableProps,
+} from "@rttui/core";
 import React from "react";
 const MuiSkin: Skin = {
   rowHeight: 52,
@@ -117,9 +123,11 @@ const MuiSkin: Skin = {
       </TableRow>
     );
   },
-  HeaderCell: React.forwardRef((props, ref) => {
-    return <TableHeaderCell {...props} ref={ref} />;
-  }),
+  HeaderCell: React.memo(
+    React.forwardRef((props, ref) => {
+      return <TableHeaderCell {...props} ref={ref} />;
+    }),
+  ),
   TableBody: ({ children }) => {
     return (
       <TableBody
@@ -131,11 +139,7 @@ const MuiSkin: Skin = {
       </TableBody>
     );
   },
-  PinnedRows: ({ children, position, pinned }) => {
-    if (pinned.length === 0) {
-      return null;
-    }
-
+  PinnedRows: ({ children, position }) => {
     const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
@@ -160,11 +164,7 @@ const MuiSkin: Skin = {
       </Component>
     );
   },
-  PinnedCols: ({ children, position, pinned }) => {
-    if (pinned.length === 0) {
-      return null;
-    }
-
+  PinnedCols: ({ children, position }) => {
     const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
@@ -230,7 +230,10 @@ const MuiSkin: Skin = {
     );
   },
   TableRowExpandedContent: ({ children }) => {
-    const { table } = useTableContext();
+    const leafColLength = useTableProps((table) => {
+      return table.getAllLeafColumns().length;
+    });
+
     return (
       <TableRow
         component="div"
@@ -242,7 +245,7 @@ const MuiSkin: Skin = {
         <TableCell
           component="div"
           className="expanded-cell"
-          colSpan={table.getAllLeafColumns().length}
+          colSpan={leafColLength}
           sx={{
             padding: 2,
             borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
@@ -253,8 +256,13 @@ const MuiSkin: Skin = {
       </TableRow>
     );
   },
-  Cell: React.forwardRef(({ children, cell, isMeasuring }, ref) => {
-    const { isPinned } = cell;
+  Cell: React.forwardRef(({ isMeasuring, children }, ref) => {
+    const { isPinned, width } = useCellProps((cell) => {
+      return {
+        isPinned: cell.vheader.isPinned,
+        width: cell.vheader.width,
+      };
+    });
     return (
       <TableCell
         className="td"
@@ -262,7 +270,7 @@ const MuiSkin: Skin = {
         ref={ref}
         sx={{
           height: "var(--row-height)",
-          width: isMeasuring ? "auto" : cell.width,
+          width: isMeasuring ? "auto" : width,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -288,160 +296,170 @@ const MuiSkin: Skin = {
   }),
 };
 
-const TableHeaderCell = React.forwardRef<
-  HTMLDivElement,
-  VirtualHeaderCell & {
-    type: "header" | "footer";
-    isMeasuring?: boolean;
-  }
->(({ headerId, isPinned, width, header, type, isMeasuring }, ref) => {
-  const canPin = header?.column.getCanPin();
-  const canResize = header?.column.getCanResize();
+const TableHeaderCell = React.memo(
+  React.forwardRef<
+    HTMLDivElement,
+    {
+      isMeasuring?: boolean;
+      children: React.ReactNode;
+    }
+  >(({ isMeasuring, children }, ref) => {
+    const { headerId, isPinned, width, canPin, canResize } = useColProps(
+      ({ header, vheader }) => {
+        const canPin = header?.column.getCanPin();
+        const canResize = header?.column.getCanResize();
+        return {
+          headerId: vheader.id,
+          isPinned: vheader.isPinned,
+          width: vheader.width,
+          canPin,
+          canResize,
+        };
+      },
+    );
 
-  return (
-    <TableCell
-      component="div"
-      className="th"
-      data-header-id={headerId}
-      data-is-pinned={isPinned}
-      ref={ref}
-      sx={{
-        transition: "background-color 0.2s ease",
-        whiteSpace: "nowrap",
-        zIndex: isPinned ? 1 : 0,
-        display: "flex",
-        overflow: "hidden",
-        height: "var(--header-row-height)",
-        width: isMeasuring ? "auto" : width,
-        position: "relative",
-        flexShrink: 0,
-        alignItems: "center",
-        gap: "8px",
-        justifyContent: "space-between",
-        padding: "16px",
-        boxSizing: "border-box",
-        fontWeight: 600,
-        backgroundColor: isPinned
-          ? (theme) => theme.palette.background.paper
-          : "transparent",
-        borderRight: (theme) =>
-          isPinned ? `1px solid ${theme.palette.divider}` : "none",
-        "&:hover": {
-          backgroundColor: (theme) => theme.palette.action.hover,
-          borderBottom: (theme) => `2px solid ${theme.palette.primary.main}`,
-        },
-      }}
-    >
-      <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-        {header && !header.isPlaceholder
-          ? flexRender(header.column.columnDef[type], header.getContext())
-          : null}
-      </div>
+    const colRef = useColRef();
 
-      {canPin && header && (
-        <div
-          style={{ display: "flex", gap: "4px", justifyContent: "flex-start" }}
-        >
-          {isPinned !== "start" ? (
-            <button
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                padding: "2px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                opacity: 0.5,
-              }}
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin("left");
-              }}
-            >
-              <ChevronLeft fontSize="small" />
-            </button>
-          ) : null}
-          {isPinned ? (
-            <button
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                padding: "2px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                opacity: 0.7,
-              }}
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin(false);
-              }}
-            >
-              <Close fontSize="small" />
-            </button>
-          ) : null}
-          {isPinned !== "end" ? (
-            <button
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                padding: "2px",
-                borderRadius: "4px",
-                display: "flex",
-                alignItems: "center",
-                opacity: 0.5,
-              }}
-              onClick={() => {
-                if (!header) {
-                  return;
-                }
-                header.column.pin("right");
-              }}
-            >
-              <ChevronRight fontSize="small" />
-            </button>
-          ) : null}
+    return (
+      <TableCell
+        component="div"
+        className="th"
+        data-header-id={headerId}
+        data-is-pinned={isPinned}
+        ref={ref}
+        sx={{
+          transition: "background-color 0.2s ease",
+          whiteSpace: "nowrap",
+          zIndex: isPinned ? 1 : 0,
+          display: "flex",
+          overflow: "hidden",
+          height: "var(--header-row-height)",
+          width: isMeasuring ? "auto" : width,
+          position: "relative",
+          flexShrink: 0,
+          alignItems: "center",
+          gap: "8px",
+          justifyContent: "space-between",
+          padding: "16px",
+          boxSizing: "border-box",
+          fontWeight: 600,
+          backgroundColor: isPinned
+            ? (theme) => theme.palette.background.paper
+            : "transparent",
+          borderRight: (theme) =>
+            isPinned ? `1px solid ${theme.palette.divider}` : "none",
+          "&:hover": {
+            backgroundColor: (theme) => theme.palette.action.hover,
+            borderBottom: (theme) => `2px solid ${theme.palette.primary.main}`,
+          },
+        }}
+      >
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
+          {children}
         </div>
-      )}
 
-      {canResize && header && (
-        <Box
-          {...{
-            onDoubleClick: () => header.column.resetSize(),
-            onMouseDown: header.getResizeHandler(),
-            onTouchStart: header.getResizeHandler(),
-            className: `resizer ${
-              header.column.getIsResizing() ? "isResizing" : ""
-            }`,
-            sx: {
-              position: "absolute",
-              top: 0,
-              height: "100%",
-              right: 0,
-              width: "4px",
-              cursor: "col-resize",
-              userSelect: "none",
-              touchAction: "none",
-              opacity: 0,
-              backgroundColor: (theme) => theme.palette.primary.main,
-              transition: "opacity 0.2s",
-              "&:hover, &.isResizing": {
-                opacity: 0.5,
+        {canPin && (
+          <div
+            style={{
+              display: "flex",
+              gap: "4px",
+              justifyContent: "flex-start",
+            }}
+          >
+            {isPinned !== "start" ? (
+              <button
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  padding: "2px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  opacity: 0.5,
+                }}
+                onClick={() => {
+                  colRef.current.column.pin("left");
+                }}
+              >
+                <ChevronLeft fontSize="small" />
+              </button>
+            ) : null}
+            {isPinned ? (
+              <button
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  padding: "2px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  opacity: 0.7,
+                }}
+                onClick={() => {
+                  colRef.current.column.pin(false);
+                }}
+              >
+                <Close fontSize="small" />
+              </button>
+            ) : null}
+            {isPinned !== "end" ? (
+              <button
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  padding: "2px",
+                  borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  opacity: 0.5,
+                }}
+                onClick={() => {
+                  colRef.current.column.pin("right");
+                }}
+              >
+                <ChevronRight fontSize="small" />
+              </button>
+            ) : null}
+          </div>
+        )}
+
+        {canResize && (
+          <Box
+            {...{
+              onDoubleClick: () => colRef.current.column.resetSize(),
+              onMouseDown: (ev: any) =>
+                colRef.current.header.getResizeHandler()(ev),
+              onTouchStart: (ev: any) =>
+                colRef.current.header.getResizeHandler()(ev),
+              className: `resizer ${
+                colRef.current.header.column.getIsResizing() ? "isResizing" : ""
+              }`,
+              sx: {
+                position: "absolute",
+                top: 0,
+                height: "100%",
+                right: 0,
                 width: "4px",
+                cursor: "col-resize",
+                userSelect: "none",
+                touchAction: "none",
+                opacity: 0,
+                backgroundColor: (theme) => theme.palette.primary.main,
+                transition: "opacity 0.2s",
+                "&:hover, &.isResizing": {
+                  opacity: 0.5,
+                  width: "4px",
+                },
               },
-            },
-          }}
-        />
-      )}
-    </TableCell>
-  );
-});
+            }}
+          />
+        )}
+      </TableCell>
+    );
+  }),
+);
 
 export { MuiSkin };

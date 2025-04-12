@@ -1,15 +1,22 @@
-import { Row } from "@tanstack/react-table";
+import { useRow, useRowRef } from "@rttui/core";
 
-export function ExpandButton({ row }: { row: Row<any> }) {
-  if (!row.getCanExpand()) {
+export function ExpandButton() {
+  const { canExpand, isExpanded } = useRow((row) => {
+    return {
+      canExpand: row.getCanExpand(),
+      isExpanded: row.getIsExpanded(),
+    };
+  });
+  const rowRef = useRowRef();
+  if (!canExpand) {
     return null;
   }
   return (
     <button
-      onClick={row.getToggleExpandedHandler()}
+      onClick={() => rowRef.current.toggleExpanded()}
       className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
     >
-      {row.getIsExpanded() ? (
+      {isExpanded ? (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

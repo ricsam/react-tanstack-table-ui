@@ -1,25 +1,19 @@
-import { useVirtualHeader } from "@rttui/core";
-import { Header } from "@tanstack/react-table";
+import { useColProps, useColRef } from "@rttui/core";
 
-export function HeaderPinButtons({ header }: { header: Header<any, any> }) {
-  const canPin = header?.column.getCanPin();
-  const virtualHeader = useVirtualHeader();
+export function HeaderPinButtons() {
+  const { isPinned } = useColProps(({ vheader, column }) => {
+    return { isPinned: vheader.isPinned, canPin: column.getCanPin };
+  });
 
-  if (!canPin || !header) {
-    return null;
-  }
+  const colRef = useColRef();
 
-  const isPinned = virtualHeader?.isPinned;
   return (
     <div className="flex gap-1">
       {isPinned !== "start" ? (
         <button
           className="p-1 rounded opacity-50 hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={() => {
-            if (!header) {
-              return;
-            }
-            header.column.pin("left");
+            colRef.current.column.pin("left");
           }}
         >
           <svg
@@ -41,10 +35,7 @@ export function HeaderPinButtons({ header }: { header: Header<any, any> }) {
         <button
           className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={() => {
-            if (!header) {
-              return;
-            }
-            header.column.pin(false);
+            colRef.current.column.pin(false);
           }}
         >
           <svg
@@ -67,10 +58,7 @@ export function HeaderPinButtons({ header }: { header: Header<any, any> }) {
         <button
           className="p-1 rounded opacity-50 hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={() => {
-            if (!header) {
-              return;
-            }
-            header.column.pin("right");
+            colRef.current.column.pin("right");
           }}
         >
           <svg

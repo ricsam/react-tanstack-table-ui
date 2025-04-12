@@ -1,11 +1,17 @@
-import { useCrushHeader } from "@rttui/core";
-import { Header } from "@tanstack/react-table";
+import { useColProps, useCrushHeader, useColRef } from "@rttui/core";
 import React from "react";
 
-export function Resizer({ header }: { header: Header<any, unknown> }) {
-  const canResize = header?.column.getCanResize();
+export function Resizer() {
   const crushHeader = useCrushHeader();
-  const isResizing = header.column.getIsResizing();
+
+  const { canResize, isResizing } = useColProps(({ column }) => {
+    return {
+      canResize: column.getCanResize(),
+      isResizing: column.getIsResizing(),
+    };
+  });
+
+  const colRef = useColRef();
 
   React.useEffect(() => {
     if (!isResizing) {
@@ -24,20 +30,18 @@ export function Resizer({ header }: { header: Header<any, unknown> }) {
     };
   }, [isResizing]);
 
-  if (!canResize || !header) {
+  if (!canResize) {
     return null;
   }
   return (
     <div
       {...{
-        // onDoubleClick: () => header.column.resetSize(),
         onDoubleClick: () => {
-          crushHeader(header);
+          crushHeader(colRef.current.header);
         },
-
-        onMouseDown: header.getResizeHandler(),
-        onTouchStart: header.getResizeHandler(),
-        className: `absolute top-0 right-0 h-full w-1 cursor-col-resize transition-opacity opacity-0 hover:opacity-50 hover:w-1 bg-indigo-500 dark:bg-indigo-400 ${header.column.getIsResizing() ? "opacity-50 w-1" : ""}`,
+        onMouseDown: (ev) => colRef.current.header.getResizeHandler()(ev),
+        onTouchStart: (ev) => colRef.current.header.getResizeHandler()(ev),
+        className: `absolute top-0 right-0 h-full w-1 cursor-col-resize transition-opacity opacity-0 hover:opacity-50 hover:w-1 bg-indigo-500 dark:bg-indigo-400 ${colRef.current.header.column.getIsResizing() ? "opacity-50 w-1" : ""}`,
       }}
     />
   );

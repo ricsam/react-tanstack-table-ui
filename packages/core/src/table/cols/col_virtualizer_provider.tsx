@@ -1,59 +1,55 @@
 import { HeaderGroup } from "@tanstack/react-table";
 import React from "react";
-import { useTableContext } from "../table_context";
-import { CombinedHeaderGroup } from "../types";
-import { ColContext } from "./col_context";
-import { VirtualHeaderGroup } from "./header_group";
+import { useTableRef } from "../../utils";
+import { ColVirtualizerContext } from "../contexts/ColVirtualizerContext";
+import { CombinedHeaderGroup, VirtualHeaderGroup } from "../types";
 import { useHeaderGroupVirtualizers } from "./use_header_group_virtualizers";
 
 const combinedHeaderGroups = (
-  ...groups: HeaderGroup<any>[][]
+  getGroups: () => HeaderGroup<any>[][],
 ): CombinedHeaderGroup[] => {
-  const numGroups = Math.max(...groups.map((group) => group.length));
+  const numGroups = Math.max(...getGroups().map((group) => group.length));
   const combinedGroups: CombinedHeaderGroup[] = [];
   for (let i = 0; i < numGroups; i++) {
     combinedGroups[i] = {
-      id: "",
-      headers: [],
-      headerGroups: [],
+      id: getGroups()
+        .map((group) => group[i].id)
+        .join(""),
+      headers: () => {
+        return getGroups().flatMap((group) => {
+          return group[i].headers;
+        });
+      },
+      headerGroups: () => {
+        return getGroups().flatMap((group) => {
+          return group[i];
+        });
+      },
     };
-    groups.forEach((group) => {
-      combinedGroups[i].id += group[i].id;
-      combinedGroups[i].headers.push(...group[i].headers);
-      combinedGroups[i].headerGroups.push(group[i]);
-    });
   }
   return combinedGroups;
 };
-export const ColProvider = ({ children }: { children: React.ReactNode }) => {
-  const { table } = useTableContext();
-  const state = table.getState();
-
-  const dependencies: any[] = [table, state];
+export const ColVirtualizerProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const tableRef = useTableRef();
 
   const headerGroups: VirtualHeaderGroup[] = useHeaderGroupVirtualizers({
-    headerGroups: React.useMemo(() => {
-      return combinedHeaderGroups(
-        table.getLeftHeaderGroups(),
-        table.getCenterHeaderGroups(),
-        table.getRightHeaderGroups(),
-      );
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, dependencies),
+    headerGroups: combinedHeaderGroups(() => [
+      tableRef.current.getLeftHeaderGroups(),
+      tableRef.current.getCenterHeaderGroups(),
+      tableRef.current.getRightHeaderGroups(),
+    ]),
     type: "header",
   });
   const footerGroups: VirtualHeaderGroup[] = useHeaderGroupVirtualizers({
-    headerGroups: React.useMemo(
-      () => {
-        return combinedHeaderGroups(
-          table.getLeftFooterGroups(),
-          table.getCenterFooterGroups(),
-          table.getRightFooterGroups(),
-        );
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      dependencies,
-    ),
+    headerGroups: combinedHeaderGroups(() => [
+      tableRef.current.getLeftFooterGroups(),
+      tableRef.current.getCenterFooterGroups(),
+      tableRef.current.getRightFooterGroups(),
+    ]),
     type: "footer",
   });
 
@@ -78,8 +74,9 @@ export const ColProvider = ({ children }: { children: React.ReactNode }) => {
     throw new Error("Implement me using the body virtualizer");
   }
   // console.log("headerGroups", headerGroups, mainHeaderGroup);
+
   return (
-    <ColContext.Provider
+    <ColVirtualizerContext.Provider
       value={React.useMemo(() => {
         return {
           onDragStart: () => {},
@@ -91,6 +88,6 @@ export const ColProvider = ({ children }: { children: React.ReactNode }) => {
       }, [headerGroups, footerGroups, mainHeaderGroup])}
     >
       {children}
-    </ColContext.Provider>
+    </ColVirtualizerContext.Provider>
   );
 };

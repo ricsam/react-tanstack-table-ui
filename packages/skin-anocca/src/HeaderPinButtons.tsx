@@ -1,13 +1,9 @@
-import { useVirtualHeader } from "@rttui/core";
+import { useColProps, useColRef } from "@rttui/core";
 import { MdChevronLeft, MdChevronRight, MdClose } from "react-icons/md";
 
 export const HeaderPinButtons = () => {
-  const vHeader = useVirtualHeader();
-  const header = vHeader?.header;
-  if (!header) {
-    return null;
-  }
-  const isPinned = vHeader.isPinned;
+  const isPinned = useColProps(({ vheader }) => vheader.isPinned);
+  const headerRef = useColRef();
   return (
     <div style={{ display: "flex", gap: "-4px", justifyContent: "flex-start" }}>
       {isPinned !== "start" ? (
@@ -23,10 +19,7 @@ export const HeaderPinButtons = () => {
             opacity: 0.5,
           }}
           onClick={() => {
-            if (!header) {
-              return;
-            }
-            header.column.pin("left");
+            headerRef.current.column.pin("left");
           }}
         >
           <MdChevronLeft />
@@ -45,10 +38,7 @@ export const HeaderPinButtons = () => {
             opacity: 0.7,
           }}
           onClick={() => {
-            if (!header) {
-              return;
-            }
-            header.column.pin(false);
+            headerRef.current.column.pin(false);
           }}
         >
           <MdClose />
@@ -67,10 +57,7 @@ export const HeaderPinButtons = () => {
             opacity: 0.5,
           }}
           onClick={() => {
-            if (!header) {
-              return;
-            }
-            header.column.pin("right");
+            headerRef.current.column.pin("right");
           }}
         >
           <MdChevronRight />

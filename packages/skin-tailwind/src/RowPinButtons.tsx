@@ -1,14 +1,21 @@
-import { Row } from "@tanstack/react-table";
+import { useRow, useRowRef } from "@rttui/core";
 
-export function RowPinButtons({ row }: { row: Row<any> }) {
-  if (!row.getCanPin()) {
+export function RowPinButtons() {
+  const { canPin, isPinned } = useRow((row) => {
+    return {
+      canPin: row.getCanPin(),
+      isPinned: row.getIsPinned(),
+    };
+  });
+  const rowRef = useRowRef();
+  if (!canPin) {
     return null;
   }
 
-  if (row.getIsPinned()) {
+  if (isPinned) {
     return (
       <button
-        onClick={() => row.pin(false, true, true)}
+        onClick={() => rowRef.current.pin(false, true, true)}
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
       >
         <svg
@@ -32,7 +39,7 @@ export function RowPinButtons({ row }: { row: Row<any> }) {
   return (
     <div className="flex">
       <button
-        onClick={() => row.pin("top", true, true)}
+        onClick={() => rowRef.current.pin("top", true, true)}
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
       >
         <svg
@@ -51,7 +58,7 @@ export function RowPinButtons({ row }: { row: Row<any> }) {
         </svg>
       </button>
       <button
-        onClick={() => row.pin("bottom", true, true)}
+        onClick={() => rowRef.current.pin("bottom", true, true)}
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
       >
         <svg

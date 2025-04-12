@@ -164,7 +164,7 @@ const columns = [
 
 export function OptionsPage() {
   const customHeaderExample = `import React from 'react';
-import { ReactTanstackTableUi, useVirtualHeader } from '@rttui/core';
+import { ReactTanstackTableUi, useColProps } from '@rttui/core';
 import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
 
 function CustomHeaderTable() {
@@ -181,8 +181,8 @@ function CustomHeaderTable() {
   
   // Custom header renderer
   const CustomHeader = ({ header }) => {
-    // Use the useVirtualHeader hook to get header styling and properties
-    const virtualHeader = useVirtualHeader(header);
+    // Use the useColProps hook to get header styling and properties
+    const virtualHeader = useColProps(header);
     
     return (
       <div 
@@ -502,12 +502,12 @@ const height =
       </table> */}
 
       <h2>
-        Styling Headers with <code>useVirtualHeader</code>
+        Styling Headers with <code>useColProps</code>
       </h2>
 
       <p>
         If you need to customize the appearance of table headers, especially
-        when using virtualization, you can use the <code>useVirtualHeader</code>{" "}
+        when using virtualization, you can use the <code>useColProps</code>{" "}
         hook:
       </p>
 
@@ -518,11 +518,11 @@ const height =
       />
 
       <h3>
-        Properties available in <code>useVirtualHeader</code>
+        Properties available in <code>useColProps</code>
       </h3>
 
       <p>
-        The <code>useVirtualHeader</code> hook provides these properties:
+        The <code>useColProps</code> hook provides these properties:
       </p>
 
       <ul>

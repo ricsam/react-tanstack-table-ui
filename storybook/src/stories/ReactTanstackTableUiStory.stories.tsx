@@ -1,10 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { TailwindSkin } from "@rttui/skin-tailwind";
-import { getCoreRowModel } from "@tanstack/react-table";
-import { ReactTanstackTableUi } from "./ReactTanstackTableUiStoryComponent";
-import { createSourceCode } from "./createSourceCode";
 import { AnoccaSkin } from "@rttui/skin-anocca";
+import { TailwindSkin } from "@rttui/skin-tailwind";
+import { ColumnDef, getCoreRowModel } from "@tanstack/react-table";
+import { ReactNode, useReducer, useState } from "react";
+import {
+  Person,
+  ReactTanstackTableUi,
+} from "./ReactTanstackTableUiStoryComponent";
+import { createSourceCode } from "./createSourceCode";
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
   title: "ReactTanstackTableUi",
@@ -334,3 +338,60 @@ export const CanExpandRowsWithMaxWidthWithHeaderGroups: Story = {
     },
   },
 };
+
+export const CanChangeContentOfCell: Story = {
+  args: {
+    data: "small",
+    columns: "few",
+    columnDefs: {
+      name: {
+        header: "Before",
+      },
+    },
+    shouldUpdate: {
+      cell: (a, b) => a.column.columnDef.cell !== b.column.columnDef.cell,
+      header: () => false,
+    },
+  },
+  render: (args) => {
+    return <CanChangeContentOfCellComponent {...args} />;
+  },
+};
+
+function CanChangeContentOfCellComponent(args: Story["args"]) {
+  const [value, setValue] = useState<string | null>(null);
+  const [, rerender] = useReducer(() => ({}), {});
+  const columnDef: Partial<ColumnDef<Person, ReactNode>> | undefined = value
+    ? {
+        cell: value,
+        header: value,
+      }
+    : args?.columnDefs?.name;
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex gap-2">
+        <button
+          className="relative bg-blue-500 text-white p-2 rounded inline-flex cursor-pointer"
+          onClick={() => setValue((prev) => (prev ? null : "HELLO"))}
+        >
+          <span>Toggle Value</span>
+          {value && (
+            <span className="absolute top-0 right-0 -mt-1 -mr-1 h-3 w-3 rounded-full bg-green-500"></span>
+          )}
+        </button>
+        <button
+          onClick={() => rerender()}
+          className="bg-blue-500 text-white p-2 rounded inline-flex cursor-pointer"
+        >
+          Rerender
+        </button>
+      </div>
+      <ReactTanstackTableUi
+        {...(args as any)}
+        columnDefs={{
+          name: columnDef,
+        }}
+      />
+    </div>
+  );
+}

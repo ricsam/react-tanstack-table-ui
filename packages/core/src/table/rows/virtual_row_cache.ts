@@ -1,9 +1,8 @@
 import { shallowEqual } from "../../utils";
-import { VirtualCell, VirtualRow } from "./table_row";
+import { VirtualCell, VirtualRow } from "../types";
 
 export class VirtualRowCache {
   private lastResult: VirtualRow[] | null = null;
-
   /**
    * Updates the cache with the new header groups.
    * If nothing changes, returns the same array reference.
@@ -20,45 +19,51 @@ export class VirtualRowCache {
     const cachedRowMap = new Map<string, VirtualRow>();
 
     this.lastResult.forEach((newRow) =>
-      cachedRowMap.set(newRow.row.id, newRow),
+      cachedRowMap.set(newRow.row().id, newRow),
     );
 
     const newRowsMapped = newRows.map((newRow) => {
-      const cachedRow = cachedRowMap.get(newRow.row.id);
+      const cachedRow = cachedRowMap.get(newRow.row().id);
 
       if (!cachedRow) {
         return newRow;
       }
 
       let rowChanged =
-        !shallowEqual(cachedRow, newRow, ["cells", "dndStyle"]) ||
+        !shallowEqual(cachedRow, newRow, ["cells", "dndStyle", "row"]) ||
         !shallowEqual(cachedRow.dndStyle, newRow.dndStyle);
 
       const cachedCellMap = new Map<string, VirtualCell>();
-      cachedRow.cells.forEach((c) => cachedCellMap.set(c.cell.id, c));
+      cachedRow.cells.forEach((c) => cachedCellMap.set(c.cell().id, c));
 
       let cellsChanged = false;
 
       const newCellsMapped = newRow.cells.map((newCell) => {
-        const cachedCell = cachedCellMap.get(newCell.cell.id);
+        const cachedCell = cachedCellMap.get(newCell.cell().id);
 
         if (
           cachedCell &&
-          shallowEqual(cachedCell, newCell, ["dndStyle"]) &&
-          shallowEqual(cachedCell.dndStyle, newCell.dndStyle)
+          shallowEqual(cachedCell, newCell, ["dndStyle", "cell", "vheader"]) &&
+          shallowEqual(cachedCell.dndStyle, newCell.dndStyle) &&
+          shallowEqual(cachedCell.vheader, newCell.vheader, [
+            "dndStyle",
+            "header",
+          ]) &&
+          shallowEqual(cachedCell.vheader.dndStyle, newCell.vheader.dndStyle)
         ) {
           return cachedCell;
         }
 
         // Otherwise, mark that headers have changed and use the new header.
         cellsChanged = true;
+
         return newCell;
       });
 
       if (!cellsChanged) {
         if (cachedRow.cells.length === newCellsMapped.length) {
           for (let i = 0; i < newCellsMapped.length; i++) {
-            if (cachedRow.cells[i].cell.id !== newCellsMapped[i].cell.id) {
+            if (cachedRow.cells[i].id !== newCellsMapped[i].id) {
               cellsChanged = true;
               break;
             }
@@ -89,7 +94,7 @@ export class VirtualRowCache {
     if (!changed) {
       if (this.lastResult.length === newRowsMapped.length) {
         for (let i = 0; i < this.lastResult.length; i++) {
-          if (this.lastResult[i].row.id !== newRowsMapped[i].row.id) {
+          if (this.lastResult[i].id !== newRowsMapped[i].id) {
             changed = true;
             break;
           }

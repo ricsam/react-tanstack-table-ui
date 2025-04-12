@@ -24,11 +24,11 @@ function SimpleTable() {
   );
 }`;
 
-  const headerHookExample = `import { useVirtualHeader } from '@rttui/core';
+  const headerHookExample = `import { useColProps } from '@rttui/core';
 
 // Inside your custom header component:
 function CustomHeader({ header }) {
-  const virtualHeader = useVirtualHeader(header);
+  const virtualHeader = useColProps(header);
   
   return (
     <div 
@@ -288,17 +288,17 @@ function CustomHeader({ header }) {
           </div>
         </div>
 
-        {/* useVirtualHeader Hook */}
+        {/* useColProps Hook */}
         <div id="usevirtualheader">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            useVirtualHeader
+            useColProps
           </h2>
 
           <div className="space-y-8">
             <div className="bg-white shadow overflow-hidden sm:rounded-lg">
               <div className="px-4 py-5 sm:px-6 bg-gray-50">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  useVirtualHeader
+                  useColProps
                 </h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
                   Hook for styling and customizing table headers with
@@ -321,7 +321,7 @@ function CustomHeader({ header }) {
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                       <code>
-                        import {"{ useVirtualHeader }"} from '@rttui/core';
+                        import {"{ useColProps }"} from '@rttui/core';
                       </code>
                     </dd>
                   </div>
@@ -470,7 +470,7 @@ function CustomHeader({ header }) {
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2">
                       <p>
-                        The <code>useVirtualHeader</code> hook is used to style
+                        The <code>useColProps</code> hook is used to style
                         and customize table headers, especially when using
                         virtualization. It provides properties and styles that
                         can be applied to header elements to ensure they work

@@ -1,30 +1,45 @@
 import React from "react";
-import { VirtualHeaderCell } from "../table/cols/virtual_header/types";
-import { flexRender } from "@tanstack/react-table";
-export const HeaderCell = React.forwardRef<
-  HTMLDivElement,
-  VirtualHeaderCell & {
-    type: "header" | "footer";
-    isMeasuring?: boolean;
-  }
->(
-  (
+import { useColProps } from "../table/hooks/use_col_props";
+import { useColRef } from "../table/hooks/use_col_ref";
+export const HeaderCell = React.memo(
+  React.forwardRef<
+    HTMLDivElement,
     {
+      isMeasuring?: boolean;
+      children: React.ReactNode;
+    }
+  >(({ isMeasuring, children }, ref) => {
+    const {
       isDragging,
       isPinned,
       width,
       dndStyle,
-      header,
-      type,
       headerIndex,
       headerId,
-      isMeasuring,
-    },
-    ref,
-  ) => {
-    const canDrag = header?.isPlaceholder ? false : true;
-    const canPin = header?.column.getCanPin();
-    const canResize = header?.column.getCanResize();
+      canDrag,
+      canPin,
+      canResize,
+      isResizing,
+    } = useColProps(({ header, vheader, column }) => {
+      const canDrag = header.isPlaceholder ? false : true;
+      const canPin = header.column.getCanPin();
+      const canResize = header?.column.getCanResize();
+
+      return {
+        canDrag,
+        canPin,
+        canResize,
+        isDragging: vheader.isDragging,
+        isResizing: column.getIsResizing(),
+        isPinned: vheader.isPinned,
+        width: vheader.width,
+        dndStyle: vheader.dndStyle,
+        headerIndex: vheader.headerIndex,
+        headerId: vheader.id,
+        isPlaceholder: header.isPlaceholder,
+      };
+    });
+    const colRef = useColRef();
     return (
       <div
         className="th"
@@ -53,9 +68,7 @@ export const HeaderCell = React.forwardRef<
         }}
       >
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-          {header && !header.isPlaceholder
-            ? flexRender(header.column.columnDef[type], header.getContext())
-            : null}
+          {children}
           <div style={{ width: "4px" }}></div>
         </div>
         {canDrag && canPin && (
@@ -64,10 +77,7 @@ export const HeaderCell = React.forwardRef<
               <button
                 className="border rounded px-2"
                 onClick={() => {
-                  if (!header) {
-                    return;
-                  }
-                  header.column.pin("left");
+                  colRef.current.column.pin("left");
                 }}
               >
                 {"<="}
@@ -77,10 +87,7 @@ export const HeaderCell = React.forwardRef<
               <button
                 className="border rounded px-2"
                 onClick={() => {
-                  if (!header) {
-                    return;
-                  }
-                  header.column.pin(false);
+                  colRef.current.column.pin(false);
                   // table.resetColumnSizing(true);
                 }}
               >
@@ -91,10 +98,7 @@ export const HeaderCell = React.forwardRef<
               <button
                 className="border rounded px-2"
                 onClick={() => {
-                  if (!header) {
-                    return;
-                  }
-                  header.column.pin("right");
+                  colRef.current.column.pin("right");
                 }}
               >
                 {"=>"}
@@ -102,13 +106,14 @@ export const HeaderCell = React.forwardRef<
             ) : null}
           </div>
         )}
-        {canResize && header && (
+        {canResize && (
           <div
             {...{
-              onDoubleClick: () => header.column.resetSize(),
-              onMouseDown: header.getResizeHandler(),
-              onTouchStart: header.getResizeHandler(),
-              className: `resizer ${header.column.getIsResizing() ? "isResizing" : ""}`,
+              onDoubleClick: () => colRef.current.column.resetSize(),
+              onMouseDown: (ev) => colRef.current.header.getResizeHandler()(ev),
+              onTouchStart: (ev) =>
+                colRef.current.header.getResizeHandler()(ev),
+              className: `resizer ${colRef.current.column.getIsResizing() ? "isResizing" : ""}`,
               style: {
                 position: "absolute",
                 top: 0,
@@ -119,8 +124,8 @@ export const HeaderCell = React.forwardRef<
                 cursor: "col-resize",
                 userSelect: "none",
                 touchAction: "none",
-                opacity: header.column.getIsResizing() ? 1 : 0,
-                backgroundColor: header.column.getIsResizing()
+                opacity: isResizing ? 1 : 0,
+                backgroundColor: isResizing
                   ? "var(--table-border-color)"
                   : "var(--table-border-color)",
               },
@@ -129,5 +134,5 @@ export const HeaderCell = React.forwardRef<
         )}
       </div>
     );
-  },
+  }),
 );

@@ -1,46 +1,55 @@
-import { Row } from "@tanstack/react-table";
-import { Checkbox } from "./Checkbox";
-import { RowPinButtons } from "./RowPinButtons";
-import { ExpandButton } from "./ExpandButton";
-import { CellTextBold } from "./CellTextBold";
+import { useRow, useRowRef } from "@rttui/core";
 import { CellText } from "./CellText";
+import { CellTextBold } from "./CellTextBold";
+import { Checkbox } from "./Checkbox";
+import { ExpandButton } from "./ExpandButton";
+import { RowPinButtons } from "./RowPinButtons";
 
 export function Cell({
-  row,
   children,
   checkbox,
   expandButton,
   pinButtons,
   highlightSelected,
 }: {
-  row: Row<any>;
   children?: React.ReactNode;
   checkbox?: boolean;
   expandButton?: boolean;
   pinButtons?: boolean;
   highlightSelected?: boolean;
 }) {
+  const { checked, disabled, indeterminate, depth } = useRow((row) => {
+    return {
+      checked: row.getIsSelected(),
+      disabled: !row.getCanSelect(),
+      indeterminate: row.getIsSomeSelected(),
+      depth: row.depth,
+    };
+  });
+  const rowRef = useRowRef();
   return (
     <div
       className="flex items-center gap-2"
-      style={{ paddingLeft: `${row.depth * 20}px` }}
+      style={{ paddingLeft: `${depth * 20}px` }}
     >
       {checkbox && (
         <Checkbox
-          {...{
-            checked: row.getIsSelected(),
-            disabled: !row.getCanSelect(),
-            indeterminate: row.getIsSomeSelected(),
-            onChange: row.getToggleSelectedHandler(),
+          getProps={() => ({
+            checked,
+            disabled,
+            indeterminate,
+          })}
+          onChange={() => {
+            return () => rowRef.current.toggleSelected();
           }}
         />
       )}
 
-      {expandButton && <ExpandButton row={row} />}
-      {pinButtons && <RowPinButtons row={row} />}
+      {expandButton && <ExpandButton />}
+      {pinButtons && <RowPinButtons />}
 
       {/* Name content */}
-      {highlightSelected && row.getIsSelected() ? (
+      {highlightSelected && checked ? (
         <CellTextBold className="text-indigo-600 dark:text-indigo-500">
           {children}
         </CellTextBold>

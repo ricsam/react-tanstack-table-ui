@@ -1,5 +1,6 @@
 import React, { CSSProperties } from "react";
 import { Skin, useTableCssVars } from "../skin";
+import { useCellProps } from "../table/hooks/use_cell_props";
 import { useTableContext } from "../table/table_context";
 import { HeaderCell } from "./header_cell";
 
@@ -116,9 +117,11 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  HeaderCell: React.forwardRef((props, ref) => {
-    return <HeaderCell {...props} ref={ref} />;
-  }),
+  HeaderCell: React.memo(
+    React.forwardRef((props, ref) => {
+      return <HeaderCell {...props} ref={ref} />;
+    }),
+  ),
   TableFooter: ({ children }) => {
     return (
       <div
@@ -152,10 +155,7 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  PinnedRows: ({ children, position, pinned }) => {
-    if (pinned.length === 0) {
-      return null;
-    }
+  PinnedRows: ({ children, position }) => {
     const style: CSSProperties = {
       position: "sticky",
       zIndex: 1,
@@ -178,16 +178,13 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  PinnedCols: ({ children, position, pinned }) => {
+  PinnedCols: ({ children, position }) => {
     const style: CSSProperties = {
       position: "sticky",
       zIndex: 1,
       top: "var(--header-height)",
       display: "flex",
     };
-    if (pinned.length === 0) {
-      return null;
-    }
     if (position === "left") {
       style.left = 0;
       style.boxShadow =
@@ -255,13 +252,19 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  Cell: React.memo(({ children, isMeasuring, cell }) => {
-    const { isPinned } = cell;
+  Cell: React.memo(({ isMeasuring, children }) => {
+    const { isPinned, dndStyle, width } = useCellProps((cell) => {
+      return {
+        isPinned: cell.vheader.isPinned,
+        dndStyle: cell.vheader.dndStyle,
+        width: cell.vheader.width,
+      };
+    });
     return (
       <div
         className="drag-along-cell td"
         style={{
-          width: isMeasuring ? "auto" : cell.width,
+          width: isMeasuring ? "auto" : width,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -278,7 +281,7 @@ export const defaultSkin: Skin = {
           margin: 0,
           borderTop: 0,
           paddingRight: "8px",
-          ...cell.dndStyle,
+          ...dndStyle,
         }}
       >
         {children}

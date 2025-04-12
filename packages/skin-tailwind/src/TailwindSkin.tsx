@@ -1,8 +1,10 @@
 import {
   type Skin,
+  useCellProps,
   useRow,
   useTableContext,
   useTableCssVars,
+  useTableProps,
 } from "@rttui/core";
 import React, { CSSProperties } from "react";
 import { TableHeaderCell } from "./TableHeaderCell";
@@ -99,9 +101,11 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  HeaderCell: React.forwardRef((props, ref) => {
-    return <TableHeaderCell {...props} ref={ref} />;
-  }),
+  HeaderCell: React.memo(
+    React.forwardRef((props, ref) => {
+      return <TableHeaderCell {...props} ref={ref} />;
+    }),
+  ),
   TableBody: ({ children }) => {
     return (
       <div
@@ -116,11 +120,7 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  PinnedRows: ({ children, position, pinned }) => {
-    if (pinned.length === 0) {
-      return null;
-    }
-
+  PinnedRows: ({ children, position }) => {
     const style: React.CSSProperties = {};
 
     if (position === "top") {
@@ -142,11 +142,7 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  PinnedCols: ({ children, position, pinned, type }) => {
-    if (pinned.length === 0) {
-      return null;
-    }
-
+  PinnedCols: ({ children, position, type }) => {
     const style: React.CSSProperties = {
       position: "sticky",
       zIndex: 20,
@@ -218,63 +214,86 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  Cell: React.forwardRef(({ children, cell, isMeasuring }, ref) => {
-    const {
-      isFirst,
-      isPinned,
-      isLastPinned,
-      isLast,
-      isLastCenter,
-      width,
-      columnId,
-    } = cell;
-    const { row } = useRow();
-    const selected = row.getIsSelected();
-    const { table } = useTableContext();
+  Cell: React.memo(
+    React.forwardRef(({ isMeasuring, children }, ref) => {
+      const {
+        isFirst,
+        isPinned,
+        isLastPinned,
+        isLast,
+        isLastCenter,
+        width,
+        columnId,
+      } = useCellProps((cell) => {
+        const vheader = cell.vheader;
+        return {
+          isFirst: vheader.isFirst,
+          isPinned: vheader.isPinned,
+          isLastPinned: vheader.isLastPinned,
+          width: vheader.width,
+          columnId: vheader.columnId,
+          isLast: vheader.isLast,
+          isLastCenter: vheader.isLastCenter,
+        };
+      });
 
-    return (
-      <div
-        ref={ref}
-        className={clsx(
-          `td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis`,
-          "bg-(--table-cell-bg) bg-[--table-cell-bg] group-hover/row:bg-[#E3F2FD] dark:group-hover/row:bg-[#1e1e52]",
-          `relative border-b border-gray-200 dark:border-gray-700`,
-        )}
-        data-column-id={columnId}
-        style={{
-          height: "var(--row-height)",
-          width: isMeasuring ? "auto" : width,
-          zIndex: isPinned ? 5 : 0,
-          boxSizing: "border-box",
-          flexShrink: 0,
-          borderRight:
-            ((isPinned === "start" && !isLastPinned) || !isPinned) &&
-            !isLast &&
-            !(isLastCenter && table.getIsSomeColumnsPinned("right"))
-              ? `1px solid var(--table-border-color)`
-              : undefined,
-          borderLeft:
-            isPinned === "end" && !isLastPinned
-              ? `1px solid var(--table-border-color)`
-              : undefined,
-        }}
-      >
-        {isFirst && selected && (
-          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-600" />
-        )}
-        {children}
-      </div>
-    );
-  }),
+      const { selected, isSomeColumnsPinnedRight } = useRow((row, table) => {
+        const selected = row.getIsSelected();
+        return {
+          selected,
+          isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
+        };
+      });
+
+      return (
+        <div
+          ref={ref}
+          className={clsx(
+            `td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis`,
+            "bg-(--table-cell-bg) bg-[--table-cell-bg] group-hover/row:bg-[#E3F2FD] dark:group-hover/row:bg-[#1e1e52]",
+            `relative border-b border-gray-200 dark:border-gray-700`,
+          )}
+          data-column-id={columnId}
+          style={{
+            height: "var(--row-height)",
+            width: isMeasuring ? "auto" : width,
+            zIndex: isPinned ? 5 : 0,
+            boxSizing: "border-box",
+            flexShrink: 0,
+            borderRight:
+              ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+              !isLast &&
+              !(isLastCenter && isSomeColumnsPinnedRight)
+                ? `1px solid var(--table-border-color)`
+                : undefined,
+            borderLeft:
+              isPinned === "end" && !isLastPinned
+                ? `1px solid var(--table-border-color)`
+                : undefined,
+          }}
+        >
+          {isFirst && selected && (
+            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-600" />
+          )}
+          {children}
+        </div>
+      );
+    }),
+  ),
   PinnedColsOverlay: ({ position }) => {
-    const { table } = useTableContext();
-    if (!table.getIsSomeColumnsPinned(position)) {
+    const width = useTableProps((table) => {
+      const isPinned = table.getIsSomeColumnsPinned(position);
+      if (isPinned) {
+        return position === "left"
+          ? table.getLeftTotalSize()
+          : table.getRightTotalSize();
+      }
+      return undefined;
+    });
+
+    if (width === undefined) {
       return null;
     }
-    const width =
-      position === "left"
-        ? table.getLeftTotalSize()
-        : table.getRightTotalSize();
 
     const style: CSSProperties = { width, [position]: 0 };
 

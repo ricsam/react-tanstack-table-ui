@@ -1,7 +1,7 @@
 import React from "react";
-import { TableRow, VirtualRow } from "./rows/table_row";
+import { TableRow } from "./rows/table_row";
 import { useTableContext } from "./table_context";
-
+import { VirtualRow } from "./types";
 export const TableBody = React.memo(
   ({
     rows,
@@ -24,7 +24,7 @@ export const TableBody = React.memo(
           {rows.map((virtualRow) => {
             return (
               <TableRow
-                key={virtualRow.row.id}
+                key={virtualRow.id}
                 row={virtualRow}
                 offsetLeft={offsetLeft}
                 offsetRight={offsetRight}
@@ -40,9 +40,9 @@ export const TableBody = React.memo(
 
     return (
       <skin.TableBody>
-        <skin.PinnedRows position="top" pinned={pinnedTop}>
-          {loop(pinnedTop)}
-        </skin.PinnedRows>
+        {pinnedTop.length > 0 && (
+          <skin.PinnedRows position="top">{loop(pinnedTop)}</skin.PinnedRows>
+        )}
 
         <div
           style={{ height: offsetTop, flexShrink: 0 }}
@@ -60,9 +60,11 @@ export const TableBody = React.memo(
           className="offset-bottom"
         ></div>
 
-        <skin.PinnedRows position="bottom" pinned={pinnedBottom}>
-          {loop(pinnedBottom)}
-        </skin.PinnedRows>
+        {pinnedBottom.length > 0 && (
+          <skin.PinnedRows position="bottom">
+            {loop(pinnedBottom)}
+          </skin.PinnedRows>
+        )}
       </skin.TableBody>
     );
   },

@@ -1,4 +1,4 @@
-import { VirtualHeaderCell } from "./virtual_header/types";
+import { VirtualHeaderCell } from "../types";
 
 /**
  * when we are only rendering a window of columns while maintaining a scrollbar we need to move the elements as we remove elements to the left
@@ -19,7 +19,7 @@ export function getColVirtualizedOffsets({
     let firstNonPinned: undefined | number;
     for (let i = 0; i < headers.length; i++) {
       const vc = headers[i];
-      if (vc.isPinned === "start" && vc.header) {
+      if (vc.isPinned === "start") {
         lastPinned = i;
       } else {
         firstNonPinned = i;

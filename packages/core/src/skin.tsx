@@ -1,10 +1,9 @@
 import React, { CSSProperties } from "react";
+import { useColVirtualizer } from "./table/hooks/use_col_virtualizer";
+import { useRowVirtualizer } from "./table/hooks/use_row_virtualizer";
 import { useTableContext } from "./table/table_context";
-import { useColContext } from "./table/cols/col_context";
-import { useVirtualRowContext } from "./table/rows/virtual_row_context";
-import { VirtualHeaderCell } from "./table/cols/virtual_header/types";
 import { PinPos } from "./table/types";
-import { VirtualCell, VirtualRow } from "./table/rows/table_row";
+import { useTableProps } from "./utils";
 
 export type Skin = {
   rowHeight: number;
@@ -14,10 +13,10 @@ export type Skin = {
   TableScroller: React.FC;
 
   HeaderCell: React.ForwardRefExoticComponent<
-    React.RefAttributes<HTMLDivElement> &
-      VirtualHeaderCell & {
-        isMeasuring: boolean;
-      }
+    React.RefAttributes<HTMLDivElement> & {
+      isMeasuring: boolean;
+      children: React.ReactNode;
+    }
   >;
   HeaderRow: React.FC<{ children: React.ReactNode; type: "header" | "footer" }>;
 
@@ -29,7 +28,6 @@ export type Skin = {
   PinnedRows: React.FC<{
     children: React.ReactNode;
     position: "top" | "bottom";
-    pinned: VirtualRow[];
   }>;
 
   TableRowWrapper: React.ForwardRefExoticComponent<
@@ -52,15 +50,13 @@ export type Skin = {
   PinnedCols: React.FC<{
     children: React.ReactNode;
     position: "left" | "right";
-    pinned: (VirtualHeaderCell | VirtualCell)[];
     type: "header" | "footer" | "body";
   }>;
 
   Cell: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> & {
-      children: React.ReactNode;
-      cell: VirtualCell;
       isMeasuring: boolean;
+      children: React.ReactNode;
     }
   >;
 
@@ -69,10 +65,15 @@ export type Skin = {
 };
 
 export function useTableCssVars(): Record<string, string> {
-  const { table, skin, width, height, pinColsRelativeTo, pinRowsRelativeTo } =
+  const { skin, width, height, pinColsRelativeTo, pinRowsRelativeTo } =
     useTableContext();
-  const { rowVirtualizer } = useVirtualRowContext();
-  const { footerGroups, headerGroups } = useColContext();
+  const { rowVirtualizer } = useRowVirtualizer();
+  const { footerGroups, headerGroups } = useColVirtualizer();
+
+  const { totalSize } = useTableProps((table) => {
+    const totalSize = table.getTotalSize();
+    return { totalSize };
+  });
 
   return {
     "--table-container-width": width + "px",
@@ -84,8 +85,8 @@ export function useTableCssVars(): Record<string, string> {
     "--footer-height": footerGroups.length * skin.footerRowHeight + "px",
     "--table-width":
       pinColsRelativeTo === "table"
-        ? `max(100%, ${table.getTotalSize()}px)`
-        : table.getTotalSize() + "px",
+        ? `max(100%, ${totalSize}px)`
+        : totalSize + "px",
     "--table-height":
       pinRowsRelativeTo === "table"
         ? `max(calc(100% - var(--header-height) - var(--footer-height)), ${rowVirtualizer.getTotalSize()}px)`

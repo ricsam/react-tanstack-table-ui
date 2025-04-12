@@ -1,13 +1,7 @@
 import React from "react";
 import { useTableContext } from "../table_context";
 import { TableHeaderCell } from "./table_header_cell";
-import { VirtualHeaderCell } from "./virtual_header/types";
-export type VirtualHeaderGroup = {
-  offsetLeft: number;
-  offsetRight: number;
-  headers: VirtualHeaderCell[];
-  id: string;
-};
+import { VirtualHeaderGroup, VirtualHeaderCell } from "../types";
 
 export const HeaderGroup = React.memo(function HeaderGroup({
   offsetLeft,
@@ -21,7 +15,7 @@ export const HeaderGroup = React.memo(function HeaderGroup({
     const draggableHeader = (
       <>
         {headers.map((header) => {
-          return <TableHeaderCell key={header.headerId} header={header} />;
+          return <TableHeaderCell key={header.id} header={header} />;
         })}
       </>
     );
@@ -35,9 +29,11 @@ export const HeaderGroup = React.memo(function HeaderGroup({
 
   return (
     <skin.HeaderRow type={type}>
-      <skin.PinnedCols position="left" pinned={pinnedLeft} type={type}>
-        {loop(pinnedLeft)}
-      </skin.PinnedCols>
+      {pinnedLeft.length > 0 && (
+        <skin.PinnedCols position="left" type={type}>
+          {loop(pinnedLeft)}
+        </skin.PinnedCols>
+      )}
       <div style={{ width: offsetLeft, flexShrink: 0 }}></div>
       {loop(headers.filter((header) => header.isPinned === false))}
       <div
@@ -54,9 +50,11 @@ export const HeaderGroup = React.memo(function HeaderGroup({
               }
         }
       ></div>
-      <skin.PinnedCols position="right" pinned={pinnedRight} type={type}>
-        {loop(pinnedRight)}
-      </skin.PinnedCols>
+      {pinnedRight.length > 0 && (
+        <skin.PinnedCols position="right" type={type}>
+          {loop(pinnedRight)}
+        </skin.PinnedCols>
+      )}
     </skin.HeaderRow>
   );
 });

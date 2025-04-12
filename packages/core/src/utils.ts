@@ -1,4 +1,4 @@
-import { ColumnPinningPosition, Header } from "@tanstack/react-table";
+import { ColumnPinningPosition, Header, Table } from "@tanstack/react-table";
 import React from "react";
 
 export function tuple<A, B, C, D>(a: A, b: B, c: C, d: D): [A, B, C, D];
@@ -126,9 +126,14 @@ export function shallowEqual(
   objB: any,
   excludeKeys?: string | string[],
 ): boolean {
-  if (objA === objB) return true;
-  if (!objA || !objB || typeof objA !== "object" || typeof objB !== "object")
-    return false;
+  if (objA === objB) return true; // same reference
+  if (typeof objA !== typeof objB) return false; // different types
+  if (typeof objA !== "object" && objA !== objB) return false; // primitive values that are not the same
+
+  // these are objects
+  if (!objA && !objB) return true; // both null
+  if ((!objA && objB) || (objA && !objB)) return false; // is one null and the other not?
+  if (Object.keys(objA).length !== Object.keys(objB).length) return false; // different number of keys
 
   // Convert single key to array for consistent handling
   const excludeKeysArr = excludeKeys
@@ -153,3 +158,89 @@ export function shallowEqual(
 
   return true;
 }
+
+const tableUpdateListeners = new Set<
+  (table: Table<any>, rerender: boolean) => void
+>();
+let initialTable: Table<any> | null = null;
+export const triggerTableUpdate = (table: Table<any>, rerender: boolean) => {
+  initialTable = table;
+  tableUpdateListeners.forEach((listener) => listener(table, rerender));
+};
+export const useTableProps = <T>(
+  callback: (table: Table<any>) => T,
+  arePropsEqual: (prevProps: T, newProps: T) => boolean = shallowEqual,
+): T => {
+  if (!initialTable) {
+    throw new Error(
+      "This hook must be used within ReactTanstackTableUi, not outside of it.",
+    );
+  }
+  const latest = callback(initialTable);
+  const [, triggerRerender] = React.useReducer(() => ({}), {});
+
+  const value = React.useRef<T>(latest);
+  const lastCommittedValue = React.useRef<T>(latest);
+
+  const callbacks = { callback, arePropsEqual };
+  const callbackRefs = React.useRef(callbacks);
+  callbackRefs.current = callbacks;
+  React.useEffect(() => {
+    const listener = (table: Table<any>, rerender: boolean) => {
+      const result = callbackRefs.current.callback(table);
+      const areEqual = callbackRefs.current.arePropsEqual(
+        value.current,
+        result,
+      );
+      if (!areEqual) {
+        value.current = result;
+      }
+      if (rerender && lastCommittedValue.current !== value.current) {
+        triggerRerender();
+      }
+    };
+    tableUpdateListeners.add(listener);
+    return () => {
+      tableUpdateListeners.delete(listener);
+    };
+  }, []);
+
+  lastCommittedValue.current = value.current;
+
+  return value.current;
+};
+export const useTableRef = () => {
+  if (!initialTable) {
+    throw new Error(
+      "This hook must be used within ReactTanstackTableUi, not outside of it.",
+    );
+  }
+  const tableRef = React.useRef(initialTable);
+  React.useEffect(() => {
+    const listener = (table: Table<any>) => {
+      tableRef.current = table;
+    };
+    tableUpdateListeners.add(listener);
+    return () => {
+      tableUpdateListeners.delete(listener);
+    };
+  }, []);
+
+  return tableRef;
+};
+
+export const useListenToTableUpdate = (
+  callback: (table: Table<any>) => void,
+) => {
+  const callbackRef = React.useRef(callback);
+  callbackRef.current = callback;
+  React.useEffect(() => {
+    const listener = (table: Table<any>) => {
+      callbackRef.current(table);
+    };
+    tableUpdateListeners.add(listener);
+    return () => {
+      tableUpdateListeners.delete(listener);
+    };
+  }, []);
+};

@@ -9,13 +9,17 @@ import {
 } from "@tanstack/react-virtual";
 import React from "react";
 import { flushSync } from "react-dom";
-import { getIsPinned, mapColumnPinningPositionToPinPos } from "../../utils";
+import {
+  getIsPinned,
+  mapColumnPinningPositionToPinPos,
+  useTableProps,
+} from "../../utils";
 import { useTableContext } from "../table_context";
 import { CombinedHeaderGroup } from "../types";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
-import { VirtualHeaderGroup } from "./header_group";
-import { HeaderIndex, VirtualHeaderCell } from "./virtual_header/types";
+import { VirtualHeaderCell, VirtualHeaderGroup } from "../types";
 import { VirtualHeaderGroupCache } from "./virtual_header_group_cache";
+import { HeaderIndex } from "./virtual_header/types";
 
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -27,14 +31,15 @@ const getVirtualHeaderGroup = (
   type: "header" | "footer",
 ): VirtualHeaderGroup => {
   const getVirtualHeader = (
-    header: Header<any, unknown>,
+    headerFn: () => Header<any, unknown>,
     headerIndex: number,
     start: number,
   ): VirtualHeaderCell => {
+    const header = headerFn();
     const isPinned = getIsPinned(header);
 
     const width = header.getSize();
-    const allHeaders = group.headers;
+    const allHeaders = group.headers();
 
     const isIndexPinned = (index: number) =>
       allHeaders[index] ? getIsPinned(allHeaders[index]) : false;
@@ -69,8 +74,8 @@ const getVirtualHeaderGroup = (
     }
 
     return {
-      header,
-      headerId: header.id,
+      header: headerFn,
+      id: header.id,
       isDragging: false,
       isPinned: mapColumnPinningPositionToPinPos(isPinned),
       dndStyle: {},
@@ -90,8 +95,13 @@ const getVirtualHeaderGroup = (
   };
 
   const headers = virtualColumns.map((vc) => {
-    const header = group.headers[vc.index];
-    return getVirtualHeader(header, vc.index, vc.start);
+    return getVirtualHeader(
+      () => {
+        return group.headers()[vc.index];
+      },
+      vc.index,
+      vc.start,
+    );
   });
 
   const { offsetLeft, offsetRight } = getColVirtualizedOffsets({
@@ -111,8 +121,7 @@ export function useHeaderGroupVirtualizers(props: {
   headerGroups: CombinedHeaderGroup[];
   type: "footer" | "header";
 }) {
-  const { tableContainerRef, table, config } = useTableContext();
-  const tableState = table.getState();
+  const { tableContainerRef, config } = useTableContext();
   const { filteredHeaderGroups, headerIndices } = React.useMemo(() => {
     const headerIndices: Record<string, undefined | HeaderIndex[]> = {};
     const filteredHeaderGroups: CombinedHeaderGroup[] = [];
@@ -120,7 +129,7 @@ export function useHeaderGroupVirtualizers(props: {
     props.headerGroups.forEach((group) => {
       let hasVisibleHeader = false;
       const groupHeaderIndices: Record<string, HeaderIndex[]> = {};
-      group.headers.forEach((header, j) => {
+      group.headers().forEach((header, j) => {
         if (!groupHeaderIndices[header.column.id]) {
           groupHeaderIndices[header.column.id] = [];
         }
@@ -157,18 +166,18 @@ export function useHeaderGroupVirtualizers(props: {
     | "debug"
     | "getItemKey"
   > => {
-    const headers = headerGroup.headers;
     return {
       getScrollElement: () => tableContainerRef.current,
       horizontal: true,
       // debug: true,
       overscan: config.columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
       rangeExtractor: (range) => {
+        const headersInstance = headerGroup.headers();
         const defaultRange = defaultRangeExtractor(range);
         const next = new Set(defaultRange);
 
-        for (let i = 0; i < headers.length; i++) {
-          const header = headers[i];
+        for (let i = 0; i < headersInstance.length; i++) {
+          const header = headersInstance[i];
           if (getIsPinned(header)) {
             next.add(i);
           }
@@ -180,7 +189,8 @@ export function useHeaderGroupVirtualizers(props: {
         return sortedRange;
       },
       getItemKey(index) {
-        return headers[index].id;
+        const headersInstance = headerGroup.headers();
+        return headersInstance[index].id;
       },
     };
   };
@@ -192,8 +202,8 @@ export function useHeaderGroupVirtualizers(props: {
       return {
         // todo, don't call here, instead call when headerColVirterOptions is used
         ...baseColVirtOpts(headerGroup),
-        count: headerGroup.headers.length,
-        estimateSize: (index) => headerGroup.headers[index].getSize(),
+        count: headerGroup.headers().length,
+        estimateSize: (index) => headerGroup.headers()[index].getSize(),
         observeElementRect,
         observeElementOffset,
         scrollToFn: () => {},
@@ -239,11 +249,14 @@ export function useHeaderGroupVirtualizers(props: {
     headerColVirtualizerOptions.length,
   );
 
-  const columnResizingInfo = tableState.columnSizingInfo;
+  const { columnSizingInfo, columnSizing } = useTableProps((table) => {
+    const { columnSizingInfo, columnSizing } = table.getState();
+    return { columnSizingInfo, columnSizing };
+  });
 
   useIsomorphicLayoutEffect(() => {
-    if (columnResizingInfo.isResizingColumn) {
-      const indices = headerIndices[columnResizingInfo.isResizingColumn];
+    if (columnSizingInfo.isResizingColumn) {
+      const indices = headerIndices[columnSizingInfo.isResizingColumn];
       if (!indices) {
         return;
       }
@@ -255,10 +268,10 @@ export function useHeaderGroupVirtualizers(props: {
       });
     }
   }, [
-    columnResizingInfo.isResizingColumn,
+    columnSizingInfo.isResizingColumn,
     headerColVirtualizers,
     headerIndices,
-    tableState.columnSizing,
+    columnSizing,
   ]);
 
   headerColVirtualizers.current.forEach((cv, i) => {

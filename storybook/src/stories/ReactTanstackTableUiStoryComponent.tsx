@@ -43,7 +43,7 @@ import "@fontsource/inter/800.css";
 import "@fontsource/inter/900.css";
 import "./index.css";
 
-type Person = {
+export type Person = {
   id: string;
   name: string;
   age: number;
@@ -70,7 +70,10 @@ export const ReactTanstackTableUi = (
   props: {
     data: "big" | "small" | "none";
     columns: "many" | "few";
-    columnDefs?: Record<string, Partial<ColumnDef<Person, unknown>>>;
+    columnDefs?: Record<
+      string,
+      Partial<ColumnDef<Person, unknown>> | undefined
+    >;
     withTwoHeaderRows?: boolean;
     withHeaderGroups?: boolean;
     canSelectRows?: boolean;
@@ -81,16 +84,18 @@ export const ReactTanstackTableUi = (
   const data: Person[] =
     props.data === "big" ? bigData : props.data === "small" ? smallData : [];
 
-  const columns: ColumnDef<Person>[] = React.useMemo(() => {
+  const columns: ColumnDef<Person, unknown>[] = React.useMemo(() => {
     const originalColumnHelper = createColumnHelper<Person>();
-    const columnHelper = decorateColumnHelper(originalColumnHelper, {
-      header: (original) => (
-        <Box sx={{ display: "flex", gap: 2 }}>
-          {original}
-          {props.enableColumnPinning && <HeaderPinButtons />}
-        </Box>
-      ),
-    });
+    const columnHelper = props.enableColumnPinning
+      ? decorateColumnHelper(originalColumnHelper, {
+          header: (original) => (
+            <Box sx={{ display: "flex", gap: 2 }}>
+              {original}
+              {props.enableColumnPinning && <HeaderPinButtons />}
+            </Box>
+          ),
+        })
+      : originalColumnHelper;
 
     const fewColumns: ColumnDef<Person, unknown>[] = [
       columnHelper.accessor("name", {
@@ -111,7 +116,7 @@ export const ReactTanstackTableUi = (
                 <div className="flex-1 gap-2 flex items-center">
                   <CellText>{info.getValue()}</CellText>
                   {props.enableRowPinning && <div className="flex-1" />}
-                  {props.enableRowPinning && <TwRowPinButtons row={info.row} />}
+                  {props.enableRowPinning && <TwRowPinButtons />}
                 </div>
               ),
         ...props.columnDefs?.["name"],
@@ -205,7 +210,6 @@ export const ReactTanstackTableUi = (
       });
     }
     if (props.canSelectRows) {
-      console.log("canSelectRows", props.canSelectRows);
       cols.splice(
         0,
         0,
@@ -213,22 +217,22 @@ export const ReactTanstackTableUi = (
           id: "selected",
           header: ({ table }) => (
             <Checkbox
-              {...{
+              getProps={() => ({
                 checked: table.getIsAllRowsSelected(),
                 indeterminate: table.getIsSomeRowsSelected(),
-                onChange: table.getToggleAllRowsSelectedHandler(),
-              }}
+              })}
+              onChange={() => table.getToggleAllRowsSelectedHandler()}
             />
           ),
           cell: ({ row }) => (
             <div className="flex items-center">
               <Checkbox
-                {...{
+                getProps={() => ({
                   checked: row.getIsSelected(),
                   disabled: !row.getCanSelect(),
                   indeterminate: row.getIsSomeSelected(),
-                  onChange: row.getToggleSelectedHandler(),
-                }}
+                })}
+                onChange={() => row.getToggleSelectedHandler()}
               />
             </div>
           ),

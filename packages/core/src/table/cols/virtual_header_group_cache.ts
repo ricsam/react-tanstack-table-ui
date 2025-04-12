@@ -1,6 +1,5 @@
 import { shallowEqual } from "../../utils";
-import { VirtualHeaderGroup } from "./header_group";
-import { VirtualHeaderCell } from "./virtual_header/types";
+import { VirtualHeaderGroup, VirtualHeaderCell } from "../types";
 
 export class VirtualHeaderGroupCache {
   // Cache for header groups keyed by group.id
@@ -39,16 +38,16 @@ export class VirtualHeaderGroupCache {
 
       // Build a lookup of the cached headers keyed by headerId.
       const cachedHeaderMap = new Map<string, VirtualHeaderCell>();
-      cachedGroup.headers.forEach((h) => cachedHeaderMap.set(h.headerId, h));
+      cachedGroup.headers.forEach((h) => cachedHeaderMap.set(h.id, h));
 
       // Process headers: if a header exists and its properties are the same, reuse it.
       let headersChanged = false;
       const newHeadersMapped = newGroup.headers.map((newHeader) => {
-        const cachedHeader = cachedHeaderMap.get(newHeader.headerId);
+        const cachedHeader = cachedHeaderMap.get(newHeader.id);
 
         if (
           cachedHeader &&
-          shallowEqual(cachedHeader, newHeader, ["dndStyle"]) &&
+          shallowEqual(cachedHeader, newHeader, ["dndStyle", "header"]) &&
           shallowEqual(cachedHeader.dndStyle, newHeader.dndStyle)
         ) {
           return cachedHeader;
@@ -64,7 +63,7 @@ export class VirtualHeaderGroupCache {
         if (cachedGroup.headers.length === newHeadersMapped.length) {
           for (let i = 0; i < cachedGroup.headers.length; i++) {
             if (
-              cachedGroup.headers[i].headerId !== newHeadersMapped[i].headerId
+              cachedGroup.headers[i].id !== newHeadersMapped[i].id
             ) {
               headersChanged = true;
               break;
@@ -111,6 +110,7 @@ export class VirtualHeaderGroupCache {
     if (!changed && this.lastResult) {
       return this.lastResult;
     }
+
     this.lastResult = updatedGroups;
     return updatedGroups;
   }
