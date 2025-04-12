@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.23
+
+### Patch Changes
+
+- fix re-rendering issues
+
 ## 1.0.22
 
 ### Patch Changes
