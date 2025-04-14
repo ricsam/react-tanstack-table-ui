@@ -57,7 +57,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
 ) {
   return (
     <TablePropsProvider>
-      <TablePropsProviderWrapper {...props} />;
+      <TablePropsProviderWrapper {...props} />
     </TablePropsProvider>
   );
 };
