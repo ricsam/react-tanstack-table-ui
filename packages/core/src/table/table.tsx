@@ -4,16 +4,15 @@ import { defaultSkin } from "../default_skin/default_skin";
 import { ColDndHandler, RowDndHandler } from "../dnd_handler";
 import { MeasureCellProvider } from "../measure_cell_provider";
 import { Skin } from "../skin";
-import {
-  getSubHeaders,
-  triggerTableUpdate,
-  useTableProps,
-  useTableRef,
-} from "../utils";
+import { getSubHeaders } from "../utils";
 import { ColVirtualizerProvider } from "./cols/col_virtualizer_provider";
 import { HeaderGroup } from "./cols/header_group";
 import { useColVirtualizer } from "./hooks/use_col_virtualizer";
 import { useRowVirtualizer } from "./hooks/use_row_virtualizer";
+import { useTableProps } from "./hooks/useTableProps";
+import { useTablePropsContext } from "./hooks/useTablePropsContext";
+import { useTableRef } from "./hooks/useTableRef";
+import { TablePropsProvider } from "./providers/TablePropsProvider";
 import { VirtualRowProvider } from "./rows/virtual_row_provider";
 import { TableBody } from "./table_body";
 import { TableContext, useTableContext } from "./table_context";
@@ -56,8 +55,18 @@ type ShallowEqualCompatibleProps = ReactTanstackTableUiProps<any> & {
 export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
   props: ReactTanstackTableUiProps<T>,
 ) {
+  return (
+    <TablePropsProvider>
+      <TablePropsProviderWrapper {...props} />;
+    </TablePropsProvider>
+  );
+};
+
+function TablePropsProviderWrapper(props: ReactTanstackTableUiProps<any>) {
   const { table } = props;
 
+  const context = useTablePropsContext();
+  const { triggerTableUpdate } = context;
   // validate props
   if (table.getIsSomeColumnsPinned() && !table.options.enableColumnPinning) {
     throw new Error(
@@ -89,7 +98,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
   // or one of the other ReactTanstackTableUiProps changes
   // we trigger updates to the useTableProps hooks when the table state changes so it can re-render if the data the particular useTableProps hook depends on changes
   return <PropGuard {...shallowEqualCompatibleProps} />;
-};
+}
 
 const PropGuard = React.memo(function PropGuard(
   props: ShallowEqualCompatibleProps,

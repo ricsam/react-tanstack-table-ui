@@ -1,7 +1,7 @@
-import { useRow, useRowRef } from "@rttui/core";
+import { useRowProps, useRowRef } from "@rttui/core";
 
 export function ExpandButton() {
-  const { canExpand, isExpanded } = useRow((row) => {
+  const { canExpand, isExpanded } = useRowProps((row) => {
     return {
       canExpand: row.getCanExpand(),
       isExpanded: row.getIsExpanded(),

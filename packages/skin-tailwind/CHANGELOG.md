@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.19
+
+### Patch Changes
+
+- make useTableProps scoped to a context
+- Updated dependencies
+  - @rttui/core@1.0.25
+
 ## 0.0.18
 
 ### Patch Changes

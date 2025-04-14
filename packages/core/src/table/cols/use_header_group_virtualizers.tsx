@@ -9,17 +9,14 @@ import {
 } from "@tanstack/react-virtual";
 import React from "react";
 import { flushSync } from "react-dom";
-import {
-  getIsPinned,
-  mapColumnPinningPositionToPinPos,
-  useTableProps,
-} from "../../utils";
+import { getIsPinned, mapColumnPinningPositionToPinPos } from "../../utils";
 import { useTableContext } from "../table_context";
 import { CombinedHeaderGroup } from "../types";
 import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { VirtualHeaderCell, VirtualHeaderGroup } from "../types";
 import { VirtualHeaderGroupCache } from "./virtual_header_group_cache";
 import { HeaderIndex } from "./virtual_header/types";
+import { useTableProps } from "../hooks/useTableProps";
 
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;

@@ -1,10 +1,9 @@
 import { HeaderGroup } from "@tanstack/react-table";
 import React from "react";
-import { useTableRef } from "../../utils";
 import { ColVirtualizerContext } from "../contexts/ColVirtualizerContext";
 import { CombinedHeaderGroup, VirtualHeaderGroup } from "../types";
 import { useHeaderGroupVirtualizers } from "./use_header_group_virtualizers";
-
+import { useTableRef } from "../hooks/useTableRef";
 const combinedHeaderGroups = (
   getGroups: () => HeaderGroup<any>[][],
 ): CombinedHeaderGroup[] => {

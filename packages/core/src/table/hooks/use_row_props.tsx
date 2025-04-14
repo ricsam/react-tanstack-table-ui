@@ -1,8 +1,7 @@
 import { Row, Table } from "@tanstack/react-table";
 import React from "react";
-import { useTableProps } from "../../utils";
 import { VirtualRowContext } from "../contexts/VirtualRowContext";
-
+import { useTableProps } from "./useTableProps";
 export const useRowProps = <T,>(
   callback: (row: Row<any>, table: Table<any>) => T,
 ) => {

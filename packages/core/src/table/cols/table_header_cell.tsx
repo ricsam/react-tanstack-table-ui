@@ -1,7 +1,7 @@
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
 import { useMeasureCellContext } from "../../measure_cell_context";
-import { useTableProps } from "../../utils";
+import { useTableProps } from "../hooks/useTableProps";
 import { VirtualHeaderCellContext } from "../contexts/VirtualHeaderCellContext";
 import { useTableContext } from "../table_context";
 import { VirtualHeaderCell } from "../types";

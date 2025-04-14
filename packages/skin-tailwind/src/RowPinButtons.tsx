@@ -1,7 +1,7 @@
-import { useRow, useRowRef } from "@rttui/core";
+import { useRowProps, useRowRef } from "@rttui/core";
 
 export function RowPinButtons() {
-  const { canPin, isPinned } = useRow((row) => {
+  const { canPin, isPinned } = useRowProps((row) => {
     return {
       canPin: row.getCanPin(),
       isPinned: row.getIsPinned(),

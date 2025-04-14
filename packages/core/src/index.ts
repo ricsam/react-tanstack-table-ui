@@ -20,23 +20,24 @@ import { useCrushHeader } from "./use_crush_header";
 import { decorateColumnHelper } from "./decorate_column_helper";
 import type { HeaderDecorator, CellDecorator } from "./decorate_column_helper";
 import type { RttuiRef } from "./table/types";
-import { shallowEqual, useTableProps } from "./utils";
+import { shallowEqual } from "./utils";
+import { useTableProps } from "./table/hooks/useTableProps";
 
 export {
   ReactTanstackTableUi,
-  useRowVirtualizer as useVirtualRowContext,
+  useRowVirtualizer,
   iterateOverColumns,
-  useRowProps as useRow,
+  useRowProps,
   useTableContext,
-  useColVirtualizer as useColContext,
+  useColVirtualizer,
   useTableCssVars,
   defaultSkin,
   darkModeVars,
   lightModeVars,
-  useColProps as useColProps,
+  useColProps,
   useCrushHeader,
   decorateColumnHelper,
-  useTableProps as useTableProps,
+  useTableProps,
   useColRef,
   useRowRef,
   useCellProps,
@@ -44,7 +45,7 @@ export {
 };
 export type {
   Skin,
-  VirtualHeaderCell as VirtualHeaderCell,
+  VirtualHeaderCell,
   HeaderDecorator,
   CellDecorator,
   RttuiRef,

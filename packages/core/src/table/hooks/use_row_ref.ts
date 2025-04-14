@@ -1,6 +1,7 @@
 import React from "react";
 import { VirtualRowContext } from "../contexts/VirtualRowContext";
-import { useListenToTableUpdate } from "../../utils";
+import { useListenToTableUpdate } from "./useListenToTableUpdate";
+
 export const useRowRef = () => {
   const virtualRow = React.useContext(VirtualRowContext);
   if (!virtualRow) {

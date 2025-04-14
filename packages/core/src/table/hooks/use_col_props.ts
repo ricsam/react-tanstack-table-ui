@@ -1,9 +1,9 @@
 import { Column, Header, Table } from "@tanstack/react-table";
 import React from "react";
-import { useTableProps } from "../../utils";
 import { VirtualCellContext } from "../contexts/VirtualCellContext";
 import { VirtualHeaderCellContext } from "../contexts/VirtualHeaderCellContext";
 import { VirtualHeaderCell } from "../types";
+import { useTableProps } from "./useTableProps";
 
 export const useColProps = <T>(
   callback: (props: {

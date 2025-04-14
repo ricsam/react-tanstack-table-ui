@@ -1,5 +1,5 @@
 import React from "react";
-import { useTableProps } from "../../utils";
+import { useTableProps } from "../hooks/useTableProps";
 import { TableCell } from "../cols/table_cell";
 import { VirtualRowContext } from "../contexts/VirtualRowContext";
 import { useTableContext } from "../table_context";

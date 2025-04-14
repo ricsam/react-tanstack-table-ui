@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.25
+
+### Patch Changes
+
+- make useTableProps scoped to a context
+
 ## 1.0.24
 
 ### Patch Changes

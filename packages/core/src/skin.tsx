@@ -3,7 +3,7 @@ import { useColVirtualizer } from "./table/hooks/use_col_virtualizer";
 import { useRowVirtualizer } from "./table/hooks/use_row_virtualizer";
 import { useTableContext } from "./table/table_context";
 import { PinPos } from "./table/types";
-import { useTableProps } from "./utils";
+import { useTableProps } from "./table/hooks/useTableProps";
 
 export type Skin = {
   rowHeight: number;

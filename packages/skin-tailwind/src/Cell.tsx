@@ -1,4 +1,4 @@
-import { useRow, useRowRef } from "@rttui/core";
+import { useRowProps, useRowRef } from "@rttui/core";
 import { CellText } from "./CellText";
 import { CellTextBold } from "./CellTextBold";
 import { Checkbox } from "./Checkbox";
@@ -18,7 +18,7 @@ export function Cell({
   pinButtons?: boolean;
   highlightSelected?: boolean;
 }) {
-  const { checked, disabled, indeterminate, depth } = useRow((row) => {
+  const { checked, disabled, indeterminate, depth } = useRowProps((row) => {
     return {
       checked: row.getIsSelected(),
       disabled: !row.getCanSelect(),

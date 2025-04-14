@@ -6,14 +6,14 @@ import {
   Virtualizer,
 } from "@tanstack/react-virtual";
 import React, { CSSProperties } from "react";
-import { useTableProps, useTableRef } from "../../utils";
+import { useTableRef } from "../hooks/useTableRef";
 import { useColVirtualizer } from "../hooks/use_col_virtualizer";
 import { useTableContext } from "../table_context";
 import { VirtualCell, VirtualRow } from "../types";
 import { VirtualRowCache } from "./virtual_row_cache";
 import { RowVirtualizerContext } from "../contexts/RowVirtualizerContext";
 import { RowVirtualizerContextType } from "./row_virtualizer_context_type";
-
+import { useTableProps } from "../hooks/useTableProps";
 const dndStyle: CSSProperties = {};
 
 export const VirtualRowProvider = ({
@@ -79,7 +79,10 @@ export const VirtualRowProvider = ({
       (index: number) => refs.current.rowIds[index],
       [],
     ),
-    getScrollElement: () => tableContainerRef.current,
+    getScrollElement: React.useCallback(
+      () => tableContainerRef.current,
+      [tableContainerRef],
+    ),
     measureElement: React.useCallback(
       (
         element: any,

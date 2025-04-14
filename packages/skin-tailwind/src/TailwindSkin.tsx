@@ -1,7 +1,7 @@
 import {
   type Skin,
   useCellProps,
-  useRow,
+  useRowProps,
   useTableContext,
   useTableCssVars,
   useTableProps,
@@ -237,7 +237,7 @@ export const TailwindSkin: Skin = {
         };
       });
 
-      const { selected, isSomeColumnsPinnedRight } = useRow((row, table) => {
+      const { selected, isSomeColumnsPinnedRight } = useRowProps((row, table) => {
         const selected = row.getIsSelected();
         return {
           selected,

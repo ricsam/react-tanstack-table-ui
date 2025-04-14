@@ -1,8 +1,9 @@
 import { Table } from "@tanstack/react-table";
 import React from "react";
-import { useTableProps } from "../../utils";
+
 import { VirtualCellContext } from "../contexts/VirtualCellContext";
 import { VirtualCell } from "../types";
+import { useTableProps } from "./useTableProps";
 
 export const useCellProps = <T>(
   callback: (cell: VirtualCell, table: Table<any>) => T,
