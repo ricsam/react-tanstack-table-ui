@@ -1,5 +1,5 @@
 import React from "react";
-import { ColVirtualizerContext } from "../contexts/ColVirtualizerContext";
+import { ColVirtualizerContext } from "../contexts/col_virtualizer_context";
 
 export const useColVirtualizer = () => {
   const context = React.useContext(ColVirtualizerContext);

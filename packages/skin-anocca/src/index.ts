@@ -1,5 +1,5 @@
-export { AnoccaSkin } from "./AnoccaSkin";
-export { TableHeaderRow } from "./TableHeaderRow";
-export { HeaderPinButtons } from "./HeaderPinButtons";
-export { RowPinButtons } from "./RowPinButtons";
-export { Resizer } from "./Resizer";
+export { AnoccaSkin } from "./anocca_skin";
+export { TableHeaderRow } from "./table_header_row";
+export { HeaderPinButtons } from "./header_pin_buttons";
+export { RowPinButtons } from "./row_pin_buttons";
+export { Resizer } from "./resizer";

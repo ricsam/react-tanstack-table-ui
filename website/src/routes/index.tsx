@@ -1,33 +1,33 @@
-import { DocsLayout } from "@/layouts/DocsLayout";
-import { RootLayout } from "@/layouts/RootLayout";
-import { APIPage } from "@/pages/api/Index";
-import { GettingStartedPage } from "@/pages/docs/GettingStarted";
-import { DocsIndexPage } from "@/pages/docs/Index";
-import { OptionsPage } from "@/pages/docs/Options";
-import { ExamplesPage } from "@/pages/examples/Index";
-import { StaticExample } from "@/pages/examples/StaticExample";
-import { HomePage } from "@/pages/Home";
+import { DocsLayout } from "@/layouts/docs_layout";
+import { RootLayout } from "@/layouts/root_layout";
+import { APIPage } from "@/pages/api/index";
+import { GettingStartedPage } from "@/pages/docs/getting_started";
+import { DocsIndexPage } from "@/pages/docs/index";
+import { OptionsPage } from "@/pages/docs/options";
+import { ExamplesPage } from "@/pages/examples/index";
+import { StaticExample } from "@/pages/examples/static_example";
+import { HomePage } from "@/pages/home";
 import { createRootRoute, createRoute } from "@tanstack/react-router";
 import { examples } from "@/data/examples";
 
 // Skins pages
-import { DefaultSkinPage } from "@/pages/skins/DefaultSkin";
-import { AnoccaSkinPage } from "@/pages/skins/AnoccaSkin";
-import { AnoccaStorybookPage } from "@/pages/skins/AnoccaStorybook";
-import { MuiSkinPage } from "@/pages/skins/MuiSkin";
-import { MuiStorybookPage } from "@/pages/skins/MuiStorybook";
-import { TailwindSkinPage } from "@/pages/skins/TailwindSkin";
-import { TailwindStorybookPage } from "@/pages/skins/TailwindStorybook";
-import { TailwindComponentsPage } from "@/pages/skins/TailwindComponents";
-import { SkinsLandingPage } from "@/pages/skins/SkinsLandingPage";
+import { DefaultSkinPage } from "@/pages/skins/default_skin";
+import { AnoccaSkinPage } from "@/pages/skins/anocca_skin";
+import { AnoccaStorybookPage } from "@/pages/skins/anocca_storybook";
+import { MuiSkinPage } from "@/pages/skins/mui_skin";
+import { MuiStorybookPage } from "@/pages/skins/mui_storybook";
+import { TailwindSkinPage } from "@/pages/skins/tailwind_skin";
+import { TailwindStorybookPage } from "@/pages/skins/tailwind_storybook";
+import { TailwindComponentsPage } from "@/pages/skins/tailwind_components";
 
 // Core concepts pages
-import { ColumnAutoSizingPage } from "@/pages/core-concepts/ColumnAutoSizing";
-import { TableAutoSizingPage } from "@/pages/core-concepts/TableAutoSizing";
-import { ToggleColPinningPage } from "@/pages/core-concepts/ToggleColPinning";
-import { ToggleRowPinningPage } from "@/pages/core-concepts/ToggleRowPinning";
-import { HeaderGroupsPage } from "@/pages/core-concepts/HeaderGroups";
-import { AddResizerPage } from "@/pages/core-concepts/AddResizer";
+import { ColumnAutoSizingPage } from "@/pages/core-concepts/column_auto_sizing";
+import { TableAutoSizingPage } from "@/pages/core-concepts/table_auto_sizing";
+import { ToggleColPinningPage } from "@/pages/core-concepts/toggle_col_pinning";
+import { ToggleRowPinningPage } from "@/pages/core-concepts/toggle_row_pinning";
+import { HeaderGroupsPage } from "@/pages/core-concepts/header_groups";
+import { AddResizerPage } from "@/pages/core-concepts/add_resizer";
+import { SkinsLandingPage } from "@/pages/skins/skins_landing_page";
 
 // Root route with the main layout
 export const rootRoute = createRootRoute({

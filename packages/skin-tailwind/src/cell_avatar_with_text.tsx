@@ -1,5 +1,5 @@
 import React from "react";
-import { CellAvatar } from "./CellAvatar";
+import { CellAvatar } from "./cell_avatar";
 
 
 export const CellAvatarWithText: React.FC<{

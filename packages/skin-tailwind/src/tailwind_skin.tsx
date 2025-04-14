@@ -7,7 +7,7 @@ import {
   useTableProps,
 } from "@rttui/core";
 import React, { CSSProperties } from "react";
-import { TableHeaderCell } from "./TableHeaderCell";
+import { TableHeaderCell } from "./table_header_cell";
 import { clsx } from "./clsx";
 
 export const TailwindSkin: Skin = {

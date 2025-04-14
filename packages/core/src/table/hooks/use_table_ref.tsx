@@ -1,6 +1,6 @@
 import { Table } from "@tanstack/react-table";
 import React from "react";
-import { useTablePropsContext } from "./useTablePropsContext";
+import { useTablePropsContext } from "./use_table_props_context";
 
 export const useTableRef = () => {
   const context = useTablePropsContext();

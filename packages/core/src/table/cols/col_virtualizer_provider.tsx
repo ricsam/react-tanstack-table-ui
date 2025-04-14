@@ -1,6 +1,6 @@
 import { HeaderGroup } from "@tanstack/react-table";
 import React from "react";
-import { ColVirtualizerContext } from "../contexts/ColVirtualizerContext";
+import { ColVirtualizerContext } from "../contexts/col_virtualizer_context";
 import { CombinedHeaderGroup, VirtualHeaderGroup } from "../types";
 import { useHeaderGroupVirtualizers } from "./use_header_group_virtualizers";
 import { useTableRef } from "../hooks/use_table_ref";

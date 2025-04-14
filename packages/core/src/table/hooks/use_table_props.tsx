@@ -1,7 +1,7 @@
 import { Table } from "@tanstack/react-table";
 import React from "react";
 import { shallowEqual } from "../../utils";
-import { useTablePropsContext } from "./useTablePropsContext";
+import { useTablePropsContext } from "./use_table_props_context";
 
 export const useTableProps = <T,>(
   callback: (table: Table<any>) => T,

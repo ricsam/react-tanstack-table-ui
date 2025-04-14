@@ -1,6 +1,6 @@
 import { Table } from "@tanstack/react-table";
 import React from "react";
-import { TablePropsContext, TablePropsContextType } from "../contexts/TablePropsContext";
+import { TablePropsContext, TablePropsContextType } from "../contexts/table_props_context";
 
 export const TablePropsProvider = ({
   children,

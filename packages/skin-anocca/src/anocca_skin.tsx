@@ -19,7 +19,7 @@ import {
 } from "@rttui/core";
 import { shallowEqual, useTableProps } from "@rttui/core";
 import React, { CSSProperties } from "react";
-import { TableHeaderRow } from "./TableHeaderRow";
+import { TableHeaderRow } from "./table_header_row";
 
 const AnoccaSkin: Skin = {
   rowHeight: 32,
