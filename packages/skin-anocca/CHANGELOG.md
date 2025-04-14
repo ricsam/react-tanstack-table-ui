@@ -1,5 +1,13 @@
 # @rttui/skin-anocca
 
+## 1.0.25
+
+### Patch Changes
+
+- Fix invalid version
+- Updated dependencies [4d4b7f0]
+  - @rttui/core@1.0.24
+
 ## 1.0.24
 
 ### Patch Changes

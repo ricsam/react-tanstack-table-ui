@@ -17,7 +17,7 @@ import {
   useTableContext,
   useTableCssVars,
 } from "@rttui/core";
-import { shallowEqual, useTableProps } from "@rttui/core/src/utils";
+import { shallowEqual, useTableProps } from "@rttui/core";
 import React, { CSSProperties } from "react";
 import { TableHeaderRow } from "./TableHeaderRow";
 

@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.24
+
+### Patch Changes
+
+- 4d4b7f0: catch errors in the useTableProps callbacks
+
 ## 1.0.23
 
 ### Patch Changes
