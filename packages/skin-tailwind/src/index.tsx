@@ -15,7 +15,7 @@ export { Checkbox } from "./checkbox";
 export { CellTextBold } from "./cell_text_bold";
 export { CellCurrency } from "./cell_currency";
 export { CellBadge } from "./cell_badge";
-export { Cell } from "./_cell";
+export { Cell } from "./cell";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { darkModeVars, lightModeVars } from "./vars";
