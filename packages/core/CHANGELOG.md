@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.26
+
+### Patch Changes
+
+- Fix bug in crush cols
+
 ## 1.0.25
 
 ### Patch Changes

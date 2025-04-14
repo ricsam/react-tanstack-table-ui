@@ -1,5 +1,12 @@
 # @rttui/skin-tailwind
 
+## 0.0.21
+
+### Patch Changes
+
+- Updated dependencies
+  - @rttui/core@1.0.26
+
 ## 0.0.20
 
 ### Patch Changes

@@ -142,9 +142,11 @@ export const VirtualRowProvider = ({
         rowVirtualizer,
 
         cells: mainHeaderGroup.headers.map((header): VirtualCell => {
+          const getCell = () => getAllCells()[header.headerIndex];
+          const id = getCell().id;
           return {
-            id: header.id,
-            cell: () => getAllCells()[header.headerIndex],
+            id,
+            cell: getCell,
             dndStyle: {},
             vheader: header,
           };

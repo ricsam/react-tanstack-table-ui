@@ -95,7 +95,7 @@ export function HomePage() {
 
   const deferredColumnCount = useDeferredValue(columnCount);
 
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const isDesktop = window.matchMedia("(min-width: 1280px)").matches;
 
   // Generate columns based on columnCount
   const columns = useMemo(() => {
@@ -168,9 +168,6 @@ export function HomePage() {
       columnHelper.accessor("performance", {
         id: "performance",
         header: "Performance",
-        meta: {
-          autoCrush: false,
-        },
         cell: (info) => {
           const performance = info.getValue();
           const color =
@@ -252,8 +249,8 @@ export function HomePage() {
       }),
     ];
 
-    return isMobile ? baseColumns : groupedColumns;
-  }, [deferredColumnCount, isMobile]);
+    return isDesktop ? groupedColumns : baseColumns;
+  }, [deferredColumnCount, isDesktop]);
 
   const table = useReactTable({
     data,
@@ -270,30 +267,9 @@ export function HomePage() {
     defaultColumn: {
       size: 100,
     },
-    initialState: isMobile
+    initialState: !isDesktop
       ? undefined
       : {
-          columnSizing: {
-            name: 196.6640625,
-            email: 182.890625,
-            role: 77.0859375,
-            status: 83.9921875,
-            age: 35.09375,
-            performance: 156.7,
-            salary: 97.0546875,
-            department: 61.1875,
-            startDate: 99.9765625,
-            salary_2: 97.0546875,
-            department_2: 61.1875,
-          },
-          columnSizingInfo: {
-            startOffset: null,
-            startSize: null,
-            deltaOffset: null,
-            deltaPercentage: null,
-            isResizingColumn: false,
-            columnSizingStart: [],
-          },
           rowSelection: {},
           rowPinning: {
             top: ["7"],
@@ -308,7 +284,6 @@ export function HomePage() {
           columnFilters: [],
           columnPinning: {
             left: ["email"],
-            right: ["salary"],
           },
           columnOrder: [],
           columnVisibility: {},
@@ -585,7 +560,7 @@ export function HomePage() {
                   height={tableContainerBounds.height}
                   skin={TailwindSkin}
                   autoCrushColumns
-                  crushMinSizeBy="header"
+                  crushMinSizeBy="both"
                   underlay={
                     <div
                       style={{
@@ -630,9 +605,10 @@ function Details({ row, width }: { row: Row<Person>; width: number }) {
       rightTotalSize: table.getRightTotalSize(),
     };
   });
+  const isDesktop = window.matchMedia("(min-width: 1280px)").matches;
   const style: React.CSSProperties = {
-    width: width - leftTotalSize - rightTotalSize,
-    left: leftTotalSize,
+    width: isDesktop ? width - leftTotalSize - rightTotalSize : width,
+    left: isDesktop ? leftTotalSize : 0,
     overflow: "hidden",
     transition: "opacity 0.3s ease-in-out",
     opacity: 1,
@@ -644,15 +620,15 @@ function Details({ row, width }: { row: Row<Person>; width: number }) {
 
   return (
     <div
-      className="px-6 pb-6 bg-white dark:bg-gray-800 ring-1 ring-gray-900/5 w-full border-t border-gray-200 dark:border-gray-700 sticky"
+      className="px-4 sm:px-6 pb-6 bg-white dark:bg-gray-800 ring-1 ring-gray-900/5 w-full border-t border-gray-200 dark:border-gray-700 sticky"
       style={style}
     >
-      <div className="flex items-start gap-6">
+      <div className="flex flex-col items-start gap-4 sm:gap-6">
         {/* Content container */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 w-full min-w-0">
           {/* Header with name, email and status */}
-          <div className="flex items-center justify-between mb-5">
-            <div>
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between mb-4 xl:mb-5 pt-4 xl:pt-0">
+            <div className="mb-2 xl:mb-0">
               <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
                 {person.name}
               </h1>
@@ -661,7 +637,7 @@ function Details({ row, width }: { row: Row<Person>; width: number }) {
               </p>
             </div>
             <div
-              className={`rounded-md px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+              className={`rounded-md px-2.5 py-1 text-xs font-medium ring-1 ring-inset self-start xl:self-auto ${
                 person.status === "Active"
                   ? "bg-green-50 text-green-600 ring-green-600/20 dark:bg-green-900/20 dark:text-green-400"
                   : person.status === "Inactive"
@@ -675,7 +651,7 @@ function Details({ row, width }: { row: Row<Person>; width: number }) {
 
           {/* Main information grid */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="grid grid-cols-6 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-x-4 sm:gap-x-8 gap-y-4">
               {/* Role info */}
               <div className="col-span-1 flex items-start gap-2">
                 <div className="flex-none mt-0.5">
@@ -857,8 +833,8 @@ function Details({ row, width }: { row: Row<Person>; width: number }) {
           </div>
 
           {/* Performance section and actions */}
-          <div className="grid grid-cols-4 gap-x-8 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="col-span-3">
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-y-4 xl:gap-x-8 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="col-span-1 xl:col-span-3">
               <div className="flex justify-between text-sm mb-2">
                 <span className="font-medium text-gray-900 dark:text-gray-100">
                   Performance
@@ -896,7 +872,7 @@ function Details({ row, width }: { row: Row<Person>; width: number }) {
                 ></div>
               </div>
             </div>
-            <div className="col-span-1 flex items-center justify-end space-x-2">
+            <div className="col-span-1 flex items-center justify-start xl:justify-end space-x-2 mt-2 xl:mt-0">
               <button className="inline-flex items-center rounded-md bg-white dark:bg-gray-800 px-2 py-1 text-xs font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                 Details
               </button>
