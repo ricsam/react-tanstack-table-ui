@@ -3,7 +3,7 @@ import React from "react";
 import { ColVirtualizerContext } from "../contexts/ColVirtualizerContext";
 import { CombinedHeaderGroup, VirtualHeaderGroup } from "../types";
 import { useHeaderGroupVirtualizers } from "./use_header_group_virtualizers";
-import { useTableRef } from "../hooks/useTableRef";
+import { useTableRef } from "../hooks/use_table_ref";
 const combinedHeaderGroups = (
   getGroups: () => HeaderGroup<any>[][],
 ): CombinedHeaderGroup[] => {

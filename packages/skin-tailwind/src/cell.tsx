@@ -1,9 +1,9 @@
 import { useRowProps, useRowRef } from "@rttui/core";
-import { CellText } from "./CellText";
-import { CellTextBold } from "./CellTextBold";
-import { Checkbox } from "./Checkbox";
-import { ExpandButton } from "./ExpandButton";
-import { RowPinButtons } from "./RowPinButtons";
+import { CellText } from "./cell_text";
+import { CellTextBold } from "./cell_text_bold";
+import { Checkbox } from "./checkbox";
+import { ExpandButton } from "./expand_button";
+import { RowPinButtons } from "./row_pin_buttons";
 
 export function Cell({
   children,

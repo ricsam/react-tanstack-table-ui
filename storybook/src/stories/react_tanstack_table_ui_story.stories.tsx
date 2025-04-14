@@ -7,8 +7,8 @@ import { ReactNode, useReducer, useState } from "react";
 import {
   Person,
   ReactTanstackTableUi,
-} from "./ReactTanstackTableUiStoryComponent";
-import { createSourceCode } from "./createSourceCode";
+} from "./react_tanstack_table_ui_story_component";
+import { createSourceCode } from "./create_source_code";
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
   title: "ReactTanstackTableUi",

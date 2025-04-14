@@ -1,5 +1,5 @@
 import React from "react";
-import { RowVirtualizerContext } from "../contexts/RowVirtualizerContext";
+import { RowVirtualizerContext } from "../contexts/row_virtualizer_context";
 
 export const useRowVirtualizer = () => {
   const context = React.useContext(RowVirtualizerContext);

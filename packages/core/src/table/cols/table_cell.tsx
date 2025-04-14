@@ -1,10 +1,10 @@
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
 import { useMeasureCellContext } from "../../measure_cell_context";
-import { VirtualCellContext } from "../contexts/VirtualCellContext";
+import { VirtualCellContext } from "../contexts/virtual_cell_context";
 import { useTableContext } from "../table_context";
 import { VirtualCell } from "../types";
-import { useTableProps } from "../hooks/useTableProps";
+import { useTableProps } from "../hooks/use_table_props";
 
 export const TableCell = React.memo(function TableCell({
   cell,

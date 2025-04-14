@@ -16,7 +16,7 @@ import { getColVirtualizedOffsets } from "./get_col_virtualized_offset";
 import { VirtualHeaderCell, VirtualHeaderGroup } from "../types";
 import { VirtualHeaderGroupCache } from "./virtual_header_group_cache";
 import { HeaderIndex } from "./virtual_header/types";
-import { useTableProps } from "../hooks/useTableProps";
+import { useTableProps } from "../hooks/use_table_props";
 
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;

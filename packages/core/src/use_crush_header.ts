@@ -1,7 +1,7 @@
 import { Header } from "@tanstack/react-table";
 import { useTableContext } from "./table/table_context";
 import { getSubHeaders } from "./utils";
-import { useTableRef } from "./table/hooks/useTableRef";
+import { useTableRef } from "./table/hooks/use_table_ref";
 
 export const useCrushHeader = () => {
   const { measureCells, crushMinSizeBy: defaultCrushMinSizeBy } =

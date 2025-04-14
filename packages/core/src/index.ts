@@ -21,7 +21,7 @@ import { decorateColumnHelper } from "./decorate_column_helper";
 import type { HeaderDecorator, CellDecorator } from "./decorate_column_helper";
 import type { RttuiRef } from "./table/types";
 import { shallowEqual } from "./utils";
-import { useTableProps } from "./table/hooks/useTableProps";
+import { useTableProps } from "./table/hooks/use_table_props";
 
 export {
   ReactTanstackTableUi,

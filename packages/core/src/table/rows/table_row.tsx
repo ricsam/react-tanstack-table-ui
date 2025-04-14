@@ -1,7 +1,7 @@
 import React from "react";
-import { useTableProps } from "../hooks/useTableProps";
+import { useTableProps } from "../hooks/use_table_props";
 import { TableCell } from "../cols/table_cell";
-import { VirtualRowContext } from "../contexts/VirtualRowContext";
+import { VirtualRowContext } from "../contexts/virtual_row_context";
 import { useTableContext } from "../table_context";
 import { VirtualRow, VirtualCell } from "../types";
 

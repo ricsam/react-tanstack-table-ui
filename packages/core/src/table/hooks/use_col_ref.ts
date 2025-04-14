@@ -1,7 +1,7 @@
 import React from "react";
-import { VirtualCellContext } from "../contexts/VirtualCellContext";
-import { VirtualHeaderCellContext } from "../contexts/VirtualHeaderCellContext";
-import { useListenToTableUpdate } from "./useListenToTableUpdate";
+import { VirtualCellContext } from "../contexts/virtual_cell_context";
+import { VirtualHeaderCellContext } from "../contexts/virtual_header_cell_context";
+import { useListenToTableUpdate } from "./use_listen_to_table_update";
 
 export const useColRef = () => {
   const headerContext = React.useContext(VirtualHeaderCellContext);

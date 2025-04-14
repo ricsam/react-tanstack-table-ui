@@ -6,14 +6,14 @@ import {
   Virtualizer,
 } from "@tanstack/react-virtual";
 import React, { CSSProperties } from "react";
-import { useTableRef } from "../hooks/useTableRef";
+import { useTableRef } from "../hooks/use_table_ref";
 import { useColVirtualizer } from "../hooks/use_col_virtualizer";
 import { useTableContext } from "../table_context";
 import { VirtualCell, VirtualRow } from "../types";
 import { VirtualRowCache } from "./virtual_row_cache";
-import { RowVirtualizerContext } from "../contexts/RowVirtualizerContext";
+import { RowVirtualizerContext } from "../contexts/row_virtualizer_context";
 import { RowVirtualizerContextType } from "./row_virtualizer_context_type";
-import { useTableProps } from "../hooks/useTableProps";
+import { useTableProps } from "../hooks/use_table_props";
 const dndStyle: CSSProperties = {};
 
 export const VirtualRowProvider = ({
