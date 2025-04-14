@@ -17,6 +17,9 @@ importers:
       eslint:
         specifier: ^9.17.0
         version: 9.23.0(jiti@2.4.2)
+      eslint-plugin-filenames-simple:
+        specifier: ^0.9.0
+        version: 0.9.0(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-react-hooks:
         specifier: ^5.0.0
         version: 5.2.0(eslint@9.23.0(jiti@2.4.2))
@@ -2173,6 +2176,12 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
+  eslint-plugin-filenames-simple@0.9.0:
+    resolution: {integrity: sha512-eIs+fIO/YXjjlNRdMK3H2HiF0BJ6zj3Of1+REBMnHMbqqgxX1VReIV/gf+ZfP3/bbCAHk5PE3SXi7Fjt3uzUGw==}
+    engines: {node: '>=14.17.0'}
+    peerDependencies:
+      eslint: '>=7.0.0 <9.0.0'
+
   eslint-plugin-react-hooks@5.2.0:
     resolution: {integrity: sha512-+f15FfK64YQwZdJNELETdn5ibXEUQmW1DZL6KXhNnc2heoy/sg9VJJeT7n8TlMWouzWqSWavFkIhHyIbIAEapg==}
     engines: {node: '>=10'}
@@ -2882,6 +2891,10 @@ packages:
     resolution: {integrity: sha512-kkx+MB2KQRkyxjYPc3a0wLZZoDczmppyGJIvQ43l+aZihkaVvmu/21kiyaHeHjiFxjxNNFnUncKmcGIyOojsaw==}
     engines: {node: '>=18'}
     hasBin: true
+
+  pluralize@8.0.0:
+    resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
+    engines: {node: '>=4'}
 
   polished@4.3.1:
     resolution: {integrity: sha512-OBatVyC/N7SCW/FaDHrSd+vn0o5cS855TOmYi4OkdWUMSJCET/xip//ch8xGUvtr3i44X9LVyWwQlRMTN3pwSA==}
@@ -5546,6 +5559,11 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
+  eslint-plugin-filenames-simple@0.9.0(eslint@9.23.0(jiti@2.4.2)):
+    dependencies:
+      eslint: 9.23.0(jiti@2.4.2)
+      pluralize: 8.0.0
+
   eslint-plugin-react-hooks@5.2.0(eslint@9.23.0(jiti@2.4.2)):
     dependencies:
       eslint: 9.23.0(jiti@2.4.2)
@@ -6198,6 +6216,8 @@ snapshots:
       playwright-core: 1.51.1
     optionalDependencies:
       fsevents: 2.3.2
+
+  pluralize@8.0.0: {}
 
   polished@4.3.1:
     dependencies:
