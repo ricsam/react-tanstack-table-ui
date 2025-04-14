@@ -33,7 +33,7 @@ export function RootLayout() {
     <div className="min-h-screen flex bg-white dark:bg-gray-900">
       {/* Sidebar */}
       <aside
-        className={`${sidebarOpen ? "w-64" : "w-16"} h-screen sticky top-0 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-200 ease-in-out ${isMobile ? (sidebarOpen ? "translate-x-0" : "-translate-x-full") : ""}`}
+        className={`${sidebarOpen ? "w-64" : "w-16"} hidden md:flex h-screen sticky top-0 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-200 ease-in-out ${isMobile ? (sidebarOpen ? "translate-x-0" : "-translate-x-full") : ""}`}
       >
         <div className="flex-shrink-0 p-4 flex items-center justify-between">
           <Link to="/" className="flex items-center">

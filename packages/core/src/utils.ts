@@ -165,7 +165,13 @@ const tableUpdateListeners = new Set<
 let initialTable: Table<any> | null = null;
 export const triggerTableUpdate = (table: Table<any>, rerender: boolean) => {
   initialTable = table;
-  tableUpdateListeners.forEach((listener) => listener(table, rerender));
+  tableUpdateListeners.forEach((listener) => {
+    try {
+      listener(table, rerender);
+    } catch (err) {
+      // ignore errors
+    }
+  });
 };
 export const useTableProps = <T>(
   callback: (table: Table<any>) => T,

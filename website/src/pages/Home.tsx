@@ -31,6 +31,7 @@ import {
 import React, {
   useCallback,
   useDeferredValue,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -94,6 +95,8 @@ export function HomePage() {
   }, [deferredRowCount]);
 
   const deferredColumnCount = useDeferredValue(columnCount);
+
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
   // Generate columns based on columnCount
   const columns = useMemo(() => {
@@ -250,8 +253,8 @@ export function HomePage() {
       }),
     ];
 
-    return groupedColumns;
-  }, [deferredColumnCount]);
+    return isMobile ? baseColumns : groupedColumns;
+  }, [deferredColumnCount, isMobile]);
 
   const table = useReactTable({
     data,
@@ -268,51 +271,53 @@ export function HomePage() {
     defaultColumn: {
       size: 100,
     },
-    initialState: {
-      columnSizing: {
-        name: 196.6640625,
-        email: 182.890625,
-        role: 77.0859375,
-        status: 83.9921875,
-        age: 35.09375,
-        performance: 156.7,
-        salary: 97.0546875,
-        department: 61.1875,
-        startDate: 99.9765625,
-        salary_2: 97.0546875,
-        department_2: 61.1875,
-      },
-      columnSizingInfo: {
-        startOffset: null,
-        startSize: null,
-        deltaOffset: null,
-        deltaPercentage: null,
-        isResizingColumn: false,
-        columnSizingStart: [],
-      },
-      rowSelection: {},
-      rowPinning: {
-        top: ["7"],
-        bottom: ["9"],
-      },
-      expanded: {
-        "4": true,
-        "10": true,
-      },
-      grouping: [],
-      sorting: [],
-      columnFilters: [],
-      columnPinning: {
-        left: ["email"],
-        right: ["salary"],
-      },
-      columnOrder: [],
-      columnVisibility: {},
-      pagination: {
-        pageIndex: 0,
-        pageSize: 10,
-      },
-    },
+    initialState: isMobile
+      ? undefined
+      : {
+          columnSizing: {
+            name: 196.6640625,
+            email: 182.890625,
+            role: 77.0859375,
+            status: 83.9921875,
+            age: 35.09375,
+            performance: 156.7,
+            salary: 97.0546875,
+            department: 61.1875,
+            startDate: 99.9765625,
+            salary_2: 97.0546875,
+            department_2: 61.1875,
+          },
+          columnSizingInfo: {
+            startOffset: null,
+            startSize: null,
+            deltaOffset: null,
+            deltaPercentage: null,
+            isResizingColumn: false,
+            columnSizingStart: [],
+          },
+          rowSelection: {},
+          rowPinning: {
+            top: ["7"],
+            bottom: ["9"],
+          },
+          expanded: {
+            "4": true,
+            "10": true,
+          },
+          grouping: [],
+          sorting: [],
+          columnFilters: [],
+          columnPinning: {
+            left: ["email"],
+            right: ["salary"],
+          },
+          columnOrder: [],
+          columnVisibility: {},
+          pagination: {
+            pageIndex: 0,
+            pageSize: 10,
+          },
+        },
   });
 
   // Apply theme-specific styles
@@ -565,7 +570,7 @@ export function HomePage() {
 
           {/* Table container with 16:9 aspect ratio */}
           <div
-            className="w-full relative border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden aspect-video"
+            className="w-full relative border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden aspect-[1/1.25] md:aspect-video"
             style={{ ...themeVars }}
           >
             <div ref={tableContainerRef} className="absolute inset-0">
