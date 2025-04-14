@@ -18,12 +18,10 @@ export function Cell({
   pinButtons?: boolean;
   highlightSelected?: boolean;
 }) {
-  const { checked, disabled, indeterminate, depth } = useRowProps((row) => {
+  const { depth, checked } = useRowProps((row) => {
     return {
-      checked: row.getIsSelected(),
-      disabled: !row.getCanSelect(),
-      indeterminate: row.getIsSomeSelected(),
       depth: row.depth,
+      checked: row.getIsSelected(),
     };
   });
   const rowRef = useRowRef();
@@ -34,11 +32,14 @@ export function Cell({
     >
       {checkbox && (
         <Checkbox
-          getProps={() => ({
-            checked,
-            disabled,
-            indeterminate,
-          })}
+          getProps={() => {
+            const row = rowRef.current;
+            return {
+              checked: row.getIsSelected(),
+              disabled: !row.getCanSelect(),
+              indeterminate: row.getIsSomeSelected(),
+            };
+          }}
           onChange={() => {
             return () => rowRef.current.toggleSelected();
           }}

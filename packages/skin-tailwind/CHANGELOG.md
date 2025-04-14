@@ -1,5 +1,11 @@
 # @rttui/skin-tailwind
 
+## 0.0.20
+
+### Patch Changes
+
+- Fix checkbox component
+
 ## 0.0.19
 
 ### Patch Changes
