@@ -1,5 +1,11 @@
 # @rttui/skin-anocca
 
+## 1.0.28
+
+### Patch Changes
+
+- Move width from a sx prop to a style prop for better performance
+
 ## 1.0.27
 
 ### Patch Changes

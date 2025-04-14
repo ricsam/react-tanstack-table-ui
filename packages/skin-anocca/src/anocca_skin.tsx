@@ -310,9 +310,9 @@ const AnoccaSkin: Skin = {
           className="td"
           component="div"
           ref={ref}
+          style={{ width: isMeasuring ? "auto" : width }}
           sx={{
             height: "var(--row-height)",
-            width: isMeasuring ? "auto" : width,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -426,6 +426,7 @@ const TableHeaderCell = React.memo(
         className="th"
         data-header-id={headerId}
         data-is-pinned={isPinned}
+        style={{ width: isMeasuring ? "auto" : width }}
         sx={{
           transition: "background-color 0.2s ease",
           whiteSpace: "nowrap",
@@ -433,7 +434,6 @@ const TableHeaderCell = React.memo(
           display: "flex",
           overflow: "hidden",
           height: "var(--header-row-height)",
-          width: isMeasuring ? "auto" : width,
           position: "relative",
           flexShrink: 0,
           alignItems: "center",
