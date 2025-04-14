@@ -1,4 +1,4 @@
-import { StorybookEmbed } from "@/components/Storybook/StorybookEmbed";
+import { StorybookEmbed } from "@/components/storybook/storybook_embed";
 
 export function MuiStorybookPage() {
   return (

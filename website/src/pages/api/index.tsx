@@ -1,4 +1,4 @@
-import { CodeBlock } from "../../components/CodeBlock";
+import { CodeBlock } from "../../components/code_block";
 
 export function APIPage() {
   const tableExample = `import React from 'react';

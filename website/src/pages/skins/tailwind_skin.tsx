@@ -1,4 +1,4 @@
-import { CodeBlock } from "@/components/CodeBlock";
+import { CodeBlock } from "@/components/code_block";
 import { Link } from "@tanstack/react-router";
 
 export function TailwindSkinPage() {

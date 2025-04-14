@@ -13,7 +13,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { CodeBlock } from "../../components/CodeBlock";
+import { CodeBlock } from "../../components/code_block";
 
 type Prop = {
   id: string;

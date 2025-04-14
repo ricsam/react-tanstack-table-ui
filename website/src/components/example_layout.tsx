@@ -1,4 +1,4 @@
-import { PrimaryLinkButton } from "@/components/PrimaryLinkButton";
+import { PrimaryLinkButton } from "@/components/primary_link_button";
 
 interface ExampleProps {
   title: string;

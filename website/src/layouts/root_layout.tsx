@@ -5,7 +5,7 @@ import logoFullLight from "@/assets/logos/logo-full-light.svg";
 import logoIconDark from "@/assets/logos/logo-icon-dark.svg";
 import logoIconLight from "@/assets/logos/logo-icon-light.svg";
 import { useState, useEffect } from "react";
-import { SidebarSection } from "@/components/Sidebar/SidebarSection";
+import { SidebarSection } from "@/components/sidebar/sidebar_section";
 import { navigation } from "@/data/navigation";
 
 export function RootLayout() {
