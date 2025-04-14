@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import filenamesSimple from 'eslint-plugin-filenames-simple'
 
 export default tseslint.config(
-  { ignores: ['dist', '**/public/**/*', '**/storybook-static/**/*'] },
+  { ignores: ['**/dist/**/*', '**/public/**/*', '**/storybook-static/**/*'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -27,7 +27,9 @@ export default tseslint.config(
       ],
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      "filenames-simple/naming-convention": ["error", { "rule": "snake_case" }]
+      "filenames-simple/naming-convention": [
+        "error",
+        { "rule": "snake_case", "excepts": ["vite-env"] }]
     },
   },
 )
