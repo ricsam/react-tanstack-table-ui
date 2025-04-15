@@ -307,7 +307,7 @@ const PropGuard = React.memo(function PropGuard(
             });
           }
         });
-        let totalSize = 0;
+        let colAccumWidth = 0;
         const colsThatCanFill = new Set<Column<any, unknown>>();
 
         const getSize = (colId: string, col?: Column<any, unknown>) => {
@@ -319,34 +319,46 @@ const PropGuard = React.memo(function PropGuard(
           );
         };
 
+        let fixedWidth = 0;
         leafCols.forEach((colId) => {
           const tsCol = tableRef.current.getColumn(colId);
-          totalSize += contrainSize(getSize(colId, tsCol), tsCol);
+          const colSize = contrainSize(getSize(colId, tsCol), tsCol);
           if (
             tsCol &&
             tsCol?.columnDef.meta?.fillAvailableSpaceAfterCrush !== false
           ) {
+            colAccumWidth += colSize;
             colsThatCanFill.add(tsCol);
+          } else {
+            fixedWidth += colSize;
           }
         });
+        console.log(
+          Array.from(cols.values()).flatMap((col) =>
+            col ? Object.values(col).map((entry) => entry) : [],
+          ),
+        );
         if (
           refs.current.props.fillAvailableSpaceAfterCrush &&
-          totalSize < totalWidth
+          colAccumWidth < totalWidth - fixedWidth
         ) {
           let totalWhenColsAreConstrained = 0;
           const nonConstrainedCols = new Set<Column<any, unknown>>();
-          const delta = totalWidth - totalSize;
+          const delta = totalWidth - fixedWidth - colAccumWidth;
           const perColumnDelta = delta / colsThatCanFill.size;
+          // step 1, expand each col that doesn't have fillAvailableSpaceAfterCrush set to false
           colsThatCanFill.forEach((col) => {
             const newSize = getSize(col.id, col) + perColumnDelta;
             newSizing[col.id] = contrainSize(newSize, col);
             totalWhenColsAreConstrained += newSizing[col.id];
             if (newSize === newSizing[col.id]) {
+              // these are cols without a maxSize
               nonConstrainedCols.add(col);
             }
           });
-          if (totalWhenColsAreConstrained < totalWidth) {
-            const diff = totalWidth - totalWhenColsAreConstrained;
+          // step 2, if columns have a maxSize, then we need a second pass to expand the cols that don't have a maxSize
+          if (totalWhenColsAreConstrained < totalWidth - fixedWidth) {
+            const diff = totalWidth - fixedWidth - totalWhenColsAreConstrained;
             const perCol = diff / nonConstrainedCols.size;
             nonConstrainedCols.forEach((col) => {
               newSizing[col.id] += perCol;

@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.27
+
+### Patch Changes
+
+- fix issue with fillAvailableSpaceAfterCrush
+
 ## 1.0.26
 
 ### Patch Changes
