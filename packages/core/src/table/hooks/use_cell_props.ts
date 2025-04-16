@@ -3,11 +3,11 @@ import React from "react";
 
 import { VirtualCellContext } from "../contexts/virtual_cell_context";
 import { VirtualCell } from "../types";
-import { useTableProps } from "./use_table_props";
+import { useTableProps, UseTablePropsOptions } from "./use_table_props";
 
 export const useCellProps = <T>(
   callback: (cell: VirtualCell, table: Table<any>) => T,
-  arePropsEqual?: (prev: T, next: T) => boolean,
+  options?: UseTablePropsOptions<T>,
 ) => {
   const context = React.useContext(VirtualCellContext);
   if (!context) {
@@ -15,5 +15,5 @@ export const useCellProps = <T>(
   }
   return useTableProps((table) => {
     return callback(context, table);
-  }, arePropsEqual);
+  }, options);
 };

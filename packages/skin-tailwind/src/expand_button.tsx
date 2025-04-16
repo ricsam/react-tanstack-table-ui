@@ -1,7 +1,8 @@
 import { useRowProps, useRowRef } from "@rttui/core";
 
 export function ExpandButton() {
-  const { canExpand, isExpanded } = useRowProps((row) => {
+  const { canExpand, isExpanded } = useRowProps((vrow) => {
+    const row = vrow.row();
     return {
       canExpand: row.getCanExpand(),
       isExpanded: row.getIsExpanded(),

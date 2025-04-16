@@ -3,18 +3,16 @@ import {
   CellContext,
   Header,
   HeaderContext,
-  HeaderGroup,
   Row,
 } from "@tanstack/react-table";
 import { Virtualizer } from "@tanstack/react-virtual";
-import { CSSProperties } from "react";
 import { MeasuredCell } from "../measure_cell_context";
+import { HorOffsets } from "./cols/col_virtualizer_type";
 
 export type PinPos = false | "start" | "end";
 export type CombinedHeaderGroup = {
   id: string;
-  headers: () => Header<any, unknown>[];
-  headerGroups: () => HeaderGroup<any>[];
+  headers: Header<any, unknown>[];
 };
 
 export type CellRefs = Record<
@@ -47,31 +45,29 @@ export type ShouldUpdate = {
 export type VirtualCell = {
   id: string;
   cell: () => Cell<any, any>;
-  dndStyle: CSSProperties;
   vheader: VirtualHeaderCell;
 };
 
 export type VirtualRow = {
   id: string;
-  dndStyle: CSSProperties;
   row: () => Row<any>;
-  isDragging: boolean;
-  isPinned: PinPos;
+  isPinned: () => PinPos;
   flatIndex: number;
-  cells: VirtualCell[];
+  getCells: () => VirtualCell[];
   rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
 };
 
 export type VirtualHeaderCell = {
   id: string;
   type: "header" | "footer";
-  isDragging: boolean;
-  isPinned: PinPos;
-  width: number;
-  dndStyle: CSSProperties;
   columnId: string;
   headerIndex: number;
   header: () => Header<any, any>;
+  getState: () => VirtualHeaderCellState;
+};
+
+export type VirtualHeaderCellState = {
+  width: number;
   start: number;
   end: number;
   isLastPinned: boolean;
@@ -80,11 +76,12 @@ export type VirtualHeaderCell = {
   isFirst: boolean;
   isFirstCenter: boolean;
   isLastCenter: boolean;
+  isPinned: PinPos;
 };
-
 export type VirtualHeaderGroup = {
   id: string;
-  offsetLeft: number;
-  offsetRight: number;
-  headers: VirtualHeaderCell[];
+  type: "header" | "footer";
+  getHeaders: () => VirtualHeaderCell[];
+  getOffsets: () => HorOffsets;
+  getVirtualizer: () => Virtualizer<HTMLDivElement, Element>;
 };

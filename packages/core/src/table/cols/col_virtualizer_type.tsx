@@ -1,15 +1,12 @@
 import { VirtualHeaderGroup } from "../types";
 
-type Position = { x: number; y: number };
+export type HorOffsets = {
+  offsetLeft: number;
+  offsetRight: number;
+};
 
 export type ColVirtualizerType = {
-  onDragStart: (headerId: string) => void;
-  setIsDragging: (props: {
-    headerId: string;
-    mouseStart: Position;
-    itemPos: Position;
-  }) => void;
-  footerGroups: VirtualHeaderGroup[];
-  headerGroups: VirtualHeaderGroup[];
-  mainHeaderGroup: VirtualHeaderGroup;
+  getFooterGroups: () => VirtualHeaderGroup[];
+  getHeaderGroups: () => VirtualHeaderGroup[];
+  getMainHeaderGroup: () => VirtualHeaderGroup;
 };

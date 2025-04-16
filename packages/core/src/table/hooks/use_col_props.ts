@@ -3,7 +3,7 @@ import React from "react";
 import { VirtualCellContext } from "../contexts/virtual_cell_context";
 import { VirtualHeaderCellContext } from "../contexts/virtual_header_cell_context";
 import { VirtualHeaderCell } from "../types";
-import { useTableProps } from "./use_table_props";
+import { useTableProps, UseTablePropsOptions } from "./use_table_props";
 
 export const useColProps = <T>(
   callback: (props: {
@@ -12,7 +12,7 @@ export const useColProps = <T>(
     table: Table<any>;
     column: Column<any, any>;
   }) => T,
-  arePropsEqual?: (prev: T, next: T) => boolean,
+  options?: UseTablePropsOptions<T>,
 ): T => {
   const headerContext = React.useContext(VirtualHeaderCellContext);
   const cellContext = React.useContext(VirtualCellContext);
@@ -34,5 +34,5 @@ export const useColProps = <T>(
       table,
       column: headerInstance.column,
     });
-  }, arePropsEqual);
+  }, options);
 };

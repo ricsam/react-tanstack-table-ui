@@ -14,6 +14,7 @@ import {
   Skin,
   useCellProps,
   useColProps,
+  useRowProps,
   useTableContext,
   useTableCssVars,
 } from "@rttui/core";
@@ -191,42 +192,42 @@ const AnoccaSkin: Skin = {
     );
   },
 
-  TableRowWrapper: React.forwardRef(
-    ({ children, flatIndex, dndStyle }, ref) => {
-      const theme = useTheme();
-      const backgroundColor = (theme: Theme) => {
-        const baseColor =
-          flatIndex % 2 === 0
-            ? theme.palette.background.paper
-            : theme.palette.mode === "dark"
-              ? theme.palette.grey[900]
-              : theme.palette.grey[100];
-        return baseColor;
-      };
+  TableRowWrapper: React.forwardRef(({ children }, ref) => {
+    const theme = useTheme();
+    const { flatIndex } = useRowProps((row) => {
+      return { flatIndex: row.flatIndex };
+    });
+    const backgroundColor = (theme: Theme) => {
+      const baseColor =
+        flatIndex % 2 === 0
+          ? theme.palette.background.paper
+          : theme.palette.mode === "dark"
+            ? theme.palette.grey[900]
+            : theme.palette.grey[100];
+      return baseColor;
+    };
 
-      const vars: Record<string, string> = {
-        "--row-background-color": backgroundColor(theme),
-      };
+    const vars: Record<string, string> = {
+      "--row-background-color": backgroundColor(theme),
+    };
 
-      return (
-        <Box
-          sx={{
-            ...dndStyle,
-            ...vars,
-            width: "var(--table-width)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "stretch",
-          }}
-          data-index={flatIndex}
-          ref={ref}
-        >
-          {children}
-        </Box>
-      );
-    },
-  ),
+    return (
+      <Box
+        sx={{
+          ...vars,
+          width: "var(--table-width)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          alignItems: "stretch",
+        }}
+        data-index={flatIndex}
+        ref={ref}
+      >
+        {children}
+      </Box>
+    );
+  }),
   TableRow: ({ children }) => {
     return (
       <TableRow
@@ -290,18 +291,20 @@ const AnoccaSkin: Skin = {
         isSomeColumnsPinnedRight,
       } = useCellProps(
         (cell, table) => {
-          const vheader = cell.vheader;
+          const state = cell.vheader.getState();
           return {
-            isPinned: vheader.isPinned,
-            isLastPinned: vheader.isLastPinned,
-            isLast: vheader.isLast,
-            isLastCenter: vheader.isLastCenter,
-            width: vheader.width,
+            isPinned: state.isPinned,
+            isLastPinned: state.isLastPinned,
+            isLast: state.isLast,
+            isLastCenter: state.isLastCenter,
+            width: state.width,
             isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
           };
         },
-        (prev, next) => {
-          return shallowEqual(prev, next, ["content"]);
+        {
+          arePropsEqual: (prev, next) => {
+            return shallowEqual(prev, next, ["content"]);
+          },
         },
       );
 
@@ -408,14 +411,15 @@ const TableHeaderCell = React.memo(
       isLastPinned,
       isLastCenter,
     } = useColProps(({ vheader, table }) => {
+      const state = vheader.getState();
       return {
         isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
         headerId: vheader.id,
-        isPinned: vheader.isPinned,
-        width: vheader.width,
-        isLast: vheader.isLast,
-        isLastPinned: vheader.isLastPinned,
-        isLastCenter: vheader.isLastCenter,
+        isPinned: state.isPinned,
+        width: state.width,
+        isLast: state.isLast,
+        isLastPinned: state.isLastPinned,
+        isLastCenter: state.isLastCenter,
       };
     });
 

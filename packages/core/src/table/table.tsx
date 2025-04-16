@@ -66,7 +66,7 @@ function TablePropsProviderWrapper(props: ReactTanstackTableUiProps<any>) {
   const { table } = props;
 
   const context = useTablePropsContext();
-  const { triggerTableUpdate } = context;
+  const { updateTable } = context;
   // validate props
   if (table.getIsSomeColumnsPinned() && !table.options.enableColumnPinning) {
     throw new Error(
@@ -75,9 +75,9 @@ function TablePropsProviderWrapper(props: ReactTanstackTableUiProps<any>) {
   }
 
   // update the useTableProps hooks when the table state changes
-  triggerTableUpdate(props.table, false);
+  updateTable(props.table, false);
   React.useLayoutEffect(() => {
-    triggerTableUpdate(props.table, true);
+    updateTable(props.table, true);
   });
 
   const entryRefOb = {
@@ -333,11 +333,7 @@ const PropGuard = React.memo(function PropGuard(
             fixedWidth += colSize;
           }
         });
-        console.log(
-          Array.from(cols.values()).flatMap((col) =>
-            col ? Object.values(col).map((entry) => entry) : [],
-          ),
-        );
+
         if (
           refs.current.props.fillAvailableSpaceAfterCrush &&
           colAccumWidth < totalWidth - fixedWidth
@@ -595,47 +591,73 @@ const Content = React.memo(function Content({
 }: {
   isMeasuring: boolean;
 }) {
-  const { skin, crushMinSizeBy } = useTableContext();
-  const { rows, offsetBottom, offsetTop, offsetLeft, offsetRight } =
-    useRowVirtualizer();
-  const { footerGroups, headerGroups } = useColVirtualizer();
+  const tableContext = useTableContext();
+  const rowVirtualizer = useRowVirtualizer();
+  const colVirtualizer = useColVirtualizer();
+  const crushMinSizeBy = useTableProps(
+    () => {
+      const crushMinSizeBy = tableContext.crushMinSizeBy;
+      for (const group of [
+        ...colVirtualizer.getFooterGroups(),
+        ...colVirtualizer.getHeaderGroups(),
+      ]) {
+        const headerGroups = group.getHeaders();
+        for (const header of headerGroups) {
+          const headerInstance = header.header();
+          const hCrushMinSizeBy = headerInstance.column.columnDef.meta?.crushMinSizeBy;
+          if (hCrushMinSizeBy && crushMinSizeBy !== hCrushMinSizeBy) {
+            return "both";
+          }
+          //#region maybe unnecessary
+          const getAncestor = (col: Column<any>): Column<any> => {
+            const parent = col.parent;
+            if (parent) {
+              return getAncestor(parent);
+            }
+            return col;
+          };
+          const ancestor = getAncestor(headerInstance.column);
+          const children = ancestor.getFlatColumns();
+          for (const child of children) {
+            const hCrushMinSizeBy = child.columnDef.meta?.crushMinSizeBy;
+            if (hCrushMinSizeBy && crushMinSizeBy !== hCrushMinSizeBy) {
+              return "both";
+            }
+          }
+          //#endregion
+        }
+      }
+      return crushMinSizeBy;
+    },
+    {
+      arePropsEqual: (prev, next) => {
+        return prev === next;
+      },
+      dependencies: [
+        "table",
+        "col_visible_range_footer",
+        "col_visible_range_header",
+      ],
+    },
+  );
 
   let tableHeader: React.ReactNode | undefined;
   let tableBody: React.ReactNode | undefined;
   let tableFooter: React.ReactNode | undefined;
 
-  if (headerGroups.length > 0 && (!isMeasuring || crushMinSizeBy !== "cell")) {
-    tableHeader = (
-      <skin.TableHeader>
-        {headerGroups.map((headerGroup) => {
-          return (
-            <HeaderGroup key={headerGroup.id} {...headerGroup} type="header" />
-          );
-        })}
-      </skin.TableHeader>
-    );
+  if (!isMeasuring || crushMinSizeBy !== "cell") {
+    tableHeader = <TableHeaderGroups type="header" />;
   }
 
-  if (footerGroups.length > 0 && (!isMeasuring || crushMinSizeBy !== "cell")) {
-    tableFooter = (
-      <skin.TableFooter>
-        {footerGroups.map((footerGroup) => {
-          return (
-            <HeaderGroup key={footerGroup.id} {...footerGroup} type="footer" />
-          );
-        })}
-      </skin.TableFooter>
-    );
+  if (!isMeasuring || crushMinSizeBy !== "cell") {
+    tableFooter = <TableHeaderGroups type="footer" />;
   }
 
-  if (rows.length > 0 && (!isMeasuring || crushMinSizeBy !== "header")) {
+  if (!isMeasuring || crushMinSizeBy !== "header") {
     tableBody = (
       <TableBody
-        rows={rows}
-        offsetBottom={offsetBottom}
-        offsetTop={offsetTop}
-        offsetLeft={offsetLeft}
-        offsetRight={offsetRight}
+        getRows={rowVirtualizer.getRows}
+        getVerOffsets={rowVirtualizer.getVerticalOffsets}
       ></TableBody>
     );
   }
@@ -646,5 +668,38 @@ const Content = React.memo(function Content({
       {tableBody}
       {tableFooter}
     </>
+  );
+});
+
+const TableHeaderGroups = React.memo(function TableHeaderGroups({
+  type,
+}: {
+  type: "header" | "footer";
+}) {
+  const { skin } = useTableContext();
+  const colVirtualizer = useColVirtualizer();
+
+  const { headerGroups } = useTableProps(
+    () => {
+      const headerGroups =
+        type === "header"
+          ? colVirtualizer.getHeaderGroups()
+          : colVirtualizer.getFooterGroups();
+      return { headerGroups };
+    },
+    {
+      dependencies: ["table"],
+    },
+  );
+  if (headerGroups.length === 0) {
+    return null;
+  }
+  const Wrapper = type === "header" ? skin.TableHeader : skin.TableFooter;
+  return (
+    <Wrapper>
+      {headerGroups.map((headerGroup) => {
+        return <HeaderGroup key={headerGroup.id} headerGroup={headerGroup} />;
+      })}
+    </Wrapper>
   );
 });

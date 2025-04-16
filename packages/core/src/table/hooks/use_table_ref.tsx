@@ -10,9 +10,9 @@ export const useTableRef = () => {
     const listener = (table: Table<any>) => {
       tableRef.current = table;
     };
-    context.tableUpdateListeners.add(listener);
+    context.updateListeners.table.add(listener);
     return () => {
-      context.tableUpdateListeners.delete(listener);
+      context.updateListeners.table.delete(listener);
     };
   }, [context]);
 

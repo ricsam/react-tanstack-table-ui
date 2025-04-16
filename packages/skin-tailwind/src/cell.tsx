@@ -18,7 +18,8 @@ export function Cell({
   pinButtons?: boolean;
   highlightSelected?: boolean;
 }) {
-  const { depth, checked } = useRowProps((row) => {
+  const { depth, checked } = useRowProps((vrow) => {
+    const row = vrow.row();
     return {
       depth: row.depth,
       checked: row.getIsSelected(),

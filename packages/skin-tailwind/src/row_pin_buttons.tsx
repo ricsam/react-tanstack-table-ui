@@ -1,7 +1,8 @@
 import { useRowProps, useRowRef } from "@rttui/core";
 
 export function RowPinButtons() {
-  const { canPin, isPinned } = useRowProps((row) => {
+  const { canPin, isPinned } = useRowProps((vrow) => {
+    const row = vrow.row();
     return {
       canPin: row.getCanPin(),
       isPinned: row.getIsPinned(),

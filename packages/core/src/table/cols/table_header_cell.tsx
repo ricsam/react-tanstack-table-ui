@@ -27,22 +27,25 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
         isPlaceholder: headerInstance.isPlaceholder,
       };
     },
-    (prev, next) => {
-      const shouldUpdateFn = refs.current.shouldUpdate?.header;
-      if (shouldUpdateFn) {
-        const arePropsEqual = shouldUpdateFn(
-          prev.headerContext,
-          next.headerContext,
-        )
-          ? false
-          : true;
-        return arePropsEqual;
-      }
+    {
+      arePropsEqual: (prev, next) => {
+        const shouldUpdateFn = refs.current.shouldUpdate?.header;
+        if (shouldUpdateFn) {
+          const arePropsEqual = shouldUpdateFn(
+            prev.headerContext,
+            next.headerContext,
+          )
+            ? false
+            : true;
+          return arePropsEqual;
+        }
 
-      // shallow equal will not work because the objects will always be different
-      // so we always return false to always re-render and if the user wants
-      // better performance they can return true in the shouldUpdate function
-      return false;
+        // shallow equal will not work because the objects will always be different
+        // so we always return false to always re-render and if the user wants
+        // better performance they can return true in the shouldUpdate function
+        return false;
+      },
+      dependencies: ["table"],
     },
   );
 

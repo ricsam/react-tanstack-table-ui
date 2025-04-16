@@ -1,21 +1,15 @@
 import { Virtualizer } from "@tanstack/react-virtual";
+import { HorOffsets } from "../cols/col_virtualizer_type";
 import { VirtualRow } from "../types";
 
-type DragState = {
-  rowId: string;
-  mouseStart: { x: number; y: number };
-  itemPos: { x: number; y: number };
+export type VerOffsets = {
+  offsetTop: number;
+  offsetBottom: number;
 };
 
 export type RowVirtualizerContextType = {
   rowVirtualizer: Virtualizer<any, any>;
-  rows: VirtualRow[];
-  offsetBottom: number;
-  offsetTop: number;
-  setIsDragging: (dragState: DragState) => void;
-  moveResult: any;
-  offsetLeft: number;
-  offsetRight: number;
+  getRows: () => VirtualRow[];
+  getHorizontalOffsets: () => HorOffsets;
+  getVerticalOffsets: () => VerOffsets;
 };
-
-

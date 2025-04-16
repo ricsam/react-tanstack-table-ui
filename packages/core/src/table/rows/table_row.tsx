@@ -1,33 +1,17 @@
 import React from "react";
-import { useTableProps } from "../hooks/use_table_props";
 import { TableCell } from "../cols/table_cell";
 import { VirtualRowContext } from "../contexts/virtual_row_context";
+import { useRowVirtualizer } from "../hooks/use_row_virtualizer";
+import { useTableProps } from "../hooks/use_table_props";
 import { useTableContext } from "../table_context";
-import { VirtualRow, VirtualCell } from "../types";
+import { PinPos, VirtualCell, VirtualRow } from "../types";
 
-export const TableRow = function TableRow({
-  row,
-  offsetLeft,
-  offsetRight,
-}: {
-  row: VirtualRow;
-  offsetLeft: number;
-  offsetRight: number;
-}) {
-  const { dndStyle, isDragging, flatIndex, isPinned, cells, rowVirtualizer } =
-    row;
+export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
+  const { getCells, rowVirtualizer } = row;
+  const { getHorizontalOffsets } = useRowVirtualizer();
   const { skin, renderSubComponent, pinColsRelativeTo } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
 
-  const loop = (cells: VirtualCell[]) => {
-    return (
-      <>
-        {cells.map((virtualCell) => {
-          return <TableCell key={virtualCell.id} cell={virtualCell} />;
-        })}
-      </>
-    );
-  };
   const { isExpanded, subComponent } = useTableProps(() => {
     const subRowsLength = row.row().subRows.length;
     const rowIsExpanded = row.row().getIsExpanded();
@@ -45,17 +29,24 @@ export const TableRow = function TableRow({
     return { isExpanded, subComponent };
   });
 
-  const pinnedLeft = cells.filter((cell) => cell.vheader.isPinned === "start");
-  const pinnedRight = cells.filter((cell) => cell.vheader.isPinned === "end");
+  const { offsetLeft, offsetRight } = useTableProps(
+    () => {
+      const { offsetLeft, offsetRight } = getHorizontalOffsets();
+      return {
+        offsetLeft,
+        offsetRight,
+      };
+    },
+    {
+      dependencies: ["table", "col_offsets"],
+    },
+  );
 
   return (
     <>
       <VirtualRowContext.Provider value={row}>
         <skin.TableRowWrapper
-          isDragging={isDragging}
-          isPinned={isPinned}
-          flatIndex={flatIndex}
-          dndStyle={dndStyle}
+          flatIndex={row.flatIndex}
           ref={(el) => {
             rowRef.current = el;
             if (isExpanded) {
@@ -63,23 +54,15 @@ export const TableRow = function TableRow({
             }
           }}
         >
-          <skin.TableRow
-            isDragging={isDragging}
-            isPinned={isPinned}
-            flatIndex={flatIndex}
-          >
-            {pinnedLeft.length > 0 && (
-              <skin.PinnedCols position="left" type={"body"}>
-                {loop(pinnedLeft)}
-              </skin.PinnedCols>
-            )}
+          <skin.TableRow flatIndex={row.flatIndex}>
+            <ColSlice getCells={getCells} pinPos="start" />
             <div
               style={{
                 minWidth: offsetLeft,
                 flexShrink: 0,
               }}
             ></div>
-            {loop(cells.filter((cell) => !cell.vheader.isPinned))}
+            <ColSlice getCells={getCells} pinPos={false} />
             <div
               style={
                 pinColsRelativeTo === "table"
@@ -94,11 +77,7 @@ export const TableRow = function TableRow({
                     }
               }
             ></div>
-            {pinnedRight.length > 0 && (
-              <skin.PinnedCols position="right" type={"body"}>
-                {loop(pinnedRight)}
-              </skin.PinnedCols>
-            )}
+            <ColSlice getCells={getCells} pinPos="end" />
           </skin.TableRow>
           {isExpanded && (
             <skin.TableRowExpandedContent>
@@ -109,4 +88,59 @@ export const TableRow = function TableRow({
       </VirtualRowContext.Provider>
     </>
   );
+};
+
+const ColSlice = ({
+  getCells,
+  pinPos,
+}: {
+  getCells: () => VirtualCell[];
+  pinPos: PinPos;
+}) => {
+  const { skin } = useTableContext();
+  const { cells } = useTableProps(
+    () => {
+      let cacheKey = "";
+      const cells = getCells().filter((cell) => {
+        const result = cell.vheader.getState().isPinned === pinPos;
+        if (result) {
+          cacheKey += `${cell.id},`;
+        }
+        return result;
+      });
+      return { cells, cacheKey };
+    },
+    {
+      dependencies: ["table", `col_visible_range_main`],
+      arePropsEqual: (prev, next) => {
+        return prev.cacheKey === next.cacheKey;
+      },
+    },
+  );
+
+  if (cells.length === 0) {
+    return null;
+  }
+  const base = (
+    <>
+      {cells.map((cell) => {
+        return <TableCell key={cell.id} cell={cell} />;
+      })}
+    </>
+  );
+  if (pinPos === "start") {
+    return (
+      <skin.PinnedCols position="left" type={"body"}>
+        {base}
+      </skin.PinnedCols>
+    );
+  }
+  if (pinPos === "end") {
+    return (
+      <skin.PinnedCols position="right" type={"body"}>
+        {base}
+      </skin.PinnedCols>
+    );
+  }
+  return base;
 };

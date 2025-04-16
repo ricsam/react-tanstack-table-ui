@@ -1,41 +1,39 @@
 import React from "react";
 import { useTableContext } from "../table_context";
-import { TableHeaderCell } from "./table_header_cell";
-import { VirtualHeaderGroup, VirtualHeaderCell } from "../types";
+import { VirtualHeaderGroup } from "../types";
+import { HeaderColsSlice } from "./header_cols_slice";
+import { useTableProps } from "../hooks/use_table_props";
 
 export const HeaderGroup = React.memo(function HeaderGroup({
-  offsetLeft,
-  offsetRight,
-  headers,
-  type,
-}: VirtualHeaderGroup & {
-  type: "header" | "footer";
+  headerGroup,
+}: {
+  headerGroup: VirtualHeaderGroup;
 }) {
-  const loop = (headers: VirtualHeaderCell[]) => {
-    const draggableHeader = (
-      <>
-        {headers.map((header) => {
-          return <TableHeaderCell key={header.id} header={header} />;
-        })}
-      </>
-    );
-
-    return draggableHeader;
-  };
-
-  const pinnedLeft = headers.filter((header) => header.isPinned === "start");
-  const pinnedRight = headers.filter((header) => header.isPinned === "end");
   const { skin, pinColsRelativeTo } = useTableContext();
+  const { offsetLeft, offsetRight } = useTableProps(
+    () => {
+      const { offsetLeft, offsetRight } = headerGroup.getOffsets();
+      return {
+        offsetLeft,
+        offsetRight,
+      };
+    },
+    {
+      dependencies: ["table", "col_offsets"],
+    },
+  );
+  const { type } = headerGroup;
+  const headerGroupRef = React.useRef(headerGroup);
+
+  const getHeaders = React.useCallback(() => {
+    return headerGroupRef.current.getHeaders();
+  }, []);
 
   return (
     <skin.HeaderRow type={type}>
-      {pinnedLeft.length > 0 && (
-        <skin.PinnedCols position="left" type={type}>
-          {loop(pinnedLeft)}
-        </skin.PinnedCols>
-      )}
+      <HeaderColsSlice type={type} pinPos="start" getHeaders={getHeaders} />
       <div style={{ width: offsetLeft, flexShrink: 0 }}></div>
-      {loop(headers.filter((header) => header.isPinned === false))}
+      <HeaderColsSlice type={type} pinPos={false} getHeaders={getHeaders} />
       <div
         style={
           pinColsRelativeTo === "table"
@@ -50,11 +48,7 @@ export const HeaderGroup = React.memo(function HeaderGroup({
               }
         }
       ></div>
-      {pinnedRight.length > 0 && (
-        <skin.PinnedCols position="right" type={type}>
-          {loop(pinnedRight)}
-        </skin.PinnedCols>
-      )}
+      <HeaderColsSlice type={type} pinPos="end" getHeaders={getHeaders} />
     </skin.HeaderRow>
   );
 });

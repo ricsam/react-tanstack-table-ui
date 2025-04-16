@@ -19,14 +19,15 @@ export const TableHeaderCell = React.memo(
       isLastCenter,
       columnId,
     } = useColProps(({ vheader, table }) => {
+      const state = vheader.getState();
       return {
         isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
         headerId: vheader.id,
-        isPinned: vheader.isPinned,
-        width: vheader.width,
-        isLast: vheader.isLast,
-        isLastPinned: vheader.isLastPinned,
-        isLastCenter: vheader.isLastCenter,
+        isPinned: state.isPinned,
+        width: state.width,
+        isLast: state.isLast,
+        isLastPinned: state.isLastPinned,
+        isLastCenter: state.isLastCenter,
         columnId: vheader.columnId,
       };
     });

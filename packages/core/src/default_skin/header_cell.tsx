@@ -10,10 +10,8 @@ export const HeaderCell = React.memo(
     }
   >(({ isMeasuring, children }, ref) => {
     const {
-      isDragging,
       isPinned,
       width,
-      dndStyle,
       headerIndex,
       headerId,
       canDrag,
@@ -24,16 +22,15 @@ export const HeaderCell = React.memo(
       const canDrag = header.isPlaceholder ? false : true;
       const canPin = header.column.getCanPin();
       const canResize = header?.column.getCanResize();
+      const state = vheader.getState();
 
       return {
         canDrag,
         canPin,
         canResize,
-        isDragging: vheader.isDragging,
         isResizing: column.getIsResizing(),
-        isPinned: vheader.isPinned,
-        width: vheader.width,
-        dndStyle: vheader.dndStyle,
+        isPinned: state.isPinned,
+        width: state.width,
         headerIndex: vheader.headerIndex,
         headerId: vheader.id,
         isPlaceholder: header.isPlaceholder,
@@ -47,10 +44,10 @@ export const HeaderCell = React.memo(
         data-header-index={headerIndex}
         data-header-id={headerId}
         style={{
-          opacity: isDragging ? 0.8 : 1,
+          opacity: 1,
           transition: "none",
           whiteSpace: "nowrap",
-          zIndex: isDragging || isPinned ? 1 : 0,
+          zIndex: isPinned ? 1 : 0,
           display: "flex",
           overflow: "hidden",
           width: isMeasuring ? "auto" : width,
@@ -64,7 +61,6 @@ export const HeaderCell = React.memo(
           borderRight: "1px solid var(--table-border-color)",
           fontWeight: "600",
           alignItems: "center",
-          ...dndStyle,
         }}
       >
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>

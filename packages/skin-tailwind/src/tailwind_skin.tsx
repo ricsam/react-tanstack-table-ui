@@ -168,15 +168,13 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  TableRowWrapper: React.forwardRef(
-    ({ children, flatIndex, dndStyle }, ref) => {
-      return (
-        <div data-index={flatIndex} ref={ref} style={dndStyle}>
-          {children}
-        </div>
-      );
-    },
-  ),
+  TableRowWrapper: React.forwardRef(({ children, flatIndex }, ref) => {
+    return (
+      <div data-index={flatIndex} ref={ref}>
+        {children}
+      </div>
+    );
+  }),
   TableRow: ({ children, flatIndex }) => {
     const vars: Record<string, string> = {
       "--table-cell-bg":
@@ -226,24 +224,27 @@ export const TailwindSkin: Skin = {
         columnId,
       } = useCellProps((cell) => {
         const vheader = cell.vheader;
+        const state = vheader.getState();
         return {
-          isFirst: vheader.isFirst,
-          isPinned: vheader.isPinned,
-          isLastPinned: vheader.isLastPinned,
-          width: vheader.width,
+          isFirst: state.isFirst,
+          isPinned: state.isPinned,
+          isLastPinned: state.isLastPinned,
+          width: state.width,
           columnId: vheader.columnId,
-          isLast: vheader.isLast,
-          isLastCenter: vheader.isLastCenter,
+          isLast: state.isLast,
+          isLastCenter: state.isLastCenter,
         };
       });
 
-      const { selected, isSomeColumnsPinnedRight } = useRowProps((row, table) => {
-        const selected = row.getIsSelected();
-        return {
-          selected,
-          isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
-        };
-      });
+      const { selected, isSomeColumnsPinnedRight } = useRowProps(
+        (row, table) => {
+          const selected = row.row().getIsSelected();
+          return {
+            selected,
+            isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
+          };
+        },
+      );
 
       return (
         <div

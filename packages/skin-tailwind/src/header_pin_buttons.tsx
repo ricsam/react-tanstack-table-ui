@@ -2,7 +2,10 @@ import { useColProps, useColRef } from "@rttui/core";
 
 export function HeaderPinButtons() {
   const { isPinned } = useColProps(({ vheader, column }) => {
-    return { isPinned: vheader.isPinned, canPin: column.getCanPin };
+    return {
+      isPinned: vheader.getState().isPinned,
+      canPin: column.getCanPin(),
+    };
   });
 
   const colRef = useColRef();

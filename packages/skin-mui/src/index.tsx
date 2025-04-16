@@ -15,6 +15,7 @@ import {
   useCellProps,
   useColProps,
   useColRef,
+  useRowProps,
   useTableContext,
   useTableCssVars,
   useTableProps,
@@ -188,22 +189,19 @@ const MuiSkin: Skin = {
       </Box>
     );
   },
-  TableRowWrapper: React.forwardRef(
-    ({ children, flatIndex, dndStyle }, ref) => {
-      return (
-        <Box
-          sx={{
-            ...dndStyle,
-          }}
-          data-index={flatIndex}
-          ref={ref}
-        >
-          {children}
-        </Box>
-      );
-    },
-  ),
-  TableRow: ({ children, isPinned, flatIndex }) => {
+  TableRowWrapper: React.forwardRef(({ children, flatIndex }, ref) => {
+    return (
+      <Box data-index={flatIndex} ref={ref}>
+        {children}
+      </Box>
+    );
+  }),
+  TableRow: ({ children, flatIndex }) => {
+    const { isPinned } = useRowProps((row) => {
+      return {
+        isPinned: row.isPinned(),
+      };
+    });
     return (
       <TableRow
         component="div"
@@ -258,9 +256,10 @@ const MuiSkin: Skin = {
   },
   Cell: React.forwardRef(({ isMeasuring, children }, ref) => {
     const { isPinned, width } = useCellProps((cell) => {
+      const state = cell.vheader.getState();
       return {
-        isPinned: cell.vheader.isPinned,
-        width: cell.vheader.width,
+        isPinned: state.isPinned,
+        width: state.width,
       };
     });
     return (
@@ -306,12 +305,13 @@ const TableHeaderCell = React.memo(
   >(({ isMeasuring, children }, ref) => {
     const { headerId, isPinned, width, canPin, canResize } = useColProps(
       ({ header, vheader }) => {
+        const state = vheader.getState();
         const canPin = header?.column.getCanPin();
         const canResize = header?.column.getCanResize();
         return {
           headerId: vheader.id,
-          isPinned: vheader.isPinned,
-          width: vheader.width,
+          isPinned: state.isPinned,
+          width: state.width,
           canPin,
           canResize,
         };

@@ -5,16 +5,16 @@ import {
   useVirtualizer,
   Virtualizer,
 } from "@tanstack/react-virtual";
-import React, { CSSProperties } from "react";
-import { useTableRef } from "../hooks/use_table_ref";
+import React from "react";
+import { RowVirtualizerContext } from "../contexts/row_virtualizer_context";
 import { useColVirtualizer } from "../hooks/use_col_virtualizer";
+import { useTableProps } from "../hooks/use_table_props";
+import { useTableRef } from "../hooks/use_table_ref";
+import { useTriggerTablePropsUpdate } from "../hooks/use_trigger_table_props_update";
 import { useTableContext } from "../table_context";
 import { VirtualCell, VirtualRow } from "../types";
-import { VirtualRowCache } from "./virtual_row_cache";
-import { RowVirtualizerContext } from "../contexts/row_virtualizer_context";
 import { RowVirtualizerContextType } from "./row_virtualizer_context_type";
-import { useTableProps } from "../hooks/use_table_props";
-const dndStyle: CSSProperties = {};
+import { Cell } from "@tanstack/react-table";
 
 export const VirtualRowProvider = ({
   children,
@@ -55,7 +55,7 @@ export const VirtualRowProvider = ({
   }
   */
 
-  const { mainHeaderGroup } = useColVirtualizer();
+  const { getMainHeaderGroup } = useColVirtualizer();
 
   const { allRows } = useTableProps((table) => {
     const allRows = table.getRowModel().rows;
@@ -68,9 +68,19 @@ export const VirtualRowProvider = ({
 
   const tableRef = useTableRef();
 
-  const _refs = { rowIds };
+  const _refs = {
+    rowIds,
+    getMainHeaderGroup,
+    getTable: () => tableRef.current,
+  };
   const refs = React.useRef(_refs);
   refs.current = _refs;
+
+  // we need to trigger a re-render the virtualizer when the table instance updates
+  useTableProps(() => ({}), {
+    dependencies: ["table"],
+    arePropsEqual: () => true,
+  });
 
   const rowVirtualizer = useVirtualizer({
     count: allRows.length,
@@ -95,101 +105,189 @@ export const VirtualRowProvider = ({
       [skin.rowHeight],
     ),
     overscan: config.rowOverscan,
-    rangeExtractor: React.useCallback(
-      (range: Range): number[] => {
-        const defaultRange = defaultRangeExtractor(range);
-        const next = new Set(defaultRange);
+    rangeExtractor: React.useCallback((range: Range): number[] => {
+      const defaultRange = defaultRangeExtractor(range);
+      const next = new Set(defaultRange);
 
-        [
-          ...tableRef.current.getTopRows(),
-          ...tableRef.current.getBottomRows(),
-        ].forEach((row) => {
-          next.add(refs.current.rowIds.indexOf(row.id));
-        });
+      const table = refs.current.getTable();
+      [...table.getTopRows(), ...table.getBottomRows()].forEach((row) => {
+        next.add(refs.current.rowIds.indexOf(row.id));
+      });
 
-        const n = [...next].sort((a, b) => a - b);
-        return n;
-      },
-      [tableRef],
-    ),
+      const n = [...next].sort((a, b) => a - b);
+      return n;
+    }, []),
   });
 
-  const { offsetTop, offsetBottom } = getRowVirtualizedOffsets({
-    virtualColumns: rowVirtualizer.getVirtualItems(),
-    getIsPinned(vcIndex) {
-      const row = allRows[vcIndex];
-      return !!row.getIsPinned();
-    },
-    totalSize: rowVirtualizer.getTotalSize(),
-  });
+  const getRowsInitialRef = {
+    rowVirtualizer,
+    allRows,
+    rowIds,
+  };
+  const getRowsRef = React.useRef(getRowsInitialRef);
+  getRowsRef.current = getRowsInitialRef;
 
-  const virtualRows = rowVirtualizer
-    .getVirtualItems()
-    .map((item): VirtualRow => {
-      const getRow = () => allRows[item.index];
-      const staticRow = getRow();
-      const pinned = staticRow.getIsPinned();
-      const getAllCells = () => getRow().getVisibleCells();
+  type RowCache = {
+    cells?: Cell<any, unknown>[];
+    virtualCells?: VirtualCell[];
+  };
+  const rowCache = React.useRef<
+    Record<
+      /**
+       * row index
+       */
+      number,
+      RowCache | undefined
+    >
+  >({});
 
-      return {
-        row: getRow,
-        id: staticRow.id,
-        flatIndex: rowIds.indexOf(staticRow.id),
-        isDragging: false,
-        isPinned:
-          pinned === "bottom" ? "end" : pinned === "top" ? "start" : false,
-        dndStyle,
-        rowVirtualizer,
+  const writeToCacheRef = React.useRef(false);
 
-        cells: mainHeaderGroup.headers.map((header): VirtualCell => {
-          const getCell = () => getAllCells()[header.headerIndex];
-          const id = getCell().id;
-          return {
-            id,
-            cell: getCell,
-            dndStyle: {},
-            vheader: header,
-          };
-        }),
-      };
-    });
+  const getRows = React.useCallback(() => {
+    const updateCache = (index: number, data: RowCache) => {
+      if (!rowCache.current[index]) {
+        rowCache.current[index] = {};
+      }
+      Object.assign(rowCache.current[index], data);
+    };
+    const getCache = <T extends keyof RowCache>(index: number, key: T) =>
+      rowCache.current[index]?.[key];
 
-  // wip if we make the virtualRows contain start and size info
-  const [rowCache] = React.useState(() => {
-    const rowCache = new VirtualRowCache();
-    return rowCache;
-  });
+    const rowVirtualizer = getRowsRef.current.rowVirtualizer;
+    const virtualRows = rowVirtualizer
+      .getVirtualItems()
+      .map((item): VirtualRow => {
+        const getRow = () => {
+          const allRows = getRowsRef.current.allRows;
+          return allRows[item.index];
+        };
+        const staticRow = getRow();
+        const getAllCells = () => {
+          const cacheEntry = getCache(item.index, "cells");
+          if (cacheEntry) {
+            return cacheEntry;
+          }
 
-  const cachedVirtualRows = rowCache.update(virtualRows);
-  const rows = cachedVirtualRows;
+          const cells = getRow().getVisibleCells();
+          updateCache(item.index, { cells });
+          return cells;
+        };
 
-  const offsetLeft = mainHeaderGroup.offsetLeft;
-  const offsetRight = mainHeaderGroup.offsetRight;
+        const getCells = () => {
+          const cacheEntry = getCache(item.index, "virtualCells");
+          if (cacheEntry) {
+            return cacheEntry;
+          }
 
-  return (
-    <RowVirtualizerContext.Provider
-      value={React.useMemo((): RowVirtualizerContextType => {
+          const mainHeaderGroup = refs.current.getMainHeaderGroup();
+          const virtualCells = mainHeaderGroup
+            .getHeaders()
+            .map((header): VirtualCell => {
+              const getCell = () => getAllCells()[header.headerIndex];
+              const id = getCell().id;
+              return {
+                id,
+                cell: getCell,
+                vheader: header,
+              };
+            });
+          updateCache(item.index, { virtualCells });
+          return virtualCells;
+        };
+
+        if (writeToCacheRef.current) {
+          updateCache(item.index, {
+            cells: getAllCells(),
+            virtualCells: getCells(),
+          });
+        }
         return {
-          moveResult: null,
-          rows: rows,
-          setIsDragging(_dragState) {
-            // to be implemented
+          row: getRow,
+          id: staticRow.id,
+          // flatIndex: staticRow.index,
+          flatIndex: getRowsRef.current.rowIds.indexOf(staticRow.id),
+          isPinned: () => {
+            const row = getRow();
+            const pinned = row.getIsPinned();
+            return pinned === "bottom"
+              ? "end"
+              : pinned === "top"
+                ? "start"
+                : false;
           },
           rowVirtualizer,
-          offsetTop,
-          offsetBottom,
-          offsetLeft,
-          offsetRight,
+          getCells,
         };
-      }, [
-        rows,
-        offsetBottom,
-        offsetLeft,
-        offsetRight,
-        offsetTop,
-        rowVirtualizer,
-      ])}
-    >
+      });
+    const rows = virtualRows;
+    return rows;
+  }, []);
+
+  useTableProps(() => ({}), {
+    dependencies: ["table", "col_visible_range_main"],
+    arePropsEqual: () => false,
+  });
+  writeToCacheRef.current = true;
+  rowCache.current = {};
+  const virtualRows = getRows();
+  writeToCacheRef.current = false;
+  const virtualRowsRef = React.useRef(virtualRows);
+  virtualRowsRef.current = virtualRows;
+
+  const initialRefs = {
+    rowVirtualizer,
+    getMainHeaderGroup,
+    getTable: () => tableRef.current,
+  };
+  const memoRefs = React.useRef(initialRefs);
+  memoRefs.current = initialRefs;
+
+  const visibleRangeCacheKey = rowVirtualizer
+    .getVirtualItems()
+    .map((item) => item.index)
+    .join(",");
+
+  useTriggerTablePropsUpdate("row_visible_range", visibleRangeCacheKey);
+  useTriggerTablePropsUpdate("row_offsets");
+
+  const getVerticalOffsets = () => {
+    const rowVirtualizer = memoRefs.current.rowVirtualizer;
+    const allRows = memoRefs.current.getTable().getRowModel().rows;
+    const { offsetTop, offsetBottom } = getRowVirtualizedOffsets({
+      virtualColumns: rowVirtualizer.getVirtualItems(),
+      getIsPinned(vcIndex) {
+        const row = allRows[vcIndex];
+        return !!row.getIsPinned();
+      },
+      totalSize: rowVirtualizer.getTotalSize(),
+    });
+    return {
+      offsetTop,
+      offsetBottom,
+    };
+  };
+
+  const verticalOffsets = getVerticalOffsets();
+  const verticalOffsetsRef = React.useRef(verticalOffsets);
+  verticalOffsetsRef.current = verticalOffsets;
+
+  const context = React.useMemo(
+    (): RowVirtualizerContextType => ({
+      getRows: () => virtualRowsRef.current,
+      rowVirtualizer: memoRefs.current.rowVirtualizer,
+      getVerticalOffsets: () => verticalOffsetsRef.current,
+      getHorizontalOffsets: () => {
+        const offsets = memoRefs.current.getMainHeaderGroup().getOffsets();
+        return {
+          offsetLeft: offsets.offsetLeft,
+          offsetRight: offsets.offsetRight,
+        };
+      },
+    }),
+    [],
+  );
+  return (
+    <RowVirtualizerContext.Provider value={context}>
       {children}
     </RowVirtualizerContext.Provider>
   );

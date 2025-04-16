@@ -3,6 +3,7 @@ import { Skin, useTableCssVars } from "../skin";
 import { useCellProps } from "../table/hooks/use_cell_props";
 import { useTableContext } from "../table/table_context";
 import { HeaderCell } from "./header_cell";
+import { useRowProps } from "../table/hooks/use_row_props";
 
 export const darkModeVars: Record<string, string> = {
   "--table-text-color": "#ffffff",
@@ -202,19 +203,29 @@ export const defaultSkin: Skin = {
     );
   },
   TableRowWrapper: React.forwardRef(
-    ({ children, flatIndex, dndStyle }, ref) => {
+    ({ children }, ref) => {
+      const { flatIndex } = useRowProps((row) => {
+        return {
+          flatIndex: row.flatIndex,
+        };
+      });
       return (
-        <div data-index={flatIndex} ref={ref} style={dndStyle}>
+        <div data-index={flatIndex} ref={ref}>
           {children}
         </div>
       );
     },
   ),
-  TableRow: ({ children, isDragging, isPinned, flatIndex }) => {
+  TableRow: ({ children }) => {
+    const { flatIndex, isPinned } = useRowProps((row) => {
+      return {
+        flatIndex: row.flatIndex,
+        isPinned: row.isPinned(),
+      };
+    });
     const style: CSSProperties = {
       position: "relative",
-      opacity: isDragging ? 0.8 : 1,
-      zIndex: isDragging ? 1 : 0,
+      zIndex: 0,
       width: "var(--table-width)",
       display: "flex",
       height: "var(--row-height)",
@@ -253,11 +264,11 @@ export const defaultSkin: Skin = {
     );
   },
   Cell: React.memo(({ isMeasuring, children }) => {
-    const { isPinned, dndStyle, width } = useCellProps((cell) => {
+    const { isPinned, width } = useCellProps((cell) => {
+      const state = cell.vheader.getState();
       return {
-        isPinned: cell.vheader.isPinned,
-        dndStyle: cell.vheader.dndStyle,
-        width: cell.vheader.width,
+        isPinned: state.isPinned,
+        width: state.width,
       };
     });
     return (
@@ -281,7 +292,6 @@ export const defaultSkin: Skin = {
           margin: 0,
           borderTop: 0,
           paddingRight: "8px",
-          ...dndStyle,
         }}
       >
         {children}

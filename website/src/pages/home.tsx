@@ -328,6 +328,24 @@ export function HomePage() {
     [innerContainerSize.width],
   );
 
+  const underlay = React.useMemo((): React.ReactNode => {
+    return (
+      <div
+        style={{
+          position: "absolute",
+          pointerEvents: "none",
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: -1,
+          visibility: "hidden",
+        }}
+        ref={innerContainerSizeRef}
+      ></div>
+    );
+  }, [innerContainerSizeRef]);
+
   return (
     <div>
       <div className="bg-white dark:bg-gray-900">
@@ -551,6 +569,9 @@ export function HomePage() {
               {tableContainerBounds.width && tableContainerBounds.height ? (
                 <ReactTanstackTableUi
                   shouldUpdate={{
+                    header: () => {
+                      return false;
+                    },
                     cell: () => {
                       return false;
                     },
@@ -561,21 +582,7 @@ export function HomePage() {
                   skin={TailwindSkin}
                   autoCrushColumns
                   crushMinSizeBy="both"
-                  underlay={
-                    <div
-                      style={{
-                        position: "absolute",
-                        pointerEvents: "none",
-                        left: 0,
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        zIndex: -1,
-                        visibility: "hidden",
-                      }}
-                      ref={innerContainerSizeRef}
-                    ></div>
-                  }
+                  underlay={underlay}
                   renderSubComponent={renderSubComponent}
                 />
               ) : null}

@@ -12,9 +12,9 @@ export const useListenToTableUpdate = (
     const listener = (table: Table<any>) => {
       callbackRef.current(table);
     };
-    context.tableUpdateListeners.add(listener);
+    context.updateListeners.table.add(listener);
     return () => {
-      context.tableUpdateListeners.delete(listener);
+      context.updateListeners.table.delete(listener);
     };
   }, [context]);
 };

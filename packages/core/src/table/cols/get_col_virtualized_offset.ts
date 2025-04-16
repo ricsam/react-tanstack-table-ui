@@ -1,4 +1,4 @@
-import { VirtualHeaderCell } from "../types";
+import { VirtualHeaderCell, VirtualHeaderCellState } from "../types";
 
 /**
  * when we are only rendering a window of columns while maintaining a scrollbar we need to move the elements as we remove elements to the left
@@ -14,12 +14,17 @@ export function getColVirtualizedOffsets({
   let offsetLeft = 0;
   let offsetRight = 0;
 
+  const states: Record<string, VirtualHeaderCellState> = {};
+  headers.forEach((header) => {
+    states[header.id] = header.getState();
+  });
+
   {
     let lastPinned: undefined | number;
     let firstNonPinned: undefined | number;
     for (let i = 0; i < headers.length; i++) {
       const vc = headers[i];
-      if (vc.isPinned === "start") {
+      if (states[vc.id].isPinned === "start") {
         lastPinned = i;
       } else {
         firstNonPinned = i;
@@ -28,9 +33,9 @@ export function getColVirtualizedOffsets({
     }
 
     if (typeof firstNonPinned !== "undefined") {
-      offsetLeft = headers[firstNonPinned].start
+      offsetLeft = states[headers[firstNonPinned].id].start;
       if (typeof lastPinned !== "undefined") {
-        offsetLeft -= headers[lastPinned].end;
+        offsetLeft -= states[headers[lastPinned].id].end;
       }
     }
   }
@@ -43,7 +48,7 @@ export function getColVirtualizedOffsets({
       if (!vc) {
         console.log(vc, headers, i);
       }
-      if (vc.isPinned === "end") {
+      if (states[vc.id].isPinned === "end") {
         lastPinned = i;
       } else {
         firstNonPinned = i;
@@ -74,10 +79,11 @@ export function getColVirtualizedOffsets({
     // a.start - i.end
 
     if (typeof firstNonPinned !== "undefined") {
-      offsetRight = totalSize - headers[firstNonPinned].end;
+      offsetRight = totalSize - states[headers[firstNonPinned].id].end;
       if (typeof lastPinned !== "undefined") {
         offsetRight =
-          headers[lastPinned].start - headers[firstNonPinned].end;
+          states[headers[lastPinned].id].start -
+          states[headers[firstNonPinned].id].end;
       }
     }
   }
