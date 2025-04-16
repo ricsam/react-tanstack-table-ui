@@ -8,10 +8,12 @@ export const HeaderColsSlice = React.memo(function HeaderColsSlice({
   type,
   pinPos,
   getHeaders,
+  groupId,
 }: {
   type: "header" | "footer";
   pinPos: PinPos;
   getHeaders: () => VirtualHeaderCell[];
+  groupId: string;
 }) {
   const { skin } = useTableContext();
   const { cols } = useTableProps(
@@ -38,7 +40,10 @@ export const HeaderColsSlice = React.memo(function HeaderColsSlice({
       arePropsEqual: (prev, next) => {
         return prev.cacheKey === next.cacheKey;
       },
-      dependencies: ["table", `col_visible_range_${type}`],
+      dependencies: [
+        { type: "table" },
+        { type: "col_visible_range", groupType: type, groupId },
+      ],
     },
   );
 

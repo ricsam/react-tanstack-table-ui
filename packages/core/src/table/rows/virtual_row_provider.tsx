@@ -14,7 +14,6 @@ import { useTriggerTablePropsUpdate } from "../hooks/use_trigger_table_props_upd
 import { useTableContext } from "../table_context";
 import { VirtualCell, VirtualRow } from "../types";
 import { RowVirtualizerContextType } from "./row_virtualizer_context_type";
-import { Cell } from "@tanstack/react-table";
 
 export const VirtualRowProvider = ({
   children,
@@ -72,16 +71,10 @@ export const VirtualRowProvider = ({
     rowIds,
     getMainHeaderGroup,
     getTable: () => tableRef.current,
-    getMainHeaderIndices
+    getMainHeaderIndices,
   };
   const refs = React.useRef(_refs);
   refs.current = _refs;
-
-  // we need to trigger a re-render the virtualizer when the table instance updates
-  useTableProps(() => ({}), {
-    dependencies: ["table"],
-    arePropsEqual: () => true,
-  });
 
   const rowVirtualizer = useVirtualizer({
     count: allRows.length,
@@ -128,32 +121,7 @@ export const VirtualRowProvider = ({
   const getRowsRef = React.useRef(getRowsInitialRef);
   getRowsRef.current = getRowsInitialRef;
 
-  type RowCache = {
-    cells?: Cell<any, unknown>[];
-    virtualCells?: VirtualCell[];
-  };
-  const rowCache = React.useRef<
-    Record<
-      /**
-       * row index
-       */
-      number,
-      RowCache | undefined
-    >
-  >({});
-
-  const writeToCacheRef = React.useRef(false);
-
   const getRows = React.useCallback(() => {
-    const updateCache = (index: number, data: RowCache) => {
-      if (!rowCache.current[index]) {
-        rowCache.current[index] = {};
-      }
-      Object.assign(rowCache.current[index], data);
-    };
-    const getCache = <T extends keyof RowCache>(index: number, key: T) =>
-      rowCache.current[index]?.[key];
-
     const rowVirtualizer = getRowsRef.current.rowVirtualizer;
     const virtualRows = rowVirtualizer
       .getVirtualItems()
@@ -164,23 +132,11 @@ export const VirtualRowProvider = ({
         };
         const staticRow = getRow();
         const getAllCells = () => {
-          const cacheEntry = getCache(item.index, "cells");
-          if (cacheEntry) {
-            return cacheEntry;
-          }
-
           const cells = getRow().getVisibleCells();
-          updateCache(item.index, { cells });
           return cells;
         };
 
-
         const getCells = () => {
-          const cacheEntry = getCache(item.index, "virtualCells");
-          if (cacheEntry) {
-            return cacheEntry;
-          }
-
           const mainHeaderGroup = refs.current.getMainHeaderGroup();
           const virtualCells = mainHeaderGroup
             .getHeaders()
@@ -199,16 +155,10 @@ export const VirtualRowProvider = ({
                 vheader: header,
               };
             });
-          updateCache(item.index, { virtualCells });
+
           return virtualCells;
         };
 
-        if (writeToCacheRef.current) {
-          updateCache(item.index, {
-            cells: getAllCells(),
-            virtualCells: getCells(),
-          });
-        }
         return {
           row: getRow,
           id: staticRow.id,
@@ -231,16 +181,8 @@ export const VirtualRowProvider = ({
     return rows;
   }, []);
 
-  useTableProps(() => ({}), {
-    dependencies: ["table", "col_visible_range_main"],
-    arePropsEqual: () => false,
-  });
-  writeToCacheRef.current = true;
-  rowCache.current = {};
-  const virtualRows = getRows();
-  writeToCacheRef.current = false;
-  const virtualRowsRef = React.useRef(virtualRows);
-  virtualRowsRef.current = virtualRows;
+  // const virtualRowsRef = React.useRef(virtualRows);
+  // virtualRowsRef.current = virtualRows;
 
   const initialRefs = {
     rowVirtualizer,
@@ -250,12 +192,16 @@ export const VirtualRowProvider = ({
   const memoRefs = React.useRef(initialRefs);
   memoRefs.current = initialRefs;
 
-  const visibleRangeCacheKey = rowVirtualizer
-    .getVirtualItems()
-    .map((item) => item.index)
+  const visibleRangeCacheKey = getRows()
+    .map((row) => row.id)
     .join(",");
 
-  useTriggerTablePropsUpdate("row_visible_range", visibleRangeCacheKey);
+  useTriggerTablePropsUpdate([
+    {
+      dependency: { type: "row_visible_range" },
+      cacheKey: visibleRangeCacheKey,
+    },
+  ]);
 
   const getVerticalOffsets = () => {
     const rowVirtualizer = memoRefs.current.rowVirtualizer;
@@ -274,18 +220,24 @@ export const VirtualRowProvider = ({
     };
   };
 
+  // this one will be updated when the virtualizer updates, so we can store it in a ref here
   const verticalOffsets = getVerticalOffsets();
   const verticalOffsetsRef = React.useRef(verticalOffsets);
   verticalOffsetsRef.current = verticalOffsets;
 
-  useTriggerTablePropsUpdate(
-    "row_offsets",
-    `${verticalOffsets.offsetTop},${verticalOffsets.offsetBottom}`,
-  );
+  useTriggerTablePropsUpdate([
+    {
+      dependency: { type: "row_offsets" },
+      cacheKey: `${verticalOffsets.offsetTop},${verticalOffsets.offsetBottom}`,
+    },
+  ]);
+
+  const _getRowsRef = React.useRef(getRows);
+  _getRowsRef.current = getRows;
 
   const context = React.useMemo(
     (): RowVirtualizerContextType => ({
-      getRows: () => virtualRowsRef.current,
+      getRows: () => _getRowsRef.current(),
       rowVirtualizer: memoRefs.current.rowVirtualizer,
       getVerticalOffsets: () => verticalOffsetsRef.current,
       getHorizontalOffsets: () => {

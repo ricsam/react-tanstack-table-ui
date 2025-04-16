@@ -19,7 +19,14 @@ export const HeaderGroup = React.memo(function HeaderGroup({
       };
     },
     {
-      dependencies: ["table", "col_offsets"],
+      dependencies: [
+        { type: "table" },
+        {
+          type: "col_offsets",
+          groupType: headerGroup.type,
+          groupId: headerGroup.id,
+        },
+      ],
     },
   );
   const { type } = headerGroup;
@@ -29,11 +36,23 @@ export const HeaderGroup = React.memo(function HeaderGroup({
     return headerGroupRef.current.getHeaders();
   }, []);
 
+  const groupId = headerGroup.id;
+
   return (
     <skin.HeaderRow type={type}>
-      <HeaderColsSlice type={type} pinPos="start" getHeaders={getHeaders} />
+      <HeaderColsSlice
+        type={type}
+        pinPos="start"
+        getHeaders={getHeaders}
+        groupId={groupId}
+      />
       <div style={{ width: offsetLeft, flexShrink: 0 }}></div>
-      <HeaderColsSlice type={type} pinPos={false} getHeaders={getHeaders} />
+      <HeaderColsSlice
+        type={type}
+        pinPos={false}
+        getHeaders={getHeaders}
+        groupId={groupId}
+      />
       <div
         style={
           pinColsRelativeTo === "table"
@@ -48,7 +67,12 @@ export const HeaderGroup = React.memo(function HeaderGroup({
               }
         }
       ></div>
-      <HeaderColsSlice type={type} pinPos="end" getHeaders={getHeaders} />
+      <HeaderColsSlice
+        type={type}
+        pinPos="end"
+        getHeaders={getHeaders}
+        groupId={groupId}
+      />
     </skin.HeaderRow>
   );
 });

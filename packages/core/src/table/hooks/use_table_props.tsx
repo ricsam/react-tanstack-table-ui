@@ -1,8 +1,8 @@
 import { Table } from "@tanstack/react-table";
 import React from "react";
 import { shallowEqual } from "../../utils";
-import { useTablePropsContext } from "./use_table_props_context";
 import { Dependency } from "../contexts/table_props_context";
+import { useTablePropsContext } from "./use_table_props_context";
 
 export type UseTablePropsOptions<T> = {
   arePropsEqual?: (prevProps: T, newProps: T) => boolean;
@@ -13,7 +13,7 @@ export const useTableProps = <T,>(
   callback: (table: Table<any>) => T,
   {
     arePropsEqual = shallowEqual,
-    dependencies = ["table"],
+    dependencies = [{ type: "table" }],
   }: UseTablePropsOptions<T> = {},
 ): T => {
   const context = useTablePropsContext();
@@ -31,7 +31,7 @@ export const useTableProps = <T,>(
     }
   }
   prevVal.current = latest;
-  const [, triggerRerender] = React.useReducer(() => ({}), {});
+  const [renderCount, setRenderCount] = React.useState(0);
 
   const value = React.useRef<T>(latest);
   const lastCommittedValue = React.useRef<T>(latest);
@@ -39,8 +39,10 @@ export const useTableProps = <T,>(
   const callbacks = { callback, arePropsEqual };
   const callbackRefs = React.useRef(callbacks);
   callbackRefs.current = callbacks;
+  const renderCountRef = React.useRef(renderCount);
+  renderCountRef.current = renderCount;
   React.useEffect(() => {
-    const listener = (table: Table<any>, rerender: boolean) => {
+    const listener = (_dependency: Dependency) => (table: Table<any>, rerender: boolean) => {
       const result = callbackRefs.current.callback(table);
       const areEqual = callbackRefs.current.arePropsEqual(
         value.current,
@@ -50,15 +52,24 @@ export const useTableProps = <T,>(
         value.current = result;
       }
       if (rerender && lastCommittedValue.current !== value.current) {
-        triggerRerender();
+        // console.log('batching', renderCountRef.current, _dependency.type)
+        setRenderCount(renderCountRef.current + 1); // batch updates together
       }
     };
+    const teardown: (() => void)[] = [];
     dependencies.forEach((dependency) => {
-      context.updateListeners[dependency].add(listener);
+      const listenerArtifact: any = {
+        callback: listener(dependency),
+        dependency,
+      };
+      context.updateListeners[dependency.type].add(listenerArtifact);
+      teardown.push(() => {
+        context.updateListeners[dependency.type].delete(listenerArtifact);
+      });
     });
     return () => {
-      dependencies.forEach((dependency) => {
-        context.updateListeners[dependency].delete(listener);
+      teardown.forEach((teardown) => {
+        teardown();
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

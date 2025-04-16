@@ -38,7 +38,12 @@ export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
       };
     },
     {
-      dependencies: ["table", "col_offsets"],
+      dependencies: [
+        { type: "table" },
+        {
+          type: "col_offsets_main",
+        },
+      ],
     },
   );
 
@@ -100,15 +105,26 @@ export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
 const ColSlice = React.memo(
   ({ getCells, pinPos }: { getCells: () => VirtualCell[]; pinPos: PinPos }) => {
     const { skin } = useTableContext();
-    const cells = useTableProps(
-      () =>
-        getCells().filter(
-          (cell) => cell.vheader.getState().isPinned === pinPos,
-        ),
+    const { cells } = useTableProps(
+      () => {
+        let cacheKey = "";
+        const cells = getCells().filter((cell) => {
+          const result = cell.vheader.getState().isPinned === pinPos;
+          if (result) {
+            cacheKey += `${cell.id},`;
+          }
+          return result;
+        });
+
+        return {
+          cells,
+          cacheKey,
+        };
+      },
       {
-        dependencies: ["table", `col_visible_range_main`],
-        arePropsEqual: () => {
-          return false;
+        dependencies: [{ type: "table" }, { type: "col_visible_range_main" }],
+        arePropsEqual: (prev, next) => {
+          return prev.cacheKey === next.cacheKey;
         },
       },
     );

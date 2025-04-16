@@ -37,6 +37,7 @@ export type FilteredHeaderGroup = {
 export function useHeaderGroupVirtualizers(props: {
   headerGroupsRef: React.RefObject<FilteredHeaderGroup>;
   type: "footer" | "header";
+  rerender: () => void;
 }): () => VirtualHeaderGroup[] {
   const { tableContainerRef, config } = useTableContext();
 
@@ -98,8 +99,6 @@ export function useHeaderGroupVirtualizers(props: {
     };
   };
 
-  const rerender = React.useReducer(() => ({}), {})[1];
-
   const headerColVirtualizerOptions: Record<
     string,
     () => VirtualizerOptions<HTMLDivElement, Element>
@@ -115,9 +114,9 @@ export function useHeaderGroupVirtualizers(props: {
       scrollToFn: () => {},
       onChange: (_, sync) => {
         if (sync) {
-          flushSync(rerender);
+          flushSync(props.rerender);
         } else {
-          rerender();
+          props.rerender();
         }
       },
     });
@@ -405,18 +404,22 @@ export function useHeaderGroupVirtualizers(props: {
 
   groupCache.current = [];
   stateCache.current = {};
-  const virtualHeaderGroups = getVirtualHeaderGroups(true);
+  const virtualHeaderGroups = getVirtualHeaderGroups();
 
   useTriggerTablePropsUpdate(
-    `col_visible_range_${props.type}`,
-    virtualHeaderGroups
-      .map((cv) =>
-        cv
+    virtualHeaderGroups.map((vgroup) => {
+      return {
+        dependency: {
+          type: "col_visible_range",
+          groupType: vgroup.type,
+          groupId: vgroup.id,
+        },
+        cacheKey: vgroup
           .getHeaders()
           .map((vi) => vi.id)
           .join(","),
-      )
-      .join("|"),
+      };
+    }),
   );
 
   return getVirtualHeaderGroups;

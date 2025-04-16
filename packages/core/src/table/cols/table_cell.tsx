@@ -24,7 +24,6 @@ export const TableCell = React.memo(
         };
       },
       {
-        dependencies: ["table"],
         arePropsEqual: (prev, next) => {
           const shouldUpdateFn = refs.current.shouldUpdate?.cell;
           if (shouldUpdateFn) {

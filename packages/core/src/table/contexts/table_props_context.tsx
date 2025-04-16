@@ -2,14 +2,30 @@ import { Table } from "@tanstack/react-table";
 import { createContext } from "react";
 
 export type Dependency =
-  | "table"
-  | "row_offsets"
-  | `col_offsets`
-  | `col_visible_range_${"header" | "footer" | "main"}`
-  | "row_visible_range";
+  | { type: "table" }
+  | { type: "row_offsets" }
+  | { type: "col_visible_range_main" }
+  | { type: "col_offsets_main" }
+  | { type: "col_offsets"; groupType?: "header" | "footer"; groupId?: string }
+  | {
+      type: "col_visible_range";
+      groupType?: "header" | "footer";
+      groupId?: string;
+    }
+  | { type: "row_visible_range" };
+
+export type GetDependency<
+  T extends Dependency["type"],
+  U extends Dependency = Dependency,
+> = {
+  [key in Dependency["type"]]: U extends { type: T } ? U : never;
+}[T];
 
 export type UpdateListeners = {
-  [key in Dependency]: Set<(table: Table<any>, rerender: boolean) => void>;
+  [key in Dependency["type"]]: Set<{
+    callback: (table: Table<any>, rerender: boolean) => void;
+    dependency: GetDependency<key>;
+  }>;
 };
 
 export type TablePropsContextType = {

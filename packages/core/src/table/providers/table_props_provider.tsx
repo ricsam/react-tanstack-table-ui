@@ -2,6 +2,7 @@ import { Table } from "@tanstack/react-table";
 import React from "react";
 import {
   Dependency,
+  GetDependency,
   TablePropsContext,
   TablePropsContextType,
   UpdateListeners,
@@ -13,17 +14,23 @@ export const TablePropsProvider = ({
   children: React.ReactNode;
 }) => {
   const [contextValue] = React.useState((): TablePropsContextType => {
-    const getSet = () =>
-      new Set<(table: Table<any>, rerender: boolean) => void>();
+    const getSet = <T extends Dependency["type"]>(
+      _: T,
+    ): Set<{
+      callback: (table: Table<any>, rerender: boolean) => void;
+      dependency: GetDependency<T>;
+    }> => new Set();
 
     const updateListeners: UpdateListeners = {
-      table: getSet(),
-      row_offsets: getSet(),
-      col_offsets: getSet(),
-      col_visible_range_header: getSet(),
-      col_visible_range_footer: getSet(),
-      col_visible_range_main: getSet(),
-      row_visible_range: getSet(),
+      table: getSet("table"),
+      row_offsets: getSet("row_offsets"),
+      col_offsets: getSet("col_offsets"),
+
+      col_offsets_main: getSet("col_offsets_main"),
+      col_visible_range_main: getSet("col_visible_range_main"),
+
+      col_visible_range: getSet("col_visible_range"),
+      row_visible_range: getSet("row_visible_range"),
     };
 
     let initialTable: Table<any> | null = null;
@@ -33,9 +40,26 @@ export const TablePropsProvider = ({
       if (!tbl) {
         throw new Error("initialTable is not set");
       }
-      updateListeners[dependency].forEach((listener) => {
+      updateListeners[dependency.type].forEach((listener) => {
+        if (
+          (dependency.type === "col_offsets" &&
+            listener.dependency.type === "col_offsets") ||
+          (dependency.type === "col_visible_range" &&
+            listener.dependency.type === "col_visible_range")
+        ) {
+          if (dependency.groupType !== listener.dependency.groupType) {
+            return;
+          }
+          if (dependency.groupId !== listener.dependency.groupId) {
+            return;
+          }
+        }
+        if (dependency.type !== listener.dependency.type) {
+          return;
+        }
+
         try {
-          listener(tbl, rerender);
+          listener.callback(tbl, rerender);
         } catch (err) {
           // ignore errors
         }
@@ -45,7 +69,7 @@ export const TablePropsProvider = ({
       triggerUpdate,
       updateTable: (table: Table<any>, rerender: boolean) => {
         initialTable = table;
-        triggerUpdate("table", rerender);
+        triggerUpdate({ type: "table" }, rerender);
       },
       updateListeners,
       initialTable: () => {

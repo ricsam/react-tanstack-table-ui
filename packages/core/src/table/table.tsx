@@ -635,9 +635,11 @@ const Content = React.memo(function Content({
         return prev === next;
       },
       dependencies: [
-        "table",
-        "col_visible_range_footer",
-        "col_visible_range_header",
+        { type: "table" },
+        {
+          /* any change to any visible_range */
+          type: "col_visible_range",
+        },
       ],
     },
   );
@@ -696,7 +698,7 @@ const TableHeaderGroups = React.memo(function TableHeaderGroups({
       return { headerGroups };
     },
     {
-      dependencies: ["table"],
+      dependencies: [{ type: "table" }],
     },
   );
   if (headerGroups.length === 0) {

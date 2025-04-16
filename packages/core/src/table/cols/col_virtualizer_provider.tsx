@@ -2,7 +2,10 @@ import { HeaderGroup } from "@tanstack/react-table";
 import React from "react";
 import { ColVirtualizerContext } from "../contexts/col_virtualizer_context";
 import { useTableProps } from "../hooks/use_table_props";
-import { useTriggerTablePropsUpdate } from "../hooks/use_trigger_table_props_update";
+import {
+  TriggerUpdateDep,
+  useTriggerTablePropsUpdate,
+} from "../hooks/use_trigger_table_props_update";
 import { CombinedHeaderGroup, VirtualHeaderGroup } from "../types";
 import { ColVirtualizerType } from "./col_virtualizer_type";
 import {
@@ -74,7 +77,7 @@ const combineHeaderGroups = (
   };
 };
 
-const useHeaderGroups = (type: "header" | "footer") => {
+const useHeaderGroups = (type: "header" | "footer", rerender: () => void) => {
   const { leftHeaderGroups, centerHeaderGroups, rightHeaderGroups } =
     useTableProps((table) => {
       const [leftHeaderGroups, centerHeaderGroups, rightHeaderGroups] =
@@ -112,8 +115,9 @@ const useHeaderGroups = (type: "header" | "footer") => {
       () => ({
         headerGroupsRef,
         type,
+        rerender,
       }),
-      [type],
+      [type, rerender],
     ),
   );
 
@@ -127,12 +131,23 @@ export const ColVirtualizerProvider = ({
 }) => {
   // we need to trigger a re-render the virtualizer when the table instance updates
   useTableProps(() => ({}), {
-    dependencies: ["table"],
+    dependencies: [{ type: "table" }],
     arePropsEqual: () => false,
   });
 
-  const getHeaderGroups = useHeaderGroups("header");
-  const getFooterGroups = useHeaderGroups("footer");
+  /**
+   * To batch the updates from the horizontal virtualizers se use the renderCountRef
+   * to trigger a re-render of the virtualizers
+   */
+  const [renderCount, setRenderCount] = React.useState(0);
+  const renderCountRef = React.useRef(renderCount);
+  renderCountRef.current = renderCount;
+  const rerender = React.useCallback(() => {
+    setRenderCount(renderCountRef.current + 1);
+  }, []);
+
+  const getHeaderGroups = useHeaderGroups("header", rerender);
+  const getFooterGroups = useHeaderGroups("footer", rerender);
 
   const getMainHeaderGroup: () => VirtualHeaderGroup = () => {
     const headerGroups = getHeaderGroups();
@@ -143,14 +158,6 @@ export const ColVirtualizerProvider = ({
     }
     return mainHeaderGroup;
   };
-
-  useTriggerTablePropsUpdate(
-    `col_visible_range_main`,
-    getMainHeaderGroup()
-      .getHeaders()
-      .map((vi) => vi.id)
-      .join(","),
-  );
 
   // const firstRow = table.getRowModel().rows[0].getVisibleCells();
   // const bodyVirtualizer = useVirtualizer({
@@ -184,14 +191,39 @@ export const ColVirtualizerProvider = ({
   const refs = React.useRef(initialRefs);
   refs.current = initialRefs;
 
-  let offsetsCacheKey = "";
-  [getHeaderGroups, getFooterGroups].forEach((getGroups) => {
-    getGroups().forEach((group) => {
-      const { offsetLeft, offsetRight } = group.getOffsets();
-      offsetsCacheKey += `${offsetLeft},${offsetRight}`;
-    });
-  });
-  useTriggerTablePropsUpdate("col_offsets", offsetsCacheKey);
+  useTriggerTablePropsUpdate([
+    ...[...getHeaderGroups(), ...getFooterGroups()].map(
+      (group): TriggerUpdateDep => {
+        const { offsetLeft, offsetRight } = group.getOffsets();
+        return {
+          dependency: {
+            type: "col_offsets",
+            groupType: group.type,
+            groupId: group.id,
+          },
+          cacheKey: `${offsetLeft},${offsetRight}`,
+        };
+      },
+    ),
+  ]);
+
+  useTriggerTablePropsUpdate([
+    {
+      dependency: { type: "col_visible_range_main" },
+      cacheKey: getMainHeaderGroup()
+        .getHeaders()
+        .map((vi) => vi.id)
+        .join(","),
+    },
+  ]);
+
+  const mainOffsets = getMainHeaderGroup().getOffsets();
+  useTriggerTablePropsUpdate([
+    {
+      dependency: { type: "col_offsets_main" },
+      cacheKey: `${mainOffsets.offsetLeft},${mainOffsets.offsetRight}`,
+    },
+  ]);
 
   return (
     <ColVirtualizerContext.Provider

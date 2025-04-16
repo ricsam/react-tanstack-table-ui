@@ -17,8 +17,8 @@ import {
   useRowProps,
   useTableContext,
   useTableCssVars,
+  useTableProps,
 } from "@rttui/core";
-import { shallowEqual, useTableProps } from "@rttui/core";
 import React, { CSSProperties } from "react";
 import { TableHeaderRow } from "./table_header_row";
 
@@ -281,7 +281,7 @@ const AnoccaSkin: Skin = {
     );
   },
   Cell: React.memo(
-    React.forwardRef(({ isMeasuring, children }, ref) => {
+    React.forwardRef(function Cell({ isMeasuring, children }, ref) {
       const {
         isPinned,
         isLastPinned,
@@ -289,24 +289,17 @@ const AnoccaSkin: Skin = {
         isLastCenter,
         width,
         isSomeColumnsPinnedRight,
-      } = useCellProps(
-        (cell, table) => {
-          const state = cell.vheader.getState();
-          return {
-            isPinned: state.isPinned,
-            isLastPinned: state.isLastPinned,
-            isLast: state.isLast,
-            isLastCenter: state.isLastCenter,
-            width: state.width,
-            isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
-          };
-        },
-        {
-          arePropsEqual: (prev, next) => {
-            return shallowEqual(prev, next, ["content"]);
-          },
-        },
-      );
+      } = useCellProps((cell, table) => {
+        const state = cell.vheader.getState();
+        return {
+          isPinned: state.isPinned,
+          isLastPinned: state.isLastPinned,
+          isLast: state.isLast,
+          isLastCenter: state.isLastCenter,
+          width: state.width,
+          isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
+        };
+      });
 
       return (
         <TableCell

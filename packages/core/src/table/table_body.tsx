@@ -23,7 +23,7 @@ export const TableBody = React.memo(
         };
       },
       {
-        dependencies: ["table", "row_offsets"],
+        dependencies: [{ type: "table" }, { type: "row_offsets" }],
       },
     );
 
@@ -32,7 +32,7 @@ export const TableBody = React.memo(
         return getRows().length;
       },
       {
-        dependencies: ["table", "row_visible_range"],
+        dependencies: [{ type: "table" }, { type: "row_visible_range" }],
       },
     );
 
@@ -91,7 +91,7 @@ const RowsSlice = React.memo(function RowsSlice({
       };
     },
     {
-      dependencies: ["row_visible_range", "table"],
+      dependencies: [{ type: "row_visible_range" }, { type: "table" }],
       arePropsEqual: (prev, next) => {
         return prev.cacheKey === next.cacheKey;
       },

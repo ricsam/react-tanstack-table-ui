@@ -2,28 +2,40 @@ import React from "react";
 import { useTablePropsContext } from "../hooks/use_table_props_context";
 import { Dependency } from "../contexts/table_props_context";
 
-export const useTriggerTablePropsUpdate = (
-  dependency: Dependency,
-  cacheKey?: string,
-) => {
+export type TriggerUpdateDep = {
+  dependency: Dependency;
+  cacheKey?: string;
+};
+
+export const useTriggerTablePropsUpdate = (deps: TriggerUpdateDep[]) => {
   const { triggerUpdate } = useTablePropsContext();
-  const cacheKeyRef = React.useRef(cacheKey);
-  const cacheKeyChanged = cacheKeyRef.current !== cacheKey;
-  cacheKeyRef.current = cacheKey;
+  const depsRef = React.useRef(deps);
 
-  const shouldUpdate = cacheKeyChanged || typeof cacheKey !== "string";
+  const shouldUpdate = deps.filter(
+    (d, index) =>
+      typeof d.cacheKey === "undefined" ||
+      d.cacheKey !== depsRef.current[index]?.cacheKey,
+  );
 
-  const shouldUpdateInEffectRef = React.useRef(shouldUpdate);
+  depsRef.current = deps;
 
-  if (shouldUpdate) {
-    triggerUpdate(dependency, false);
+  const shouldUpdateInEffectRef = React.useRef<false | typeof shouldUpdate>(
+    false,
+  );
+
+  if (shouldUpdate.length > 0) {
+    shouldUpdate.forEach((dep) => {
+      triggerUpdate(dep.dependency, false);
+    });
     shouldUpdateInEffectRef.current = shouldUpdate;
   }
 
   React.useLayoutEffect(() => {
     const shouldUpdate = shouldUpdateInEffectRef.current;
     if (shouldUpdate) {
-      triggerUpdate(dependency, true);
+      shouldUpdate.forEach((dep) => {
+        triggerUpdate(dep.dependency, true);
+      });
       shouldUpdateInEffectRef.current = false;
     }
   });
