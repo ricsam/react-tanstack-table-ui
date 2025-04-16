@@ -7,7 +7,7 @@ import { useTableContext } from "../table_context";
 import { PinPos, VirtualCell, VirtualRow } from "../types";
 
 export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
-  const { getCells, rowVirtualizer } = row;
+  const { rowVirtualizer } = row;
   const { getHorizontalOffsets } = useRowVirtualizer();
   const { skin, renderSubComponent, pinColsRelativeTo } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
@@ -41,6 +41,13 @@ export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
       dependencies: ["table", "col_offsets"],
     },
   );
+
+  const vrowRef = React.useRef<VirtualRow>(row);
+  vrowRef.current = row;
+
+  const getCells = React.useCallback(() => {
+    return vrowRef.current.getCells();
+  }, []);
 
   return (
     <>
@@ -90,57 +97,46 @@ export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
   );
 };
 
-const ColSlice = ({
-  getCells,
-  pinPos,
-}: {
-  getCells: () => VirtualCell[];
-  pinPos: PinPos;
-}) => {
-  const { skin } = useTableContext();
-  const { cells } = useTableProps(
-    () => {
-      let cacheKey = "";
-      const cells = getCells().filter((cell) => {
-        const result = cell.vheader.getState().isPinned === pinPos;
-        if (result) {
-          cacheKey += `${cell.id},`;
-        }
-        return result;
-      });
-      return { cells, cacheKey };
-    },
-    {
-      dependencies: ["table", `col_visible_range_main`],
-      arePropsEqual: (prev, next) => {
-        return prev.cacheKey === next.cacheKey;
+const ColSlice = React.memo(
+  ({ getCells, pinPos }: { getCells: () => VirtualCell[]; pinPos: PinPos }) => {
+    const { skin } = useTableContext();
+    const cells = useTableProps(
+      () =>
+        getCells().filter(
+          (cell) => cell.vheader.getState().isPinned === pinPos,
+        ),
+      {
+        dependencies: ["table", `col_visible_range_main`],
+        arePropsEqual: () => {
+          return false;
+        },
       },
-    },
-  );
+    );
 
-  if (cells.length === 0) {
-    return null;
-  }
-  const base = (
-    <>
-      {cells.map((cell) => {
-        return <TableCell key={cell.id} cell={cell} />;
-      })}
-    </>
-  );
-  if (pinPos === "start") {
-    return (
-      <skin.PinnedCols position="left" type={"body"}>
-        {base}
-      </skin.PinnedCols>
+    if (cells.length === 0) {
+      return null;
+    }
+    const base = (
+      <>
+        {cells.map((cell) => {
+          return <TableCell key={cell.id} cell={cell} />;
+        })}
+      </>
     );
-  }
-  if (pinPos === "end") {
-    return (
-      <skin.PinnedCols position="right" type={"body"}>
-        {base}
-      </skin.PinnedCols>
-    );
-  }
-  return base;
-};
+    if (pinPos === "start") {
+      return (
+        <skin.PinnedCols position="left" type={"body"}>
+          {base}
+        </skin.PinnedCols>
+      );
+    }
+    if (pinPos === "end") {
+      return (
+        <skin.PinnedCols position="right" type={"body"}>
+          {base}
+        </skin.PinnedCols>
+      );
+    }
+    return base;
+  },
+);

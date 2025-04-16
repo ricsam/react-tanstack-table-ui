@@ -55,7 +55,7 @@ export const VirtualRowProvider = ({
   }
   */
 
-  const { getMainHeaderGroup } = useColVirtualizer();
+  const { getMainHeaderGroup, getMainHeaderIndices } = useColVirtualizer();
 
   const { allRows } = useTableProps((table) => {
     const allRows = table.getRowModel().rows;
@@ -72,6 +72,7 @@ export const VirtualRowProvider = ({
     rowIds,
     getMainHeaderGroup,
     getTable: () => tableRef.current,
+    getMainHeaderIndices
   };
   const refs = React.useRef(_refs);
   refs.current = _refs;
@@ -173,6 +174,7 @@ export const VirtualRowProvider = ({
           return cells;
         };
 
+
         const getCells = () => {
           const cacheEntry = getCache(item.index, "virtualCells");
           if (cacheEntry) {
@@ -183,7 +185,13 @@ export const VirtualRowProvider = ({
           const virtualCells = mainHeaderGroup
             .getHeaders()
             .map((header): VirtualCell => {
-              const getCell = () => getAllCells()[header.headerIndex];
+              const getCell = () => {
+                const headerIndices = refs.current.getMainHeaderIndices();
+                const allCells = getAllCells();
+                const headerIndex = headerIndices[header.id];
+                const cell = allCells[headerIndex];
+                return cell;
+              };
               const id = getCell().id;
               return {
                 id,
@@ -248,7 +256,6 @@ export const VirtualRowProvider = ({
     .join(",");
 
   useTriggerTablePropsUpdate("row_visible_range", visibleRangeCacheKey);
-  useTriggerTablePropsUpdate("row_offsets");
 
   const getVerticalOffsets = () => {
     const rowVirtualizer = memoRefs.current.rowVirtualizer;
@@ -270,6 +277,11 @@ export const VirtualRowProvider = ({
   const verticalOffsets = getVerticalOffsets();
   const verticalOffsetsRef = React.useRef(verticalOffsets);
   verticalOffsetsRef.current = verticalOffsets;
+
+  useTriggerTablePropsUpdate(
+    "row_offsets",
+    `${verticalOffsets.offsetTop},${verticalOffsets.offsetBottom}`,
+  );
 
   const context = React.useMemo(
     (): RowVirtualizerContextType => ({

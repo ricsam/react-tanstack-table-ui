@@ -7,7 +7,7 @@
     "lint": "eslint .",
     "knip": "knip",
     "prepare-release": "NODE_ENV=production bun ./scripts/prepare_release.ts",
-    "precommit-check": "pnpm lint && pnpm knip && pnpm -r exec tsc --noEmit",
+    "precommit-check": "pnpm lint && pnpm knip && pnpm -r --no-bail exec tsc --noEmit",
     "vercel:install": "pnpm install && cd examples && pnpm install",
     "vercel:build": "bun ./scripts/build_examples_for_vercel.ts && pnpm --filter @rttui/website exec vite build"
   },

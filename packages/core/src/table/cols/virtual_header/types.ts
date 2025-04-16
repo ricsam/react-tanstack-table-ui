@@ -5,5 +5,6 @@ export type HeaderIndex = {
   groupIndex: number;
   columnId: string;
   headerId: string;
+  groupId: string;
   header: Header<any, unknown>;
 };

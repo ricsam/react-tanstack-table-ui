@@ -5,16 +5,16 @@ import { useTableProps } from "../hooks/use_table_props";
 import { useTriggerTablePropsUpdate } from "../hooks/use_trigger_table_props_update";
 import { CombinedHeaderGroup, VirtualHeaderGroup } from "../types";
 import { ColVirtualizerType } from "./col_virtualizer_type";
-import { useHeaderGroupVirtualizers } from "./use_header_group_virtualizers";
+import {
+  FilteredHeaderGroup,
+  useHeaderGroupVirtualizers,
+} from "./use_header_group_virtualizers";
 import { HeaderIndex } from "./virtual_header/types";
 
 const combineHeaderGroups = (
   groups: HeaderGroup<any>[][],
   type: "header" | "footer",
-): {
-  filteredHeaderGroups: CombinedHeaderGroup[];
-  headerIndices: Record<string, undefined | HeaderIndex[]>;
-} => {
+): FilteredHeaderGroup => {
   const numGroups = Math.max(...groups.map((group) => group.length));
   const combinedGroups: CombinedHeaderGroup[] = [];
   for (let i = 0; i < numGroups; i++) {
@@ -28,6 +28,10 @@ const combineHeaderGroups = (
 
   const headerIndices: Record<string, undefined | HeaderIndex[]> = {};
   const filteredHeaderGroups: CombinedHeaderGroup[] = [];
+  const headerGroupIndices: Record<
+    string,
+    { groupIndex: number; headerIndices: Record<string, number> }
+  > = {};
 
   combinedGroups.forEach((group) => {
     let hasVisibleHeader = false;
@@ -42,6 +46,7 @@ const combineHeaderGroups = (
         columnId: header.column.id,
         headerId: header.id,
         header,
+        groupId: group.id,
       });
       if (header.column.columnDef[type]) {
         hasVisibleHeader = true;
@@ -52,9 +57,20 @@ const combineHeaderGroups = (
       Object.assign(headerIndices, groupHeaderIndices);
     }
   });
+  filteredHeaderGroups.forEach((group, i) => {
+    const headerIndices: Record<string, number> = {};
+    group.headers.forEach((header, j) => {
+      headerIndices[header.id] = j;
+    });
+    headerGroupIndices[group.id] = {
+      groupIndex: i,
+      headerIndices,
+    };
+  });
   return {
     filteredHeaderGroups,
     headerIndices,
+    headerGroupIndices,
   };
 };
 
@@ -131,9 +147,8 @@ export const ColVirtualizerProvider = ({
   useTriggerTablePropsUpdate(
     `col_visible_range_main`,
     getMainHeaderGroup()
-      .getVirtualizer()
-      .getVirtualItems()
-      .map((vi) => vi.index)
+      .getHeaders()
+      .map((vi) => vi.id)
       .join(","),
   );
 
@@ -151,15 +166,32 @@ export const ColVirtualizerProvider = ({
   //   horizontal: true,
   // });
 
+  const getMainHeaderIndices = (): Record<string, number> => {
+    const mainHeaderGroup = getMainHeaderGroup();
+    const headerIndices: Record<string, number> = {};
+    mainHeaderGroup.getHeaders().forEach((header) => {
+      headerIndices[header.id] = header.getIndex();
+    });
+    return headerIndices;
+  };
+
   const initialRefs = {
     getHeaderGroups,
     getFooterGroups,
     getMainHeaderGroup,
+    getMainHeaderIndices,
   };
   const refs = React.useRef(initialRefs);
   refs.current = initialRefs;
 
-  useTriggerTablePropsUpdate("col_offsets");
+  let offsetsCacheKey = "";
+  [getHeaderGroups, getFooterGroups].forEach((getGroups) => {
+    getGroups().forEach((group) => {
+      const { offsetLeft, offsetRight } = group.getOffsets();
+      offsetsCacheKey += `${offsetLeft},${offsetRight}`;
+    });
+  });
+  useTriggerTablePropsUpdate("col_offsets", offsetsCacheKey);
 
   return (
     <ColVirtualizerContext.Provider
@@ -168,6 +200,7 @@ export const ColVirtualizerProvider = ({
           getHeaderGroups: () => refs.current.getHeaderGroups(),
           getFooterGroups: () => refs.current.getFooterGroups(),
           getMainHeaderGroup: () => refs.current.getMainHeaderGroup(),
+          getMainHeaderIndices: () => refs.current.getMainHeaderIndices(),
         }),
         [],
       )}

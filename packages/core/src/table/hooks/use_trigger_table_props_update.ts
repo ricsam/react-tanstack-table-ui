@@ -11,7 +11,7 @@ export const useTriggerTablePropsUpdate = (
   const cacheKeyChanged = cacheKeyRef.current !== cacheKey;
   cacheKeyRef.current = cacheKey;
 
-  const shouldUpdate = Boolean(cacheKeyChanged || !cacheKey);
+  const shouldUpdate = cacheKeyChanged || typeof cacheKey !== "string";
 
   const shouldUpdateInEffectRef = React.useRef(shouldUpdate);
 

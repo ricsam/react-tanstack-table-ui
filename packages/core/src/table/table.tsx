@@ -604,7 +604,8 @@ const Content = React.memo(function Content({
         const headerGroups = group.getHeaders();
         for (const header of headerGroups) {
           const headerInstance = header.header();
-          const hCrushMinSizeBy = headerInstance.column.columnDef.meta?.crushMinSizeBy;
+          const hCrushMinSizeBy =
+            headerInstance.column.columnDef.meta?.crushMinSizeBy;
           if (hCrushMinSizeBy && crushMinSizeBy !== hCrushMinSizeBy) {
             return "both";
           }
@@ -641,6 +642,16 @@ const Content = React.memo(function Content({
     },
   );
 
+  const rowVirtualizerRef = React.useRef(rowVirtualizer);
+  rowVirtualizerRef.current = rowVirtualizer;
+
+  const getRows = React.useCallback(() => {
+    return rowVirtualizerRef.current.getRows();
+  }, []);
+  const getVerOffsets = React.useCallback(() => {
+    return rowVirtualizerRef.current.getVerticalOffsets();
+  }, []);
+
   let tableHeader: React.ReactNode | undefined;
   let tableBody: React.ReactNode | undefined;
   let tableFooter: React.ReactNode | undefined;
@@ -655,10 +666,7 @@ const Content = React.memo(function Content({
 
   if (!isMeasuring || crushMinSizeBy !== "header") {
     tableBody = (
-      <TableBody
-        getRows={rowVirtualizer.getRows}
-        getVerOffsets={rowVirtualizer.getVerticalOffsets}
-      ></TableBody>
+      <TableBody getRows={getRows} getVerOffsets={getVerOffsets}></TableBody>
     );
   }
 

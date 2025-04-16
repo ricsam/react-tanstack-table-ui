@@ -2,8 +2,15 @@ import { useColProps, useColRef } from "@rttui/core";
 import { MdChevronLeft, MdChevronRight, MdClose } from "react-icons/md";
 
 export const HeaderPinButtons = () => {
-  const isPinned = useColProps(({ vheader }) => vheader.getState().isPinned);
+  const { isPinned, canPin } = useColProps(({ vheader }) => ({
+    isPinned: vheader.getState().isPinned,
+    canPin: vheader.header().column.getCanPin(),
+  }));
+
   const headerRef = useColRef();
+  if (!canPin) {
+    return null;
+  }
   return (
     <div style={{ display: "flex", gap: "-4px", justifyContent: "flex-start" }}>
       {isPinned !== "start" ? (

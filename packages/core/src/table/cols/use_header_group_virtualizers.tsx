@@ -25,9 +25,13 @@ import { HorOffsets } from "./col_virtualizer_type";
 const useIsomorphicLayoutEffect =
   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
-type FilteredHeaderGroup = {
+export type FilteredHeaderGroup = {
   filteredHeaderGroups: CombinedHeaderGroup[];
   headerIndices: Record<string, undefined | HeaderIndex[]>;
+  headerGroupIndices: Record<
+    string,
+    { groupIndex: number; headerIndices: Record<string, number> }
+  >;
 };
 
 export function useHeaderGroupVirtualizers(props: {
@@ -36,8 +40,18 @@ export function useHeaderGroupVirtualizers(props: {
 }): () => VirtualHeaderGroup[] {
   const { tableContainerRef, config } = useTableContext();
 
+  const getters = {
+    getHeaderGroupIndices: () =>
+      props.headerGroupsRef.current.headerGroupIndices,
+    getFilteredHeaderGroups: () =>
+      props.headerGroupsRef.current.filteredHeaderGroups,
+    getHeaderIndices: () => props.headerGroupsRef.current.headerIndices,
+  };
+  const gettersRef = React.useRef(getters);
+  gettersRef.current = getters;
+
   const baseColVirtOpts = (
-    headerGroupIndex: number,
+    groupId: string,
   ): Pick<
     VirtualizerOptions<HTMLDivElement, Element>,
     | "getScrollElement"
@@ -53,8 +67,10 @@ export function useHeaderGroupVirtualizers(props: {
       // debug: true,
       overscan: config.columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
       rangeExtractor: (range) => {
-        const headerGroup =
-          props.headerGroupsRef.current.filteredHeaderGroups[headerGroupIndex];
+        const { getHeaderGroupIndices, getFilteredHeaderGroups } =
+          gettersRef.current;
+        const { groupIndex } = getHeaderGroupIndices()[groupId];
+        const headerGroup = getFilteredHeaderGroups()[groupIndex];
         const headersInstance = headerGroup.headers;
         const defaultRange = defaultRangeExtractor(range);
         const next = new Set(defaultRange);
@@ -72,8 +88,10 @@ export function useHeaderGroupVirtualizers(props: {
         return sortedRange;
       },
       getItemKey(index) {
-        const headerGroup =
-          props.headerGroupsRef.current.filteredHeaderGroups[headerGroupIndex];
+        const { getHeaderGroupIndices, getFilteredHeaderGroups } =
+          gettersRef.current;
+        const { groupIndex } = getHeaderGroupIndices()[groupId];
+        const headerGroup = getFilteredHeaderGroups()[groupIndex];
         const headersInstance = headerGroup.headers;
         return headersInstance[index].id;
       },
@@ -82,61 +100,63 @@ export function useHeaderGroupVirtualizers(props: {
 
   const rerender = React.useReducer(() => ({}), {})[1];
 
-  const headerColVirtualizerOptions =
-    props.headerGroupsRef.current.filteredHeaderGroups.map(
-      (
-        headerGroup,
-        headerGroupIndex,
-      ): (() => VirtualizerOptions<HTMLDivElement, Element>) => {
-        return () => ({
-          // todo, don't call here, instead call when headerColVirterOptions is used
-          ...baseColVirtOpts(headerGroupIndex),
-          count: headerGroup.headers.length,
-          estimateSize: (index) => headerGroup.headers[index].getSize(),
-          observeElementRect,
-          observeElementOffset,
-          scrollToFn: () => {},
-          onChange: (_, sync) => {
-            if (sync) {
-              flushSync(rerender);
-            } else {
-              rerender();
-            }
-          },
-        });
+  const headerColVirtualizerOptions: Record<
+    string,
+    () => VirtualizerOptions<HTMLDivElement, Element>
+  > = {};
+  props.headerGroupsRef.current.filteredHeaderGroups.forEach((headerGroup) => {
+    headerColVirtualizerOptions[headerGroup.id] = () => ({
+      // todo, don't call here, instead call when headerColVirterOptions is used
+      ...baseColVirtOpts(headerGroup.id),
+      count: headerGroup.headers.length,
+      estimateSize: (index) => headerGroup.headers[index].getSize(),
+      observeElementRect,
+      observeElementOffset,
+      scrollToFn: () => {},
+      onChange: (_, sync) => {
+        if (sync) {
+          flushSync(rerender);
+        } else {
+          rerender();
+        }
       },
-    );
+    });
+  });
 
   const headerColVirtualizersCache = React.useRef<
-    Virtualizer<HTMLDivElement, Element>[]
-  >([]);
+    Record<string, Virtualizer<HTMLDivElement, Element>>
+  >({});
   const headerColVirtualizers = React.useRef<
-    Virtualizer<HTMLDivElement, Element>[]
-  >([]);
+    Record<string, Virtualizer<HTMLDivElement, Element>>
+  >({});
 
   if (
-    headerColVirtualizerOptions.length >
-    headerColVirtualizersCache.current.length
+    Object.keys(headerColVirtualizerOptions).length >
+    Object.keys(headerColVirtualizersCache.current).length
   ) {
     const prevVirtualizer: Virtualizer<HTMLDivElement, Element> | undefined =
-      headerColVirtualizers.current[headerColVirtualizers.current.length - 1];
+      headerColVirtualizers.current[
+        Object.keys(headerColVirtualizers.current)[0]
+      ];
     for (
-      let i = headerColVirtualizers.current.length;
-      i < headerColVirtualizerOptions.length;
+      let i = Object.keys(headerColVirtualizers.current).length;
+      i < Object.keys(headerColVirtualizerOptions).length;
       i++
     ) {
+      const id = props.headerGroupsRef.current.filteredHeaderGroups[i].id;
       const newVirtualizer = new Virtualizer({
-        ...headerColVirtualizerOptions[i](),
+        ...headerColVirtualizerOptions[id](),
         initialOffset: prevVirtualizer?.scrollOffset ?? undefined,
       });
-      headerColVirtualizersCache.current.push(newVirtualizer);
+      headerColVirtualizersCache.current[id] = newVirtualizer;
     }
   }
 
-  headerColVirtualizers.current = headerColVirtualizersCache.current.slice(
-    0,
-    headerColVirtualizerOptions.length,
-  );
+  headerColVirtualizers.current = {};
+  for (let i = 0; i < Object.keys(headerColVirtualizerOptions).length; i++) {
+    const id = props.headerGroupsRef.current.filteredHeaderGroups[i].id;
+    headerColVirtualizers.current[id] = headerColVirtualizersCache.current[id];
+  }
 
   const { columnSizingInfo, columnSizing } = useTableProps((table) => {
     const { columnSizingInfo, columnSizing } = table.getState();
@@ -146,36 +166,32 @@ export function useHeaderGroupVirtualizers(props: {
   useIsomorphicLayoutEffect(() => {
     if (columnSizingInfo.isResizingColumn) {
       const indices =
-        props.headerGroupsRef.current.headerIndices[
+        gettersRef.current.getHeaderIndices()[
           columnSizingInfo.isResizingColumn
         ];
       if (!indices) {
         return;
       }
-      indices.forEach(({ headerIndex, groupIndex, header }) => {
-        const virtualizer = headerColVirtualizers.current[groupIndex];
+      indices.forEach(({ headerIndex, header, groupId }) => {
+        const virtualizer = headerColVirtualizers.current[groupId];
         const headerSize = header.getSize();
 
         virtualizer.resizeItem(headerIndex, headerSize);
       });
     }
-  }, [
-    columnSizingInfo.isResizingColumn,
-    props.headerGroupsRef.current.headerIndices,
-    columnSizing,
-  ]);
+  }, [columnSizingInfo.isResizingColumn, columnSizing]);
 
-  headerColVirtualizers.current.forEach((cv, i) => {
+  Object.entries(headerColVirtualizers.current).forEach(([groupId, cv]) => {
     cv.shouldAdjustScrollPositionOnItemSizeChange = undefined;
     cv.setOptions({
-      ...headerColVirtualizerOptions[i](),
+      ...headerColVirtualizerOptions[groupId](),
       initialOffset: cv.options.initialOffset,
     });
     cv.calculateRange();
   });
 
   useIsomorphicLayoutEffect(() => {
-    const cleanups = headerColVirtualizers.current.map((cv) => {
+    const cleanups = Object.values(headerColVirtualizers.current).map((cv) => {
       return cv._didMount();
     });
     return () => {
@@ -186,22 +202,10 @@ export function useHeaderGroupVirtualizers(props: {
   }, []);
 
   useIsomorphicLayoutEffect(() => {
-    headerColVirtualizers.current.forEach((cv) => {
+    Object.values(headerColVirtualizers.current).forEach((cv) => {
       cv._willUpdate();
     });
   });
-
-  useTriggerTablePropsUpdate(
-    `col_visible_range_${props.type}`,
-    headerColVirtualizers.current
-      .map((cv) =>
-        cv
-          .getVirtualItems()
-          .map((vi) => vi.index)
-          .join(","),
-      )
-      .join("|"),
-  );
 
   type GroupCache = {
     headers?: VirtualHeaderCell[];
@@ -221,40 +225,54 @@ export function useHeaderGroupVirtualizers(props: {
        */
       writeToCache?: boolean,
     ) => {
-      const updateGroupCache = (i: number, data: GroupCache) => {
-        if (!groupCache.current[i]) {
-          groupCache.current[i] = {};
+      const updateGroupCache = (groupId: string, data: GroupCache) => {
+        const { getHeaderGroupIndices } = gettersRef.current;
+        const { groupIndex } = getHeaderGroupIndices()[groupId];
+        if (!groupCache.current[groupIndex]) {
+          groupCache.current[groupIndex] = {};
         }
-        Object.assign(groupCache.current[i], data);
+        Object.assign(groupCache.current[groupIndex], data);
       };
-      const getGroupCache = <T extends keyof GroupCache>(i: number, key: T) => {
-        return groupCache.current[i]?.[key];
+      const getGroupCache = <T extends keyof GroupCache>(
+        groupId: string,
+        key: T,
+      ) => {
+        const { getHeaderGroupIndices } = gettersRef.current;
+        const { groupIndex } = getHeaderGroupIndices()[groupId];
+        return groupCache.current[groupIndex]?.[key];
       };
       const updateStateCache = (id: string, data: VirtualHeaderCellState) => {
         stateCache.current[id] = data;
       };
-      const getStateCache = (id: string): VirtualHeaderCellState | undefined => {
+      const getStateCache = (
+        id: string,
+      ): VirtualHeaderCellState | undefined => {
         return stateCache.current[id];
       };
       const virtualHeaderGroups =
         props.headerGroupsRef.current.filteredHeaderGroups.map(
-          (_, i): VirtualHeaderGroup => {
+          ({ id: groupId }): VirtualHeaderGroup => {
             const getVirtualHeader = (
               headerFn: () => Header<any, unknown>,
-              headerIndex: number,
+              getIndex: () => number,
               start: number,
             ): VirtualHeaderCell => {
-              const fixedHeader = headerFn();
-
               const getState = () => {
                 const header = headerFn();
-                const cacheEntry = getStateCache(header.id);
+                const headerId = header.id;
+                const { getHeaderGroupIndices } = gettersRef.current;
+                const { groupIndex, headerIndices } =
+                  getHeaderGroupIndices()[groupId];
+                const headerIndex = headerIndices[headerId];
+                const cacheEntry = getStateCache(headerId);
                 if (cacheEntry) {
                   return cacheEntry;
                 }
                 const isPinned = getIsPinned(header);
                 const headerGroup =
-                  props.headerGroupsRef.current.filteredHeaderGroups[i];
+                  props.headerGroupsRef.current.filteredHeaderGroups[
+                    groupIndex
+                  ];
 
                 const width = header.getSize();
                 const allHeaders = headerGroup.headers;
@@ -306,6 +324,7 @@ export function useHeaderGroupVirtualizers(props: {
                 return state;
               };
 
+              const fixedHeader = headerFn();
               if (writeToCache) {
                 updateStateCache(fixedHeader.id, getState());
               }
@@ -314,39 +333,41 @@ export function useHeaderGroupVirtualizers(props: {
                 header: headerFn,
                 id: fixedHeader.id,
                 columnId: fixedHeader.column.id,
-                headerIndex,
                 type: props.type,
                 getState,
+                getIndex,
               };
             };
 
             const getHeaders = () => {
-              const cacheEntry = getGroupCache(i, "headers");
+              const cacheEntry = getGroupCache(groupId, "headers");
               if (cacheEntry) {
                 return cacheEntry;
               }
 
-              const virtualizer = headerColVirtualizers.current[i];
+              const { getHeaderGroupIndices } = gettersRef.current;
+              const { groupIndex } = getHeaderGroupIndices()[groupId];
+              const virtualizer = headerColVirtualizers.current[groupId];
               const headerGroup =
-                props.headerGroupsRef.current.filteredHeaderGroups[i];
+                props.headerGroupsRef.current.filteredHeaderGroups[groupIndex];
               const headers = virtualizer.getVirtualItems().map((vc) => {
                 return getVirtualHeader(
                   () => {
                     return headerGroup.headers[vc.index];
                   },
-                  vc.index,
+                  () => vc.index,
                   vc.start,
                 );
               });
-              updateGroupCache(i, { headers });
+              updateGroupCache(groupId, { headers });
               return headers;
             };
 
             const getOffsets = (): HorOffsets => {
-              const virtualizer = headerColVirtualizers.current[i];
+              const virtualizer = headerColVirtualizers.current[groupId];
               const totalSize = virtualizer.getTotalSize();
 
-              const cacheEntry = getGroupCache(i, "offsets");
+              const cacheEntry = getGroupCache(groupId, "offsets");
               if (cacheEntry) {
                 return cacheEntry;
               }
@@ -355,21 +376,21 @@ export function useHeaderGroupVirtualizers(props: {
                 headers: getHeaders(),
                 totalSize,
               });
-              updateGroupCache(i, { offsets });
+              updateGroupCache(groupId, { offsets });
               return offsets;
             };
             if (writeToCache) {
-              updateGroupCache(i, {
+              updateGroupCache(groupId, {
                 headers: getHeaders(),
                 offsets: getOffsets(),
               });
             }
 
-            const headerGroup =
-              props.headerGroupsRef.current.filteredHeaderGroups[i];
             return {
-              getVirtualizer: () => headerColVirtualizers.current[i],
-              id: headerGroup.id,
+              getVirtualizer: () => {
+                return headerColVirtualizers.current[groupId];
+              },
+              id: groupId,
               type: props.type,
               getHeaders,
               getOffsets,
@@ -384,7 +405,19 @@ export function useHeaderGroupVirtualizers(props: {
 
   groupCache.current = [];
   stateCache.current = {};
-  getVirtualHeaderGroups(true);
+  const virtualHeaderGroups = getVirtualHeaderGroups(true);
+
+  useTriggerTablePropsUpdate(
+    `col_visible_range_${props.type}`,
+    virtualHeaderGroups
+      .map((cv) =>
+        cv
+          .getHeaders()
+          .map((vi) => vi.id)
+          .join(","),
+      )
+      .join("|"),
+  );
 
   return getVirtualHeaderGroups;
 }

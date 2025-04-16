@@ -12,7 +12,6 @@ export const HeaderCell = React.memo(
     const {
       isPinned,
       width,
-      headerIndex,
       headerId,
       canDrag,
       canPin,
@@ -31,7 +30,6 @@ export const HeaderCell = React.memo(
         isResizing: column.getIsResizing(),
         isPinned: state.isPinned,
         width: state.width,
-        headerIndex: vheader.headerIndex,
         headerId: vheader.id,
         isPlaceholder: header.isPlaceholder,
       };
@@ -41,7 +39,6 @@ export const HeaderCell = React.memo(
       <div
         className="th"
         ref={ref}
-        data-header-index={headerIndex}
         data-header-id={headerId}
         style={{
           opacity: 1,

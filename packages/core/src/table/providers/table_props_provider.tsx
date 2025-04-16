@@ -45,13 +45,7 @@ export const TablePropsProvider = ({
       triggerUpdate,
       updateTable: (table: Table<any>, rerender: boolean) => {
         initialTable = table;
-        updateListeners.table.forEach((listener) => {
-          try {
-            listener(table, rerender);
-          } catch (err) {
-            // ignore errors
-          }
-        });
+        triggerUpdate("table", rerender);
       },
       updateListeners,
       initialTable: () => {

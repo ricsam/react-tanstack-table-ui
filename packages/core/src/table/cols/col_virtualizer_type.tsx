@@ -9,4 +9,5 @@ export type ColVirtualizerType = {
   getFooterGroups: () => VirtualHeaderGroup[];
   getHeaderGroups: () => VirtualHeaderGroup[];
   getMainHeaderGroup: () => VirtualHeaderGroup;
+  getMainHeaderIndices: () => Record<string, number>;
 };

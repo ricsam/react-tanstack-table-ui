@@ -61,7 +61,7 @@ export type VirtualHeaderCell = {
   id: string;
   type: "header" | "footer";
   columnId: string;
-  headerIndex: number;
+  getIndex: () => number;
   header: () => Header<any, any>;
   getState: () => VirtualHeaderCellState;
 };
