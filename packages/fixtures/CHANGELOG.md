@@ -1,5 +1,11 @@
 # @rttui/fixtures
 
+## 1.0.6
+
+### Patch Changes
+
+- new data flow
+
 ## 1.0.5
 
 ### Patch Changes

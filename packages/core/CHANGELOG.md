@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.28
+
+### Patch Changes
+
+- new data flow
+
 ## 1.0.27
 
 ### Patch Changes
