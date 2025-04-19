@@ -1,7 +1,7 @@
 import React from "react";
 import { RowVirtualizerContext } from "../contexts/row_virtualizer_context";
 
-export const useRowVirtualizer = () => {
+export const useRowVirtualizer = (): unknown => {
   const context = React.useContext(RowVirtualizerContext);
   if (!context) {
     throw new Error(

@@ -1,14 +1,14 @@
-import { useColProps } from "@rttui/core";
+import { shallowEqual, useColProps } from "@rttui/core";
 import React from "react";
 
 export const TableHeaderCell = React.memo(
   React.forwardRef<
     HTMLDivElement,
     {
-      isMeasuring: boolean;
+      isMeasureInstance: boolean;
       children: React.ReactNode;
     }
-  >(({ isMeasuring, children }, ref) => {
+  >(({ isMeasureInstance, children }, ref) => {
     const {
       isSomeColumnsPinnedRight,
       headerId,
@@ -18,18 +18,23 @@ export const TableHeaderCell = React.memo(
       isLastPinned,
       isLastCenter,
       columnId,
-    } = useColProps(({ vheader, table }) => {
-      const state = vheader.getState();
-      return {
-        isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
-        headerId: vheader.id,
-        isPinned: state.isPinned,
-        width: state.width,
-        isLast: state.isLast,
-        isLastPinned: state.isLastPinned,
-        isLastCenter: state.isLastCenter,
-        columnId: vheader.columnId,
-      };
+    } = useColProps({
+      callback: ({ vheader, selectorValue }) => {
+        const state = vheader.state;
+        return {
+          isSomeColumnsPinnedRight:
+            selectorValue.tanstackTable.getIsSomeColumnsPinned("right"),
+          headerId: vheader.header.id,
+          isPinned: state.isPinned,
+          width: state.width,
+          isLast: state.isLast,
+          isLastPinned: state.isLastPinned,
+          isLastCenter: state.isLastCenter,
+          columnId: vheader.header.column.id,
+        };
+      },
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: shallowEqual,
     });
     return (
       <div
@@ -40,7 +45,7 @@ export const TableHeaderCell = React.memo(
         ref={ref}
         style={{
           height: "var(--header-row-height)",
-          width: isMeasuring ? "auto" : width,
+          width: isMeasureInstance ? "auto" : width,
           zIndex: isPinned ? 11 : 10,
           flexShrink: 0,
           boxSizing: "border-box",

@@ -1,11 +1,15 @@
-import { useColProps, useColRef } from "@rttui/core";
+import { shallowEqual, useColProps, useColRef } from "@rttui/core";
 
 export function HeaderPinButtons() {
-  const { isPinned } = useColProps(({ vheader, column }) => {
-    return {
-      isPinned: vheader.getState().isPinned,
-      canPin: column.getCanPin(),
-    };
+  const { isPinned } = useColProps({
+    callback: ({ vheader, column }) => {
+      return {
+        isPinned: vheader.state.isPinned,
+        canPin: column.getCanPin(),
+      };
+    },
+    dependencies: [{ type: "tanstack_table" }],
+    areCallbackOutputEqual: shallowEqual,
   });
 
   const colRef = useColRef();

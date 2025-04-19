@@ -1,6 +1,6 @@
 import React from "react";
-import { useTablePropsContext } from "../hooks/use_table_props_context";
 import { Dependency } from "../contexts/table_props_context";
+import { useTablePropsContext } from "../hooks/use_table_props_context";
 
 export type TriggerUpdateDep = {
   dependency: Dependency;
@@ -24,18 +24,24 @@ export const useTriggerTablePropsUpdate = (deps: TriggerUpdateDep[]) => {
   );
 
   if (shouldUpdate.length > 0) {
-    shouldUpdate.forEach((dep) => {
-      triggerUpdate(dep.dependency, false);
-    });
+    triggerUpdate(
+      shouldUpdate.map((d) => d.dependency),
+      {
+        type: "from_render_method",
+      },
+    );
     shouldUpdateInEffectRef.current = shouldUpdate;
   }
 
   React.useLayoutEffect(() => {
     const shouldUpdate = shouldUpdateInEffectRef.current;
     if (shouldUpdate) {
-      shouldUpdate.forEach((dep) => {
-        triggerUpdate(dep.dependency, true);
-      });
+      triggerUpdate(
+        shouldUpdate.map((d) => d.dependency),
+        {
+          type: "from_layout_effect",
+        },
+      );
       shouldUpdateInEffectRef.current = false;
     }
   });

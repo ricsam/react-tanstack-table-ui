@@ -1,58 +1,51 @@
 import React from "react";
-import { useTableContext } from "../table_context";
-import { VirtualHeaderGroup } from "../types";
-import { HeaderColsSlice } from "./header_cols_slice";
+import { shallowEqual } from "../../utils";
 import { useTableProps } from "../hooks/use_table_props";
+import { useTableContext } from "../table_context";
+import { HeaderColsSlice } from "./header_cols_slice";
 
 export const HeaderGroup = React.memo(function HeaderGroup({
-  headerGroup,
+  groupIndex,
+  type,
 }: {
-  headerGroup: VirtualHeaderGroup;
+  groupIndex: number;
+  type: "header" | "footer";
 }) {
-  const { skin, pinColsRelativeTo } = useTableContext();
-  const { offsetLeft, offsetRight } = useTableProps(
-    () => {
-      const { offsetLeft, offsetRight } = headerGroup.getOffsets();
+  const { skin } = useTableContext();
+
+  const { offsetLeft, offsetRight, pinColsRelativeTo } = useTableProps({
+    selector(props) {
+      const headerGroup =
+        type === "header"
+          ? props.virtualData.header.groupLookup[groupIndex]
+          : props.virtualData.footer.groupLookup[groupIndex];
+      return { headerGroup, uiProps: props.uiProps };
+    },
+    callback: ({ headerGroup, uiProps }) => {
+      const { offsetLeft, offsetRight } = headerGroup;
       return {
         offsetLeft,
         offsetRight,
+        pinColsRelativeTo: uiProps.pinColsRelativeTo,
       };
     },
-    {
-      dependencies: [
-        { type: "table" },
-        {
-          type: "col_offsets",
-          groupType: headerGroup.type,
-          groupId: headerGroup.id,
-        },
-      ],
-    },
-  );
-  const { type } = headerGroup;
-  const headerGroupRef = React.useRef(headerGroup);
-
-  const getHeaders = React.useCallback(() => {
-    return headerGroupRef.current.getHeaders();
-  }, []);
-
-  const groupId = headerGroup.id;
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [
+      { type: "ui_props" },
+      { type: "tanstack_table" },
+      {
+        type: "col_offsets",
+        groupType: type,
+        groupIndex,
+      },
+    ],
+  });
 
   return (
     <skin.HeaderRow type={type}>
-      <HeaderColsSlice
-        type={type}
-        pinPos="start"
-        getHeaders={getHeaders}
-        groupId={groupId}
-      />
+      <HeaderColsSlice type={type} pinPos="start" groupIndex={groupIndex} />
       <div style={{ width: offsetLeft, flexShrink: 0 }}></div>
-      <HeaderColsSlice
-        type={type}
-        pinPos={false}
-        getHeaders={getHeaders}
-        groupId={groupId}
-      />
+      <HeaderColsSlice type={type} pinPos={false} groupIndex={groupIndex} />
       <div
         style={
           pinColsRelativeTo === "table"
@@ -67,12 +60,7 @@ export const HeaderGroup = React.memo(function HeaderGroup({
               }
         }
       ></div>
-      <HeaderColsSlice
-        type={type}
-        pinPos="end"
-        getHeaders={getHeaders}
-        groupId={groupId}
-      />
+      <HeaderColsSlice type={type} pinPos="end" groupIndex={groupIndex} />
     </skin.HeaderRow>
   );
 });

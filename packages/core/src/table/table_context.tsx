@@ -1,27 +1,9 @@
-import { Row } from "@tanstack/react-table";
 import React from "react";
 import { Skin } from "../skin";
-import { MeasureData, ShouldUpdate } from "./types";
 
-type TableConfig = {
-  columnOverscan: number;
-  rowOverscan: number;
-};
-
-type TableContextType = {
-  width: number;
-  height: number;
+export type TableContextType = {
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   skin: Skin;
-  config: TableConfig;
-  renderSubComponent?: (row: Row<any>) => React.ReactNode;
-  measureCells: (cb: (measureData: MeasureData) => void) => void;
-  pinColsRelativeTo: "cols" | "table";
-  pinRowsRelativeTo: "rows" | "table";
-  crushMinSizeBy: "header" | "cell" | "both";
-  refs: React.RefObject<{
-    shouldUpdate?: ShouldUpdate;
-  }>;
   loading: boolean;
 };
 

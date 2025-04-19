@@ -1,15 +1,17 @@
-import { useTableProps } from "@rttui/core";
+import { shallowEqual, useTableProps } from "@rttui/core";
 import React, { useRef, RefObject, useLayoutEffect } from "react";
 
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ getProps, className = "", onChange }, ref) => {
     const internalRef = useRef<HTMLInputElement>(null);
     const resolvedRef = (ref || internalRef) as RefObject<HTMLInputElement>;
-    const { checked, indeterminate, disabled, value } = useTableProps(
-      () => {
+    const { checked, indeterminate, disabled, value } = useTableProps({
+      callback: () => {
         return getProps();
       },
-    );
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: shallowEqual,
+    });
 
     useLayoutEffect(() => {
       if (resolvedRef.current) {

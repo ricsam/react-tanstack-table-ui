@@ -1,26 +1,52 @@
-import { Table } from "@tanstack/react-table";
 import React from "react";
-import { shallowEqual } from "../../utils";
-import { Dependency } from "../contexts/table_props_context";
+import { memoize, strictEqual } from "../../utils";
+import {
+  Dependency,
+  UpdateListenerEntry,
+  UpdateType,
+} from "../contexts/table_props_context";
+import { RttuiTable } from "../types";
+import { useMeasureContext } from "./use_measure_context";
 import { useTablePropsContext } from "./use_table_props_context";
 
-export type UseTablePropsOptions<T> = {
-  arePropsEqual?: (prevProps: T, newProps: T) => boolean;
+export type UseTablePropsOptions<T, U> = {
+  areCallbackOutputEqual?: (prevProps: T, newProps: T) => boolean;
   dependencies?: Dependency[];
+  selector?: (table: RttuiTable) => U;
+  callback: (table: U) => T;
 };
 
-export const useTableProps = <T,>(
-  callback: (table: Table<any>) => T,
-  {
-    arePropsEqual = shallowEqual,
-    dependencies = [{ type: "table" }],
-  }: UseTablePropsOptions<T> = {},
-): T => {
+export const useTableProps = <T, U = RttuiTable>({
+  areCallbackOutputEqual = strictEqual,
+  dependencies = [{ type: "*" }],
+  selector,
+  callback,
+}: UseTablePropsOptions<T, U>): T => {
+  const callbacks = { callback, areCallbackOutputEqual, selector };
+  const callbackRefs = React.useRef(callbacks);
+  callbackRefs.current = callbacks;
+
+  const memoCallback = React.useMemo(() => {
+    const fn = memoize(
+      (
+        /**
+         * essentially U
+         */
+        table: any,
+      ): T => callbackRefs.current.callback(table),
+    );
+    const selector = callbackRefs.current.selector
+      ? memoize(callbackRefs.current.selector)
+      : undefined;
+    return (table: RttuiTable) => {
+      return fn(selector ? selector(table) : table);
+    };
+  }, []);
   const context = useTablePropsContext();
   const prevVal = React.useRef<T | undefined>(undefined);
   let latest: T | undefined;
   try {
-    latest = callback(context.initialTable());
+    latest = memoCallback(context.initialTable());
   } catch (e) {
     // ignore, probably during unmount
     // return the previous value
@@ -31,34 +57,54 @@ export const useTableProps = <T,>(
     }
   }
   prevVal.current = latest;
-  const [renderCount, setRenderCount] = React.useState(0);
 
   const value = React.useRef<T>(latest);
   const lastCommittedValue = React.useRef<T>(latest);
 
-  const callbacks = { callback, arePropsEqual };
-  const callbackRefs = React.useRef(callbacks);
-  callbackRefs.current = callbacks;
-  const renderCountRef = React.useRef(renderCount);
-  renderCountRef.current = renderCount;
+  const [rerenderCount, setRerenderCount] = React.useState(0);
+  const rerenderCountRef = React.useRef(rerenderCount);
+  rerenderCountRef.current = rerenderCount;
+
+  const memoCallbackRef = React.useRef(memoCallback);
+  memoCallbackRef.current = memoCallback;
+
   React.useEffect(() => {
-    const listener = (_dependency: Dependency) => (table: Table<any>, rerender: boolean) => {
-      const result = callbackRefs.current.callback(table);
-      const areEqual = callbackRefs.current.arePropsEqual(
-        value.current,
-        result,
-      );
-      if (!areEqual) {
-        value.current = result;
-      }
-      if (rerender && lastCommittedValue.current !== value.current) {
-        // console.log('batching', renderCountRef.current, _dependency.type)
-        setRenderCount(renderCountRef.current + 1); // batch updates together
-      }
-    };
+    const listener =
+      (_dependency: Dependency) =>
+      (table: RttuiTable, updateType: UpdateType) => {
+        let hadIssue = false;
+        try {
+          const result = memoCallbackRef.current(table);
+          const areEqual = callbackRefs.current.areCallbackOutputEqual(
+            value.current,
+            result,
+          );
+          if (!areEqual) {
+            value.current = result;
+          }
+        } catch (e) {
+          // ignore
+          hadIssue = true;
+        }
+        const rerender = () => {
+          setRerenderCount(rerenderCountRef.current + 1);
+        };
+        if (lastCommittedValue.current !== value.current) {
+          if (updateType.type === "from_layout_effect") {
+            rerender();
+          } else if (updateType.type === "from_dom_event") {
+            // if (updateType.sync) {
+            //   flushSync(rerender);
+            // } else {
+            // rerender();
+            // }
+            rerender();
+          }
+        }
+      };
     const teardown: (() => void)[] = [];
     dependencies.forEach((dependency) => {
-      const listenerArtifact: any = {
+      const listenerArtifact: UpdateListenerEntry = {
         callback: listener(dependency),
         dependency,
       };
@@ -77,7 +123,7 @@ export const useTableProps = <T,>(
 
   let result: T;
   try {
-    result = callback(context.initialTable());
+    result = memoCallback(context.initialTable());
   } catch (e) {
     // ignore, probably during unmount
     // return the previous value
@@ -87,12 +133,17 @@ export const useTableProps = <T,>(
       throw e;
     }
   }
-  const areEqual = arePropsEqual(value.current, result);
+  const areEqual = areCallbackOutputEqual(value.current, result);
   if (!areEqual) {
     value.current = result;
   }
 
   lastCommittedValue.current = value.current;
+
+  // const measureContext = useMeasureContext();
+  // if (!measureContext.consumerOnMeasureCb && !measureContext.isMeasuring) {
+  //   console.trace("useTableProps");
+  // }
 
   return value.current;
 };

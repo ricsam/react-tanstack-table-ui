@@ -1,24 +1,26 @@
-import { Table } from "@tanstack/react-table";
 import React from "react";
+import {
+  UpdateListenerEntries,
+  UpdateType,
+} from "../contexts/table_props_context";
+import { RttuiTable } from "../types";
 import { useTablePropsContext } from "./use_table_props_context";
-
 export const useListenToTableUpdate = (
-  callback: (table: Table<any>) => void,
+  callback: (table: RttuiTable, updateType: UpdateType) => void,
 ) => {
   const context = useTablePropsContext();
   const callbackRef = React.useRef(callback);
   callbackRef.current = callback;
   React.useEffect(() => {
-    const listener = (table: Table<any>) => {
-      callbackRef.current(table);
+    const listenerEntry: UpdateListenerEntries["*"] = {
+      callback: (table, updateType) => {
+        callbackRef.current(table, updateType);
+      },
+      dependency: { type: "*" },
     };
-    const listenerEntry: any = {
-      callback: listener,
-      dependency: { type: "table" },
-    };
-    context.updateListeners.table.add(listenerEntry);
+    context.updateListeners["*"].add(listenerEntry);
     return () => {
-      context.updateListeners.table.delete(listenerEntry);
+      context.updateListeners["*"].delete(listenerEntry);
     };
   }, [context]);
 };

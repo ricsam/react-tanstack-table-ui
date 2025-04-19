@@ -1,6 +1,6 @@
 import React from "react";
-import { VirtualCell } from "../types";
+import { RttuiCell } from "../types";
 
-export const VirtualCellContext = React.createContext<VirtualCell | undefined>(
-  undefined,
-);
+export const VirtualCellContext = React.createContext<
+  (() => RttuiCell) | undefined
+>(undefined);

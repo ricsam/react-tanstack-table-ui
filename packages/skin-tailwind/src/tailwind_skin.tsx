@@ -1,5 +1,7 @@
 import {
+  shallowEqual,
   type Skin,
+  strictEqual,
   useCellProps,
   useRowProps,
   useTableContext,
@@ -15,7 +17,17 @@ export const TailwindSkin: Skin = {
   headerRowHeight: 56,
   footerRowHeight: 56,
   OverlayContainer: ({ children }) => {
-    const { width, height } = useTableContext();
+    const { width, height } = useTableProps({
+      selector: (props) => props.uiProps,
+      callback: ({ width, height }) => {
+        return {
+          width,
+          height,
+        };
+      },
+      dependencies: [{ type: "ui_props" }],
+      areCallbackOutputEqual: shallowEqual,
+    });
     const cssVars = useTableCssVars();
     return (
       <div
@@ -168,14 +180,16 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  TableRowWrapper: React.forwardRef(({ children, flatIndex }, ref) => {
-    return (
-      <div data-index={flatIndex} ref={ref}>
-        {children}
-      </div>
-    );
-  }),
-  TableRow: ({ children, flatIndex }) => {
+  TableRowWrapper: React.forwardRef(
+    ({ children, relativeIndex: flatIndex }, ref) => {
+      return (
+        <div data-index={flatIndex} ref={ref}>
+          {children}
+        </div>
+      );
+    },
+  ),
+  TableRow: ({ children, relativeIndex: flatIndex }) => {
     const vars: Record<string, string> = {
       "--table-cell-bg":
         flatIndex % 2 === 0 ? "var(--table-row-bg)" : "var(--table-row-alt-bg)",
@@ -213,7 +227,7 @@ export const TailwindSkin: Skin = {
     );
   },
   Cell: React.memo(
-    React.forwardRef(({ isMeasuring, children }, ref) => {
+    React.forwardRef(function Cell({ isMeasureInstance, children }, ref) {
       const {
         isFirst,
         isPinned,
@@ -222,29 +236,35 @@ export const TailwindSkin: Skin = {
         isLastCenter,
         width,
         columnId,
-      } = useCellProps((cell) => {
-        const vheader = cell.vheader;
-        const state = vheader.getState();
-        return {
-          isFirst: state.isFirst,
-          isPinned: state.isPinned,
-          isLastPinned: state.isLastPinned,
-          width: state.width,
-          columnId: vheader.columnId,
-          isLast: state.isLast,
-          isLastCenter: state.isLastCenter,
-        };
-      });
-
-      const { selected, isSomeColumnsPinnedRight } = useRowProps(
-        (row, table) => {
-          const selected = row.row().getIsSelected();
+      } = useCellProps({
+        callback: (cell) => {
+          const state = cell.header.state;
           return {
-            selected,
-            isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
+            isFirst: state.isFirst,
+            isPinned: state.isPinned,
+            isLastPinned: state.isLastPinned,
+            width: state.width,
+            columnId: cell.header.header.column.id,
+            isLast: state.isLast,
+            isLastCenter: state.isLastCenter,
           };
         },
-      );
+        areCallbackOutputEqual: shallowEqual,
+        dependencies: [{ type: "tanstack_table" }],
+      });
+
+      const { selected, isSomeColumnsPinnedRight } = useRowProps({
+        callback: (row, table) => {
+          const selected = row.row.getIsSelected();
+          return {
+            selected,
+            isSomeColumnsPinnedRight:
+              table.tanstackTable.getIsSomeColumnsPinned("right"),
+          };
+        },
+        areCallbackOutputEqual: shallowEqual,
+        dependencies: [{ type: "tanstack_table" }],
+      });
 
       return (
         <div
@@ -257,7 +277,7 @@ export const TailwindSkin: Skin = {
           data-column-id={columnId}
           style={{
             height: "var(--row-height)",
-            width: isMeasuring ? "auto" : width,
+            width: isMeasureInstance ? "auto" : width,
             zIndex: isPinned ? 5 : 0,
             boxSizing: "border-box",
             flexShrink: 0,
@@ -282,14 +302,18 @@ export const TailwindSkin: Skin = {
     }),
   ),
   PinnedColsOverlay: ({ position }) => {
-    const width = useTableProps((table) => {
-      const isPinned = table.getIsSomeColumnsPinned(position);
-      if (isPinned) {
-        return position === "left"
-          ? table.getLeftTotalSize()
-          : table.getRightTotalSize();
-      }
-      return undefined;
+    const width = useTableProps({
+      callback: (table) => {
+        const isPinned = table.tanstackTable.getIsSomeColumnsPinned(position);
+        if (isPinned) {
+          return position === "left"
+            ? table.tanstackTable.getLeftTotalSize()
+            : table.tanstackTable.getRightTotalSize();
+        }
+        return undefined;
+      },
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: strictEqual,
     });
 
     if (width === undefined) {

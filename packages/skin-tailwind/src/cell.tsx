@@ -1,4 +1,4 @@
-import { useRowProps, useRowRef } from "@rttui/core";
+import { shallowEqual, useRowProps, useRowRef } from "@rttui/core";
 import { CellText } from "./cell_text";
 import { CellTextBold } from "./cell_text_bold";
 import { Checkbox } from "./checkbox";
@@ -18,12 +18,16 @@ export function Cell({
   pinButtons?: boolean;
   highlightSelected?: boolean;
 }) {
-  const { depth, checked } = useRowProps((vrow) => {
-    const row = vrow.row();
-    return {
-      depth: row.depth,
-      checked: row.getIsSelected(),
-    };
+  const { depth, checked } = useRowProps({
+    callback: (vrow) => {
+      const row = vrow.row;
+      return {
+        depth: row.depth,
+        checked: row.getIsSelected(),
+      };
+    },
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [{ type: "tanstack_table" }],
   });
   const rowRef = useRowRef();
   return (
@@ -34,7 +38,7 @@ export function Cell({
       {checkbox && (
         <Checkbox
           getProps={() => {
-            const row = rowRef.current;
+            const row = rowRef.current.row;
             return {
               checked: row.getIsSelected(),
               disabled: !row.getCanSelect(),
@@ -42,7 +46,7 @@ export function Cell({
             };
           }}
           onChange={() => {
-            return () => rowRef.current.toggleSelected();
+            return () => rowRef.current.row.toggleSelected();
           }}
         />
       )}

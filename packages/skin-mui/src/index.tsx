@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import type { Skin } from "@rttui/core";
 import {
+  shallowEqual,
+  strictEqual,
   useCellProps,
   useColProps,
   useColRef,
@@ -26,7 +28,16 @@ const MuiSkin: Skin = {
   headerRowHeight: 56,
   footerRowHeight: 52,
   OverlayContainer: ({ children }) => {
-    const { width, height } = useTableContext();
+    const { width, height } = useTableProps({
+      callback: (props) => {
+        return {
+          width: props.uiProps.width,
+          height: props.uiProps.height,
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "ui_props" }],
+    });
     const cssVars = useTableCssVars();
     return (
       <div
@@ -189,18 +200,24 @@ const MuiSkin: Skin = {
       </Box>
     );
   },
-  TableRowWrapper: React.forwardRef(({ children, flatIndex }, ref) => {
-    return (
-      <Box data-index={flatIndex} ref={ref}>
-        {children}
-      </Box>
-    );
-  }),
-  TableRow: ({ children, flatIndex }) => {
-    const { isPinned } = useRowProps((row) => {
-      return {
-        isPinned: row.isPinned(),
-      };
+  TableRowWrapper: React.forwardRef(
+    ({ children, relativeIndex: flatIndex }, ref) => {
+      return (
+        <Box data-index={flatIndex} ref={ref}>
+          {children}
+        </Box>
+      );
+    },
+  ),
+  TableRow: ({ children, relativeIndex: flatIndex }) => {
+    const { isPinned } = useRowProps({
+      callback: (row) => {
+        return {
+          isPinned: row.row.getIsPinned(),
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
     });
     return (
       <TableRow
@@ -228,8 +245,12 @@ const MuiSkin: Skin = {
     );
   },
   TableRowExpandedContent: ({ children }) => {
-    const leafColLength = useTableProps((table) => {
-      return table.getAllLeafColumns().length;
+    const leafColLength = useTableProps({
+      callback: (table) => {
+        return table.tanstackTable.getAllLeafColumns().length;
+      },
+      areCallbackOutputEqual: strictEqual,
+      dependencies: [{ type: "tanstack_table" }],
     });
 
     return (
@@ -254,20 +275,24 @@ const MuiSkin: Skin = {
       </TableRow>
     );
   },
-  Cell: React.forwardRef(({ isMeasuring, children }, ref) => {
-    const { isPinned, width } = useCellProps((cell) => {
-      const state = cell.vheader.getState();
-      return {
-        isPinned: state.isPinned,
-        width: state.width,
-      };
+  Cell: React.forwardRef(function Cell({ isMeasureInstance, children }, ref) {
+    const { isPinned, width } = useCellProps({
+      callback: (cell) => {
+        const state = cell.header.state;
+        return {
+          isPinned: state.isPinned,
+          width: state.width,
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
     });
     return (
       <TableCell
         className="td"
         component="div"
         ref={ref}
-        style={{ width: isMeasuring ? "auto" : width }}
+        style={{ width: isMeasureInstance ? "auto" : width }}
         sx={{
           height: "var(--row-height)",
           overflow: "hidden",
@@ -299,24 +324,26 @@ const TableHeaderCell = React.memo(
   React.forwardRef<
     HTMLDivElement,
     {
-      isMeasuring?: boolean;
+      isMeasureInstance?: boolean;
       children: React.ReactNode;
     }
-  >(({ isMeasuring, children }, ref) => {
-    const { headerId, isPinned, width, canPin, canResize } = useColProps(
-      ({ header, vheader }) => {
-        const state = vheader.getState();
+  >(({ isMeasureInstance, children }, ref) => {
+    const { headerId, isPinned, width, canPin, canResize } = useColProps({
+      callback: ({ header, vheader }) => {
+        const state = vheader.state;
         const canPin = header?.column.getCanPin();
         const canResize = header?.column.getCanResize();
         return {
-          headerId: vheader.id,
+          headerId: vheader.header.id,
           isPinned: state.isPinned,
           width: state.width,
           canPin,
           canResize,
         };
       },
-    );
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
+    });
 
     const colRef = useColRef();
 
@@ -327,7 +354,7 @@ const TableHeaderCell = React.memo(
         data-header-id={headerId}
         data-is-pinned={isPinned}
         ref={ref}
-        style={{ width: isMeasuring ? "auto" : width }}
+        style={{ width: isMeasureInstance ? "auto" : width }}
         sx={{
           transition: "background-color 0.2s ease",
           whiteSpace: "nowrap",

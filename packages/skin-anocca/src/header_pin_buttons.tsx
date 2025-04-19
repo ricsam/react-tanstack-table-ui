@@ -1,11 +1,15 @@
-import { useColProps, useColRef } from "@rttui/core";
+import { shallowEqual, useColProps, useColRef } from "@rttui/core";
 import { MdChevronLeft, MdChevronRight, MdClose } from "react-icons/md";
 
 export const HeaderPinButtons = () => {
-  const { isPinned, canPin } = useColProps(({ vheader }) => ({
-    isPinned: vheader.getState().isPinned,
-    canPin: vheader.header().column.getCanPin(),
-  }));
+  const { isPinned, canPin } = useColProps({
+    callback: ({ vheader }) => ({
+      isPinned: vheader.state.isPinned,
+      canPin: vheader.header.column.getCanPin(),
+    }),
+    dependencies: [{ type: "tanstack_table" }],
+    areCallbackOutputEqual: shallowEqual,
+  });
 
   const headerRef = useColRef();
   if (!canPin) {

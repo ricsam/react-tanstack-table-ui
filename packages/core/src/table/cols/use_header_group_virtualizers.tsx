@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-virtual";
 import React from "react";
 import { flushSync } from "react-dom";
-import { getIsPinned, mapColumnPinningPositionToPinPos } from "../../utils";
+import { getIsPinned, mapColumnPinningPositionToPinPos, shallowEqual } from "../../utils";
 import { useTableProps } from "../hooks/use_table_props";
 import { useTableContext } from "../table_context";
 import {
@@ -39,7 +39,7 @@ export function useHeaderGroupVirtualizers(props: {
   type: "footer" | "header";
   rerender: () => void;
 }): () => VirtualHeaderGroup[] {
-  const { tableContainerRef, config } = useTableContext();
+  const { tableContainerRef } = useTableContext();
 
   const getters = {
     getHeaderGroupIndices: () =>
@@ -50,6 +50,16 @@ export function useHeaderGroupVirtualizers(props: {
   };
   const gettersRef = React.useRef(getters);
   gettersRef.current = getters;
+
+  const { columnOverscan } = useTableProps({
+    callback: (props) => {
+      return {
+        columnOverscan: props.uiProps.columnOverscan,
+      };
+    },
+    dependencies: [{ type: "ui_props" }],
+    areCallbackOutputEqual: shallowEqual,
+  });
 
   const baseColVirtOpts = (
     groupId: string,
@@ -66,13 +76,13 @@ export function useHeaderGroupVirtualizers(props: {
       getScrollElement: () => tableContainerRef.current,
       horizontal: true,
       // debug: true,
-      overscan: config.columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
+      overscan: columnOverscan, //how many columns to render on each side off screen each way (adjust this for performance)
       rangeExtractor: (range) => {
         const { getHeaderGroupIndices, getFilteredHeaderGroups } =
           gettersRef.current;
         const { groupIndex } = getHeaderGroupIndices()[groupId];
         const headerGroup = getFilteredHeaderGroups()[groupIndex];
-        const headersInstance = headerGroup.headers;
+        const headersInstance = headerGroup._slow_headers;
         const defaultRange = defaultRangeExtractor(range);
         const next = new Set(defaultRange);
 
@@ -93,7 +103,7 @@ export function useHeaderGroupVirtualizers(props: {
           gettersRef.current;
         const { groupIndex } = getHeaderGroupIndices()[groupId];
         const headerGroup = getFilteredHeaderGroups()[groupIndex];
-        const headersInstance = headerGroup.headers;
+        const headersInstance = headerGroup._slow_headers;
         return headersInstance[index].id;
       },
     };
@@ -107,8 +117,8 @@ export function useHeaderGroupVirtualizers(props: {
     headerColVirtualizerOptions[headerGroup.id] = () => ({
       // todo, don't call here, instead call when headerColVirterOptions is used
       ...baseColVirtOpts(headerGroup.id),
-      count: headerGroup.headers.length,
-      estimateSize: (index) => headerGroup.headers[index].getSize(),
+      count: headerGroup._slow_headers.length,
+      estimateSize: (index) => headerGroup._slow_headers[index].getSize(),
       observeElementRect,
       observeElementOffset,
       scrollToFn: () => {},
@@ -123,17 +133,17 @@ export function useHeaderGroupVirtualizers(props: {
   });
 
   const headerColVirtualizersCache = React.useRef<
-    Record<string, Virtualizer<HTMLDivElement, Element>>
+    Record<string, Virtualizer<any, any>>
   >({});
   const headerColVirtualizers = React.useRef<
-    Record<string, Virtualizer<HTMLDivElement, Element>>
+    Record<string, Virtualizer<any, any>>
   >({});
 
   if (
     Object.keys(headerColVirtualizerOptions).length >
     Object.keys(headerColVirtualizersCache.current).length
   ) {
-    const prevVirtualizer: Virtualizer<HTMLDivElement, Element> | undefined =
+    const prevVirtualizer: Virtualizer<any, any> | undefined =
       headerColVirtualizers.current[
         Object.keys(headerColVirtualizers.current)[0]
       ];
@@ -157,9 +167,11 @@ export function useHeaderGroupVirtualizers(props: {
     headerColVirtualizers.current[id] = headerColVirtualizersCache.current[id];
   }
 
-  const { columnSizingInfo, columnSizing } = useTableProps((table) => {
-    const { columnSizingInfo, columnSizing } = table.getState();
-    return { columnSizingInfo, columnSizing };
+  const { columnSizingInfo, columnSizing } = useTableProps({
+    callback: (table) => {
+      const { columnSizingInfo, columnSizing } = table.tanstackTable.getState();
+      return { columnSizingInfo, columnSizing };
+    },
   });
 
   useIsomorphicLayoutEffect(() => {
@@ -254,7 +266,6 @@ export function useHeaderGroupVirtualizers(props: {
             const getVirtualHeader = (
               headerFn: () => Header<any, unknown>,
               getIndex: () => number,
-              start: number,
             ): VirtualHeaderCell => {
               const getState = () => {
                 const header = headerFn();
@@ -274,7 +285,7 @@ export function useHeaderGroupVirtualizers(props: {
                   ];
 
                 const width = header.getSize();
-                const allHeaders = headerGroup.headers;
+                const allHeaders = headerGroup._slow_headers;
 
                 const isIndexPinned = (index: number) =>
                   allHeaders[index] ? getIsPinned(allHeaders[index]) : false;
@@ -310,8 +321,6 @@ export function useHeaderGroupVirtualizers(props: {
                 const state: VirtualHeaderCellState = {
                   isPinned: mapColumnPinningPositionToPinPos(isPinned),
                   width,
-                  start,
-                  end: start + width,
                   isLastPinned,
                   isFirstPinned,
                   isLast,
@@ -352,10 +361,9 @@ export function useHeaderGroupVirtualizers(props: {
               const headers = virtualizer.getVirtualItems().map((vc) => {
                 return getVirtualHeader(
                   () => {
-                    return headerGroup.headers[vc.index];
+                    return headerGroup._slow_headers[vc.index];
                   },
                   () => vc.index,
-                  vc.start,
                 );
               });
               updateGroupCache(groupId, { headers });

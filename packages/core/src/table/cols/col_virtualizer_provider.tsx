@@ -13,6 +13,7 @@ import {
   useHeaderGroupVirtualizers,
 } from "./use_header_group_virtualizers";
 import { HeaderIndex } from "./virtual_header/types";
+import { shallowEqual } from "../../utils";
 
 const combineHeaderGroups = (
   groups: HeaderGroup<any>[][],
@@ -23,7 +24,7 @@ const combineHeaderGroups = (
   for (let i = 0; i < numGroups; i++) {
     combinedGroups[i] = {
       id: groups.map((group) => group[i].id).join(""),
-      headers: groups.flatMap((group) => {
+      _slow_headers: groups.flatMap((group) => {
         return group[i].headers;
       }),
     };
@@ -39,7 +40,7 @@ const combineHeaderGroups = (
   combinedGroups.forEach((group) => {
     let hasVisibleHeader = false;
     const groupHeaderIndices: Record<string, HeaderIndex[]> = {};
-    group.headers.forEach((header, j) => {
+    group._slow_headers.forEach((header, j) => {
       if (!groupHeaderIndices[header.column.id]) {
         groupHeaderIndices[header.column.id] = [];
       }
@@ -50,6 +51,7 @@ const combineHeaderGroups = (
         headerId: header.id,
         header,
         groupId: group.id,
+        type,
       });
       if (header.column.columnDef[type]) {
         hasVisibleHeader = true;
@@ -62,7 +64,7 @@ const combineHeaderGroups = (
   });
   filteredHeaderGroups.forEach((group, i) => {
     const headerIndices: Record<string, number> = {};
-    group.headers.forEach((header, j) => {
+    group._slow_headers.forEach((header, j) => {
       headerIndices[header.id] = j;
     });
     headerGroupIndices[group.id] = {
@@ -79,24 +81,29 @@ const combineHeaderGroups = (
 
 const useHeaderGroups = (type: "header" | "footer", rerender: () => void) => {
   const { leftHeaderGroups, centerHeaderGroups, rightHeaderGroups } =
-    useTableProps((table) => {
-      const [leftHeaderGroups, centerHeaderGroups, rightHeaderGroups] =
-        type === "header"
-          ? [
-              table.getLeftHeaderGroups(),
-              table.getCenterHeaderGroups(),
-              table.getRightHeaderGroups(),
-            ]
-          : [
-              table.getLeftFooterGroups(),
-              table.getCenterFooterGroups(),
-              table.getRightFooterGroups(),
-            ];
-      return {
-        leftHeaderGroups,
-        centerHeaderGroups,
-        rightHeaderGroups,
-      };
+    useTableProps({
+      selector: (table) => table.tanstackTable,
+      callback: (tanstackTable) => {
+        const [leftHeaderGroups, centerHeaderGroups, rightHeaderGroups] =
+          type === "header"
+            ? [
+                tanstackTable.getLeftHeaderGroups(),
+                tanstackTable.getCenterHeaderGroups(),
+                tanstackTable.getRightHeaderGroups(),
+              ]
+            : [
+                tanstackTable.getLeftFooterGroups(),
+                tanstackTable.getCenterFooterGroups(),
+                tanstackTable.getRightFooterGroups(),
+              ];
+        return {
+          leftHeaderGroups,
+          centerHeaderGroups,
+          rightHeaderGroups,
+        };
+      },
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: shallowEqual,
     });
   const headerGroups = React.useMemo(() => {
     const combined = combineHeaderGroups(
@@ -130,9 +137,10 @@ export const ColVirtualizerProvider = ({
   children: React.ReactNode;
 }) => {
   // we need to trigger a re-render the virtualizer when the table instance updates
-  useTableProps(() => ({}), {
-    dependencies: [{ type: "table" }],
-    arePropsEqual: () => false,
+  useTableProps({
+    callback: () => ({}),
+    dependencies: [{ type: "tanstack_table" }],
+    areCallbackOutputEqual: () => false,
   });
 
   /**
@@ -199,7 +207,7 @@ export const ColVirtualizerProvider = ({
           dependency: {
             type: "col_offsets",
             groupType: group.type,
-            groupId: group.id,
+            // groupIndex: group.groupIndex,
           },
           cacheKey: `${offsetLeft},${offsetRight}`,
         };

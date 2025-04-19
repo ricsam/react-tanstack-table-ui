@@ -14,13 +14,15 @@ import { useTriggerTablePropsUpdate } from "../hooks/use_trigger_table_props_upd
 import { useTableContext } from "../table_context";
 import { VirtualCell, VirtualRow } from "../types";
 import { RowVirtualizerContextType } from "./row_virtualizer_context_type";
+import { Cell } from "@tanstack/react-table";
+import { useListenToTableUpdate } from "../hooks/use_listen_to_table_update";
 
-export const VirtualRowProvider = ({
+export const _VirtualRowProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const { tableContainerRef, skin, config } = useTableContext();
+  const { tableContainerRef, skin } = useTableContext();
 
   /* to be implemented
   const [draggedRowId, setDraggedRowId] = React.useState<string | null>(null);
@@ -121,6 +123,15 @@ export const VirtualRowProvider = ({
   const getRowsRef = React.useRef(getRowsInitialRef);
   getRowsRef.current = getRowsInitialRef;
 
+  const visibleCellsCache = React.useRef<Record<string, Cell<any, unknown>[]>>(
+    {},
+  );
+  useListenToTableUpdate((table, rerender) => {
+    if (!rerender) {
+      visibleCellsCache.current = {};
+    }
+  });
+
   const getRows = React.useCallback(() => {
     const rowVirtualizer = getRowsRef.current.rowVirtualizer;
     const virtualRows = rowVirtualizer
@@ -132,7 +143,12 @@ export const VirtualRowProvider = ({
         };
         const staticRow = getRow();
         const getAllCells = () => {
-          const cells = getRow().getVisibleCells();
+          const row = getRow();
+          if (visibleCellsCache.current[row.id]) {
+            return visibleCellsCache.current[row.id];
+          }
+          const cells = row.getVisibleCells();
+          visibleCellsCache.current[row.id] = cells;
           return cells;
         };
 

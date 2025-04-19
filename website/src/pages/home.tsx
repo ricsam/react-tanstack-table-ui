@@ -4,6 +4,7 @@ import { useTheme } from "@/contexts/use_theme";
 import {
   decorateColumnHelper,
   ReactTanstackTableUi,
+  shallowEqual,
   useTableContext,
   useTableProps,
 } from "@rttui/core";
@@ -606,11 +607,15 @@ export function HomePage() {
 function Details({ row, width }: { row: Row<Person>; width: number }) {
   const person = row.original;
   const { loading } = useTableContext();
-  const { leftTotalSize, rightTotalSize } = useTableProps((table) => {
-    return {
-      leftTotalSize: table.getLeftTotalSize(),
-      rightTotalSize: table.getRightTotalSize(),
-    };
+  const { leftTotalSize, rightTotalSize } = useTableProps({
+    callback: (table) => {
+      return {
+        leftTotalSize: table.tanstackTable.getLeftTotalSize(),
+        rightTotalSize: table.tanstackTable.getRightTotalSize(),
+      };
+    },
+    dependencies: [{ type: "tanstack_table" }],
+    areCallbackOutputEqual: shallowEqual,
   });
   const isDesktop = window.matchMedia("(min-width: 1280px)").matches;
   const style: React.CSSProperties = {
@@ -621,7 +626,7 @@ function Details({ row, width }: { row: Row<Person>; width: number }) {
     opacity: 1,
   };
 
-  if (loading || width === 0) {
+  if (width === 0) {
     style.opacity = 0;
   }
 

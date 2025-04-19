@@ -1,64 +1,78 @@
 import React from "react";
 import { TableCell } from "../cols/table_cell";
-import { VirtualRowContext } from "../contexts/virtual_row_context";
-import { useRowVirtualizer } from "../hooks/use_row_virtualizer";
 import { useTableProps } from "../hooks/use_table_props";
+import { VirtualRowProvider } from "../providers/virtual_row_provider";
 import { useTableContext } from "../table_context";
-import { PinPos, VirtualCell, VirtualRow } from "../types";
+import { shallowEqual, useDebugDeps } from "../../utils";
 
-export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
-  const { rowVirtualizer } = row;
-  const { getHorizontalOffsets } = useRowVirtualizer();
-  const { skin, renderSubComponent, pinColsRelativeTo } = useTableContext();
+export const TableRow = React.memo(function TableRow({
+  rowIndex,
+}: {
+  rowIndex: number;
+}) {
+  const { skin } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
 
-  const { isExpanded, subComponent } = useTableProps(() => {
-    const subRowsLength = row.row().subRows.length;
-    const rowIsExpanded = row.row().getIsExpanded();
-    let subComponent: React.ReactNode | undefined;
-    let isExpanded: boolean = Boolean(
-      subRowsLength === 0 && rowIsExpanded && renderSubComponent,
-    );
+  const {
+    isExpanded,
+    subComponent,
+    rowVirtualizer,
+    relativeIndex,
+    pinColsRelativeTo,
+  } = useTableProps({
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [{ type: "tanstack_table" }, { type: "ui_props" }],
+    callback: (props) => {
+      const row = props.virtualData.body.rowLookup[rowIndex];
+      const tanstackRow = row.row;
 
-    if (isExpanded && renderSubComponent) {
-      subComponent = renderSubComponent(row.row());
-      if (subComponent) {
-        isExpanded = true;
+      const renderSubComponent = props.uiProps.renderSubComponent;
+
+      const subRowsLength = tanstackRow.subRows.length;
+      const rowIsExpanded = tanstackRow.getIsExpanded();
+      let subComponent: React.ReactNode | undefined;
+      let isExpanded: boolean = Boolean(
+        subRowsLength === 0 && rowIsExpanded && renderSubComponent,
+      );
+
+      if (isExpanded && renderSubComponent) {
+        subComponent = renderSubComponent(tanstackRow);
+        if (subComponent) {
+          isExpanded = true;
+        }
       }
-    }
-    return { isExpanded, subComponent };
+
+      return {
+        isExpanded,
+        subComponent,
+        rowVirtualizer: props.virtualData.body.virtualizer,
+        relativeIndex: row.relativeIndex,
+        pinColsRelativeTo: props.uiProps.pinColsRelativeTo,
+      };
+    },
   });
 
-  const { offsetLeft, offsetRight } = useTableProps(
-    () => {
-      const { offsetLeft, offsetRight } = getHorizontalOffsets();
+  const { offsetLeft, offsetRight } = useTableProps({
+    areCallbackOutputEqual: shallowEqual,
+    selector: (props) => props.virtualData.body,
+    callback: ({ offsetLeft, offsetRight }) => {
       return {
         offsetLeft,
         offsetRight,
       };
     },
-    {
-      dependencies: [
-        { type: "table" },
-        {
-          type: "col_offsets_main",
-        },
-      ],
-    },
-  );
-
-  const vrowRef = React.useRef<VirtualRow>(row);
-  vrowRef.current = row;
-
-  const getCells = React.useCallback(() => {
-    return vrowRef.current.getCells();
-  }, []);
+    dependencies: [
+      {
+        type: "col_offsets_main",
+      },
+    ],
+  });
 
   return (
     <>
-      <VirtualRowContext.Provider value={row}>
+      <VirtualRowProvider rowIndex={rowIndex}>
         <skin.TableRowWrapper
-          flatIndex={row.flatIndex}
+          relativeIndex={relativeIndex}
           ref={(el) => {
             rowRef.current = el;
             if (isExpanded) {
@@ -66,15 +80,15 @@ export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
             }
           }}
         >
-          <skin.TableRow flatIndex={row.flatIndex}>
-            <ColSlice getCells={getCells} pinPos="start" />
+          <skin.TableRow relativeIndex={relativeIndex}>
+            <ColSlice rowIndex={rowIndex} position="left" />
             <div
               style={{
                 minWidth: offsetLeft,
                 flexShrink: 0,
               }}
             ></div>
-            <ColSlice getCells={getCells} pinPos={false} />
+            <ColSlice rowIndex={rowIndex} position="center" />
             <div
               style={
                 pinColsRelativeTo === "table"
@@ -89,7 +103,7 @@ export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
                     }
               }
             ></div>
-            <ColSlice getCells={getCells} pinPos="end" />
+            <ColSlice rowIndex={rowIndex} position="right" />
           </skin.TableRow>
           {isExpanded && (
             <skin.TableRowExpandedContent>
@@ -97,62 +111,63 @@ export const TableRow = function TableRow({ row }: { row: VirtualRow }) {
             </skin.TableRowExpandedContent>
           )}
         </skin.TableRowWrapper>
-      </VirtualRowContext.Provider>
+      </VirtualRowProvider>
     </>
   );
-};
+});
 
-const ColSlice = React.memo(
-  ({ getCells, pinPos }: { getCells: () => VirtualCell[]; pinPos: PinPos }) => {
-    const { skin } = useTableContext();
-    const { cells } = useTableProps(
-      () => {
-        let cacheKey = "";
-        const cells = getCells().filter((cell) => {
-          const result = cell.vheader.getState().isPinned === pinPos;
-          if (result) {
-            cacheKey += `${cell.id},`;
-          }
-          return result;
-        });
-
-        return {
-          cells,
-          cacheKey,
-        };
-      },
-      {
-        dependencies: [{ type: "table" }, { type: "col_visible_range_main" }],
-        arePropsEqual: (prev, next) => {
-          return prev.cacheKey === next.cacheKey;
-        },
-      },
-    );
-
-    if (cells.length === 0) {
-      return null;
-    }
-    const base = (
-      <>
-        {cells.map((cell) => {
-          return <TableCell key={cell.id} cell={cell} />;
-        })}
-      </>
-    );
-    if (pinPos === "start") {
-      return (
-        <skin.PinnedCols position="left" type={"body"}>
-          {base}
-        </skin.PinnedCols>
+const ColSlice = React.memo(function ColSlice({
+  rowIndex,
+  position,
+}: {
+  rowIndex: number;
+  position: "left" | "right" | "center";
+}) {
+  const { skin } = useTableContext();
+  const cells = useTableProps({
+    areCallbackOutputEqual: shallowEqual,
+    callback: (props) => {
+      const cells = props.virtualData.body.rowLookup[rowIndex][position].map(
+        (cell) => cell.columnIndex,
       );
-    }
-    if (pinPos === "end") {
-      return (
-        <skin.PinnedCols position="right" type={"body"}>
-          {base}
-        </skin.PinnedCols>
-      );
-    }
-    return base;
-  },
-);
+      return cells;
+    },
+    dependencies: [
+      { type: "tanstack_table" },
+      { type: "col_visible_range_main" },
+    ],
+  });
+
+  if (cells.length === 0) {
+    return null;
+  }
+
+  const base = (
+    <>
+      {cells.map((colIndex) => {
+        return (
+          <TableCell
+            key={colIndex}
+            columnIndex={colIndex}
+            rowIndex={rowIndex}
+          />
+        );
+      })}
+    </>
+  );
+  if (position === "left") {
+    return (
+      <skin.PinnedCols position="left" type={"body"}>
+        {base}
+      </skin.PinnedCols>
+    );
+  }
+  if (position === "right") {
+    return (
+      <skin.PinnedCols position="right" type={"body"}>
+        {base}
+      </skin.PinnedCols>
+    );
+  }
+  return base;
+});

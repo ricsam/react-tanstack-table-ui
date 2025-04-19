@@ -1,8 +1,7 @@
 import React from "react";
-import { useColVirtualizer } from "./table/hooks/use_col_virtualizer";
-import { useRowVirtualizer } from "./table/hooks/use_row_virtualizer";
 import { useTableProps } from "./table/hooks/use_table_props";
 import { useTableContext } from "./table/table_context";
+import { shallowEqual } from "./utils";
 
 export type Skin = {
   rowHeight: number;
@@ -13,7 +12,7 @@ export type Skin = {
 
   HeaderCell: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> & {
-      isMeasuring: boolean;
+      isMeasureInstance: boolean;
       children: React.ReactNode;
     }
   >;
@@ -32,12 +31,12 @@ export type Skin = {
   TableRowWrapper: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> & {
       children: React.ReactNode;
-      flatIndex: number;
+      relativeIndex: number;
     }
   >;
   TableRow: React.FC<{
     children: React.ReactNode;
-    flatIndex: number;
+    relativeIndex: number;
   }>;
   TableRowExpandedContent: React.FC<{ children: React.ReactNode }>;
 
@@ -49,7 +48,7 @@ export type Skin = {
 
   Cell: React.ForwardRefExoticComponent<
     React.RefAttributes<HTMLDivElement> & {
-      isMeasuring: boolean;
+      isMeasureInstance: boolean;
       children: React.ReactNode;
     }
   >;
@@ -59,32 +58,34 @@ export type Skin = {
 };
 
 export function useTableCssVars(): Record<string, string> {
-  const { skin, width, height, pinColsRelativeTo, pinRowsRelativeTo } =
-    useTableContext();
-  const { rowVirtualizer } = useRowVirtualizer();
-  const colVirtualizer = useColVirtualizer();
+  const { skin } = useTableContext();
 
-  return useTableProps((table) => {
-    const totalSize = table.getTotalSize();
-    const rowTotalSize = rowVirtualizer.getTotalSize();
-    return {
-      "--table-container-width": width + "px",
-      "--table-container-height": height + "px",
-      "--row-height": skin.rowHeight + "px",
-      "--header-row-height": skin.headerRowHeight + "px",
-      "--footer-row-height": skin.footerRowHeight + "px",
-      "--header-height":
-        colVirtualizer.getHeaderGroups().length * skin.headerRowHeight + "px",
-      "--footer-height":
-        colVirtualizer.getFooterGroups().length * skin.footerRowHeight + "px",
-      "--table-width":
-        pinColsRelativeTo === "table"
-          ? `max(100%, ${totalSize}px)`
-          : totalSize + "px",
-      "--table-height":
-        pinRowsRelativeTo === "table"
-          ? `max(calc(100% - var(--header-height) - var(--footer-height)), ${rowTotalSize}px)`
-          : rowTotalSize + "px",
-    };
+  return useTableProps({
+    callback: (table) => {
+      const { width, height } = table.uiProps;
+      const totalSize = table.tanstackTable.getTotalSize();
+      const rowTotalSize = table.virtualData.body.virtualizer.getTotalSize();
+      return {
+        "--table-container-width": width + "px",
+        "--table-container-height": height + "px",
+        "--row-height": skin.rowHeight + "px",
+        "--header-row-height": skin.headerRowHeight + "px",
+        "--footer-row-height": skin.footerRowHeight + "px",
+        "--header-height":
+          table.virtualData.header.groups.length * skin.headerRowHeight + "px",
+        "--footer-height":
+          table.virtualData.footer.groups.length * skin.footerRowHeight + "px",
+        "--table-width":
+          table.uiProps.pinColsRelativeTo === "table"
+            ? `max(100%, ${totalSize}px)`
+            : totalSize + "px",
+        "--table-height":
+          table.uiProps.pinRowsRelativeTo === "table"
+            ? `max(calc(100% - var(--header-height) - var(--footer-height)), ${rowTotalSize}px)`
+            : rowTotalSize + "px",
+      };
+    },
+    dependencies: [{ type: "ui_props" }, { type: "tanstack_table" }],
+    areCallbackOutputEqual: shallowEqual,
   });
 }

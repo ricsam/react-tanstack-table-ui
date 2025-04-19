@@ -158,3 +158,18 @@ export function shallowEqual(
 
   return true;
 }
+
+export function strictEqual(a: any, b: any) {
+  return a === b;
+}
+
+export function memoize<T, U>(fn: (arg: U) => T) {
+  let cache: T;
+  let prevArg: any;
+  return (arg: U): T => {
+    if (prevArg === arg) return cache;
+    prevArg = arg;
+    cache = fn(arg);
+    return cache;
+  };
+}

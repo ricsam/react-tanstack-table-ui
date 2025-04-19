@@ -1,12 +1,16 @@
-import { Table } from "@tanstack/react-table";
 import React from "react";
 import {
+  Action,
   Dependency,
   GetDependency,
   TablePropsContext,
   TablePropsContextType,
-  UpdateListeners,
+  UpdateListenersExact,
+  UpdateType,
 } from "../contexts/table_props_context";
+import { RttuiTable } from "../types";
+
+const DEBUG_TRIGGER_ALL = false;
 
 export const TablePropsProvider = ({
   children,
@@ -17,12 +21,16 @@ export const TablePropsProvider = ({
     const getSet = <T extends Dependency["type"]>(
       _: T,
     ): Set<{
-      callback: (table: Table<any>, rerender: boolean) => void;
+      callback: (table: RttuiTable, updateType: UpdateType) => void;
       dependency: GetDependency<T>;
     }> => new Set();
 
-    const updateListeners: UpdateListeners = {
-      table: getSet("table"),
+    let refObject: React.RefObject<RttuiTable> | null = null;
+
+    const updateListeners: UpdateListenersExact = {
+      "*": getSet("*"),
+      tanstack_table: getSet("tanstack_table"),
+      ui_props: getSet("ui_props"),
       row_offsets: getSet("row_offsets"),
       col_offsets: getSet("col_offsets"),
 
@@ -33,50 +41,64 @@ export const TablePropsProvider = ({
       row_visible_range: getSet("row_visible_range"),
     };
 
-    let initialTable: Table<any> | null = null;
+    const triggerUpdate = (
+      dependencies: Dependency[],
+      updateType: UpdateType,
+    ) => {
+      const tbl = refObject?.current;
 
-    const triggerUpdate = (dependency: Dependency, rerender: boolean) => {
-      const tbl = initialTable;
       if (!tbl) {
-        throw new Error("initialTable is not set");
+        throw new Error("table is not set");
       }
-      updateListeners[dependency.type].forEach((listener) => {
-        if (
-          (dependency.type === "col_offsets" &&
-            listener.dependency.type === "col_offsets") ||
-          (dependency.type === "col_visible_range" &&
-            listener.dependency.type === "col_visible_range")
-        ) {
-          if (dependency.groupType !== listener.dependency.groupType) {
-            return;
-          }
-          if (dependency.groupId !== listener.dependency.groupId) {
-            return;
-          }
-        }
-        if (dependency.type !== listener.dependency.type) {
-          return;
-        }
+      if (DEBUG_TRIGGER_ALL) {
+        Object.values(updateListeners).forEach((listeners) => {
+          listeners.forEach((listener) => {
+            listener.callback(tbl, updateType);
+          });
+        });
+      } else {
+        dependencies.forEach((dependency) => {
+          updateListeners[dependency.type].forEach((listener) => {
+            if (
+              (dependency.type === "col_offsets" &&
+                listener.dependency.type === "col_offsets") ||
+              (dependency.type === "col_visible_range" &&
+                listener.dependency.type === "col_visible_range")
+            ) {
+              if (dependency.groupType !== listener.dependency.groupType) {
+                return;
+              }
+              if (dependency.groupIndex !== listener.dependency.groupIndex) {
+                return;
+              }
+            }
+            if (dependency.type !== listener.dependency.type) {
+              return;
+            }
 
-        try {
-          listener.callback(tbl, rerender);
-        } catch (err) {
-          // ignore errors
+            listener.callback(tbl, updateType);
+          });
+        });
+        if (!dependencies.find((d) => d.type === "*")) {
+          updateListeners["*"].forEach((listener) => {
+            listener.callback(tbl, updateType);
+          });
         }
-      });
+      }
     };
     return {
-      triggerUpdate,
-      updateTable: (table: Table<any>, rerender: boolean) => {
-        initialTable = table;
-        triggerUpdate({ type: "table" }, rerender);
+      updateTable: (action: Action) => {
+        if (action.type === "initial") {
+          refObject = action.ref;
+        }
       },
+      triggerUpdate,
       updateListeners,
       initialTable: () => {
-        if (!initialTable) {
+        if (!refObject || !refObject.current) {
           throw new Error("initialTable is not set");
         }
-        return initialTable;
+        return refObject.current;
       },
     };
   });

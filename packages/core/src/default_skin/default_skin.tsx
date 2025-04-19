@@ -4,6 +4,8 @@ import { useCellProps } from "../table/hooks/use_cell_props";
 import { useTableContext } from "../table/table_context";
 import { HeaderCell } from "./header_cell";
 import { useRowProps } from "../table/hooks/use_row_props";
+import { useTableProps } from "../table/hooks/use_table_props";
+import { shallowEqual } from "../utils";
 
 export const darkModeVars: Record<string, string> = {
   "--table-text-color": "#ffffff",
@@ -32,7 +34,16 @@ export const defaultSkin: Skin = {
   headerRowHeight: 32,
   footerRowHeight: 32,
   OverlayContainer: ({ children }) => {
-    const { width, height } = useTableContext();
+    const { width, height } = useTableProps({
+      callback: (props) => {
+        return {
+          width: props.uiProps.width,
+          height: props.uiProps.height,
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "ui_props" }],
+    });
     const cssVars = useTableCssVars();
     return (
       <div
@@ -50,7 +61,17 @@ export const defaultSkin: Skin = {
     );
   },
   OuterContainer: ({ children }) => {
-    const { width, height, tableContainerRef } = useTableContext();
+    const { tableContainerRef } = useTableContext();
+    const { width, height } = useTableProps({
+      callback: (props) => {
+        return {
+          width: props.uiProps.width,
+          height: props.uiProps.height,
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "ui_props" }],
+    });
 
     return (
       <div
@@ -202,26 +223,32 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  TableRowWrapper: React.forwardRef(
-    ({ children }, ref) => {
-      const { flatIndex } = useRowProps((row) => {
+  TableRowWrapper: React.forwardRef(({ children }, ref) => {
+    const { rowIndex } = useRowProps({
+      callback: (row) => {
         return {
-          flatIndex: row.flatIndex,
+          rowIndex: row.rowIndex,
         };
-      });
-      return (
-        <div data-index={flatIndex} ref={ref}>
-          {children}
-        </div>
-      );
-    },
-  ),
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
+    });
+    return (
+      <div data-index={rowIndex} ref={ref}>
+        {children}
+      </div>
+    );
+  }),
   TableRow: ({ children }) => {
-    const { flatIndex, isPinned } = useRowProps((row) => {
-      return {
-        flatIndex: row.flatIndex,
-        isPinned: row.isPinned(),
-      };
+    const { relativeIndex, isPinned } = useRowProps({
+      callback: (row) => {
+        return {
+          relativeIndex: row.relativeIndex,
+          isPinned: row.row.getIsPinned(),
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
     });
     const style: CSSProperties = {
       position: "relative",
@@ -234,7 +261,7 @@ export const defaultSkin: Skin = {
       boxSizing: "border-box",
       backgroundColor: isPinned
         ? "var(--table-pinned-row-bg)"
-        : flatIndex % 2 === 0
+        : relativeIndex % 2 === 0
           ? "var(--table-row-bg)"
           : "var(--table-row-alt-bg)",
     };
@@ -263,19 +290,23 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  Cell: React.memo(({ isMeasuring, children }) => {
-    const { isPinned, width } = useCellProps((cell) => {
-      const state = cell.vheader.getState();
-      return {
-        isPinned: state.isPinned,
-        width: state.width,
-      };
+  Cell: React.memo(({ isMeasureInstance, children }) => {
+    const { isPinned, width } = useCellProps({
+      callback: (cell) => {
+        const state = cell.state;
+        return {
+          isPinned: state.isPinned,
+          width: state.width,
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
     });
     return (
       <div
         className="drag-along-cell td"
         style={{
-          width: isMeasuring ? "auto" : width,
+          width: isMeasureInstance ? "auto" : width,
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",

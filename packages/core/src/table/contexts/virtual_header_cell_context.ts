@@ -1,6 +1,6 @@
 import React from "react";
-import { VirtualHeaderCell } from "../types";
+import { RttuiHeader } from "../types";
 
 export const VirtualHeaderCellContext = React.createContext<
-  VirtualHeaderCell | undefined
+  (() => RttuiHeader) | undefined
 >(undefined);

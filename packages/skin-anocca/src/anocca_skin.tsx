@@ -11,7 +11,9 @@ import {
   useTheme,
 } from "@mui/material";
 import {
+  shallowEqual,
   Skin,
+  strictEqual,
   useCellProps,
   useColProps,
   useRowProps,
@@ -27,7 +29,17 @@ const AnoccaSkin: Skin = {
   headerRowHeight: 32,
   footerRowHeight: 32,
   OverlayContainer: ({ children }) => {
-    const { width, height } = useTableContext();
+    const { width, height } = useTableProps({
+      selector: (props) => props.uiProps,
+      callback: ({ width, height }) => {
+        return {
+          width,
+          height,
+        };
+      },
+      dependencies: [{ type: "ui_props" }],
+      areCallbackOutputEqual: shallowEqual,
+    });
     const cssVars = useTableCssVars();
     return (
       <div
@@ -194,12 +206,16 @@ const AnoccaSkin: Skin = {
 
   TableRowWrapper: React.forwardRef(({ children }, ref) => {
     const theme = useTheme();
-    const { flatIndex } = useRowProps((row) => {
-      return { flatIndex: row.flatIndex };
+    const { relativeIndex, rowIndex } = useRowProps({
+      callback: (row) => {
+        return { relativeIndex: row.relativeIndex, rowIndex: row.rowIndex };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
     });
     const backgroundColor = (theme: Theme) => {
       const baseColor =
-        flatIndex % 2 === 0
+        relativeIndex % 2 === 0
           ? theme.palette.background.paper
           : theme.palette.mode === "dark"
             ? theme.palette.grey[900]
@@ -221,7 +237,7 @@ const AnoccaSkin: Skin = {
           justifyContent: "flex-start",
           alignItems: "stretch",
         }}
-        data-index={flatIndex}
+        data-index={rowIndex}
         ref={ref}
       >
         {children}
@@ -256,8 +272,14 @@ const AnoccaSkin: Skin = {
     );
   },
   TableRowExpandedContent: ({ children }) => {
-    const { leafColLength } = useTableProps((table) => {
-      return { leafColLength: table.getAllLeafColumns().length };
+    const { leafColLength } = useTableProps({
+      callback: (table) => {
+        return {
+          leafColLength: table.tanstackTable.getAllLeafColumns().length,
+        };
+      },
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: strictEqual,
     });
     return (
       <TableRow
@@ -281,7 +303,7 @@ const AnoccaSkin: Skin = {
     );
   },
   Cell: React.memo(
-    React.forwardRef(function Cell({ isMeasuring, children }, ref) {
+    React.forwardRef(function Cell({ isMeasureInstance, children }, ref) {
       const {
         isPinned,
         isLastPinned,
@@ -289,16 +311,21 @@ const AnoccaSkin: Skin = {
         isLastCenter,
         width,
         isSomeColumnsPinnedRight,
-      } = useCellProps((cell, table) => {
-        const state = cell.vheader.getState();
-        return {
-          isPinned: state.isPinned,
-          isLastPinned: state.isLastPinned,
-          isLast: state.isLast,
-          isLastCenter: state.isLastCenter,
-          width: state.width,
-          isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
-        };
+      } = useCellProps({
+        callback: (cell, table) => {
+          const state = cell.header.state;
+          return {
+            isPinned: state.isPinned,
+            isLastPinned: state.isLastPinned,
+            isLast: state.isLast,
+            isLastCenter: state.isLastCenter,
+            width: state.width,
+            isSomeColumnsPinnedRight:
+              table.tanstackTable.getIsSomeColumnsPinned("right"),
+          };
+        },
+        areCallbackOutputEqual: shallowEqual,
+        dependencies: [{ type: "tanstack_table" }],
       });
 
       return (
@@ -306,7 +333,7 @@ const AnoccaSkin: Skin = {
           className="td"
           component="div"
           ref={ref}
-          style={{ width: isMeasuring ? "auto" : width }}
+          style={{ width: isMeasureInstance ? "auto" : width }}
           sx={{
             height: "var(--row-height)",
             overflow: "hidden",
@@ -353,13 +380,15 @@ const AnoccaSkin: Skin = {
     }),
   ),
   PinnedColsOverlay: ({ position }) => {
-    const width = useTableProps((table) => {
-      if (!table.getIsSomeColumnsPinned(position)) {
-        return undefined;
-      }
-      return position === "left"
-        ? table.getLeftTotalSize()
-        : table.getRightTotalSize();
+    const width = useTableProps({
+      callback: (table) => {
+        if (!table.tanstackTable.getIsSomeColumnsPinned(position)) {
+          return undefined;
+        }
+        return position === "left"
+          ? table.tanstackTable.getLeftTotalSize()
+          : table.tanstackTable.getRightTotalSize();
+      },
     });
 
     if (width === undefined) {
@@ -391,10 +420,10 @@ const TableHeaderCell = React.memo(
   React.forwardRef<
     HTMLDivElement,
     {
-      isMeasuring: boolean;
+      isMeasureInstance: boolean;
       children: React.ReactNode;
     }
-  >(({ isMeasuring, children }, ref) => {
+  >(({ isMeasureInstance, children }, ref) => {
     const {
       isSomeColumnsPinnedRight,
       headerId,
@@ -403,17 +432,22 @@ const TableHeaderCell = React.memo(
       isLast,
       isLastPinned,
       isLastCenter,
-    } = useColProps(({ vheader, table }) => {
-      const state = vheader.getState();
-      return {
-        isSomeColumnsPinnedRight: table.getIsSomeColumnsPinned("right"),
-        headerId: vheader.id,
-        isPinned: state.isPinned,
-        width: state.width,
-        isLast: state.isLast,
-        isLastPinned: state.isLastPinned,
-        isLastCenter: state.isLastCenter,
-      };
+    } = useColProps({
+      callback: ({ vheader, selectorValue }) => {
+        const state = vheader.state;
+        return {
+          isSomeColumnsPinnedRight:
+            selectorValue.tanstackTable.getIsSomeColumnsPinned("right"),
+          headerId: vheader.header.id,
+          isPinned: state.isPinned,
+          width: state.width,
+          isLast: state.isLast,
+          isLastPinned: state.isLastPinned,
+          isLastCenter: state.isLastCenter,
+        };
+      },
+      areCallbackOutputEqual: shallowEqual,
+      dependencies: [{ type: "tanstack_table" }],
     });
 
     return (
@@ -423,7 +457,7 @@ const TableHeaderCell = React.memo(
         className="th"
         data-header-id={headerId}
         data-is-pinned={isPinned}
-        style={{ width: isMeasuring ? "auto" : width }}
+        style={{ width: isMeasureInstance ? "auto" : width }}
         sx={{
           transition: "background-color 0.2s ease",
           whiteSpace: "nowrap",

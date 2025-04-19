@@ -1,14 +1,15 @@
 import React from "react";
 import { useColProps } from "../table/hooks/use_col_props";
 import { useColRef } from "../table/hooks/use_col_ref";
+import { shallowEqual } from "../utils";
 export const HeaderCell = React.memo(
   React.forwardRef<
     HTMLDivElement,
     {
-      isMeasuring?: boolean;
+      isMeasureInstance?: boolean;
       children: React.ReactNode;
     }
-  >(({ isMeasuring, children }, ref) => {
+  >(({ isMeasureInstance, children }, ref) => {
     const {
       isPinned,
       width,
@@ -17,22 +18,26 @@ export const HeaderCell = React.memo(
       canPin,
       canResize,
       isResizing,
-    } = useColProps(({ header, vheader, column }) => {
-      const canDrag = header.isPlaceholder ? false : true;
-      const canPin = header.column.getCanPin();
-      const canResize = header?.column.getCanResize();
-      const state = vheader.getState();
+    } = useColProps({
+      callback: ({ header, vheader, column }) => {
+        const canDrag = header.isPlaceholder ? false : true;
+        const canPin = header.column.getCanPin();
+        const canResize = header?.column.getCanResize();
+        const state = vheader.state;
 
-      return {
-        canDrag,
-        canPin,
-        canResize,
-        isResizing: column.getIsResizing(),
-        isPinned: state.isPinned,
-        width: state.width,
-        headerId: vheader.id,
-        isPlaceholder: header.isPlaceholder,
-      };
+        return {
+          canDrag,
+          canPin,
+          canResize,
+          isResizing: column.getIsResizing(),
+          isPinned: state.isPinned,
+          width: state.width,
+          headerId: header.id,
+          isPlaceholder: header.isPlaceholder,
+        };
+      },
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: shallowEqual,
     });
     const colRef = useColRef();
     return (
@@ -47,7 +52,7 @@ export const HeaderCell = React.memo(
           zIndex: isPinned ? 1 : 0,
           display: "flex",
           overflow: "hidden",
-          width: isMeasuring ? "auto" : width,
+          width: isMeasureInstance ? "auto" : width,
           backgroundColor: "var(--table-header-bg)",
           position: "relative",
           flexShrink: 0,

@@ -2,15 +2,21 @@ import { Box } from "@mui/material";
 import { useColRef, useCrushHeader } from "@rttui/core";
 import { useColProps } from "@rttui/core";
 import React from "react";
-
+import { shallowEqual } from "@rttui/core";
 export function Resizer() {
   const crushHeader = useCrushHeader();
 
-  const { canResize, isResizing } = useColProps(({ column }) => {
-    return {
-      canResize: column.getCanResize(),
-      isResizing: column.getIsResizing(),
-    };
+  const { canResize, isResizing } = useColProps({
+    callback: ({ column }) => {
+      return {
+        canResize: column.getCanResize(),
+        isResizing: column.getIsResizing(),
+      };
+    },
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [
+      { type: "tanstack_table" },
+    ],
   });
 
   const colRef = useColRef();

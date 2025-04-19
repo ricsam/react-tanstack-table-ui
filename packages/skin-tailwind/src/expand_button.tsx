@@ -1,12 +1,16 @@
-import { useRowProps, useRowRef } from "@rttui/core";
+import { useRowProps, useRowRef, shallowEqual } from "@rttui/core";
 
 export function ExpandButton() {
-  const { canExpand, isExpanded } = useRowProps((vrow) => {
-    const row = vrow.row();
-    return {
-      canExpand: row.getCanExpand(),
-      isExpanded: row.getIsExpanded(),
-    };
+  const { canExpand, isExpanded } = useRowProps({
+    callback: (vrow) => {
+      const row = vrow.row;
+      return {
+        canExpand: row.getCanExpand(),
+        isExpanded: row.getIsExpanded(),
+      };
+    },
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [{ type: "tanstack_table" }],
   });
   const rowRef = useRowRef();
   if (!canExpand) {
@@ -14,7 +18,7 @@ export function ExpandButton() {
   }
   return (
     <button
-      onClick={() => rowRef.current.toggleExpanded()}
+      onClick={() => rowRef.current.row.toggleExpanded()}
       className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
     >
       {isExpanded ? (

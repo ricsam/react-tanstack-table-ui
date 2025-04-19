@@ -1,6 +1,6 @@
 import React from "react";
-import { VirtualRow } from "../types";
+import { RttuiRow } from "../types";
 
-export const VirtualRowContext = React.createContext<undefined | VirtualRow>(
-  undefined,
-);
+export const VirtualRowContext = React.createContext<
+  undefined | (() => RttuiRow)
+>(undefined);
