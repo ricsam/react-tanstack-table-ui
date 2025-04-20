@@ -8,6 +8,7 @@ import {
 import { RttuiTable } from "../types";
 import { useTablePropsContext } from "./use_table_props_context";
 import { useTableContext } from "../table_context";
+import { flushSync } from "react-dom";
 
 export type UseTablePropsOptions<T, U> = {
   areCallbackOutputEqual?: (prevProps: T, newProps: T) => boolean;
@@ -78,7 +79,7 @@ export const useTableProps = <T, U = RttuiTable>({
   willRender.current = false;
   lastCommittedValue.current = value.current;
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const listener =
       (_dependency: Dependency) =>
       (table: RttuiTable, updateType: UpdateType) => {
@@ -107,7 +108,7 @@ export const useTableProps = <T, U = RttuiTable>({
             rerender();
           } else if (updateType.type === "from_dom_event") {
             if (updateType.sync) {
-              // flushSync(rerender);
+              flushSync(rerender);
             } else {
               rerender();
             }

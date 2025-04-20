@@ -255,6 +255,15 @@ export const useRttuiTable = ({
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   skin: Skin;
 }) => {
+  const context = useTablePropsContext();
+  const isInitial = React.useRef(true);
+  React.useLayoutEffect(() => {
+    context.triggerUpdate([{ type: "tanstack_table" }, { type: "ui_props" }], {
+      type: "from_layout_effect",
+      initial: isInitial.current,
+    });
+  });
+
   const virtualizers = useVirtualizers({
     table,
     tableContainerRef,
@@ -275,12 +284,10 @@ export const useRttuiTable = ({
 
   const rttuiRef = React.useRef<RttuiTable>(newInstance);
   rttuiRef.current = newInstance;
-  const context = useTablePropsContext();
 
   const prev = React.useRef<RttuiTable>(newInstance);
-  const isInitial = React.useRef(true);
 
-  function updateRttuiTable() {
+  function updateRttuiTable(_sync: boolean) {
     const newInstance = getNewInstance();
     rttuiRef.current = newInstance;
     const oldInstance = prev.current;
@@ -301,13 +308,6 @@ export const useRttuiTable = ({
     tableRef: rttuiRef,
   });
 
-  React.useLayoutEffect(() => {
-    updateRttuiTable();
-    context.triggerUpdate([{ type: "tanstack_table" }, { type: "ui_props" }], {
-      type: "from_layout_effect",
-      initial: isInitial.current,
-    });
-  });
   return rttuiRef;
 };
 
@@ -678,12 +678,12 @@ function useVirtualizers({
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   uiProps: UiProps;
   skin: Skin;
-  updateRttuiTable: () => void;
+  updateRttuiTable: (sync: boolean) => void;
 }) {
   const updateRttuiTableRef = React.useRef(updateRttuiTable);
   updateRttuiTableRef.current = updateRttuiTable;
-  const onChange = React.useCallback(() => {
-    updateRttuiTableRef.current();
+  const onChange = React.useCallback((sync: boolean) => {
+    updateRttuiTableRef.current(sync);
   }, []);
   const virtualizersRef = React.useRef<{
     rowVirtualizer: Virtualizer<any, any>;
@@ -967,6 +967,7 @@ function useVirtualizers({
           () => {
             verCb(offsetTop, false);
             horCbs.forEach((cb) => cb(offsetLeft, false));
+            onChange(false);
           },
           150,
         );
@@ -977,7 +978,7 @@ function useVirtualizers({
       fallback();
       verCb(offsetTop, isScrolling);
       horCbs.forEach((cb) => cb(offsetLeft, isScrolling));
-      onChange();
+      onChange(isScrolling);
     };
     const handler = createHandler(true);
     const endHandler = createHandler(false);
