@@ -42,12 +42,8 @@ const rowSelector = createTablePropsSelector((rowIndex: number) => ({
 
 export const TableRow = React.memo(function TableRow({
   rowIndex,
-  offsetLeft,
-  offsetRight,
 }: {
   rowIndex: number;
-  offsetLeft: number;
-  offsetRight: number;
 }) {
   const { skin } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
@@ -76,7 +72,7 @@ export const TableRow = React.memo(function TableRow({
             <ColSlice rowIndex={rowIndex} position="left" />
             <div
               style={{
-                minWidth: offsetLeft,
+                minWidth: "var(--body-offset-left)",
                 flexShrink: 0,
               }}
             ></div>
@@ -85,12 +81,12 @@ export const TableRow = React.memo(function TableRow({
               style={
                 pinColsRelativeTo === "table"
                   ? {
-                      minWidth: offsetRight,
+                      minWidth: "var(--body-offset-right)",
                       flexShrink: 0,
                       flexGrow: 1,
                     }
                   : {
-                      width: offsetRight,
+                      minWidth: "var(--body-offset-right)",
                       flexShrink: 0,
                     }
               }

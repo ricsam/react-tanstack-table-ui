@@ -19,7 +19,7 @@ export type UseTablePropsOptions<T, U> = {
 
 export const useTableProps = <T, U = RttuiTable>({
   areCallbackOutputEqual = strictEqual,
-  dependencies = [{ type: "*" }],
+  dependencies = [],
   selector,
   callback,
   shouldUnmount,
@@ -30,6 +30,7 @@ export const useTableProps = <T, U = RttuiTable>({
     selector,
     shouldUnmount,
   };
+
   const callbackRefs = React.useRef(callbacks);
   callbackRefs.current = callbacks;
 

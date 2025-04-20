@@ -244,16 +244,18 @@ export const useRttuiTable = ({
 
     let callback: undefined | (() => void);
 
-    return (newCallback: () => void) => {
+    return (newCallback: () => void, triggerInstantly: boolean) => {
+      callback = newCallback;
       if (active) {
-        callback = newCallback;
         return;
       }
-      // first time
-      newCallback();
+
+      if (triggerInstantly) {
+        newCallback();
+      }
 
       active = true;
-      window.requestIdleCallback(() => {
+      window.requestAnimationFrame(() => {
         if (callback) {
           callback();
         }
@@ -267,7 +269,7 @@ export const useRttuiTable = ({
     tableContainerRef,
     uiProps,
     skin,
-    updateRttuiTable,
+    updateRttuiTable: () => updateRttuiTable(false),
   });
 
   function getNewInstance() {
@@ -280,41 +282,29 @@ export const useRttuiTable = ({
 
   const newInstance = getNewInstance();
 
-  const measuringContext = useMeasureContext();
-
   const rttuiRef = React.useRef<RttuiTable>(newInstance);
   rttuiRef.current = newInstance;
   const context = useTablePropsContext();
 
   const prev = React.useRef<RttuiTable>(newInstance);
+  const isInitial = React.useRef(true);
 
-  // const hasUpdated = React.useRef(false);
-  // hasUpdated.current = true;
-
-  function updateRttuiTable() {
+  function updateRttuiTable(triggerInstantly: boolean) {
     throttleUpdates(() => {
       const newInstance = getNewInstance();
       rttuiRef.current = newInstance;
       const oldInstance = prev.current;
       const diff = diffRttuiTable(oldInstance, newInstance);
       prev.current = newInstance;
-
-      if (measuringContext.isMeasuring) {
-        console.log(
-          "measuringContext.isMeasuring",
-          measuringContext.isMeasuring,
-          newInstance,
-          newInstance.virtualData.body.colVirtualizer.scrollOffset,
-        );
-      }
       if (diff.length > 0) {
-        // hasUpdated.current = false;
         context.triggerUpdate(diff, {
           type: "from_dom_event",
           sync: false,
+          initial: isInitial.current,
         });
+        isInitial.current = false;
       }
-    });
+    }, triggerInstantly);
   }
 
   context.setInitialTableGetters({
@@ -323,9 +313,10 @@ export const useRttuiTable = ({
   });
 
   React.useLayoutEffect(() => {
-    updateRttuiTable();
+    updateRttuiTable(true);
     context.triggerUpdate([{ type: "tanstack_table" }, { type: "ui_props" }], {
       type: "from_layout_effect",
+      initial: isInitial.current,
     });
   });
   return rttuiRef;

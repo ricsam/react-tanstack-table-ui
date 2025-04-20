@@ -28,7 +28,7 @@ const AnoccaSkin: Skin = {
   rowHeight: 32,
   headerRowHeight: 32,
   footerRowHeight: 32,
-  OverlayContainer: ({ children }) => {
+  OverlayContainer: React.memo(function OverlayContainer({ children }) {
     const { width, height } = useTableProps({
       selector: (props) => props.uiProps,
       callback: ({ width, height }) => {
@@ -54,7 +54,7 @@ const AnoccaSkin: Skin = {
         {children}
       </div>
     );
-  },
+  }),
   OuterContainer: ({ children }) => {
     const { tableContainerRef } = useTableContext();
 
@@ -184,7 +184,7 @@ const AnoccaSkin: Skin = {
       </Component>
     );
   },
-  PinnedCols: ({ children, position }) => {
+  PinnedCols: React.memo(({ children, position }) => {
     const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
@@ -202,49 +202,51 @@ const AnoccaSkin: Skin = {
         {children}
       </Box>
     );
-  },
-
-  TableRowWrapper: React.forwardRef(({ children }, ref) => {
-    const theme = useTheme();
-    const { relativeIndex, rowIndex } = useRowProps({
-      callback: (row) => {
-        return { relativeIndex: row.relativeIndex, rowIndex: row.rowIndex };
-      },
-      areCallbackOutputEqual: shallowEqual,
-      dependencies: [{ type: "tanstack_table" }],
-    });
-    const backgroundColor = (theme: Theme) => {
-      const baseColor =
-        relativeIndex % 2 === 0
-          ? theme.palette.background.paper
-          : theme.palette.mode === "dark"
-            ? theme.palette.grey[900]
-            : theme.palette.grey[100];
-      return baseColor;
-    };
-
-    const vars: Record<string, string> = {
-      "--row-background-color": backgroundColor(theme),
-    };
-
-    return (
-      <Box
-        sx={{
-          ...vars,
-          width: "var(--table-width)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          alignItems: "stretch",
-        }}
-        data-index={rowIndex}
-        ref={ref}
-      >
-        {children}
-      </Box>
-    );
   }),
-  TableRow: ({ children }) => {
+
+  TableRowWrapper: React.memo(
+    React.forwardRef(({ children }, ref) => {
+      const theme = useTheme();
+      const { relativeIndex, rowIndex } = useRowProps({
+        callback: (row) => {
+          return { relativeIndex: row.relativeIndex, rowIndex: row.rowIndex };
+        },
+        areCallbackOutputEqual: shallowEqual,
+        dependencies: [{ type: "tanstack_table" }],
+      });
+      const backgroundColor = (theme: Theme) => {
+        const baseColor =
+          relativeIndex % 2 === 0
+            ? theme.palette.background.paper
+            : theme.palette.mode === "dark"
+              ? theme.palette.grey[900]
+              : theme.palette.grey[100];
+        return baseColor;
+      };
+
+      const vars: Record<string, string> = {
+        "--row-background-color": backgroundColor(theme),
+      };
+
+      return (
+        <Box
+          sx={{
+            ...vars,
+            width: "var(--table-width)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            alignItems: "stretch",
+          }}
+          data-index={rowIndex}
+          ref={ref}
+        >
+          {children}
+        </Box>
+      );
+    }),
+  ),
+  TableRow: React.memo(({ children }) => {
     return (
       <TableRow
         component="div"
@@ -270,8 +272,8 @@ const AnoccaSkin: Skin = {
         {children}
       </TableRow>
     );
-  },
-  TableRowExpandedContent: ({ children }) => {
+  }),
+  TableRowExpandedContent: React.memo(({ children }) => {
     const { leafColLength } = useTableProps({
       callback: (table) => {
         return {
@@ -301,7 +303,7 @@ const AnoccaSkin: Skin = {
         </TableCell>
       </TableRow>
     );
-  },
+  }),
   Cell: React.memo(
     React.forwardRef(function Cell({ isMeasureInstance, children }, ref) {
       const {

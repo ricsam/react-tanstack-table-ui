@@ -64,7 +64,7 @@ export const TablePropsProvider = ({
       if (!tbl) {
         throw new Error("table is not set");
       }
-      if (DEBUG_TRIGGER_ALL) {
+      if (DEBUG_TRIGGER_ALL || updateType.initial) {
         Object.values(updateListeners).forEach((listeners) => {
           listeners.forEach((listener) => {
             listener.callback(tbl, updateType);
@@ -79,10 +79,18 @@ export const TablePropsProvider = ({
               (dependency.type === "col_visible_range" &&
                 listener.dependency.type === "col_visible_range")
             ) {
-              if (dependency.groupType !== listener.dependency.groupType) {
+              if (
+                dependency.groupType &&
+                listener.dependency.groupType &&
+                dependency.groupType !== listener.dependency.groupType
+              ) {
                 return;
               }
-              if (dependency.groupIndex !== listener.dependency.groupIndex) {
+              if (
+                typeof dependency.groupIndex === "number" &&
+                typeof listener.dependency.groupIndex === "number" &&
+                dependency.groupIndex !== listener.dependency.groupIndex
+              ) {
                 return;
               }
             }

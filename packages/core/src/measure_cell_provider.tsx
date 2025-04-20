@@ -49,7 +49,6 @@ export const MeasureCellProvider = ({
       }
       measuredCount.current--;
       if (measuredCount.current === 0) {
-        console.log("@isMeasuringRef.current.callback", isMeasuringRef.current.callback);
         isMeasuringRef.current.callback({
           cells: elRefs.current,
           cols: new Map(colRefs.current),

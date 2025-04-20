@@ -17,6 +17,7 @@ import {
 } from "./table_context";
 import { ReactTanstackTableUiProps, UiProps } from "./types";
 import { useRttuiTable } from "./use_rttui_table";
+
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     autoCrush?: boolean;
@@ -131,10 +132,10 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
   const uiProps: UiProps = {
     width: measureContext.width,
     height: measureContext.height,
-    rowOverscan: props.rowOverscan ?? 10,
+    rowOverscan: props.rowOverscan ?? 1,
     columnOverscan: measureContext.isMeasuring
       ? (props.autoCrushNumCols ?? 50)
-      : (props.columnOverscan ?? 3),
+      : (props.columnOverscan ?? 1),
     renderSubComponent: props.renderSubComponent,
     underlay: props.underlay,
     autoCrushColumns: props.autoCrushColumns,
@@ -179,7 +180,7 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
 }
 
 const Body = React.memo(function Body() {
-  const { skin, loading } = useTableContext();
+  const { skin } = useTableContext();
 
   const { pinColsRelativeTo, underlay } = useTableProps({
     callback: (props) => {

@@ -50,12 +50,15 @@ export type UpdateType =
   | {
       type: "from_dom_event";
       sync: boolean;
+      initial: boolean;
     }
   | {
       type: "from_render_method";
+      initial: boolean;
     }
   | {
       type: "from_layout_effect";
+      initial: boolean;
     };
 
 export type TablePropsContextType = {

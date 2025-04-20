@@ -29,7 +29,6 @@ export const MeasureProvider = (props: {
       setOnMeasureCb({
         ...isMeasuring,
         callback: (measureData: MeasureData) => {
-          console.log("measureCells callback", measureData);
           isMeasuring.callback(measureData);
           setOnMeasureCb(undefined);
         },
@@ -291,7 +290,6 @@ export const MeasureProvider = (props: {
 
   const onMeasureCb = React.useCallback(
     (cols: MeasureData["cols"]) => {
-      console.log("autoSizeColumns");
       crushCols(cols);
       fillAvailableSpaceAfterCrush(cols);
     },

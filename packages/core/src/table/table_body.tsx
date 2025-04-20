@@ -7,25 +7,16 @@ import { shallowEqual } from "../utils";
 export const TableBody = React.memo(function TableBody() {
   const { skin } = useTableContext();
 
-  const { offsetTop, offsetBottom, hasRows, pinRowsRelativeTo } = useTableProps(
-    {
-      callback: (props) => {
-        const { offsetTop, offsetBottom, hasRows } = props.virtualData.body;
-        return {
-          offsetTop,
-          offsetBottom,
-          hasRows,
-          pinRowsRelativeTo: props.uiProps.pinRowsRelativeTo,
-        };
-      },
-      areCallbackOutputEqual: shallowEqual,
-      dependencies: [
-        { type: "ui_props" },
-        { type: "tanstack_table" },
-        { type: "row_offsets" },
-      ],
+  const { hasRows, pinRowsRelativeTo } = useTableProps({
+    callback: (props) => {
+      return {
+        hasRows: props.virtualData.body.hasRows,
+        pinRowsRelativeTo: props.uiProps.pinRowsRelativeTo,
+      };
     },
-  );
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [{ type: "ui_props" }, { type: "tanstack_table" }],
+  });
 
   if (!hasRows) {
     return null;
@@ -36,7 +27,7 @@ export const TableBody = React.memo(function TableBody() {
       <RowsSlice position="top" />
 
       <div
-        style={{ height: offsetTop, flexShrink: 0 }}
+        style={{ height: "var(--body-offset-top)", flexShrink: 0 }}
         className="offset-top"
       />
 
@@ -45,8 +36,12 @@ export const TableBody = React.memo(function TableBody() {
       <div
         style={
           pinRowsRelativeTo === "rows"
-            ? { height: offsetBottom, flexShrink: 0 }
-            : { minHeight: offsetBottom, flexShrink: 0, flexGrow: 1 }
+            ? { height: "var(--body-offset-bottom)", flexShrink: 0 }
+            : {
+                minHeight: "var(--body-offset-bottom)",
+                flexShrink: 0,
+                flexGrow: 1,
+              }
         }
         className="offset-bottom"
       />
@@ -70,36 +65,13 @@ const RowsSlice = React.memo(function RowsSlice({
     dependencies: [{ type: "row_visible_range" }, { type: "tanstack_table" }],
   });
 
-  const { offsetLeft, offsetRight } = useTableProps({
-    areCallbackOutputEqual: shallowEqual,
-    selector: (props) => props.virtualData.body,
-    callback: ({ offsetLeft, offsetRight }) => {
-      return {
-        offsetLeft,
-        offsetRight,
-      };
-    },
-    dependencies: [
-      {
-        type: "col_offsets_main",
-      },
-    ],
-  });
-
   if (rows.length === 0) {
     return null;
   }
   const base = (
     <>
       {rows.map((rowIndex) => {
-        return (
-          <TableRow
-            key={rowIndex}
-            rowIndex={rowIndex}
-            offsetLeft={offsetLeft}
-            offsetRight={offsetRight}
-          />
-        );
+        return <TableRow key={rowIndex} rowIndex={rowIndex} />;
       })}
     </>
   );

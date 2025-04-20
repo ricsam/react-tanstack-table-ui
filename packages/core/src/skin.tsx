@@ -61,12 +61,26 @@ const cssVarsSelector = createTablePropsSelector((skin: Skin) => ({
     const { width, height } = table.uiProps;
     const totalSize = table.tanstackTable.getTotalSize();
     const rowTotalSize = table.virtualData.body.rowVirtualizer.getTotalSize();
+    const headerOffsets: Record<string, string> = {};
+    for (const type of ["header", "footer"] as const) {
+      table.virtualData[type].groups.forEach((group) => {
+        headerOffsets[`--${type}-${group.groupIndex}-offset-left`] =
+          group.offsetLeft + "px";
+        headerOffsets[`--${type}-${group.groupIndex}-offset-right`] =
+          group.offsetRight + "px";
+      });
+    }
     return {
       "--table-container-width": width + "px",
       "--table-container-height": height + "px",
       "--row-height": skin.rowHeight + "px",
       "--header-row-height": skin.headerRowHeight + "px",
       "--footer-row-height": skin.footerRowHeight + "px",
+      "--body-offset-left": table.virtualData.body.offsetLeft + "px",
+      "--body-offset-right": table.virtualData.body.offsetRight + "px",
+      "--body-offset-top": table.virtualData.body.offsetTop + "px",
+      "--body-offset-bottom": table.virtualData.body.offsetBottom + "px",
+      ...headerOffsets,
       "--header-height":
         table.virtualData.header.groups.length * skin.headerRowHeight + "px",
       "--footer-height":
@@ -81,7 +95,16 @@ const cssVarsSelector = createTablePropsSelector((skin: Skin) => ({
           : rowTotalSize + "px",
     };
   },
-  dependencies: [{ type: "ui_props" }, { type: "tanstack_table" }],
+  dependencies: [
+    { type: "ui_props" },
+    { type: "tanstack_table" },
+    {
+      type: "col_offsets",
+    },
+    {
+      type: "row_offsets",
+    },
+  ],
   areCallbackOutputEqual: shallowEqual,
 }));
 
