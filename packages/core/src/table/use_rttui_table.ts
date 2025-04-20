@@ -2,7 +2,7 @@ import { Header, HeaderGroup, Table } from "@tanstack/react-table";
 import {
   defaultRangeExtractor,
   measureElement,
-  observeElementOffset,
+  observeElementOffset as libObserveElementOffset,
   observeElementRect,
   VirtualItem,
   Virtualizer,
@@ -27,7 +27,8 @@ import {
   VirtualHeaderCellState,
 } from "./types";
 import { useMeasureContext } from "./hooks/use_measure_context";
-
+type ObserveElementOffset = typeof libObserveElementOffset;
+type ObserveOffsetCallBack = Parameters<ObserveElementOffset>[1];
 // const useIsomorphicLayoutEffect =
 //   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
@@ -38,6 +39,21 @@ type FilteredHeaderGroup = {
     string,
     { groupIndex: number; headerIndices: Record<string, number> }
   >;
+};
+
+const supportsScrollend =
+  typeof window == "undefined" ? true : "onscrollend" in window;
+
+const debounce = (
+  targetWindow: Window & typeof globalThis,
+  fn: (...args: any[]) => void,
+  ms: number,
+) => {
+  let timeoutId: number;
+  return function (this: any, ...args: Array<any>) {
+    targetWindow.clearTimeout(timeoutId);
+    timeoutId = targetWindow.setTimeout(() => fn.apply(this, args), ms);
+  };
 };
 
 type ColPos = "left" | "center" | "right";
@@ -239,37 +255,12 @@ export const useRttuiTable = ({
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   skin: Skin;
 }) => {
-  const [throttleUpdates] = React.useState(() => {
-    let active = false;
-
-    let callback: undefined | (() => void);
-
-    return (newCallback: () => void, triggerInstantly: boolean) => {
-      callback = newCallback;
-      if (active) {
-        return;
-      }
-
-      if (triggerInstantly) {
-        newCallback();
-      }
-
-      active = true;
-      window.requestAnimationFrame(() => {
-        if (callback) {
-          callback();
-        }
-        active = false;
-      });
-    };
-  });
-
   const virtualizers = useVirtualizers({
     table,
     tableContainerRef,
     uiProps,
     skin,
-    updateRttuiTable: () => updateRttuiTable(false),
+    updateRttuiTable,
   });
 
   function getNewInstance() {
@@ -289,22 +280,20 @@ export const useRttuiTable = ({
   const prev = React.useRef<RttuiTable>(newInstance);
   const isInitial = React.useRef(true);
 
-  function updateRttuiTable(triggerInstantly: boolean) {
-    throttleUpdates(() => {
-      const newInstance = getNewInstance();
-      rttuiRef.current = newInstance;
-      const oldInstance = prev.current;
-      const diff = diffRttuiTable(oldInstance, newInstance);
-      prev.current = newInstance;
-      if (diff.length > 0) {
-        context.triggerUpdate(diff, {
-          type: "from_dom_event",
-          sync: false,
-          initial: isInitial.current,
-        });
-        isInitial.current = false;
-      }
-    }, triggerInstantly);
+  function updateRttuiTable() {
+    const newInstance = getNewInstance();
+    rttuiRef.current = newInstance;
+    const oldInstance = prev.current;
+    const diff = diffRttuiTable(oldInstance, newInstance);
+    prev.current = newInstance;
+    if (diff.length > 0) {
+      context.triggerUpdate(diff, {
+        type: "from_dom_event",
+        sync: false,
+        initial: isInitial.current,
+      });
+      isInitial.current = false;
+    }
   }
 
   context.setInitialTableGetters({
@@ -313,7 +302,7 @@ export const useRttuiTable = ({
   });
 
   React.useLayoutEffect(() => {
-    updateRttuiTable(true);
+    updateRttuiTable();
     context.triggerUpdate([{ type: "tanstack_table" }, { type: "ui_props" }], {
       type: "from_layout_effect",
       initial: isInitial.current,
@@ -500,6 +489,10 @@ function getRttuiHeaders(virtualizer: ColVirtualizer, groupIndex: number) {
     allVirtItems,
   };
 }
+
+const addEventListenerOptions = {
+  passive: true,
+};
 
 /**
  * when we are only rendering a window of columns while maintaining a scrollbar we need to move the elements as we remove elements to the left
@@ -701,6 +694,30 @@ function useVirtualizers({
     };
   }>(null);
 
+  const verScrollCallbackRef = React.useRef<ObserveOffsetCallBack>(undefined);
+  const horScrollCallbackRefs = React.useRef<{
+    [type in HeaderType]: {
+      [groupIndex: number]: ObserveOffsetCallBack;
+    };
+  }>({
+    header: {},
+    footer: {},
+  });
+
+  const verObserveElementOffset: ObserveElementOffset = React.useCallback(
+    (_, cb) => {
+      verScrollCallbackRef.current = cb;
+      return undefined;
+    },
+    [],
+  );
+  const horObserveElementOffset =
+    (type: HeaderType, groupIndex: number): ObserveElementOffset =>
+    (_, cb) => {
+      horScrollCallbackRefs.current[type][groupIndex] = cb;
+      return undefined;
+    };
+
   const _slow_allRows = table.getRowModel().rows;
 
   const rowRefsOb = {
@@ -745,10 +762,10 @@ function useVirtualizers({
           });
         },
         observeElementRect,
-        observeElementOffset,
+        observeElementOffset: verObserveElementOffset,
         estimateSize: () => rowRefs.current.skin.rowHeight,
         getItemKey: (index: number) => rowRefs.current._slow_allRows[index].id,
-        onChange,
+        onChange: () => {},
         measureElement: (
           element: any,
           entry: ResizeObserverEntry | undefined,
@@ -780,8 +797,9 @@ function useVirtualizers({
             _slow_allHeaders: _slow_leafHeaders,
             tableContainerRef,
             columnOverscan: getColOverscan(),
-            onChange,
+            onChange: () => {},
             initialOffset: getColScrollOffset(),
+            observeElementOffset: horObserveElementOffset("header", 0),
           }),
           _slow_lookup: _slow_leafHeaders,
         },
@@ -839,8 +857,9 @@ function useVirtualizers({
           _slow_allHeaders: group._slow_headers,
           tableContainerRef,
           columnOverscan: getColOverscan(),
-          onChange,
+          onChange: () => {},
           initialOffset: getColScrollOffset(),
+          observeElementOffset: horObserveElementOffset(type, groupIndex),
         }),
         _slow_lookup: group._slow_headers,
       };
@@ -923,9 +942,62 @@ function useVirtualizers({
 
   React.useLayoutEffect(() => {
     Array.from(allVirtualizersRef.current).forEach((cv) => {
+      // this should initialize the verScrollCallbackRef and horScrollCallbackRef
       cv._willUpdate();
     });
-  });
+
+    const verCb = verScrollCallbackRef.current;
+    const horCbs = Object.values(horScrollCallbackRefs.current).flatMap((val) =>
+      Object.values(val),
+    );
+
+    const element = tableContainerRef.current;
+
+    if (!verCb || !element) {
+      return;
+    }
+
+    let offsetLeft = 0;
+    let offsetTop = 0;
+
+    const fallback = supportsScrollend
+      ? () => undefined
+      : debounce(
+          window,
+          () => {
+            verCb(offsetTop, false);
+            horCbs.forEach((cb) => cb(offsetLeft, false));
+          },
+          150,
+        );
+
+    const createHandler = (isScrolling: boolean) => () => {
+      offsetLeft = element["scrollLeft"];
+      offsetTop = element["scrollTop"];
+      fallback();
+      verCb(offsetTop, isScrolling);
+      horCbs.forEach((cb) => cb(offsetLeft, isScrolling));
+      onChange();
+    };
+    const handler = createHandler(true);
+    const endHandler = createHandler(false);
+    endHandler();
+
+    element.addEventListener("scroll", handler, addEventListenerOptions);
+    if (supportsScrollend) {
+      element.addEventListener(
+        "scrollend",
+        endHandler,
+        addEventListenerOptions,
+      );
+    }
+    return () => {
+      element.removeEventListener("scroll", handler);
+      if (supportsScrollend) {
+        element.removeEventListener("scrollend", endHandler);
+      }
+    };
+  }, [onChange, tableContainerRef]);
 
   return virtualizers;
 }
@@ -964,12 +1036,14 @@ function createColVirtualizer({
   columnOverscan,
   onChange,
   initialOffset,
+  observeElementOffset,
 }: {
   _slow_allHeaders: Header<any, unknown>[];
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   columnOverscan: number;
   onChange: (sync: boolean) => void;
   initialOffset: number | undefined;
+  observeElementOffset: ObserveElementOffset;
 }) {
   return new Virtualizer({
     getScrollElement: () => tableContainerRef.current,

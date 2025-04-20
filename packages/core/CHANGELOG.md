@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.31
+
+### Patch Changes
+
+- performance tuning
+
 ## 1.0.30
 
 ### Patch Changes
