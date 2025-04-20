@@ -1,6 +1,6 @@
 {
   "name": "@rttui/skin-anocca",
-  "version": "1.0.31",
+  "version": "1.0.32",
   "main": "./src/index.ts",
   "dependencies": {
     "@rttui/core": "workspace:^"

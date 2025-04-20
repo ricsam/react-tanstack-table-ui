@@ -1,5 +1,13 @@
 # @rttui/skin-anocca
 
+## 1.0.32
+
+### Patch Changes
+
+- new data flow
+- Updated dependencies
+  - @rttui/core@1.0.30
+
 ## 1.0.31
 
 ### Patch Changes
