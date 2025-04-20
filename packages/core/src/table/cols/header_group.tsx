@@ -33,21 +33,29 @@ export const HeaderGroup = React.memo(function HeaderGroup({
   return (
     <skin.HeaderRow type={type}>
       <HeaderColsSlice type={type} pinPos="start" groupIndex={groupIndex} />
-      <div style={{ width: offsetLeftVar, flexShrink: 0 }}></div>
+      <div
+        style={{
+          width: offsetLeftVar,
+          flexShrink: 0,
+          visibility: "hidden",
+          pointerEvents: "none",
+          transform: "translateZ(0)",
+        }}
+      ></div>
       <HeaderColsSlice type={type} pinPos={false} groupIndex={groupIndex} />
       <div
-        style={
-          pinColsRelativeTo === "table"
+        style={{
+          flexShrink: 0,
+          transform: "translateZ(0)",
+          ...(pinColsRelativeTo === "table"
             ? {
                 minWidth: offsetRightVar,
-                flexShrink: 0,
                 flexGrow: 1,
               }
             : {
                 width: offsetRightVar,
-                flexShrink: 0,
-              }
-        }
+              }),
+        }}
       ></div>
       <HeaderColsSlice type={type} pinPos="end" groupIndex={groupIndex} />
     </skin.HeaderRow>

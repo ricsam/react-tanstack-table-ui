@@ -68,8 +68,8 @@ const AnoccaSkin: Skin = {
           width: "var(--table-container-width)",
           height: "var(--table-container-height)",
           position: "relative",
-          contain: "paint",
-          willChange: "transform",
+          contain: "strict",
+          willChange: "scroll-position",
           borderRadius: 1,
         }}
       >
@@ -149,6 +149,7 @@ const AnoccaSkin: Skin = {
           flexDirection: "column",
           justifyContent: "flex-start",
           alignItems: "stretch",
+          willChange: "contents",
         }}
       >
         {children}
@@ -259,6 +260,7 @@ const AnoccaSkin: Skin = {
           zIndex: 1,
           boxSizing: "border-box",
           backgroundColor: "var(--row-background-color)",
+          willChange: "contents",
           "&:hover": {
             backgroundColor: (theme) => {
               // Always use solid background colors for all cells on hover

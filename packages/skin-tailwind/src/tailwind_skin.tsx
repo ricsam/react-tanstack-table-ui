@@ -51,8 +51,8 @@ export const TailwindSkin: Skin = {
         style={{
           width: "var(--table-container-width)",
           height: "var(--table-container-height)",
-          contain: "paint",
-          willChange: "transform",
+          contain: "strict",
+          willChange: "scroll-position",
           color: "var(--table-text-color)",
           backgroundColor: "var(--table-bg-color)",
         }}
@@ -106,6 +106,7 @@ export const TailwindSkin: Skin = {
         style={{
           height: "var(--header-row-height)",
           boxSizing: "border-box",
+          willChange: "contents",
         }}
       >
         <div className={clsx("absolute inset-y-0 left-0 w-0.5")} />
@@ -126,6 +127,7 @@ export const TailwindSkin: Skin = {
           width: "var(--table-width)",
           backgroundColor: "var(--table-bg-color)",
           height: "var(--table-height)",
+          willChange: "contents",
         }}
       >
         {children}
@@ -205,6 +207,7 @@ export const TailwindSkin: Skin = {
           width: "var(--table-width)",
           height: "var(--row-height)",
           boxSizing: "border-box",
+          willChange: "contents",
           zIndex: 1,
           ...vars,
         }}

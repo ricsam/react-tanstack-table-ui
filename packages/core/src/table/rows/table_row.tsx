@@ -74,22 +74,25 @@ export const TableRow = React.memo(function TableRow({
               style={{
                 minWidth: "var(--body-offset-left)",
                 flexShrink: 0,
+                pointerEvents: "none",
+                visibility: "hidden",
+                transform: "translateZ(0)",
               }}
             ></div>
             <ColSlice rowIndex={rowIndex} position="center" />
             <div
-              style={
-                pinColsRelativeTo === "table"
+              style={{
+                visibility: "hidden",
+                pointerEvents: "none",
+                transform: "translateZ(0)",
+                minWidth: "var(--body-offset-right)",
+                flexShrink: 0,
+                ...(pinColsRelativeTo === "table"
                   ? {
-                      minWidth: "var(--body-offset-right)",
-                      flexShrink: 0,
                       flexGrow: 1,
                     }
-                  : {
-                      minWidth: "var(--body-offset-right)",
-                      flexShrink: 0,
-                    }
-              }
+                  : {}),
+              }}
             ></div>
             <ColSlice rowIndex={rowIndex} position="right" />
           </skin.TableRow>

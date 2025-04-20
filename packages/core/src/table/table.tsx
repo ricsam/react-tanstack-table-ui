@@ -90,7 +90,9 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
             height: "100%",
             visibility: "hidden",
             pointerEvents: "none",
+            transform: "translateZ(0)",
             zIndex: -1,
+            contain: "strict",
           }}
         >
           <MeasureCellProvider isMeasuring={measuringContext.isMeasuring}>

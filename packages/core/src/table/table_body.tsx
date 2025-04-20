@@ -27,22 +27,33 @@ export const TableBody = React.memo(function TableBody() {
       <RowsSlice position="top" />
 
       <div
-        style={{ height: "var(--body-offset-top)", flexShrink: 0 }}
+        style={{
+          height: "var(--body-offset-top)",
+          flexShrink: 0,
+          visibility: "hidden",
+          pointerEvents: "none",
+          transform: "translateZ(0)",
+        }}
         className="offset-top"
       />
 
       <RowsSlice position="center" />
 
       <div
-        style={
-          pinRowsRelativeTo === "rows"
-            ? { height: "var(--body-offset-bottom)", flexShrink: 0 }
+        style={{
+          flexShrink: 0,
+          visibility: "hidden",
+          pointerEvents: "none",
+          transform: "translateZ(0)",
+          ...(pinRowsRelativeTo === "rows"
+            ? {
+                height: "var(--body-offset-bottom)",
+              }
             : {
                 minHeight: "var(--body-offset-bottom)",
-                flexShrink: 0,
                 flexGrow: 1,
-              }
-        }
+              }),
+        }}
         className="offset-bottom"
       />
 
