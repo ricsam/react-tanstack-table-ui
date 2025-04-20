@@ -5,7 +5,6 @@ import {
   decorateColumnHelper,
   ReactTanstackTableUi,
   shallowEqual,
-  useTableContext,
   useTableProps,
 } from "@rttui/core";
 import {
@@ -606,7 +605,6 @@ export function HomePage() {
 
 function Details({ row, width }: { row: Row<Person>; width: number }) {
   const person = row.original;
-  const { loading } = useTableContext();
   const { leftTotalSize, rightTotalSize } = useTableProps({
     callback: (table) => {
       return {

@@ -1,6 +1,6 @@
 import React from "react";
 import { VirtualHeaderCellContext } from "../contexts/virtual_header_cell_context";
-import { useTableRef } from "../hooks/use_table_ref";
+import { useTableContext } from "../table_context";
 
 export const VirtualHeaderCellProvider = ({
   type,
@@ -13,7 +13,7 @@ export const VirtualHeaderCellProvider = ({
   headerIndex: number;
   children: React.ReactNode;
 }) => {
-  const tableRef = useTableRef();
+  const { tableRef } = useTableContext();
   return (
     <VirtualHeaderCellContext.Provider
       value={React.useMemo(() => {

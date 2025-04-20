@@ -1,7 +1,5 @@
-import { Table } from "@tanstack/react-table";
 import { createContext } from "react";
-import { RttuiTable, UiProps } from "../types";
-import { Virtualizer } from "@tanstack/react-virtual";
+import { RttuiTable } from "../types";
 
 export type Dependency =
   | { type: "*" }
@@ -34,7 +32,7 @@ export type UpdateListenerEntry = {
   dependency: Dependency;
 };
 
-export type UpdateListenerEntries = {
+type UpdateListenerEntries = {
   [key in Dependency["type"]]: {
     callback: UpdateListenerEntry["callback"];
     dependency: GetDependency<key>;
@@ -44,7 +42,7 @@ export type UpdateListenerEntries = {
 export type UpdateListenersExact = {
   [key in Dependency["type"]]: Set<UpdateListenerEntries[key]>;
 };
-export type UpdateListenersGeneric = {
+type UpdateListenersGeneric = {
   [key in Dependency["type"]]: Set<UpdateListenerEntry>;
 };
 
@@ -61,9 +59,8 @@ export type UpdateType =
     };
 
 export type TablePropsContextType = {
-  initialTable: () => RttuiTable;
   updateListeners: UpdateListenersGeneric;
-  updateTable: (action: Action) => void;
+  setInitialTableGetters: (action: Action) => void;
   triggerUpdate: (dependencies: Dependency[], updateType: UpdateType) => void;
 };
 
@@ -73,5 +70,5 @@ export const TablePropsContext = createContext<
 
 export type Action = {
   type: "initial";
-  ref: React.RefObject<RttuiTable>;
+  tableRef: React.RefObject<RttuiTable | undefined>;
 };

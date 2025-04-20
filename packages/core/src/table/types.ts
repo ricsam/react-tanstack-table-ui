@@ -136,6 +136,11 @@ export type RttuiTable = {
       offsetTop: number;
       offsetBottom: number;
       hasRows: boolean;
+      cols: {
+        left: RttuiHeader[];
+        right: RttuiHeader[];
+        center: RttuiHeader[];
+      };
       rows: {
         top: RttuiRow[];
         center: RttuiRow[];
@@ -186,7 +191,7 @@ export type ShouldUpdate = {
   ) => boolean;
 };
 
-export type VirtualCell = {
+type VirtualCell = {
   id: string;
   cell: () => Cell<any, any>;
   vheader: VirtualHeaderCell;

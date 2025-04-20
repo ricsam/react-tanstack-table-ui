@@ -1,9 +1,42 @@
 import React from "react";
-import { useTableProps } from "../hooks/use_table_props";
+import { createTablePropsSelector, shallowEqual } from "../../utils";
 import { useTableContext } from "../table_context";
 import { PinPos } from "../types";
 import { TableHeaderCell } from "./table_header_cell";
-import { shallowEqual } from "../../utils";
+
+const colsSelector = createTablePropsSelector(
+  (
+    type: "header" | "footer",
+    position: "left" | "right" | "center",
+    groupIndex: number,
+  ) => ({
+    selector(props) {
+      const headerGroups =
+        type === "header" ? props.virtualData.header : props.virtualData.footer;
+      const headerGroup = headerGroups.groupLookup[groupIndex];
+      const headers = headerGroup[position];
+      return headers;
+    },
+    shouldUnmount: (table) => {
+      if (
+        table.virtualData[type]?.groupLookup[groupIndex]?.[position] ===
+        undefined
+      ) {
+        return true;
+      }
+      return false;
+    },
+    callback: (headers) => {
+      return headers.map((header) => header.headerIndex);
+    },
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [
+      { type: "tanstack_table" },
+      { type: "ui_props" },
+      { type: "col_visible_range", groupType: type, groupIndex },
+    ],
+  }),
+);
 
 export const HeaderColsSlice = React.memo(function HeaderColsSlice({
   type,
@@ -15,26 +48,11 @@ export const HeaderColsSlice = React.memo(function HeaderColsSlice({
   groupIndex: number;
 }) {
   const { skin } = useTableContext();
-  const cols = useTableProps({
-    selector(props) {
-      const headerGroups =
-        type === "header" ? props.virtualData.header : props.virtualData.footer;
-      const headerGroup = headerGroups.groupLookup[groupIndex];
-      const position: "left" | "right" | "center" =
-        pinPos === "start" ? "left" : pinPos === "end" ? "right" : "center";
-      const headers = headerGroup[position];
-      return headers;
-    },
-    callback: (headers) => {
-      return headers.map((header) => header.headerIndex);
-    },
-    areCallbackOutputEqual: shallowEqual,
-    dependencies: [
-      { type: "tanstack_table" },
-      { type: "ui_props" },
-      { type: "col_visible_range", groupType: type, groupIndex },
-    ],
-  });
+  const cols = colsSelector.useTableProps(
+    type,
+    pinPos === "start" ? "left" : pinPos === "end" ? "right" : "center",
+    groupIndex,
+  );
 
   if (cols.length === 0) {
     return null;

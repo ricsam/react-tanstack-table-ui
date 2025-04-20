@@ -14,9 +14,7 @@ export function Resizer() {
       };
     },
     areCallbackOutputEqual: shallowEqual,
-    dependencies: [
-      { type: "tanstack_table" },
-    ],
+    dependencies: [{ type: "tanstack_table" }],
   });
 
   const colRef = useColRef();
@@ -48,10 +46,10 @@ export function Resizer() {
         <Box
           {...{
             onDoubleClick: () => {
-              crushHeader(colRef.current.header);
+              crushHeader(colRef().header);
             },
-            onMouseDown: (ev: any) => colRef.current.header.getResizeHandler()(ev),
-            onTouchStart: (ev: any) => colRef.current.header.getResizeHandler()(ev),
+            onMouseDown: (ev: any) => colRef().header.getResizeHandler()(ev),
+            onTouchStart: (ev: any) => colRef().header.getResizeHandler()(ev),
             className: `resizer ${isResizing ? "isResizing" : ""}`,
             sx: {
               position: "absolute",

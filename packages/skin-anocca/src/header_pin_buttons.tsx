@@ -30,7 +30,7 @@ export const HeaderPinButtons = () => {
             opacity: 0.5,
           }}
           onClick={() => {
-            headerRef.current.column.pin("left");
+            headerRef().column.pin("left");
           }}
         >
           <MdChevronLeft />
@@ -49,7 +49,7 @@ export const HeaderPinButtons = () => {
             opacity: 0.7,
           }}
           onClick={() => {
-            headerRef.current.column.pin(false);
+            headerRef().column.pin(false);
           }}
         >
           <MdClose />
@@ -68,7 +68,7 @@ export const HeaderPinButtons = () => {
             opacity: 0.5,
           }}
           onClick={() => {
-            headerRef.current.column.pin("right");
+            headerRef().column.pin("right");
           }}
         >
           <MdChevronRight />

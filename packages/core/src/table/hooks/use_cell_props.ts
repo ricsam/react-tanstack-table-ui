@@ -15,6 +15,9 @@ export const useCellProps = <T, U = RttuiTable>(
   }
   return useTableProps({
     ...options,
+    shouldUnmount: () => {
+      return !context();
+    },
     callback: (selectorValue) => {
       return options.callback(context(), selectorValue);
     },

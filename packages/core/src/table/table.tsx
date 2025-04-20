@@ -2,11 +2,11 @@ import { Column, RowData } from "@tanstack/react-table";
 import React from "react";
 import { defaultSkin } from "../default_skin/default_skin";
 import { MeasureCellProvider } from "../measure_cell_provider";
+import { shallowEqual } from "../utils";
 import { HeaderGroup } from "./cols/header_group";
 import { MeasureContext, MeasureContextType } from "./contexts/measure_context";
 import { useMeasureContext } from "./hooks/use_measure_context";
 import { useTableProps } from "./hooks/use_table_props";
-import { useTablePropsContext } from "./hooks/use_table_props_context";
 import { MeasureProvider } from "./providers/measure_provider";
 import { TablePropsProvider } from "./providers/table_props_provider";
 import { TableBody } from "./table_body";
@@ -17,7 +17,6 @@ import {
 } from "./table_context";
 import { ReactTanstackTableUiProps, UiProps } from "./types";
 import { useRttuiTable } from "./use_rttui_table";
-import { shallowEqual } from "../utils";
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     autoCrush?: boolean;
@@ -119,7 +118,6 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
 
 function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
   const { table } = props;
-  const context = useTablePropsContext();
   const measureContext = useMeasureContext();
 
   // validate props
@@ -152,26 +150,11 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
 
   const skin = props.skin ?? defaultSkin;
 
-  const rttuiTableRef = useRttuiTable({
+  const rttuiRef = useRttuiTable({
     table: props.table,
     uiProps,
     tableContainerRef,
     skin,
-  });
-
-  context.updateTable({
-    type: "initial",
-    ref: rttuiTableRef,
-  });
-
-  // update the useTableProps hooks when the table state changes
-  context.triggerUpdate([{ type: "tanstack_table" }, { type: "ui_props" }], {
-    type: "from_render_method",
-  });
-  React.useLayoutEffect(() => {
-    context.triggerUpdate([{ type: "tanstack_table" }, { type: "ui_props" }], {
-      type: "from_layout_effect",
-    });
   });
 
   // tanstack table causes a re-render when its state changes
@@ -185,8 +168,9 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
           tableContainerRef,
           loading: measureContext.isMeasuring,
           skin,
+          tableRef: rttuiRef,
         };
-      }, [skin, measureContext.isMeasuring])}
+      }, [skin, measureContext.isMeasuring, rttuiRef])}
     >
       <Body />
     </TableContext.Provider>
@@ -338,9 +322,7 @@ const TableHeaderGroups = React.memo(function TableHeaderGroups({
       return headerGroups.map((group) => group.groupIndex);
     },
     areCallbackOutputEqual: shallowEqual,
-    dependencies: [
-      { type: "tanstack_table" },
-    ],
+    dependencies: [{ type: "tanstack_table" }],
   });
 
   if (headerGroups.length === 0) {

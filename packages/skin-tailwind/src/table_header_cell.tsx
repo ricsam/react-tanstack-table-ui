@@ -21,12 +21,15 @@ export const TableHeaderCell = React.memo(
     } = useColProps({
       callback: ({ vheader, selectorValue }) => {
         const state = vheader.state;
+        const headerId = vheader.header.id;
+        const width = state.width;
+
         return {
           isSomeColumnsPinnedRight:
             selectorValue.tanstackTable.getIsSomeColumnsPinned("right"),
-          headerId: vheader.header.id,
+          headerId,
           isPinned: state.isPinned,
-          width: state.width,
+          width,
           isLast: state.isLast,
           isLastPinned: state.isLastPinned,
           isLastCenter: state.isLastCenter,
@@ -36,6 +39,7 @@ export const TableHeaderCell = React.memo(
       dependencies: [{ type: "tanstack_table" }],
       areCallbackOutputEqual: shallowEqual,
     });
+
     return (
       <div
         className="th relative flex items-center px-2 py-3.5 text-sm font-semibold text-gray-900 dark:text-white overflow-hidden whitespace-nowrap hover:bg-gray-100 dark:hover:bg-gray-800"

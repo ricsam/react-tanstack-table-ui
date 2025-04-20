@@ -20,7 +20,7 @@ import { useCrushHeader } from "./use_crush_header";
 import { decorateColumnHelper } from "./decorate_column_helper";
 import type { HeaderDecorator, CellDecorator } from "./decorate_column_helper";
 import type { RttuiRef } from "./table/types";
-import { shallowEqual, strictEqual } from "./utils";
+import { createTablePropsSelector, shallowEqual, strictEqual } from "./utils";
 import { useTableProps } from "./table/hooks/use_table_props";
 
 export {
@@ -35,6 +35,7 @@ export {
   darkModeVars,
   lightModeVars,
   useColProps,
+  createTablePropsSelector,
   useCrushHeader,
   decorateColumnHelper,
   useTableProps,

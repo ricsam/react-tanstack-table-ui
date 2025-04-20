@@ -14,6 +14,9 @@ export const useRowProps = <T, U = RttuiTable>(
   }
   return useTableProps({
     ...options,
+    shouldUnmount: () => {
+      return !virtualRow();
+    },
     callback: (table) => {
       const result = options.callback(virtualRow(), table);
       return result;

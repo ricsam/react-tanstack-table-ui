@@ -38,7 +38,7 @@ export function Cell({
       {checkbox && (
         <Checkbox
           getProps={() => {
-            const row = rowRef.current.row;
+            const row = rowRef().row;
             return {
               checked: row.getIsSelected(),
               disabled: !row.getCanSelect(),
@@ -46,7 +46,7 @@ export function Cell({
             };
           }}
           onChange={() => {
-            return () => rowRef.current.row.toggleSelected();
+            return () => rowRef().row.toggleSelected();
           }}
         />
       )}

@@ -1,5 +1,8 @@
 import { ColumnPinningPosition, Header } from "@tanstack/react-table";
 import React from "react";
+import { useTableProps } from "./table/hooks/use_table_props";
+import { RttuiTable } from "./table/types";
+import { UseTablePropsOptions } from "./table/hooks/use_table_props";
 
 export function tuple<A, B, C, D>(a: A, b: B, c: C, d: D): [A, B, C, D];
 export function tuple<A, B, C>(a: A, b: B, c: C): [A, B, C];
@@ -173,3 +176,13 @@ export function memoize<T, U>(fn: (arg: U) => T) {
     return cache;
   };
 }
+
+export const createTablePropsSelector = <D extends unknown[], T, U = RttuiTable>(
+  callback: (...props: D) => UseTablePropsOptions<T, U>,
+) => {
+  return {
+    useTableProps: (...props: D) => {
+      return useTableProps(callback(...props));
+    },
+  };
+};

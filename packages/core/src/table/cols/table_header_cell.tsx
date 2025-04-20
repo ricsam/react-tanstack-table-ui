@@ -1,26 +1,23 @@
 import { flexRender } from "@tanstack/react-table";
 import React from "react";
 import { useMeasureCellContext } from "../../measure_cell_context";
-import { useTableProps } from "../hooks/use_table_props";
-import { useTableRef } from "../hooks/use_table_ref";
+import { createTablePropsSelector } from "../../utils";
 import { VirtualHeaderCellProvider } from "../providers/virtual_header_cell_provider";
 import { useTableContext } from "../table_context";
+import { ShouldUpdate } from "../types";
 
-export const TableHeaderCell = React.memo(function TableHeaderCell({
-  type,
-  groupIndex,
-  headerIndex,
-}: {
-  type: "header" | "footer";
-  groupIndex: number;
-  headerIndex: number;
-}) {
-  const measuring = useMeasureCellContext();
-  const { skin } = useTableContext();
-
-  const tableRef = useTableRef();
-
-  const { headerDef, headerContext, isPlaceholder, headerId } = useTableProps({
+const headerDefSelector = createTablePropsSelector(
+  ({
+    groupIndex,
+    headerIndex,
+    type,
+    getShouldUpdateFn,
+  }: {
+    groupIndex: number;
+    headerIndex: number;
+    type: "header" | "footer";
+    getShouldUpdateFn?: () => ShouldUpdate["header"] | undefined;
+  }) => ({
     selector: (props) => {
       const headerGroups =
         type === "header" ? props.virtualData.header : props.virtualData.footer;
@@ -28,6 +25,12 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
 
       const headerInstance = header.header;
       return headerInstance;
+    },
+    shouldUnmount: (table) => {
+      return (
+        table.virtualData[type]?.headerLookup[groupIndex]?.[headerIndex] ===
+        undefined
+      );
     },
     callback: (headerInstance) => {
       return {
@@ -37,13 +40,9 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
         headerId: headerInstance.id,
       };
     },
-    dependencies: [
-      { type: "ui_props" },
-      { type: "tanstack_table" },
-      { type: "col_visible_range", groupType: type, groupIndex },
-    ],
+    dependencies: [{ type: "ui_props" }, { type: "tanstack_table" }],
     areCallbackOutputEqual: (prev, next) => {
-      const shouldUpdateFn = tableRef.current.uiProps.shouldUpdate?.header;
+      const shouldUpdateFn = getShouldUpdateFn?.();
       if (shouldUpdateFn) {
         const arePropsEqual = shouldUpdateFn(
           prev.headerContext,
@@ -59,7 +58,30 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
       // better performance they can return true in the shouldUpdate function
       return false;
     },
-  });
+  }),
+);
+
+export const TableHeaderCell = React.memo(function TableHeaderCell({
+  type,
+  groupIndex,
+  headerIndex,
+}: {
+  type: "header" | "footer";
+  groupIndex: number;
+  headerIndex: number;
+}) {
+  const measuring = useMeasureCellContext();
+  const { skin } = useTableContext();
+
+  const { tableRef } = useTableContext();
+
+  const { headerDef, headerContext, isPlaceholder, headerId } =
+    headerDefSelector.useTableProps({
+      groupIndex,
+      headerIndex,
+      type,
+      getShouldUpdateFn: () => tableRef.current.uiProps.shouldUpdate?.header,
+    });
 
   const content = React.useMemo(() => {
     return isPlaceholder ? null : flexRender(headerDef, headerContext);

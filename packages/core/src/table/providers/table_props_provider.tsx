@@ -25,7 +25,7 @@ export const TablePropsProvider = ({
       dependency: GetDependency<T>;
     }> => new Set();
 
-    let refObject: React.RefObject<RttuiTable> | null = null;
+    let tableRef: React.RefObject<RttuiTable | undefined> | undefined;
 
     const updateListeners: UpdateListenersExact = {
       "*": getSet("*"),
@@ -41,11 +41,25 @@ export const TablePropsProvider = ({
       row_visible_range: getSet("row_visible_range"),
     };
 
+    const getTable = () => {
+      if (!tableRef) {
+        throw new Error("tableRef is not set");
+      }
+      const value = tableRef.current;
+      if (!value) {
+        throw new Error("tableRef is not set");
+      }
+      return value;
+    };
+
     const triggerUpdate = (
       dependencies: Dependency[],
       updateType: UpdateType,
     ) => {
-      const tbl = refObject?.current;
+      if (updateType.type === "from_render_method") {
+        return;
+      }
+      const tbl = getTable();
 
       if (!tbl) {
         throw new Error("table is not set");
@@ -79,27 +93,16 @@ export const TablePropsProvider = ({
             listener.callback(tbl, updateType);
           });
         });
-        if (!dependencies.find((d) => d.type === "*")) {
-          updateListeners["*"].forEach((listener) => {
-            listener.callback(tbl, updateType);
-          });
-        }
       }
     };
     return {
-      updateTable: (action: Action) => {
+      setInitialTableGetters: (action: Action) => {
         if (action.type === "initial") {
-          refObject = action.ref;
+          tableRef = action.tableRef;
         }
       },
       triggerUpdate,
       updateListeners,
-      initialTable: () => {
-        if (!refObject || !refObject.current) {
-          throw new Error("initialTable is not set");
-        }
-        return refObject.current;
-      },
     };
   });
 

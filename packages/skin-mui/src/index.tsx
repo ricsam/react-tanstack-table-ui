@@ -406,7 +406,7 @@ const TableHeaderCell = React.memo(
                   opacity: 0.5,
                 }}
                 onClick={() => {
-                  colRef.current.column.pin("left");
+                  colRef().column.pin("left");
                 }}
               >
                 <ChevronLeft fontSize="small" />
@@ -425,7 +425,7 @@ const TableHeaderCell = React.memo(
                   opacity: 0.7,
                 }}
                 onClick={() => {
-                  colRef.current.column.pin(false);
+                  colRef().column.pin(false);
                 }}
               >
                 <Close fontSize="small" />
@@ -444,7 +444,7 @@ const TableHeaderCell = React.memo(
                   opacity: 0.5,
                 }}
                 onClick={() => {
-                  colRef.current.column.pin("right");
+                  colRef().column.pin("right");
                 }}
               >
                 <ChevronRight fontSize="small" />
@@ -456,13 +456,13 @@ const TableHeaderCell = React.memo(
         {canResize && (
           <Box
             {...{
-              onDoubleClick: () => colRef.current.column.resetSize(),
+              onDoubleClick: () => colRef().column.resetSize(),
               onMouseDown: (ev: any) =>
-                colRef.current.header.getResizeHandler()(ev),
+                colRef().header.getResizeHandler()(ev),
               onTouchStart: (ev: any) =>
-                colRef.current.header.getResizeHandler()(ev),
+                colRef().header.getResizeHandler()(ev),
               className: `resizer ${
-                colRef.current.header.column.getIsResizing() ? "isResizing" : ""
+                colRef().header.column.getIsResizing() ? "isResizing" : ""
               }`,
               sx: {
                 position: "absolute",

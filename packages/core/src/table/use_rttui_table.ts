@@ -11,8 +11,9 @@ import {
 import React from "react";
 import { Skin } from "../skin";
 import { getIsPinned, mapColumnPinningPositionToPinPos } from "../utils";
-import { FilteredHeaderGroup } from "./cols/use_header_group_virtualizers";
 import { HeaderIndex } from "./cols/virtual_header/types";
+import { Dependency } from "./contexts/table_props_context";
+import { useTablePropsContext } from "./hooks/use_table_props_context";
 import {
   CombinedHeaderGroup,
   PinPos,
@@ -25,12 +26,17 @@ import {
   UiProps,
   VirtualHeaderCellState,
 } from "./types";
-import { useTableProps } from "./hooks/use_table_props";
-import { useTablePropsContext } from "./hooks/use_table_props_context";
-import { Dependency } from "./contexts/table_props_context";
 
-type Diff = {
-  type: "col_offsets_main";
+// const useIsomorphicLayoutEffect =
+//   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
+
+type FilteredHeaderGroup = {
+  filteredHeaderGroups: CombinedHeaderGroup[];
+  headerIndices: Record<string, undefined | HeaderIndex[]>;
+  headerGroupIndices: Record<
+    string,
+    { groupIndex: number; headerIndices: Record<string, number> }
+  >;
 };
 
 type ColPos = "left" | "center" | "right";
@@ -43,6 +49,185 @@ type ColVirtualizer = {
   groupIndex: number;
 };
 
+function _slow_updateRttuiTable({
+  virtualizers,
+  table,
+  uiProps,
+}: {
+  virtualizers: ReturnType<typeof useVirtualizers>;
+  table: Table<any>;
+  uiProps: UiProps;
+}): RttuiTable {
+  const _slow_allRows = table.getRowModel().rows;
+
+  // if (rttuiRef.current?.virtualData.body.rows.)
+
+  const virtRows = virtualizers.rowVirtualizer.getVirtualItems();
+  const rows: Record<RowPos, RttuiRow[]> = {
+    bottom: [],
+    center: [],
+    top: [],
+  };
+
+  const { allVirtHeaders: allMainVirtHeaders, allVirtItems: allMainVirtItems } =
+    getRttuiHeaders(
+      virtualizers.colVirtualizers.main,
+      virtualizers.colVirtualizers.main.groupIndex,
+    );
+
+  const allVirtRows: RttuiRow[] = [];
+  const rowLookup: Record<number, RttuiRow> = {};
+  const cellLookup: Record<number, Record<number, RttuiCell>> = {};
+  const bodyCols: Record<ColPos, RttuiHeader[]> = {
+    left: [],
+    right: [],
+    center: [],
+  };
+
+  allMainVirtHeaders.forEach((header) => {
+    const pinned = header.state.isPinned;
+    if (pinned === "start") {
+      bodyCols.left.push(header);
+    } else if (pinned === "end") {
+      bodyCols.right.push(header);
+    } else {
+      bodyCols.center.push(header);
+    }
+  });
+
+  virtRows.forEach((vrow) => {
+    const row = _slow_allRows[vrow.index];
+    const pinned = row.getIsPinned();
+
+    const cells: Record<ColPos, RttuiCell[]> = {
+      left: [],
+      right: [],
+      center: [],
+    };
+
+    const _slow_allVisibleCells = row.getVisibleCells();
+
+    allMainVirtHeaders.forEach((header) => {
+      const cell = _slow_allVisibleCells[header.headerIndex];
+      const rttuiCell: RttuiCell = {
+        columnIndex: header.headerIndex,
+        rowIndex: vrow.index,
+        cell,
+        header,
+        state: header.state,
+      };
+
+      const pinned = header.state.isPinned;
+      if (pinned === "start") {
+        cells.left.push(rttuiCell);
+      } else if (pinned === "end") {
+        cells.right.push(rttuiCell);
+      } else {
+        cells.center.push(rttuiCell);
+      }
+      if (!cellLookup[vrow.index]) {
+        cellLookup[vrow.index] = {};
+      }
+      cellLookup[vrow.index][header.headerIndex] = rttuiCell;
+    });
+
+    const rttuiRow: RttuiRow = {
+      row,
+      left: cells.left,
+      right: cells.right,
+      center: cells.center,
+      relativeIndex: NaN,
+      rowIndex: vrow.index,
+    };
+
+    let relativeIndex = vrow.index;
+
+    if (pinned === "top") {
+      rows.top.push(rttuiRow);
+      relativeIndex = rows.top.length - 1;
+    } else if (pinned === "bottom") {
+      rows.bottom.push(rttuiRow);
+      relativeIndex = rows.bottom.length - 1;
+    } else {
+      rows.center.push(rttuiRow);
+      relativeIndex = vrow.index;
+    }
+    rowLookup[vrow.index] = rttuiRow;
+
+    rttuiRow.relativeIndex = relativeIndex;
+    allVirtRows.push(rttuiRow);
+  });
+
+  const getRttuiHeaderGroups = (type: HeaderType) => {
+    const headerGroups: RttuiHeaderGroups = {
+      groups: [],
+      groupLookup: {},
+      headerLookup: {},
+    };
+    virtualizers.colVirtualizers[type].forEach((cv, groupIndex) => {
+      const { virtHeaders, headerLookup, allVirtHeaders, allVirtItems } =
+        getRttuiHeaders(cv, groupIndex);
+      const headerGroup: RttuiHeaderGroup = {
+        ...virtHeaders,
+        groupIndex: groupIndex,
+        virtualizer: cv.virtualizer,
+        ...getColOffsets({
+          headers: allVirtItems,
+          totalSize: cv.virtualizer.getTotalSize(),
+          getProps: (relativeIndex) => ({
+            start: allVirtItems[relativeIndex].start,
+            end: allVirtItems[relativeIndex].end,
+            isPinned: allVirtHeaders[relativeIndex].state.isPinned,
+          }),
+        }),
+      };
+      headerGroups.groupLookup[groupIndex] = headerGroup;
+      headerGroups.headerLookup[groupIndex] = headerLookup;
+      headerGroups.groups.push(headerGroup);
+    });
+
+    return headerGroups;
+  };
+
+  const rttuiTable: RttuiTable = {
+    tanstackTable: table,
+    uiProps,
+    virtualData: {
+      body: {
+        virtualizer: virtualizers.rowVirtualizer,
+        ...getRowOffsets({
+          rows: allVirtRows,
+          totalSize: virtualizers.rowVirtualizer.getTotalSize(),
+          getProps: (row, relativeIndex) => ({
+            isPinned: Boolean(row.row.getIsPinned()),
+            height: virtRows[relativeIndex].size,
+            start: virtRows[relativeIndex].start,
+            end: virtRows[relativeIndex].end,
+          }),
+        }),
+        ...getColOffsets({
+          headers: allMainVirtItems,
+          totalSize:
+            virtualizers.colVirtualizers.main.virtualizer.getTotalSize(),
+          getProps: (relativeIndex) => ({
+            start: allMainVirtItems[relativeIndex].start,
+            end: allMainVirtItems[relativeIndex].end,
+            isPinned: allMainVirtHeaders[relativeIndex].state.isPinned,
+          }),
+        }),
+        cols: bodyCols,
+        hasRows: virtRows.length > 0,
+        rows,
+        rowLookup,
+        cellLookup,
+      },
+      header: getRttuiHeaderGroups("header"),
+      footer: getRttuiHeaderGroups("footer"),
+    },
+  };
+  return rttuiTable;
+}
+
 export const useRttuiTable = ({
   table,
   uiProps,
@@ -53,180 +238,161 @@ export const useRttuiTable = ({
   uiProps: UiProps;
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   skin: Skin;
-}): React.RefObject<RttuiTable> => {
-  const rttuiRef = React.useRef<RttuiTable | undefined>(undefined);
-  const updateRef = React.useRef(updateRttuiTable);
+}) => {
+  const [throttleUpdates] = React.useState(() => {
+    let active = false;
+
+    let callback: () => void;
+
+    return (newCallback: () => void) => {
+      callback = newCallback;
+      if (active) {
+        return;
+      }
+      active = true;
+      window.requestIdleCallback(() => {
+        callback();
+        active = false;
+      });
+    };
+  });
 
   const virtualizers = useVirtualizers({
     table,
     tableContainerRef,
     uiProps,
     skin,
-    updateRttuiTable: () => {
-      return updateRef.current();
-    },
+    updateRttuiTable,
   });
 
-  function updateRttuiTable(): Diff[] {
-    const _slow_allRows = table.getRowModel().rows;
-    const diffs: Diff[] = [];
-
-    const virtRows = virtualizers.rowVirtualizer.getVirtualItems();
-    const rows: Record<RowPos, RttuiRow[]> = {
-      bottom: [],
-      center: [],
-      top: [],
-    };
-
-    const {
-      allVirtHeaders: allMainVirtHeaders,
-      allVirtItems: allMainVirtItems,
-      virtHeaders: mainVirtHeaders,
-    } = getRttuiHeaders(
-      virtualizers.colVirtualizers.main,
-      virtualizers.colVirtualizers.main.groupIndex,
-    );
-
-    const allVirtRows: RttuiRow[] = [];
-    const rowLookup: Record<number, RttuiRow> = {};
-    const cellLookup: Record<number, Record<number, RttuiCell>> = {};
-    virtRows.forEach((vrow) => {
-      const row = _slow_allRows[vrow.index];
-      const pinned = row.getIsPinned();
-
-      const cells: Record<ColPos, RttuiCell[]> = {
-        left: [],
-        right: [],
-        center: [],
-      };
-
-      const _slow_allVisibleCells = row.getVisibleCells();
-
-      allMainVirtHeaders.forEach((header) => {
-        const cell = _slow_allVisibleCells[header.headerIndex];
-        const rttuiCell: RttuiCell = {
-          columnIndex: header.headerIndex,
-          rowIndex: vrow.index,
-          cell,
-          header,
-          state: header.state,
-        };
-
-        const pinned = header.state.isPinned;
-        if (pinned === "start") {
-          cells.left.push(rttuiCell);
-        } else if (pinned === "end") {
-          cells.right.push(rttuiCell);
-        } else {
-          cells.center.push(rttuiCell);
-        }
-        if (!cellLookup[vrow.index]) {
-          cellLookup[vrow.index] = {};
-        }
-        cellLookup[vrow.index][header.headerIndex] = rttuiCell;
-      });
-
-      const rttuiRow: RttuiRow = {
-        row,
-        left: cells.left,
-        right: cells.right,
-        center: cells.center,
-        relativeIndex: NaN,
-        rowIndex: vrow.index,
-      };
-
-      let relativeIndex = vrow.index;
-
-      if (pinned === "top") {
-        rows.top.push(rttuiRow);
-        relativeIndex = rows.top.length - 1;
-      } else if (pinned === "bottom") {
-        rows.bottom.push(rttuiRow);
-        relativeIndex = rows.bottom.length - 1;
-      } else {
-        rows.center.push(rttuiRow);
-        relativeIndex = vrow.index;
-      }
-      rowLookup[vrow.index] = rttuiRow;
-
-      rttuiRow.relativeIndex = relativeIndex;
-      allVirtRows.push(rttuiRow);
-    });
-
-    const getRttuiHeaderGroups = (type: HeaderType) => {
-      const headerGroups: RttuiHeaderGroups = {
-        groups: [],
-        groupLookup: {},
-        headerLookup: {},
-      };
-      virtualizers.colVirtualizers[type].forEach((cv, groupIndex) => {
-        const { virtHeaders, headerLookup, allVirtHeaders, allVirtItems } =
-          getRttuiHeaders(cv, groupIndex);
-        const headerGroup: RttuiHeaderGroup = {
-          ...virtHeaders,
-          groupIndex: groupIndex,
-          virtualizer: cv.virtualizer,
-          ...getColOffsets({
-            headers: allVirtItems,
-            totalSize: cv.virtualizer.getTotalSize(),
-            getProps: (relativeIndex) => ({
-              start: allVirtItems[relativeIndex].start,
-              end: allVirtItems[relativeIndex].end,
-              isPinned: allVirtHeaders[relativeIndex].state.isPinned,
-            }),
-          }),
-        };
-        headerGroups.groupLookup[groupIndex] = headerGroup;
-        headerGroups.headerLookup[groupIndex] = headerLookup;
-        headerGroups.groups.push(headerGroup);
-      });
-
-      return headerGroups;
-    };
-
-    const rttuiTable: RttuiTable = {
-      tanstackTable: table,
+  function getNewInstance() {
+    return _slow_updateRttuiTable({
+      virtualizers,
+      table,
       uiProps,
-      virtualData: {
-        body: {
-          virtualizer: virtualizers.rowVirtualizer,
-          ...getRowOffsets({
-            rows: allVirtRows,
-            totalSize: virtualizers.rowVirtualizer.getTotalSize(),
-            getProps: (row, relativeIndex) => ({
-              isPinned: Boolean(row.row.getIsPinned()),
-              height: virtRows[relativeIndex].size,
-              start: virtRows[relativeIndex].start,
-              end: virtRows[relativeIndex].end,
-            }),
-          }),
-          ...getColOffsets({
-            headers: allMainVirtItems,
-            totalSize:
-              virtualizers.colVirtualizers.main.virtualizer.getTotalSize(),
-            getProps: (relativeIndex) => ({
-              start: allMainVirtItems[relativeIndex].start,
-              end: allMainVirtItems[relativeIndex].end,
-              isPinned: allMainVirtHeaders[relativeIndex].state.isPinned,
-            }),
-          }),
-          hasRows: virtRows.length > 0,
-          rows,
-          rowLookup,
-          cellLookup,
-        },
-        header: getRttuiHeaderGroups("header"),
-        footer: getRttuiHeaderGroups("footer"),
-      },
-    };
-    rttuiRef.current = rttuiTable;
-    return [];
+    });
   }
-  updateRttuiTable();
-  updateRef.current = updateRttuiTable;
 
-  return rttuiRef as React.RefObject<RttuiTable>;
+  const newInstance = getNewInstance();
+
+  const rttuiRef = React.useRef<RttuiTable>(newInstance);
+  rttuiRef.current = newInstance;
+  const context = useTablePropsContext();
+
+  const prev = React.useRef<RttuiTable>(newInstance);
+
+  // const hasUpdated = React.useRef(false);
+  // hasUpdated.current = true;
+
+  function updateRttuiTable() {
+    throttleUpdates(() => {
+      const newInstance = getNewInstance();
+      rttuiRef.current = newInstance;
+      const oldInstance = prev.current;
+      const diff = diffRttuiTable(oldInstance, newInstance);
+      prev.current = newInstance;
+      if (diff.length > 0) {
+        // hasUpdated.current = false;
+        context.triggerUpdate(diff, {
+          type: "from_dom_event",
+          sync: false,
+        });
+      }
+    });
+  }
+
+  context.setInitialTableGetters({
+    type: "initial",
+    tableRef: rttuiRef,
+  });
+
+  React.useLayoutEffect(() => {
+    updateRttuiTable();
+    context.triggerUpdate([{ type: "tanstack_table" }, { type: "ui_props" }], {
+      type: "from_layout_effect",
+    });
+  });
+  return rttuiRef;
 };
+
+function diffRttuiTable(prev: RttuiTable | undefined, next: RttuiTable) {
+  let diff: Dependency[] = [];
+  if (!prev) {
+    diff = [{ type: "*" }];
+    return diff;
+  }
+
+  if (
+    prev.virtualData.body.offsetTop !== next.virtualData.body.offsetTop ||
+    prev.virtualData.body.offsetBottom !== next.virtualData.body.offsetBottom
+  ) {
+    diff.push({ type: "row_offsets" });
+  }
+  if (
+    prev.virtualData.body.offsetLeft !== next.virtualData.body.offsetLeft ||
+    prev.virtualData.body.offsetRight !== next.virtualData.body.offsetRight
+  ) {
+    diff.push({ type: "col_offsets_main" });
+  }
+
+  const serializeRows = (rows: RttuiRow[]) => {
+    return rows.map((row) => row.rowIndex).join(",");
+  };
+
+  for (const pos of ["top", "center", "bottom"] as const) {
+    if (
+      serializeRows(prev.virtualData.body.rows[pos]) !==
+      serializeRows(next.virtualData.body.rows[pos])
+    ) {
+      diff.push({ type: "row_visible_range" });
+      break;
+    }
+  }
+
+  const serializeCols = (cols: RttuiHeader[]) => {
+    return cols.map((col) => col.headerIndex).join(",");
+  };
+
+  for (const pos of ["left", "center", "right"] as const) {
+    if (
+      serializeCols(prev.virtualData.body.cols[pos]) !==
+      serializeCols(next.virtualData.body.cols[pos])
+    ) {
+      diff.push({ type: "col_visible_range_main" });
+    }
+  }
+
+  const headerGroups = ["header", "footer"] as const;
+  headerGroups.forEach((type) => {
+    next.virtualData[type].groups.forEach((group, groupIndex) => {
+      const prevGroup = prev?.virtualData[type].groups[groupIndex];
+      if (!prevGroup) {
+        diff.push({ type: "col_offsets", groupIndex, groupType: type });
+        diff.push({ type: "col_visible_range", groupIndex, groupType: type });
+        return;
+      }
+      if (
+        group.offsetLeft !== prevGroup?.offsetLeft ||
+        group.offsetRight !== prevGroup?.offsetRight
+      ) {
+        diff.push({ type: "col_offsets", groupIndex, groupType: type });
+      }
+
+      for (const pos of ["left", "center", "right"] as const) {
+        if (serializeCols(prevGroup[pos]) !== serializeCols(group[pos])) {
+          diff.push({
+            type: "col_visible_range",
+            groupIndex,
+            groupType: type,
+          });
+          break;
+        }
+      }
+    });
+  });
+
+  return diff;
+}
 
 function getHeaderState({
   header,
@@ -332,7 +498,7 @@ function getRttuiHeaders(virtualizer: ColVirtualizer, groupIndex: number) {
  * when we are only rendering a window of columns while maintaining a scrollbar we need to move the elements as we remove elements to the left
  * we are assuming that the columns are rendered in order, so pinned left, followed by non-pinned, followed by pinned right
  */
-export function getColOffsets({
+function getColOffsets({
   headers,
   totalSize,
   getProps,
@@ -512,9 +678,13 @@ function useVirtualizers({
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   uiProps: UiProps;
   skin: Skin;
-  updateRttuiTable: () => Diff[];
+  updateRttuiTable: () => void;
 }) {
-  const context = useTablePropsContext();
+  const updateRttuiTableRef = React.useRef(updateRttuiTable);
+  updateRttuiTableRef.current = updateRttuiTable;
+  const onChange = React.useCallback(() => {
+    updateRttuiTableRef.current();
+  }, []);
   const virtualizersRef = React.useRef<{
     rowVirtualizer: Virtualizer<any, any>;
     colVirtualizers: {
@@ -526,6 +696,13 @@ function useVirtualizers({
 
   const _slow_allRows = table.getRowModel().rows;
 
+  const rowRefsOb = {
+    skin,
+    _slow_allRows,
+  };
+  const rowRefs = React.useRef(rowRefsOb);
+  rowRefs.current = rowRefsOb;
+
   if (!virtualizersRef.current) {
     const _slow_leafHeaders = table.getLeafHeaders();
     virtualizersRef.current = {
@@ -536,31 +713,22 @@ function useVirtualizers({
         scrollToFn: () => {},
         observeElementRect,
         observeElementOffset,
-        estimateSize: () => skin.rowHeight,
-        getItemKey: (index: number) => _slow_allRows[index].id,
-        onChange: (_, sync) => {
-          updateRttuiTable();
-          context.triggerUpdate(
-            [{ type: "row_visible_range" }, { type: "row_offsets" }],
-            {
-              type: "from_dom_event",
-              sync,
-            },
-          );
-        },
+        estimateSize: () => rowRefs.current.skin.rowHeight,
+        getItemKey: (index: number) => rowRefs.current._slow_allRows[index].id,
+        onChange,
         measureElement: (
           element: any,
           entry: ResizeObserverEntry | undefined,
           instance: Virtualizer<HTMLDivElement, any>,
         ) => {
           const defaultSize = measureElement(element, entry, instance);
-          return Math.max(defaultSize, skin.rowHeight);
+          return Math.max(defaultSize, rowRefs.current.skin.rowHeight);
         },
         rangeExtractor: (range): number[] => {
           const defaultRange = defaultRangeExtractor(range);
           const next = new Set(defaultRange);
 
-          _slow_allRows.forEach((row, index) => {
+          rowRefs.current._slow_allRows.forEach((row, index) => {
             if (row.getIsPinned()) {
               next.add(index);
             }
@@ -579,30 +747,21 @@ function useVirtualizers({
             _slow_allHeaders: _slow_leafHeaders,
             tableContainerRef,
             columnOverscan: uiProps.columnOverscan,
-            onChange: (sync) => {
-              // should be mirrored in functionality to the onChange further down
-              updateRttuiTable();
-              context.triggerUpdate(
-                [
-                  {
-                    type: "col_visible_range_main",
-                  },
-                  {
-                    type: "col_offsets_main",
-                  },
-                ],
-                { type: "from_dom_event", sync },
-              );
-            },
+            onChange,
           }),
           _slow_lookup: _slow_leafHeaders,
         },
       },
     };
+  } else {
+    virtualizersRef.current.rowVirtualizer.setOptions({
+      ...virtualizersRef.current.rowVirtualizer.options,
+      count: _slow_allRows.length,
+      overscan: uiProps.rowOverscan,
+    });
   }
-  const virtualizers = virtualizersRef.current;
 
-  let hasFoundMainGroup = false;
+  const virtualizers = virtualizersRef.current;
 
   const headerGroups: FilteredHeaderGroup[] = [];
 
@@ -626,41 +785,7 @@ function useVirtualizers({
   ]) {
     const h = combineHeaderGroups(groups, type);
     headerGroups.push(h);
-    h.filteredHeaderGroups.forEach((group, groupIndex, orig) => {
-
-      let isMainGroup = false;
-      if (!hasFoundMainGroup) {
-        if (type === "header") {
-          if (groupIndex === orig.length - 1) {
-            hasFoundMainGroup = true;
-            isMainGroup = true;
-          }
-        } else if (type === "footer") {
-          if (groupIndex === 0) {
-            hasFoundMainGroup = true;
-            isMainGroup = true;
-          }
-        }
-      }
-
-      const onChange = (sync: boolean) => {
-        updateRttuiTable();
-        const dependencies: Dependency[] = [
-          { type: "col_visible_range", groupIndex, groupType: type },
-          { type: "col_offsets", groupIndex, groupType: type },
-        ];
-        if (isMainGroup) {
-          dependencies.push(
-            { type: "col_visible_range_main" },
-            { type: "col_offsets_main" },
-          );
-        }
-        context.triggerUpdate(dependencies, {
-          type: "from_dom_event",
-          sync,
-        });
-      };
-
+    h.filteredHeaderGroups.forEach((group, groupIndex) => {
       if (virtualizers.colVirtualizers[type][groupIndex]) {
         // update the virtualizer options
         const currentVirtualizer =
@@ -668,9 +793,6 @@ function useVirtualizers({
         currentVirtualizer.virtualizer.setOptions({
           ...currentVirtualizer.virtualizer.options,
           ...getNewColVirtualizerOptions(group._slow_headers),
-          onChange(_, sync) {
-            onChange(sync);
-          },
         });
         // update the lookup
         currentVirtualizer._slow_lookup = group._slow_headers;

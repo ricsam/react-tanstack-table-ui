@@ -1,6 +1,6 @@
 import React from "react";
 import { VirtualCellContext } from "../contexts/virtual_cell_context";
-import { useTableRef } from "../hooks/use_table_ref";
+import { useTableContext } from "../table_context";
 
 export const VirtualCellProvider = ({
   children,
@@ -11,11 +11,12 @@ export const VirtualCellProvider = ({
   columnIndex: number;
   rowIndex: number;
 }) => {
-  const tableRef = useTableRef();
+  const { tableRef } = useTableContext();
   return (
     <VirtualCellContext.Provider
       value={React.useCallback(() => {
-        return tableRef.current.virtualData.body.cellLookup[rowIndex][
+        // console.count("VirtualCellProvider");
+        return tableRef.current.virtualData.body.cellLookup?.[rowIndex]?.[
           columnIndex
         ];
       }, [tableRef, rowIndex, columnIndex])}

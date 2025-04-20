@@ -1,25 +1,19 @@
 import React from "react";
-import { shallowEqual } from "../../utils";
-import { useTableProps } from "../hooks/use_table_props";
+import { createTablePropsSelector, shallowEqual } from "../../utils";
 import { useTableContext } from "../table_context";
 import { HeaderColsSlice } from "./header_cols_slice";
 
-export const HeaderGroup = React.memo(function HeaderGroup({
-  groupIndex,
-  type,
-}: {
-  groupIndex: number;
-  type: "header" | "footer";
-}) {
-  const { skin } = useTableContext();
-
-  const { offsetLeft, offsetRight, pinColsRelativeTo } = useTableProps({
+const headerGroupSelector = createTablePropsSelector(
+  (groupIndex: number, type: "header" | "footer") => ({
     selector(props) {
       const headerGroup =
         type === "header"
           ? props.virtualData.header.groupLookup[groupIndex]
           : props.virtualData.footer.groupLookup[groupIndex];
       return { headerGroup, uiProps: props.uiProps };
+    },
+    shouldUnmount: (table) => {
+      return table.virtualData[type]?.groupLookup[groupIndex] === undefined;
     },
     callback: ({ headerGroup, uiProps }) => {
       const { offsetLeft, offsetRight } = headerGroup;
@@ -39,7 +33,20 @@ export const HeaderGroup = React.memo(function HeaderGroup({
         groupIndex,
       },
     ],
-  });
+  }),
+);
+
+export const HeaderGroup = React.memo(function HeaderGroup({
+  groupIndex,
+  type,
+}: {
+  groupIndex: number;
+  type: "header" | "footer";
+}) {
+  const { skin } = useTableContext();
+
+  const { offsetLeft, offsetRight, pinColsRelativeTo } =
+    headerGroupSelector.useTableProps(groupIndex, type);
 
   return (
     <skin.HeaderRow type={type}>

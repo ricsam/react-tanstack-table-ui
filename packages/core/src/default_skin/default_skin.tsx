@@ -1,11 +1,10 @@
 import React, { CSSProperties } from "react";
 import { Skin, useTableCssVars } from "../skin";
 import { useCellProps } from "../table/hooks/use_cell_props";
-import { useTableContext } from "../table/table_context";
-import { HeaderCell } from "./header_cell";
 import { useRowProps } from "../table/hooks/use_row_props";
-import { useTableProps } from "../table/hooks/use_table_props";
-import { shallowEqual } from "../utils";
+import { useTableContext } from "../table/table_context";
+import { createTablePropsSelector, shallowEqual } from "../utils";
+import { HeaderCell } from "./header_cell";
 
 export const darkModeVars: Record<string, string> = {
   "--table-text-color": "#ffffff",
@@ -29,21 +28,24 @@ export const lightModeVars: Record<string, string> = {
   "--table-border-color": "#d0d0d0",
 };
 
+const widthHeightSelector = createTablePropsSelector(() => ({
+  selector: (props) => props.uiProps,
+  callback: (uiProps) => {
+    return {
+      width: uiProps.width,
+      height: uiProps.height,
+    };
+  },
+  areCallbackOutputEqual: shallowEqual,
+  dependencies: [{ type: "ui_props" }],
+}));
+
 export const defaultSkin: Skin = {
   rowHeight: 32,
   headerRowHeight: 32,
   footerRowHeight: 32,
   OverlayContainer: ({ children }) => {
-    const { width, height } = useTableProps({
-      callback: (props) => {
-        return {
-          width: props.uiProps.width,
-          height: props.uiProps.height,
-        };
-      },
-      areCallbackOutputEqual: shallowEqual,
-      dependencies: [{ type: "ui_props" }],
-    });
+    const { width, height } = widthHeightSelector.useTableProps();
     const cssVars = useTableCssVars();
     return (
       <div
@@ -62,16 +64,7 @@ export const defaultSkin: Skin = {
   },
   OuterContainer: ({ children }) => {
     const { tableContainerRef } = useTableContext();
-    const { width, height } = useTableProps({
-      callback: (props) => {
-        return {
-          width: props.uiProps.width,
-          height: props.uiProps.height,
-        };
-      },
-      areCallbackOutputEqual: shallowEqual,
-      dependencies: [{ type: "ui_props" }],
-    });
+    const { width, height } = widthHeightSelector.useTableProps();
 
     return (
       <div

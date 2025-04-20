@@ -1,4 +1,9 @@
-import { shallowEqual, useColProps, useCrushHeader, useColRef } from "@rttui/core";
+import {
+  shallowEqual,
+  useColProps,
+  useCrushHeader,
+  useColRef,
+} from "@rttui/core";
 import React from "react";
 
 export function Resizer() {
@@ -41,10 +46,10 @@ export function Resizer() {
     <div
       {...{
         onDoubleClick: () => {
-          crushHeader(colRef.current.header);
+          crushHeader(colRef().header);
         },
-        onMouseDown: (ev) => colRef.current.header.getResizeHandler()(ev),
-        onTouchStart: (ev) => colRef.current.header.getResizeHandler()(ev),
+        onMouseDown: (ev) => colRef().header.getResizeHandler()(ev),
+        onTouchStart: (ev) => colRef().header.getResizeHandler()(ev),
         className: `absolute top-0 right-0 h-full w-1 cursor-col-resize transition-opacity opacity-0 hover:opacity-50 hover:w-1 bg-indigo-500 dark:bg-indigo-400 ${isResizing ? "opacity-50 w-1" : ""}`,
       }}
     />

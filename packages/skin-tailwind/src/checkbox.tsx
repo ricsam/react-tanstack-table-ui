@@ -11,6 +11,14 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       },
       dependencies: [{ type: "tanstack_table" }],
       areCallbackOutputEqual: shallowEqual,
+      shouldUnmount: () => {
+        try {
+          getProps();
+          return false;
+        } catch (e) {
+          return true;
+        }
+      },
     });
 
     useLayoutEffect(() => {

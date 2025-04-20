@@ -29,10 +29,20 @@ export const useColProps = <T, U = RttuiTable>(
 
   return useTableProps({
     ...options,
+    shouldUnmount: () => {
+      const vheader: RttuiHeader | undefined =
+        headerContext?.() ?? cellContext?.()?.header;
+      const header: Header<any, any> | undefined = vheader?.header;
+      if (!header || !vheader) {
+        return true;
+      }
+      return false;
+    },
     callback: (selectorValue) => {
       const vheader: RttuiHeader | undefined =
-        headerContext?.() ?? cellContext?.().header;
+        headerContext?.() ?? cellContext?.()?.header;
       const header: Header<any, any> | undefined = vheader?.header;
+
       if (!header || !vheader) {
         throw new Error("VirtualHeaderContext or VirtualCellContext not found");
       }

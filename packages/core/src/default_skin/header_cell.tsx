@@ -75,7 +75,7 @@ export const HeaderCell = React.memo(
               <button
                 className="border rounded px-2"
                 onClick={() => {
-                  colRef.current.column.pin("left");
+                  colRef().column.pin("left");
                 }}
               >
                 {"<="}
@@ -85,7 +85,7 @@ export const HeaderCell = React.memo(
               <button
                 className="border rounded px-2"
                 onClick={() => {
-                  colRef.current.column.pin(false);
+                  colRef().column.pin(false);
                   // table.resetColumnSizing(true);
                 }}
               >
@@ -96,7 +96,7 @@ export const HeaderCell = React.memo(
               <button
                 className="border rounded px-2"
                 onClick={() => {
-                  colRef.current.column.pin("right");
+                  colRef().column.pin("right");
                 }}
               >
                 {"=>"}
@@ -107,11 +107,10 @@ export const HeaderCell = React.memo(
         {canResize && (
           <div
             {...{
-              onDoubleClick: () => colRef.current.column.resetSize(),
-              onMouseDown: (ev) => colRef.current.header.getResizeHandler()(ev),
-              onTouchStart: (ev) =>
-                colRef.current.header.getResizeHandler()(ev),
-              className: `resizer ${colRef.current.column.getIsResizing() ? "isResizing" : ""}`,
+              onDoubleClick: () => colRef().column.resetSize(),
+              onMouseDown: (ev) => colRef().header.getResizeHandler()(ev),
+              onTouchStart: (ev) => colRef().header.getResizeHandler()(ev),
+              className: `resizer ${colRef().column.getIsResizing() ? "isResizing" : ""}`,
               style: {
                 position: "absolute",
                 top: 0,

@@ -69,13 +69,37 @@ const RowsSlice = React.memo(function RowsSlice({
     },
     dependencies: [{ type: "row_visible_range" }, { type: "tanstack_table" }],
   });
+
+  const { offsetLeft, offsetRight } = useTableProps({
+    areCallbackOutputEqual: shallowEqual,
+    selector: (props) => props.virtualData.body,
+    callback: ({ offsetLeft, offsetRight }) => {
+      return {
+        offsetLeft,
+        offsetRight,
+      };
+    },
+    dependencies: [
+      {
+        type: "col_offsets_main",
+      },
+    ],
+  });
+
   if (rows.length === 0) {
     return null;
   }
   const base = (
     <>
       {rows.map((rowIndex) => {
-        return <TableRow key={rowIndex} rowIndex={rowIndex} />;
+        return (
+          <TableRow
+            key={rowIndex}
+            rowIndex={rowIndex}
+            offsetLeft={offsetLeft}
+            offsetRight={offsetRight}
+          />
+        );
       })}
     </>
   );

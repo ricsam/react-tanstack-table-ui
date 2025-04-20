@@ -20,7 +20,7 @@ export function HeaderPinButtons() {
         <button
           className="p-1 rounded opacity-50 hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={() => {
-            colRef.current.column.pin("left");
+            colRef().column.pin("left");
           }}
         >
           <svg
@@ -42,7 +42,7 @@ export function HeaderPinButtons() {
         <button
           className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={() => {
-            colRef.current.column.pin(false);
+            colRef().column.pin(false);
           }}
         >
           <svg
@@ -65,7 +65,7 @@ export function HeaderPinButtons() {
         <button
           className="p-1 rounded opacity-50 hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-700"
           onClick={() => {
-            colRef.current.column.pin("right");
+            colRef().column.pin("right");
           }}
         >
           <svg

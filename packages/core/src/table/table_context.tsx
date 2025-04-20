@@ -1,10 +1,12 @@
 import React from "react";
+import { RttuiTable } from "./types";
 import { Skin } from "../skin";
 
 export type TableContextType = {
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   skin: Skin;
   loading: boolean;
+  tableRef: React.RefObject<RttuiTable>;
 };
 
 export const TableContext = React.createContext<TableContextType | undefined>(

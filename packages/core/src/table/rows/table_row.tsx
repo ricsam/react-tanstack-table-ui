@@ -1,14 +1,53 @@
 import React from "react";
+import { createTablePropsSelector, shallowEqual } from "../../utils";
 import { TableCell } from "../cols/table_cell";
-import { useTableProps } from "../hooks/use_table_props";
 import { VirtualRowProvider } from "../providers/virtual_row_provider";
 import { useTableContext } from "../table_context";
-import { shallowEqual, useDebugDeps } from "../../utils";
+
+const rowSelector = createTablePropsSelector((rowIndex: number) => ({
+  areCallbackOutputEqual: shallowEqual,
+  dependencies: [{ type: "tanstack_table" }, { type: "ui_props" }],
+  shouldUnmount: (table) => {
+    return table.virtualData.body.rowLookup[rowIndex] === undefined;
+  },
+  callback: (props) => {
+    const row = props.virtualData.body.rowLookup[rowIndex];
+    const tanstackRow = row.row;
+
+    const renderSubComponent = props.uiProps.renderSubComponent;
+
+    const subRowsLength = tanstackRow.subRows.length;
+    const rowIsExpanded = tanstackRow.getIsExpanded();
+    let subComponent: React.ReactNode | undefined;
+    let isExpanded: boolean = Boolean(
+      subRowsLength === 0 && rowIsExpanded && renderSubComponent,
+    );
+
+    if (isExpanded && renderSubComponent) {
+      subComponent = renderSubComponent(tanstackRow);
+      if (subComponent) {
+        isExpanded = true;
+      }
+    }
+
+    return {
+      isExpanded,
+      subComponent,
+      rowVirtualizer: props.virtualData.body.virtualizer,
+      relativeIndex: row.relativeIndex,
+      pinColsRelativeTo: props.uiProps.pinColsRelativeTo,
+    };
+  },
+}));
 
 export const TableRow = React.memo(function TableRow({
   rowIndex,
+  offsetLeft,
+  offsetRight,
 }: {
   rowIndex: number;
+  offsetLeft: number;
+  offsetRight: number;
 }) {
   const { skin } = useTableContext();
   const rowRef = React.useRef<HTMLDivElement>(null);
@@ -19,54 +58,7 @@ export const TableRow = React.memo(function TableRow({
     rowVirtualizer,
     relativeIndex,
     pinColsRelativeTo,
-  } = useTableProps({
-    areCallbackOutputEqual: shallowEqual,
-    dependencies: [{ type: "tanstack_table" }, { type: "ui_props" }],
-    callback: (props) => {
-      const row = props.virtualData.body.rowLookup[rowIndex];
-      const tanstackRow = row.row;
-
-      const renderSubComponent = props.uiProps.renderSubComponent;
-
-      const subRowsLength = tanstackRow.subRows.length;
-      const rowIsExpanded = tanstackRow.getIsExpanded();
-      let subComponent: React.ReactNode | undefined;
-      let isExpanded: boolean = Boolean(
-        subRowsLength === 0 && rowIsExpanded && renderSubComponent,
-      );
-
-      if (isExpanded && renderSubComponent) {
-        subComponent = renderSubComponent(tanstackRow);
-        if (subComponent) {
-          isExpanded = true;
-        }
-      }
-
-      return {
-        isExpanded,
-        subComponent,
-        rowVirtualizer: props.virtualData.body.virtualizer,
-        relativeIndex: row.relativeIndex,
-        pinColsRelativeTo: props.uiProps.pinColsRelativeTo,
-      };
-    },
-  });
-
-  const { offsetLeft, offsetRight } = useTableProps({
-    areCallbackOutputEqual: shallowEqual,
-    selector: (props) => props.virtualData.body,
-    callback: ({ offsetLeft, offsetRight }) => {
-      return {
-        offsetLeft,
-        offsetRight,
-      };
-    },
-    dependencies: [
-      {
-        type: "col_offsets_main",
-      },
-    ],
-  });
+  } = rowSelector.useTableProps(rowIndex);
 
   return (
     <>
@@ -116,6 +108,24 @@ export const TableRow = React.memo(function TableRow({
   );
 });
 
+const colSliceSelector = createTablePropsSelector(
+  (rowIndex: number, position: "left" | "right" | "center") => ({
+    areCallbackOutputEqual: shallowEqual,
+    callback: (props) => {
+      const cells = props.virtualData.body.rowLookup[rowIndex][position].map(
+        (cell) => cell.columnIndex,
+      );
+      return cells;
+    },
+    dependencies: [{ type: "tanstack_table" }, { type: "col_offsets_main" }],
+    shouldUnmount: (table) => {
+      return (
+        table.virtualData.body.rowLookup[rowIndex]?.[position] === undefined
+      );
+    },
+  }),
+);
+
 const ColSlice = React.memo(function ColSlice({
   rowIndex,
   position,
@@ -124,19 +134,7 @@ const ColSlice = React.memo(function ColSlice({
   position: "left" | "right" | "center";
 }) {
   const { skin } = useTableContext();
-  const cells = useTableProps({
-    areCallbackOutputEqual: shallowEqual,
-    callback: (props) => {
-      const cells = props.virtualData.body.rowLookup[rowIndex][position].map(
-        (cell) => cell.columnIndex,
-      );
-      return cells;
-    },
-    dependencies: [
-      { type: "tanstack_table" },
-      { type: "col_visible_range_main" },
-    ],
-  });
+  const cells = colSliceSelector.useTableProps(rowIndex, position);
 
   if (cells.length === 0) {
     return null;
