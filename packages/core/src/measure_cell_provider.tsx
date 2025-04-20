@@ -1,13 +1,14 @@
 import React from "react";
 import { MeasureCellContext, MeasuredCell } from "./measure_cell_context";
-import { CellRefs, MeasureData } from "./table/types";
+import { IsMeasuring } from "./table/contexts/measure_context";
+import { CellRefs } from "./table/types";
 
 export const MeasureCellProvider = ({
   children,
-  onMeasureCallback,
+  isMeasuring,
 }: {
   children: React.ReactNode;
-  onMeasureCallback: (measureData: MeasureData) => void;
+  isMeasuring: IsMeasuring;
 }) => {
   const elRefs = React.useRef<CellRefs>({});
   const cellRefs = React.useRef<Set<string>>(new Set());
@@ -20,8 +21,8 @@ export const MeasureCellProvider = ({
     }
   };
 
-  const onMeasureCallbackRef = React.useRef(onMeasureCallback);
-  onMeasureCallbackRef.current = onMeasureCallback;
+  const isMeasuringRef = React.useRef(isMeasuring);
+  isMeasuringRef.current = isMeasuring;
 
   const storeRef = React.useCallback(
     (el: HTMLDivElement | null, measuredCell: MeasuredCell) => {
@@ -48,7 +49,8 @@ export const MeasureCellProvider = ({
       }
       measuredCount.current--;
       if (measuredCount.current === 0) {
-        onMeasureCallbackRef.current({
+        console.log("@isMeasuringRef.current.callback", isMeasuringRef.current.callback);
+        isMeasuringRef.current.callback({
           cells: elRefs.current,
           cols: new Map(colRefs.current),
         });

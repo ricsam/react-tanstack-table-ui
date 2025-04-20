@@ -5,7 +5,7 @@ import { defaultSkin } from "../../default_skin/default_skin";
 import { Skin } from "../../skin";
 import { MeasureData, CellRefs, RttuiRef } from "../types";
 import { getSubHeaders } from "../../utils";
-import { MeasureContext } from "../contexts/measure_context";
+import { IsMeasuring, MeasureContext } from "../contexts/measure_context";
 
 export const MeasureProvider = (props: {
   children: React.ReactNode;
@@ -18,18 +18,21 @@ export const MeasureProvider = (props: {
   fillAvailableSpaceAfterCrush: boolean | undefined;
   autoCrushColumns: boolean | undefined;
   tableRef: React.RefObject<RttuiRef | undefined> | undefined;
+  autoCrushNumCols: number | undefined;
 }) => {
-  const [consumerOnMeasureCb, setOnMeasureCb] = useState<
-    undefined | ((measureData: MeasureData) => void)
-  >(undefined);
+  const [isMeasuring, setOnMeasureCb] = useState<undefined | IsMeasuring>(
+    undefined,
+  );
 
   const measureCells = useCallback(
-    (cb: (measureData: MeasureData) => void) =>
-      setOnMeasureCb(() => {
-        return (measureData: MeasureData) => {
-          cb(measureData);
+    (isMeasuring: IsMeasuring) =>
+      setOnMeasureCb({
+        ...isMeasuring,
+        callback: (measureData: MeasureData) => {
+          console.log("measureCells callback", measureData);
+          isMeasuring.callback(measureData);
           setOnMeasureCb(undefined);
-        };
+        },
       }),
     [],
   );
@@ -67,6 +70,7 @@ export const MeasureProvider = (props: {
     scrollbarWidth,
     fillAvailableSpaceAfterCrush: props.fillAvailableSpaceAfterCrush ?? false,
     autoCrushColumns: props.autoCrushColumns ?? false,
+    autoCrushNumCols: props.autoCrushNumCols ?? 0,
   };
 
   const refs = React.useRef(refsValue);
@@ -287,6 +291,7 @@ export const MeasureProvider = (props: {
 
   const onMeasureCb = React.useCallback(
     (cols: MeasureData["cols"]) => {
+      console.log("autoSizeColumns");
       crushCols(cols);
       fillAvailableSpaceAfterCrush(cols);
     },
@@ -294,7 +299,13 @@ export const MeasureProvider = (props: {
   );
 
   const autoSizeColumns = React.useCallback(() => {
-    measureCells(({ cols }) => onMeasureCb(cols));
+    measureCells({
+      callback: ({ cols }) => onMeasureCb(cols),
+      horizontalScrollOffset: 0,
+      verticalScrollOffset: 0,
+      horizontalOverscan: refs.current.autoCrushNumCols,
+      verticalOverscan: 0,
+    });
   }, [measureCells, onMeasureCb]);
 
   React.useEffect(() => {
@@ -309,20 +320,17 @@ export const MeasureProvider = (props: {
     };
   }
 
-  const isMeasuring = Boolean(consumerOnMeasureCb);
-
   return (
     <MeasureContext.Provider
       value={React.useMemo(
         () => ({
           isMeasuring,
           measureCells,
-          isMeasuringInstance: false,
+          isMeasuringInstanceLoading: Boolean(isMeasuring),
           width,
           height,
-          consumerOnMeasureCb,
         }),
-        [height, isMeasuring, measureCells, width, consumerOnMeasureCb],
+        [height, isMeasuring, measureCells, width],
       )}
     >
       {props.children}

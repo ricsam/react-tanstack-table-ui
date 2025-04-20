@@ -26,6 +26,7 @@ import {
   UiProps,
   VirtualHeaderCellState,
 } from "./types";
+import { useMeasureContext } from "./hooks/use_measure_context";
 
 // const useIsomorphicLayoutEffect =
 //   typeof document !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -59,8 +60,6 @@ function _slow_updateRttuiTable({
   uiProps: UiProps;
 }): RttuiTable {
   const _slow_allRows = table.getRowModel().rows;
-
-  // if (rttuiRef.current?.virtualData.body.rows.)
 
   const virtRows = virtualizers.rowVirtualizer.getVirtualItems();
   const rows: Record<RowPos, RttuiRow[]> = {
@@ -194,7 +193,8 @@ function _slow_updateRttuiTable({
     uiProps,
     virtualData: {
       body: {
-        virtualizer: virtualizers.rowVirtualizer,
+        rowVirtualizer: virtualizers.rowVirtualizer,
+        colVirtualizer: virtualizers.colVirtualizers.main.virtualizer,
         ...getRowOffsets({
           rows: allVirtRows,
           totalSize: virtualizers.rowVirtualizer.getTotalSize(),
@@ -242,16 +242,21 @@ export const useRttuiTable = ({
   const [throttleUpdates] = React.useState(() => {
     let active = false;
 
-    let callback: () => void;
+    let callback: undefined | (() => void);
 
     return (newCallback: () => void) => {
-      callback = newCallback;
       if (active) {
+        callback = newCallback;
         return;
       }
+      // first time
+      newCallback();
+
       active = true;
       window.requestIdleCallback(() => {
-        callback();
+        if (callback) {
+          callback();
+        }
         active = false;
       });
     };
@@ -275,6 +280,8 @@ export const useRttuiTable = ({
 
   const newInstance = getNewInstance();
 
+  const measuringContext = useMeasureContext();
+
   const rttuiRef = React.useRef<RttuiTable>(newInstance);
   rttuiRef.current = newInstance;
   const context = useTablePropsContext();
@@ -291,6 +298,15 @@ export const useRttuiTable = ({
       const oldInstance = prev.current;
       const diff = diffRttuiTable(oldInstance, newInstance);
       prev.current = newInstance;
+
+      if (measuringContext.isMeasuring) {
+        console.log(
+          "measuringContext.isMeasuring",
+          measuringContext.isMeasuring,
+          newInstance,
+          newInstance.virtualData.body.colVirtualizer.scrollOffset,
+        );
+      }
       if (diff.length > 0) {
         // hasUpdated.current = false;
         context.triggerUpdate(diff, {
@@ -703,14 +719,40 @@ function useVirtualizers({
   const rowRefs = React.useRef(rowRefsOb);
   rowRefs.current = rowRefsOb;
 
+  const measuringContext = useMeasureContext();
+  const isMeasuring = measuringContext.isMeasuring;
+
+  const getRowOverscan = () => {
+    const rowOverscan = isMeasuring?.verticalOverscan ?? uiProps.rowOverscan;
+    return rowOverscan;
+  };
+  const getColOverscan = () => {
+    const colOverscan =
+      isMeasuring?.horizontalOverscan ?? uiProps.columnOverscan;
+    return colOverscan;
+  };
+  const getRowScrollOffset = () => {
+    const rowScrollOffset = isMeasuring?.verticalScrollOffset;
+    return rowScrollOffset;
+  };
+  const getColScrollOffset = () => {
+    const colScrollOffset = isMeasuring?.horizontalScrollOffset;
+    return colScrollOffset;
+  };
+
   if (!virtualizersRef.current) {
     const _slow_leafHeaders = table.getLeafHeaders();
     virtualizersRef.current = {
       rowVirtualizer: new Virtualizer({
         count: _slow_allRows.length,
         getScrollElement: () => tableContainerRef.current,
-        overscan: uiProps.rowOverscan,
-        scrollToFn: () => {},
+        overscan: getRowOverscan(),
+        initialOffset: getRowScrollOffset(),
+        scrollToFn: (offset) => {
+          tableContainerRef.current?.scrollTo({
+            top: offset,
+          });
+        },
         observeElementRect,
         observeElementOffset,
         estimateSize: () => rowRefs.current.skin.rowHeight,
@@ -746,8 +788,9 @@ function useVirtualizers({
           virtualizer: createColVirtualizer({
             _slow_allHeaders: _slow_leafHeaders,
             tableContainerRef,
-            columnOverscan: uiProps.columnOverscan,
+            columnOverscan: getColOverscan(),
             onChange,
+            initialOffset: getColScrollOffset(),
           }),
           _slow_lookup: _slow_leafHeaders,
         },
@@ -757,7 +800,7 @@ function useVirtualizers({
     virtualizersRef.current.rowVirtualizer.setOptions({
       ...virtualizersRef.current.rowVirtualizer.options,
       count: _slow_allRows.length,
-      overscan: uiProps.rowOverscan,
+      overscan: getRowOverscan(),
     });
   }
 
@@ -804,8 +847,9 @@ function useVirtualizers({
         virtualizer: createColVirtualizer({
           _slow_allHeaders: group._slow_headers,
           tableContainerRef,
-          columnOverscan: uiProps.columnOverscan,
+          columnOverscan: getColOverscan(),
           onChange,
+          initialOffset: getColScrollOffset(),
         }),
         _slow_lookup: group._slow_headers,
       };
@@ -838,6 +882,14 @@ function useVirtualizers({
   allVirtualizers.forEach((cv) => {
     cv.shouldAdjustScrollPositionOnItemSizeChange = undefined;
     cv.calculateRange();
+    if (
+      cv.options.initialOffset &&
+      typeof cv.options.initialOffset === "number"
+    ) {
+      cv.scrollToOffset(cv.options.initialOffset, {
+        behavior: "auto",
+      });
+    }
   });
 
   const allVirtualizersRef = React.useRef(allVirtualizers);
@@ -920,19 +972,26 @@ function createColVirtualizer({
   tableContainerRef,
   columnOverscan,
   onChange,
+  initialOffset,
 }: {
   _slow_allHeaders: Header<any, unknown>[];
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   columnOverscan: number;
   onChange: (sync: boolean) => void;
+  initialOffset: number | undefined;
 }) {
   return new Virtualizer({
     getScrollElement: () => tableContainerRef.current,
     horizontal: true,
     overscan: columnOverscan,
+    initialOffset,
     observeElementRect,
     observeElementOffset,
-    scrollToFn: () => {},
+    scrollToFn: (offset) => {
+      tableContainerRef.current?.scrollTo({
+        left: offset,
+      });
+    },
     onChange: (_, sync) => {
       onChange(sync);
     },

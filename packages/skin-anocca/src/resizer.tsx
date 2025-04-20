@@ -44,30 +44,30 @@ export function Resizer() {
     <>
       {canResize && (
         <Box
-          {...{
-            onDoubleClick: () => {
-              crushHeader(colRef().header);
-            },
-            onMouseDown: (ev: any) => colRef().header.getResizeHandler()(ev),
-            onTouchStart: (ev: any) => colRef().header.getResizeHandler()(ev),
-            className: `resizer ${isResizing ? "isResizing" : ""}`,
-            sx: {
-              position: "absolute",
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: "3px",
-              cursor: "col-resize",
-              userSelect: "none",
-              touchAction: "none",
-              opacity: 0,
-              backgroundColor: (theme) => theme.palette.text.secondary,
-              transition: "opacity 0.2s",
-              "&.isResizing": {
-                backgroundColor: (theme) => theme.palette.primary.main,
-                opacity: 1,
-                width: "1px",
-              },
+          onDoubleClick={(ev) => {
+            crushHeader(colRef().header);
+            ev.stopPropagation();
+            ev.preventDefault();
+          }}
+          onMouseDown={(ev: any) => colRef().header.getResizeHandler()(ev)}
+          onTouchStart={(ev: any) => colRef().header.getResizeHandler()(ev)}
+          className={`resizer ${isResizing ? "isResizing" : ""}`}
+          sx={{
+            position: "absolute",
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: "3px",
+            cursor: "col-resize",
+            userSelect: "none",
+            touchAction: "none",
+            opacity: 0,
+            backgroundColor: (theme) => theme.palette.text.secondary,
+            transition: "opacity 0.2s",
+            "&.isResizing": {
+              backgroundColor: (theme) => theme.palette.primary.main,
+              opacity: 1,
+              width: "1px",
             },
           }}
         />

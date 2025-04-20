@@ -60,7 +60,7 @@ const cssVarsSelector = createTablePropsSelector((skin: Skin) => ({
   callback: (table) => {
     const { width, height } = table.uiProps;
     const totalSize = table.tanstackTable.getTotalSize();
-    const rowTotalSize = table.virtualData.body.virtualizer.getTotalSize();
+    const rowTotalSize = table.virtualData.body.rowVirtualizer.getTotalSize();
     return {
       "--table-container-width": width + "px",
       "--table-container-height": height + "px",

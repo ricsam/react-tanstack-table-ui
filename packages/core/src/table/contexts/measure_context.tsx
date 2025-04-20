@@ -1,12 +1,20 @@
 import { createContext } from "react";
 import { MeasureData } from "../types";
 
+export type IsMeasuring = {
+  callback: (measureData: MeasureData) => void;
+  horizontalScrollOffset: number;
+  verticalScrollOffset: number;
+  horizontalOverscan: number;
+  verticalOverscan: number;
+};
+
 export type MeasureContextType = {
-  measureCells: (cb: (measureData: MeasureData) => void) => void;
-  consumerOnMeasureCb: ((measureData: MeasureData) => void) | undefined;
+  measureCells: (isMeasuring: IsMeasuring) => void;
+  isMeasuring: IsMeasuring | undefined;
   width: number;
   height: number;
-  isMeasuring: boolean;
+  isMeasuringInstanceLoading: boolean;
 };
 
 export const MeasureContext = createContext<MeasureContextType | undefined>(

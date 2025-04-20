@@ -39,6 +39,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
       autoCrushColumns={props.autoCrushColumns}
       tableRef={props.tableRef}
       table={props.table}
+      autoCrushNumCols={props.autoCrushNumCols}
     >
       <MeasureSwitch>
         <TablePropsProvider>
@@ -55,8 +56,8 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
   const nonMeasuringContext = React.useMemo(
     (): MeasureContextType => ({
       ...context,
-      consumerOnMeasureCb: undefined,
-      isMeasuring: Boolean(context.consumerOnMeasureCb),
+      isMeasuring: undefined,
+      isMeasuringInstanceLoading: Boolean(context.isMeasuring),
     }),
     [context],
   );
@@ -66,14 +67,16 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
       ...context,
       // weird if the measuring instance would accidently call measure cells for some reason
       measureCells: () => {},
-      isMeasuring: false,
+      // the measuring instance doesn't need to know if it is loading or not
+      // better that we set it to false to not interfere with the measuring
+      isMeasuringInstanceLoading: false,
     }),
     [context],
   );
 
   let measuringInstance: React.ReactNode | undefined;
 
-  if (measuringContext.consumerOnMeasureCb) {
+  if (measuringContext.isMeasuring) {
     measuringInstance = (
       <MeasureContext.Provider value={measuringContext}>
         <div
@@ -89,9 +92,7 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
             zIndex: -1,
           }}
         >
-          <MeasureCellProvider
-            onMeasureCallback={measuringContext.consumerOnMeasureCb}
-          >
+          <MeasureCellProvider isMeasuring={measuringContext.isMeasuring}>
             {props.children}
           </MeasureCellProvider>
         </div>
@@ -131,7 +132,7 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
     width: measureContext.width,
     height: measureContext.height,
     rowOverscan: props.rowOverscan ?? 10,
-    columnOverscan: measureContext.consumerOnMeasureCb
+    columnOverscan: measureContext.isMeasuring
       ? (props.autoCrushNumCols ?? 50)
       : (props.columnOverscan ?? 3),
     renderSubComponent: props.renderSubComponent,
@@ -166,11 +167,11 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
       value={React.useMemo((): TableContextType => {
         return {
           tableContainerRef,
-          loading: measureContext.isMeasuring,
+          loading: Boolean(measureContext.isMeasuringInstanceLoading),
           skin,
           tableRef: rttuiRef,
         };
-      }, [skin, measureContext.isMeasuring, rttuiRef])}
+      }, [measureContext.isMeasuringInstanceLoading, skin, rttuiRef])}
     >
       <Body />
     </TableContext.Provider>
@@ -178,7 +179,7 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
 }
 
 const Body = React.memo(function Body() {
-  const { skin } = useTableContext();
+  const { skin, loading } = useTableContext();
 
   const { pinColsRelativeTo, underlay } = useTableProps({
     callback: (props) => {
@@ -279,7 +280,7 @@ const Content = React.memo(function Content() {
     ],
   });
 
-  const isMeasureInstance = Boolean(useMeasureContext().consumerOnMeasureCb);
+  const isMeasureInstance = Boolean(useMeasureContext().isMeasuring);
 
   let tableHeader: React.ReactNode | undefined;
   let tableBody: React.ReactNode | undefined;

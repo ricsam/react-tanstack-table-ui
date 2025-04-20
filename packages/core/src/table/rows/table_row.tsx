@@ -33,7 +33,7 @@ const rowSelector = createTablePropsSelector((rowIndex: number) => ({
     return {
       isExpanded,
       subComponent,
-      rowVirtualizer: props.virtualData.body.virtualizer,
+      rowVirtualizer: props.virtualData.body.rowVirtualizer,
       relativeIndex: row.relativeIndex,
       pinColsRelativeTo: props.uiProps.pinColsRelativeTo,
     };

@@ -130,7 +130,8 @@ export type RttuiTable = {
     header: RttuiHeaderGroups;
     footer: RttuiHeaderGroups;
     body: {
-      virtualizer: Virtualizer<any, any>;
+      rowVirtualizer: Virtualizer<any, any>;
+      colVirtualizer: Virtualizer<any, any>;
       offsetLeft: number;
       offsetRight: number;
       offsetTop: number;
