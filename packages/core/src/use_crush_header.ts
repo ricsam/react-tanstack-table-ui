@@ -7,11 +7,6 @@ export const useCrushHeader = () => {
   const { measureCells } = useMeasureContext();
   const { tableRef } = useTableContext();
   return (header: Header<any, any>) => {
-    console.log("was double clicked");
-    console.log(
-      "useCrushHeader",
-      tableRef.current.virtualData.body.colVirtualizer.scrollOffset,
-    );
     measureCells({
       callback: ({ cols }) => {
         tableRef.current.tanstackTable.setColumnSizing((prev) => {

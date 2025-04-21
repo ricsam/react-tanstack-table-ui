@@ -18,7 +18,7 @@ export function ExpandButton() {
   }
   return (
     <button
-      onClick={() => rowRef().row.toggleExpanded()}
+      onClick={() => rowRef()?.row.toggleExpanded()}
       className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
     >
       {isExpanded ? (

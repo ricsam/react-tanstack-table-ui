@@ -19,7 +19,11 @@ export const useCellProps = <T, U = RttuiTable>(
       return !context();
     },
     callback: (selectorValue) => {
-      return options.callback(context(), selectorValue);
+      const cell = context();
+      if (!cell) {
+        throw new Error("Cell not found");
+      }
+      return options.callback(cell, selectorValue);
     },
   });
 };

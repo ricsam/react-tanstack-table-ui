@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.28
+
+### Patch Changes
+
+- fix resizing bug
+- Updated dependencies
+  - @rttui/core@1.0.33
+
 ## 0.0.27
 
 ### Patch Changes

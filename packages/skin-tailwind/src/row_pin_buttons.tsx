@@ -22,7 +22,7 @@ export function RowPinButtons() {
   if (isPinned) {
     return (
       <button
-        onClick={() => rowRef().row.pin(false, true, true)}
+        onClick={() => rowRef()?.row.pin(false, true, true)}
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
       >
         <svg
@@ -46,7 +46,7 @@ export function RowPinButtons() {
   return (
     <div className="flex">
       <button
-        onClick={() => rowRef().row.pin("top", true, true)}
+        onClick={() => rowRef()?.row.pin("top", true, true)}
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
       >
         <svg
@@ -65,7 +65,7 @@ export function RowPinButtons() {
         </svg>
       </button>
       <button
-        onClick={() => rowRef().row.pin("bottom", true, true)}
+        onClick={() => rowRef()?.row.pin("bottom", true, true)}
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
       >
         <svg

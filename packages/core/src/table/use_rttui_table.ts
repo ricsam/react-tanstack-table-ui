@@ -64,6 +64,13 @@ type ColVirtualizer = {
   virtualizer: Virtualizer<any, any>;
   _slow_lookup: Header<any, unknown>[];
   groupIndex: number;
+  /**
+   * used to track the difference between the tanstack table instance and the
+   * virtualizer refs
+   *
+   * if outdated then the virtualizer in the ref will be removed
+   */
+  outdated: boolean;
 };
 
 function _slow_updateRttuiTable({
@@ -744,12 +751,30 @@ function useVirtualizers({
     return rowScrollOffset;
   };
   const getColScrollOffset = () => {
-    const colScrollOffset = isMeasuring?.horizontalScrollOffset;
+    const colScrollOffset =
+      isMeasuring?.horizontalScrollOffset ??
+      virtualizersRef.current?.colVirtualizers.main.virtualizer.scrollOffset ??
+      undefined;
     return colScrollOffset;
   };
 
+  const _slow_leafHeaders = table.getLeafHeaders();
+
+  /**
+   * only when there are no headers or footers
+   * then we create a fallback main virtualizer
+   */
+  const createFallbackMainVirtualizer = () => {
+    return createColVirtualizer({
+      _slow_allHeaders: _slow_leafHeaders,
+      tableContainerRef,
+      columnOverscan: getColOverscan(),
+      initialOffset: getColScrollOffset(),
+      observeElementOffset: horObserveElementOffset("header", 0),
+    });
+  };
+
   if (!virtualizersRef.current) {
-    const _slow_leafHeaders = table.getLeafHeaders();
     virtualizersRef.current = {
       rowVirtualizer: new Virtualizer({
         count: _slow_allRows.length,
@@ -793,19 +818,22 @@ function useVirtualizers({
         footer: [],
         main: {
           groupIndex: 0,
-          virtualizer: createColVirtualizer({
-            _slow_allHeaders: _slow_leafHeaders,
-            tableContainerRef,
-            columnOverscan: getColOverscan(),
-            onChange: () => {},
-            initialOffset: getColScrollOffset(),
-            observeElementOffset: horObserveElementOffset("header", 0),
-          }),
+          virtualizer: createFallbackMainVirtualizer(),
           _slow_lookup: _slow_leafHeaders,
+          outdated: false,
         },
       },
     };
   } else {
+    // mark all virtualizers in the ref as outdated
+    // later mark the ones that are not outdated as not outdated
+    Object.values(virtualizersRef.current.colVirtualizers)
+      .flat()
+      .forEach((cv) => {
+        cv.outdated = true;
+      });
+
+    // update the row virtualizer
     virtualizersRef.current.rowVirtualizer.setOptions({
       ...virtualizersRef.current.rowVirtualizer.options,
       count: _slow_allRows.length,
@@ -814,6 +842,8 @@ function useVirtualizers({
   }
 
   const virtualizers = virtualizersRef.current;
+
+  //#region update or create column virtualizers
 
   const headerGroups: FilteredHeaderGroup[] = [];
 
@@ -838,6 +868,8 @@ function useVirtualizers({
     const h = combineHeaderGroups(groups, type);
     headerGroups.push(h);
     h.filteredHeaderGroups.forEach((group, groupIndex) => {
+      // a virtualizer already exists in the ref,
+      // therefore just update the options
       if (virtualizers.colVirtualizers[type][groupIndex]) {
         // update the virtualizer options
         const currentVirtualizer =
@@ -848,24 +880,76 @@ function useVirtualizers({
         });
         // update the lookup
         currentVirtualizer._slow_lookup = group._slow_headers;
+        currentVirtualizer.outdated = false;
         return;
       }
 
+      // there is not virtualizer in the ref,
+      // therefore create a new one
       virtualizers.colVirtualizers[type][groupIndex] = {
         groupIndex,
         virtualizer: createColVirtualizer({
           _slow_allHeaders: group._slow_headers,
           tableContainerRef,
           columnOverscan: getColOverscan(),
-          onChange: () => {},
           initialOffset: getColScrollOffset(),
           observeElementOffset: horObserveElementOffset(type, groupIndex),
         }),
         _slow_lookup: group._slow_headers,
+        outdated: false,
       };
     });
   }
 
+  // by default the main virtualizer should be the last header or the first footer
+  // if there are no headers or footers then the main virtualizer will be the fallback virtualizer
+  virtualizers.colVirtualizers.main =
+    virtualizers.colVirtualizers.header[
+      virtualizers.colVirtualizers.header.length - 1
+    ] ??
+    virtualizers.colVirtualizers.footer[0] ??
+    virtualizers.colVirtualizers.main;
+
+  // if there are no headers or footers then the main virtualizer will be the fallback virtualizer
+  if (
+    virtualizers.colVirtualizers.footer.length === 0 &&
+    virtualizers.colVirtualizers.header.length === 0
+  ) {
+    // update the fallback virtualizer
+    const main = virtualizers.colVirtualizers.main;
+    main.virtualizer.setOptions({
+      ...main.virtualizer.options,
+      ...getNewColVirtualizerOptions(_slow_leafHeaders),
+    });
+    // update the lookup
+    main._slow_lookup = _slow_leafHeaders;
+    main.outdated = false;
+    main.groupIndex = 0;
+  }
+
+  //#endregion
+
+  //#region cleanup outdated virtualizers
+  for (const type of ["header", "footer"] as const) {
+    const arr = virtualizers.colVirtualizers[type];
+    const cbs = horScrollCallbackRefs.current[type];
+    for (let i = arr.length - 1; i >= 0; i--) {
+      const cv = arr[i];
+      if (cv.outdated) {
+        // the didmount function only returns the cleanup function
+        // it doesn't do anything else
+        cv.virtualizer._didMount()();
+        arr.splice(i, 1);
+        delete cbs[cv.groupIndex];
+      }
+    }
+  }
+  //#endregion
+
+  /**
+   * when resizing a column, this function is used to get the index of the column
+   * in the header group
+   */
   const getIndex = (colId: string) => {
     const headerGroup = headerGroups.find((hg) => hg.headerIndices[colId]);
     if (!headerGroup) {
@@ -873,13 +957,6 @@ function useVirtualizers({
     }
     return headerGroup.headerIndices[colId];
   };
-
-  virtualizers.colVirtualizers.main =
-    virtualizers.colVirtualizers.header[
-      virtualizers.colVirtualizers.header.length - 1
-    ] ??
-    virtualizers.colVirtualizers.footer[0] ??
-    virtualizers.colVirtualizers.main;
 
   const allVirtualizers = new Set(
     Object.values(virtualizers.colVirtualizers)
@@ -889,13 +966,19 @@ function useVirtualizers({
 
   allVirtualizers.add(virtualizers.rowVirtualizer);
 
+  // we need to configure all virtualizers
   allVirtualizers.forEach((cv) => {
     cv.shouldAdjustScrollPositionOnItemSizeChange = undefined;
     cv.calculateRange();
     if (
+      isMeasuring &&
       cv.options.initialOffset &&
       typeof cv.options.initialOffset === "number"
     ) {
+      // while measuring a column, after double clicking a resizer
+      // then the measuring instance will need to scroll to
+      // the same offset as the non measuring instance.
+      // Just setting initialOffset isn't enough
       cv.scrollToOffset(cv.options.initialOffset, {
         behavior: "auto",
       });
@@ -910,6 +993,7 @@ function useVirtualizers({
   const getIndexRef = React.useRef(getIndex);
   getIndexRef.current = getIndex;
 
+  // handle column resizing
   React.useLayoutEffect(() => {
     if (columnSizingInfo.isResizingColumn) {
       const indices = getIndexRef.current(columnSizingInfo.isResizingColumn);
@@ -929,6 +1013,7 @@ function useVirtualizers({
     }
   }, [columnSizingInfo.isResizingColumn, columnSizing]);
 
+  // cleanup all virtualizers when unmounting
   React.useLayoutEffect(() => {
     return () => {
       const cleanups = Array.from(allVirtualizersRef.current).map((cv) => {
@@ -939,21 +1024,34 @@ function useVirtualizers({
       });
     };
   }, []);
-
   React.useLayoutEffect(() => {
+    // should always intiialize all virtualizers,
+    // which will initialize the verScrollCallbackRef and horScrollCallbackRef
+    // a virtualizer can only be initialized once
     Array.from(allVirtualizersRef.current).forEach((cv) => {
       // this should initialize the verScrollCallbackRef and horScrollCallbackRef
       cv._willUpdate();
     });
-
-    const verCb = verScrollCallbackRef.current;
-    const horCbs = Object.values(horScrollCallbackRefs.current).flatMap((val) =>
-      Object.values(val),
-    );
+  });
+  // we need to do this roundabout way because we only
+  // want one scroll event listener, but we want all the
+  // virtualizers to be hooked up to it
+  // this logic is the same more or less as the libObserveElementOffset
+  React.useLayoutEffect(() => {
+    const getCallbacks = () => {
+      const verCb = verScrollCallbackRef.current;
+      if (!verCb) {
+        throw new Error("verScrollCallbackRef is not set");
+      }
+      const horCbs = Object.values(horScrollCallbackRefs.current).flatMap(
+        (val) => Object.values(val),
+      );
+      return { verCb, horCbs };
+    };
 
     const element = tableContainerRef.current;
 
-    if (!verCb || !element) {
+    if (!element) {
       return;
     }
 
@@ -965,6 +1063,7 @@ function useVirtualizers({
       : debounce(
           window,
           () => {
+            const { verCb, horCbs } = getCallbacks();
             verCb(offsetTop, false);
             horCbs.forEach((cb) => cb(offsetLeft, false));
             onChange(false);
@@ -976,6 +1075,7 @@ function useVirtualizers({
       offsetLeft = element["scrollLeft"];
       offsetTop = element["scrollTop"];
       fallback();
+      const { verCb, horCbs } = getCallbacks();
       verCb(offsetTop, isScrolling);
       horCbs.forEach((cb) => cb(offsetLeft, isScrolling));
       onChange(isScrolling);
@@ -1007,7 +1107,7 @@ function getNewColVirtualizerOptions(
   _slow_allHeaders: Header<any, unknown>[],
 ): Pick<
   VirtualizerOptions<any, any>,
-  "count" | "estimateSize" | "rangeExtractor" | "getItemKey"
+  "count" | "estimateSize" | "rangeExtractor" | "getItemKey" | "onChange"
 > {
   return {
     count: _slow_allHeaders.length,
@@ -1029,20 +1129,19 @@ function getNewColVirtualizerOptions(
       return sortedRange;
     },
     getItemKey: (index) => _slow_allHeaders[index].id,
+    onChange: undefined,
   };
 }
 function createColVirtualizer({
   _slow_allHeaders,
   tableContainerRef,
   columnOverscan,
-  onChange,
   initialOffset,
   observeElementOffset,
 }: {
   _slow_allHeaders: Header<any, unknown>[];
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   columnOverscan: number;
-  onChange: (sync: boolean) => void;
   initialOffset: number | undefined;
   observeElementOffset: ObserveElementOffset;
 }) {
@@ -1058,9 +1157,7 @@ function createColVirtualizer({
         left: offset,
       });
     },
-    onChange: (_, sync) => {
-      onChange(sync);
-    },
+    onChange: undefined,
     ...getNewColVirtualizerOptions(_slow_allHeaders),
   });
 }

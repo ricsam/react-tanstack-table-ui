@@ -15,7 +15,6 @@ export const VirtualCellProvider = ({
   return (
     <VirtualCellContext.Provider
       value={React.useCallback(() => {
-        // console.count("VirtualCellProvider");
         return tableRef.current.virtualData.body.cellLookup?.[rowIndex]?.[
           columnIndex
         ];

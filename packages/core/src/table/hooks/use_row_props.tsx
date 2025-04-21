@@ -18,8 +18,11 @@ export const useRowProps = <T, U = RttuiTable>(
       return !virtualRow();
     },
     callback: (table) => {
-      const result = options.callback(virtualRow(), table);
-      return result;
+      const row = virtualRow();
+      if (!row) {
+        throw new Error("Row not found");
+      }
+      return options.callback(row, table);
     },
   });
 };

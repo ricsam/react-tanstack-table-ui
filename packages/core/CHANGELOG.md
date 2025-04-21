@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.33
+
+### Patch Changes
+
+- fix resizing bug
+
 ## 1.0.32
 
 ### Patch Changes

@@ -2,5 +2,5 @@ import React from "react";
 import { RttuiRow } from "../types";
 
 export const VirtualRowContext = React.createContext<
-  undefined | (() => RttuiRow)
+  undefined | (() => RttuiRow | undefined)
 >(undefined);
