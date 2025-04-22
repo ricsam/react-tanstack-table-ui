@@ -337,8 +337,14 @@ export function RootLayout() {
         <footer className="border-t border-gray-200 dark:border-gray-700 py-4">
           <div className="px-4">
             <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} React TanStack Table UI. All
-              rights reserved.
+              MIT License {new Date().getFullYear()}{" "}
+              <a
+                href="https://github.com/ricsam"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                @ricsam
+              </a>
             </p>
           </div>
         </footer>
