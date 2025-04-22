@@ -1,13 +1,13 @@
 import { useArgs } from "@storybook/client-api";
 import { useEffect, useState } from "react";
 
-type SkinString = "core" | "skin-anocca" | "skin-tailwind" | "skin-mui";
+type SkinString = "core" | "anocca" | "tailwind" | "mui";
 
 const validSkins: Set<string> = new Set([
   "core",
-  "skin-anocca",
-  "skin-tailwind",
-  "skin-mui",
+  "anocca",
+  "tailwind",
+  "mui",
 ]);
 
 const getSkinFromUrl = (frameWindow: Window) => {
@@ -98,8 +98,6 @@ export const useSkinParam = (): SkinString => {
   const [updatedSkin, setUpdatedSkin] = useState(skinFromStorage);
 
   const [listenForUpdates, setListenForUpdates] = useState(false);
-
-  console.log("skinFromStorage", skinFromStorage);
 
   useEffect(() => {
     updateArgs({ skin: skinFromStorage });

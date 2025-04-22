@@ -84,7 +84,7 @@ export const ReactTanstackTableUi = (
     >;
     withTwoHeaderRows?: boolean;
     withHeaderGroups?: boolean;
-    skin?: "skin-anocca" | "skin-tailwind" | "skin-mui" | "core";
+    skin?: "anocca" | "tailwind" | "mui" | "core";
   } & Omit<TableOptions<Person>, "data" | "columns"> &
     Omit<ReactTanstackTableUiProps<Person>, "table" | "skin">,
 ) => {
@@ -93,103 +93,103 @@ export const ReactTanstackTableUi = (
     props.data === "big" ? bigData : props.data === "small" ? smallData : [];
   const skin = props.skin;
   let HeaderPinButtons: React.FC = defaultSkin.HeaderPinButtons;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     HeaderPinButtons = muiSkin.HeaderPinButtons;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     HeaderPinButtons = twskin.HeaderPinButtons;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     HeaderPinButtons = anoccaSkin.HeaderPinButtons;
   }
 
   let Resizer: React.FC = defaultSkin.Resizer;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     Resizer = muiSkin.Resizer;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     Resizer = twskin.Resizer;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     Resizer = anoccaSkin.Resizer;
   }
 
   let CellAvatar: React.FC<CellAvatarProps> = defaultSkin.CellAvatar;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellAvatar = muiSkin.CellAvatar;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellAvatar = twskin.CellAvatar;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellAvatar = anoccaSkin.CellAvatar;
   }
 
   let CellAvatarWithText: React.FC<CellAvatarWithTextProps> =
     defaultSkin.CellAvatarWithText;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellAvatarWithText = muiSkin.CellAvatarWithText;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellAvatarWithText = twskin.CellAvatarWithText;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellAvatarWithText = anoccaSkin.CellAvatarWithText;
   }
 
   let CellNumber: React.FC<{ children: React.ReactNode }> =
     defaultSkin.CellNumber;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellNumber = muiSkin.CellNumber;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellNumber = twskin.CellNumber;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellNumber = anoccaSkin.CellNumber;
   }
 
   let CellTag: React.FC<{ children: React.ReactNode }> = defaultSkin.CellTag;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellTag = muiSkin.CellTag;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellTag = twskin.CellTag;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellTag = anoccaSkin.CellTag;
   }
 
   let CellCurrency: React.FC<CellCurrencyProps> = defaultSkin.CellCurrency;
 
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellCurrency = muiSkin.CellCurrency;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellCurrency = twskin.CellCurrency;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellCurrency = anoccaSkin.CellCurrency;
   }
 
   let CellBadge: React.FC<CellBadgeProps> = defaultSkin.CellBadge;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellBadge = muiSkin.CellBadge;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellBadge = twskin.CellBadge;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellBadge = anoccaSkin.CellBadge;
   }
 
   let Cell: React.FC<CellProps> = defaultSkin.Cell;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     Cell = muiSkin.Cell;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     Cell = twskin.Cell;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     Cell = anoccaSkin.Cell;
   }
   let CellLink: React.FC<CellLinkProps> = defaultSkin.CellLink;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellLink = muiSkin.CellLink;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellLink = twskin.CellLink;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellLink = anoccaSkin.CellLink;
   }
 
   let CellPercent: React.FC<CellPercentProps> = defaultSkin.CellPercent;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     CellPercent = muiSkin.CellPercent;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     CellPercent = twskin.CellPercent;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     CellPercent = anoccaSkin.CellPercent;
   }
 
@@ -235,7 +235,7 @@ export const ReactTanstackTableUi = (
         id: "age",
         header: "Age",
         cell:
-          skin === "skin-mui" || skin === "skin-anocca"
+          skin === "mui" || skin === "anocca"
             ? (info) => (
                 <Typography variant="body2">{info.getValue()}</Typography>
               )
@@ -247,7 +247,7 @@ export const ReactTanstackTableUi = (
         id: "city",
         header: "City",
         cell:
-          skin === "skin-mui" || skin === "skin-anocca"
+          skin === "mui" || skin === "anocca"
             ? (info) => (
                 <Typography variant="body2">{info.getValue()}</Typography>
               )
@@ -346,7 +346,7 @@ export const ReactTanstackTableUi = (
           id: `col${i}`,
           header: `Column ${i}`,
           cell:
-            skin === "skin-mui" || skin === "skin-anocca"
+            skin === "mui" || skin === "anocca"
               ? (info) => (
                   <Typography variant="body2">{info.getValue()}</Typography>
                 )
@@ -375,7 +375,7 @@ export const ReactTanstackTableUi = (
               ...col,
               id: col.id,
               header: () =>
-                skin === "skin-mui" || skin === "skin-anocca" ? (
+                skin === "mui" || skin === "anocca" ? (
                   <TextField
                     placeholder="Search..."
                     slotProps={{
@@ -434,21 +434,21 @@ export const ReactTanstackTableUi = (
   });
 
   let skinOb: Skin | undefined;
-  if (skin === "skin-mui") {
+  if (skin === "mui") {
     skinOb = muiSkin.MuiSkin;
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     skinOb = twskin.TailwindSkin;
-  } else if (skin === "skin-anocca") {
+  } else if (skin === "anocca") {
     skinOb = anoccaSkin.AnoccaSkin;
   }
   let content = <TableComponent {...props} table={table} skin={skinOb} />;
-  if (skin === "skin-mui" || skin === "skin-anocca") {
+  if (skin === "mui" || skin === "anocca") {
     content = (
       <ScopedCssBaseline>
         <ThemeProvider theme={theme}>{content}</ThemeProvider>
       </ScopedCssBaseline>
     );
-  } else if (skin === "skin-tailwind") {
+  } else if (skin === "tailwind") {
     content = (
       <div className="rttui-table light" style={{ ...twskin.lightModeVars }}>
         {content}
