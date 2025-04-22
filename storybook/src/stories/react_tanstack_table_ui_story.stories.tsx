@@ -1,14 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { AnoccaSkin } from "@rttui/skin-anocca";
-import { TailwindSkin } from "@rttui/skin-tailwind";
-import { ColumnDef, getCoreRowModel } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  getCoreRowModel,
+  getExpandedRowModel,
+} from "@tanstack/react-table";
 import { ReactNode, useReducer, useState } from "react";
+import { createSourceCode } from "./create_source_code";
 import {
   Person,
   ReactTanstackTableUi,
 } from "./react_tanstack_table_ui_story_component";
-import { createSourceCode } from "./create_source_code";
+import { useSkinParam } from "./use_skin_param";
+
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
   title: "ReactTanstackTableUi",
@@ -24,24 +28,12 @@ const meta = {
     pinColsRelativeTo: { control: "select", options: ["cols", "table"] },
     skin: {
       control: "select",
-      options: ["@rttui/skin-anocca", "@rttui/skin-tailwind"],
-      description: "The skin to use for the table",
-      table: {
-        defaultValue: {
-          summary: "@rttui/skin-tailwind",
-        },
-      },
-      mapping: {
-        "@rttui/skin-anocca": AnoccaSkin,
-        "@rttui/skin-tailwind": TailwindSkin,
-      },
     },
   },
   // Use `fn` to spy on the onClick arg, which will appear in the actions panel once invoked: https://storybook.js.org/docs/essentials/actions#action-args
   args: {
     width: 600,
     height: 400,
-    skin: TailwindSkin,
     autoCrushColumns: false,
     data: "big",
     columns: "few",
@@ -50,6 +42,10 @@ const meta = {
     fillAvailableSpaceAfterCrush: false,
     scrollbarWidth: 16,
     getRowId: (row) => row.id,
+  },
+  render: function Render(args) {
+    const skin = useSkinParam();
+    return <ReactTanstackTableUi {...args} skin={skin} />;
   },
 } satisfies Meta<typeof ReactTanstackTableUi>;
 
@@ -127,7 +123,7 @@ export const PinRelativeToTable: Story = {
     autoCrushColumns: true,
     pinColsRelativeTo: "table",
     enableColumnPinning: true,
-    canSelectRows: true,
+    enableRowSelection: true,
     crushMinSizeBy: "both",
     initialState: {
       columnPinning: {
@@ -353,8 +349,9 @@ export const CanChangeContentOfCell: Story = {
       header: () => false,
     },
   },
-  render: (args) => {
-    return <CanChangeContentOfCellComponent {...args} />;
+  render: function Render(args) {
+    const skin = useSkinParam();
+    return <CanChangeContentOfCellComponent {...args} skin={skin} />;
   },
 };
 
@@ -395,3 +392,26 @@ function CanChangeContentOfCellComponent(args: Story["args"]) {
     </div>
   );
 }
+
+export const FullExample: Story = {
+  args: {
+    data: "big",
+    columns: "many",
+    autoCrushColumns: true,
+    withHeaderGroups: true,
+    enableColumnPinning: true,
+    enableRowPinning: true,
+    scrollbarWidth: 16,
+    crushMinSizeBy: "both",
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
+    width: 1200,
+    height: 600,
+    enableRowSelection: true,
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: () => true,
+    renderSubComponent(row) {
+      return <div className="p-4 bg-gray-100">{row.original.name}</div>;
+    },
+  },
+};

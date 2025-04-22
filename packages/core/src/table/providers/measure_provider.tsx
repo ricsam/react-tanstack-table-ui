@@ -152,6 +152,9 @@ export const MeasureProvider = (props: {
               const header = cell.header;
               if (header) {
                 const headerInstance = header();
+                if (!headerInstance) {
+                  return;
+                }
                 const crushMinSizeBy = getCrushMinSizeBy(headerInstance.column);
                 if (crushMinSizeBy === "cell") {
                   return;

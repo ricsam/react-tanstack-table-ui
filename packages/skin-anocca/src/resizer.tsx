@@ -49,6 +49,13 @@ export function Resizer() {
             ev.stopPropagation();
             ev.preventDefault();
           }}
+          onClick={(ev) => {
+            if (ev.metaKey) {
+              ev.stopPropagation();
+              ev.preventDefault();
+              crushHeader(colRef().header);
+            }
+          }}
           onMouseDown={(ev: any) => colRef().header.getResizeHandler()(ev)}
           onTouchStart={(ev: any) => colRef().header.getResizeHandler()(ev)}
           className={`resizer ${isResizing ? "isResizing" : ""}`}

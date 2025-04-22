@@ -1,11 +1,11 @@
+import { CellAvatarProps } from "@rttui/core";
 import React from "react";
 
-
-export const CellAvatar: React.FC<{
-  src: string;
-  alt?: string;
-  size?: "sm" | "md" | "lg";
-}> = ({ src, alt = "", size = "md" }) => {
+export const CellAvatar: React.FC<CellAvatarProps> = ({
+  src,
+  alt = "",
+  size = "md",
+}) => {
   const sizeClass = {
     sm: "size-6",
     md: "size-8",
@@ -16,6 +16,7 @@ export const CellAvatar: React.FC<{
     <img
       src={src}
       alt={alt}
-      className={`${sizeClass[size]} rounded-full bg-gray-50 dark:bg-gray-800`} />
+      className={`${sizeClass[size]} rounded-full bg-gray-50 dark:bg-gray-800`}
+    />
   );
 };

@@ -12,7 +12,7 @@ export type MeasuredCell =
       type: "header";
       id: string; // headerId
       columnId: string;
-      header: () => Header<any, any>;
+      header: () => Header<any, any> | undefined;
     };
 
 export const MeasureCellContext = createContext<

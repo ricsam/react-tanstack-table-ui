@@ -7,6 +7,7 @@ import {
   VirtualItem,
   Virtualizer,
   VirtualizerOptions,
+  Range,
 } from "@tanstack/react-virtual";
 import React from "react";
 import { Skin } from "../skin";
@@ -774,6 +775,20 @@ function useVirtualizers({
     });
   };
 
+  const rowRangeExtractor = (range: Range): number[] => {
+    const defaultRange = defaultRangeExtractor(range);
+    const next = new Set(defaultRange);
+
+    _slow_allRows.forEach((row, index) => {
+      if (row.getIsPinned()) {
+        next.add(index);
+      }
+    });
+
+    const n = [...next].sort((a, b) => a - b);
+    return n;
+  };
+
   if (!virtualizersRef.current) {
     virtualizersRef.current = {
       rowVirtualizer: new Virtualizer({
@@ -799,19 +814,7 @@ function useVirtualizers({
           const defaultSize = measureElement(element, entry, instance);
           return Math.max(defaultSize, rowRefs.current.skin.rowHeight);
         },
-        rangeExtractor: (range): number[] => {
-          const defaultRange = defaultRangeExtractor(range);
-          const next = new Set(defaultRange);
-
-          rowRefs.current._slow_allRows.forEach((row, index) => {
-            if (row.getIsPinned()) {
-              next.add(index);
-            }
-          });
-
-          const n = [...next].sort((a, b) => a - b);
-          return n;
-        },
+        rangeExtractor: rowRangeExtractor,
       }),
       colVirtualizers: {
         header: [],
@@ -838,6 +841,7 @@ function useVirtualizers({
       ...virtualizersRef.current.rowVirtualizer.options,
       count: _slow_allRows.length,
       overscan: getRowOverscan(),
+      rangeExtractor: rowRangeExtractor,
     });
   }
 

@@ -32,7 +32,7 @@ export function Cell({
   const rowRef = useRowRef();
   return (
     <div
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 flex-1 flex-shrink-0"
       style={{ paddingLeft: `${depth * 20}px` }}
     >
       {checkbox && (
@@ -61,8 +61,6 @@ export function Cell({
       )}
 
       {expandButton && <ExpandButton />}
-      {pinButtons && <RowPinButtons />}
-
       {/* Name content */}
       {highlightSelected && checked ? (
         <CellTextBold className="text-indigo-600 dark:text-indigo-500">
@@ -70,6 +68,12 @@ export function Cell({
         </CellTextBold>
       ) : (
         <CellText>{children}</CellText>
+      )}
+      <div className="flex-1" />
+      {pinButtons && (
+        <>
+          <RowPinButtons />
+        </>
       )}
     </div>
   );

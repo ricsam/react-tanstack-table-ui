@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.34
+
+### Patch Changes
+
+- add more components to each skin package
+
 ## 1.0.33
 
 ### Patch Changes

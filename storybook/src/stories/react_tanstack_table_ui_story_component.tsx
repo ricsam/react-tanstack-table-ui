@@ -1,35 +1,37 @@
 import {
-  Box,
   ScopedCssBaseline,
   TextField,
   ThemeProvider,
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import * as core from "@rttui/core";
 import {
+  CellAvatarProps,
+  CellAvatarWithTextProps,
+  CellBadgeProps,
+  CellCurrencyProps,
+  CellLinkProps,
+  CellPercentProps,
+  CellProps,
   decorateColumnHelper,
+  lightModeVars as defaultLightModeVars,
+  ReactTanstackTableUiProps,
+  Skin,
   ReactTanstackTableUi as TableComponent,
+  defaultSkin as theDefaultSkin,
 } from "@rttui/core";
-import {
-  AnoccaSkin,
-  HeaderPinButtons,
-  RowPinButtons as MuiRowPinButtons,
-} from "@rttui/skin-anocca";
-import {
-  CellText,
-  Checkbox,
-  lightModeVars,
-  TailwindSkin,
-  RowPinButtons as TwRowPinButtons,
-} from "@rttui/skin-tailwind";
+import * as anoccaSkin from "@rttui/skin-anocca";
+import * as muiSkin from "@rttui/skin-mui";
+import * as twskin from "@rttui/skin-tailwind";
 import {
   ColumnDef,
   createColumnHelper,
-  Table,
   TableOptions,
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
+import placeholderAvatar from "./placeholder_avatar.png";
 
 import "@fontsource/inter";
 import "@fontsource/inter/100.css";
@@ -42,6 +44,12 @@ import "@fontsource/inter/700.css";
 import "@fontsource/inter/800.css";
 import "@fontsource/inter/900.css";
 import "./index.css";
+
+const defaultSkin = {
+  vars: defaultLightModeVars,
+  skin: theDefaultSkin,
+  ...core,
+};
 
 export type Person = {
   id: string;
@@ -76,60 +84,162 @@ export const ReactTanstackTableUi = (
     >;
     withTwoHeaderRows?: boolean;
     withHeaderGroups?: boolean;
-    canSelectRows?: boolean;
+    skin?: "skin-anocca" | "skin-tailwind" | "skin-mui" | "core";
   } & Omit<TableOptions<Person>, "data" | "columns"> &
-    Omit<React.ComponentProps<typeof TableComponent>, "table">,
+    Omit<ReactTanstackTableUiProps<Person>, "table" | "skin">,
 ) => {
   const theme = useTheme();
   const data: Person[] =
     props.data === "big" ? bigData : props.data === "small" ? smallData : [];
+  const skin = props.skin;
+  let HeaderPinButtons: React.FC = defaultSkin.HeaderPinButtons;
+  if (skin === "skin-mui") {
+    HeaderPinButtons = muiSkin.HeaderPinButtons;
+  } else if (skin === "skin-tailwind") {
+    HeaderPinButtons = twskin.HeaderPinButtons;
+  } else if (skin === "skin-anocca") {
+    HeaderPinButtons = anoccaSkin.HeaderPinButtons;
+  }
+
+  let Resizer: React.FC = defaultSkin.Resizer;
+  if (skin === "skin-mui") {
+    Resizer = muiSkin.Resizer;
+  } else if (skin === "skin-tailwind") {
+    Resizer = twskin.Resizer;
+  } else if (skin === "skin-anocca") {
+    Resizer = anoccaSkin.Resizer;
+  }
+
+  let CellAvatar: React.FC<CellAvatarProps> = defaultSkin.CellAvatar;
+  if (skin === "skin-mui") {
+    CellAvatar = muiSkin.CellAvatar;
+  } else if (skin === "skin-tailwind") {
+    CellAvatar = twskin.CellAvatar;
+  } else if (skin === "skin-anocca") {
+    CellAvatar = anoccaSkin.CellAvatar;
+  }
+
+  let CellAvatarWithText: React.FC<CellAvatarWithTextProps> =
+    defaultSkin.CellAvatarWithText;
+  if (skin === "skin-mui") {
+    CellAvatarWithText = muiSkin.CellAvatarWithText;
+  } else if (skin === "skin-tailwind") {
+    CellAvatarWithText = twskin.CellAvatarWithText;
+  } else if (skin === "skin-anocca") {
+    CellAvatarWithText = anoccaSkin.CellAvatarWithText;
+  }
+
+  let CellNumber: React.FC<{ children: React.ReactNode }> =
+    defaultSkin.CellNumber;
+  if (skin === "skin-mui") {
+    CellNumber = muiSkin.CellNumber;
+  } else if (skin === "skin-tailwind") {
+    CellNumber = twskin.CellNumber;
+  } else if (skin === "skin-anocca") {
+    CellNumber = anoccaSkin.CellNumber;
+  }
+
+  let CellTag: React.FC<{ children: React.ReactNode }> = defaultSkin.CellTag;
+  if (skin === "skin-mui") {
+    CellTag = muiSkin.CellTag;
+  } else if (skin === "skin-tailwind") {
+    CellTag = twskin.CellTag;
+  } else if (skin === "skin-anocca") {
+    CellTag = anoccaSkin.CellTag;
+  }
+
+  let CellCurrency: React.FC<CellCurrencyProps> = defaultSkin.CellCurrency;
+
+  if (skin === "skin-mui") {
+    CellCurrency = muiSkin.CellCurrency;
+  } else if (skin === "skin-tailwind") {
+    CellCurrency = twskin.CellCurrency;
+  } else if (skin === "skin-anocca") {
+    CellCurrency = anoccaSkin.CellCurrency;
+  }
+
+  let CellBadge: React.FC<CellBadgeProps> = defaultSkin.CellBadge;
+  if (skin === "skin-mui") {
+    CellBadge = muiSkin.CellBadge;
+  } else if (skin === "skin-tailwind") {
+    CellBadge = twskin.CellBadge;
+  } else if (skin === "skin-anocca") {
+    CellBadge = anoccaSkin.CellBadge;
+  }
+
+  let Cell: React.FC<CellProps> = defaultSkin.Cell;
+  if (skin === "skin-mui") {
+    Cell = muiSkin.Cell;
+  } else if (skin === "skin-tailwind") {
+    Cell = twskin.Cell;
+  } else if (skin === "skin-anocca") {
+    Cell = anoccaSkin.Cell;
+  }
+  let CellLink: React.FC<CellLinkProps> = defaultSkin.CellLink;
+  if (skin === "skin-mui") {
+    CellLink = muiSkin.CellLink;
+  } else if (skin === "skin-tailwind") {
+    CellLink = twskin.CellLink;
+  } else if (skin === "skin-anocca") {
+    CellLink = anoccaSkin.CellLink;
+  }
+
+  let CellPercent: React.FC<CellPercentProps> = defaultSkin.CellPercent;
+  if (skin === "skin-mui") {
+    CellPercent = muiSkin.CellPercent;
+  } else if (skin === "skin-tailwind") {
+    CellPercent = twskin.CellPercent;
+  } else if (skin === "skin-anocca") {
+    CellPercent = anoccaSkin.CellPercent;
+  }
 
   const columns: ColumnDef<Person, unknown>[] = React.useMemo(() => {
     const originalColumnHelper = createColumnHelper<Person>();
     const columnHelper = props.enableColumnPinning
       ? decorateColumnHelper(originalColumnHelper, {
-          header: (original) => (
-            <Box sx={{ display: "flex", gap: 2 }}>
+          header: (original, info) => (
+            <div style={{ display: "flex", gap: 2, flex: 1 }}>
               {original}
-              {props.enableColumnPinning && <HeaderPinButtons />}
-            </Box>
+              {props.enableColumnPinning && info.column.id !== "selected" && (
+                <>
+                  <div style={{ flex: 1 }}></div>
+                  <HeaderPinButtons />
+                </>
+              )}
+              {props.enableColumnResizing && <Resizer />}
+            </div>
           ),
+          cell: (original) => {
+            return <Cell>{original}</Cell>;
+          },
         })
       : originalColumnHelper;
 
-    const fewColumns: ColumnDef<Person, unknown>[] = [
+    const fewColumns: ColumnDef<Person, any>[] = [
       columnHelper.accessor("name", {
         id: "name",
         header: "Name",
-        cell:
-          props.skin === AnoccaSkin
-            ? (info) => (
-                <Box sx={{ display: "flex", gap: 2, flex: 1 }}>
-                  <Typography variant="body2">{info.getValue()}</Typography>
-                  {props.enableRowPinning && <Box sx={{ flexGrow: 1 }} />}
-                  {props.enableRowPinning && (
-                    <MuiRowPinButtons row={info.row} />
-                  )}
-                </Box>
-              )
-            : (info) => (
-                <div className="flex-1 gap-2 flex items-center">
-                  <CellText>{info.getValue()}</CellText>
-                  {props.enableRowPinning && <div className="flex-1" />}
-                  {props.enableRowPinning && <TwRowPinButtons />}
-                </div>
-              ),
+        cell: (info) => (
+          <Cell
+            checkbox={!!props.enableRowSelection}
+            expandButton={!!props.getExpandedRowModel}
+            pinButtons={!!props.enableRowPinning}
+            highlightSelected={!!props.enableRowSelection}
+          >
+            {info.getValue()}
+          </Cell>
+        ),
         ...props.columnDefs?.["name"],
       }),
       columnHelper.accessor("age", {
         id: "age",
         header: "Age",
         cell:
-          props.skin === AnoccaSkin
+          skin === "skin-mui" || skin === "skin-anocca"
             ? (info) => (
                 <Typography variant="body2">{info.getValue()}</Typography>
               )
-            : (info) => <CellText>{info.getValue()}</CellText>,
+            : (info) => <twskin.CellText>{info.getValue()}</twskin.CellText>,
         size: 50,
         ...props.columnDefs?.["age"],
       }),
@@ -137,27 +247,110 @@ export const ReactTanstackTableUi = (
         id: "city",
         header: "City",
         cell:
-          props.skin === AnoccaSkin
+          skin === "skin-mui" || skin === "skin-anocca"
             ? (info) => (
                 <Typography variant="body2">{info.getValue()}</Typography>
               )
-            : (info) => <CellText>{info.getValue()}</CellText>,
+            : (info) => <twskin.CellText>{info.getValue()}</twskin.CellText>,
         ...props.columnDefs?.["city"],
       }),
     ];
 
-    const manyColumns: ColumnDef<Person, unknown>[] = [
+    const specialColumns: ColumnDef<Person, unknown>[] = [
+      columnHelper.display({
+        id: "percent",
+        header: "Percent",
+        cell: () => {
+          return <CellPercent value={0.5} />;
+        },
+      }),
+      columnHelper.display({
+        id: "link",
+        header: "Link",
+        cell: () => {
+          return (
+            <CellLink
+              href="https://www.google.com"
+              srText="Link to Google"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Link
+            </CellLink>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "avatar",
+        header: "Avatar",
+        cell: () => {
+          return <CellAvatar src={placeholderAvatar} alt="Avatar" />;
+        },
+      }),
+      columnHelper.display({
+        id: "avatarWithText",
+        header: "Avatar With Text",
+        maxSize: 1000,
+        cell: () => {
+          return (
+            <div style={{ flexShrink: 0 }}>
+              <CellAvatarWithText
+                src={placeholderAvatar}
+                alt="Avatar"
+                primary="John Doe"
+                secondary="Software Engineer"
+              />
+            </div>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "salary",
+        header: "Salary",
+        cell: () => {
+          return <CellCurrency value={123} />;
+        },
+      }),
+      columnHelper.display({
+        id: "number_of_reports",
+        header: "Number of Reports",
+        cell: () => {
+          return <CellNumber>123</CellNumber>;
+        },
+      }),
+      columnHelper.display({
+        id: "tag",
+        header: "Tag",
+        cell: () => {
+          return <CellTag>Tag</CellTag>;
+        },
+      }),
+      columnHelper.display({
+        id: "badge",
+        header: "Badge",
+        cell: () => {
+          return (
+            <CellBadge color="indigo" bgColor="red">
+              Badge
+            </CellBadge>
+          );
+        },
+      }),
+    ];
+
+    const manyColumns: ColumnDef<Person, any>[] = [
       ...fewColumns,
+      ...specialColumns,
       ...Array.from({ length: 100 }, (_, i) =>
         columnHelper.accessor(`col${i}`, {
           id: `col${i}`,
           header: `Column ${i}`,
           cell:
-            props.skin === AnoccaSkin
+            skin === "skin-mui" || skin === "skin-anocca"
               ? (info) => (
                   <Typography variant="body2">{info.getValue()}</Typography>
                 )
-              : (info) => <CellText>{info.getValue()}</CellText>,
+              : (info) => <twskin.CellText>{info.getValue()}</twskin.CellText>,
         }),
       ),
     ];
@@ -175,7 +368,6 @@ export const ReactTanstackTableUi = (
         }),
       );
     }
-
     if (props.withTwoHeaderRows) {
       cols = cols.map((col) => {
         const newCol: ColumnDef<Person> | undefined = col.id
@@ -183,7 +375,7 @@ export const ReactTanstackTableUi = (
               ...col,
               id: col.id,
               header: () =>
-                props.skin === AnoccaSkin ? (
+                skin === "skin-mui" || skin === "skin-anocca" ? (
                   <TextField
                     placeholder="Search..."
                     slotProps={{
@@ -209,46 +401,30 @@ export const ReactTanstackTableUi = (
         });
       });
     }
-    if (props.canSelectRows) {
-      cols.splice(
-        0,
-        0,
-        originalColumnHelper.display({
-          id: "selected",
-          header: ({ table }) => (
-            <Checkbox
-              getProps={() => ({
-                checked: table.getIsAllRowsSelected(),
-                indeterminate: table.getIsSomeRowsSelected(),
-              })}
-              onChange={() => table.getToggleAllRowsSelectedHandler()}
-            />
-          ),
-          cell: ({ row }) => (
-            <div className="flex items-center">
-              <Checkbox
-                getProps={() => ({
-                  checked: row.getIsSelected(),
-                  disabled: !row.getCanSelect(),
-                  indeterminate: row.getIsSomeSelected(),
-                })}
-                onChange={() => row.getToggleSelectedHandler()}
-              />
-            </div>
-          ),
-        }),
-      );
-    }
+
     return cols;
   }, [
-    props.skin,
+    props.enableColumnPinning,
+    props.columnDefs,
     props.columns,
     props.withHeaderGroups,
     props.withTwoHeaderRows,
-    props.canSelectRows,
-    props.enableColumnPinning,
+    props.enableColumnResizing,
+    props.enableRowSelection,
+    props.getExpandedRowModel,
     props.enableRowPinning,
-    props.columnDefs,
+    skin,
+    HeaderPinButtons,
+    Resizer,
+    Cell,
+    CellPercent,
+    CellLink,
+    CellAvatar,
+    CellAvatarWithText,
+    CellCurrency,
+    CellNumber,
+    CellTag,
+    CellBadge,
   ]);
 
   const table = useReactTable({
@@ -257,16 +433,30 @@ export const ReactTanstackTableUi = (
     columns,
   });
 
-  let content = <TableComponent {...props} table={table as Table<unknown>} />;
-  if (props.skin === AnoccaSkin) {
+  let skinOb: Skin | undefined;
+  if (skin === "skin-mui") {
+    skinOb = muiSkin.MuiSkin;
+  } else if (skin === "skin-tailwind") {
+    skinOb = twskin.TailwindSkin;
+  } else if (skin === "skin-anocca") {
+    skinOb = anoccaSkin.AnoccaSkin;
+  }
+  let content = <TableComponent {...props} table={table} skin={skinOb} />;
+  if (skin === "skin-mui" || skin === "skin-anocca") {
     content = (
       <ScopedCssBaseline>
         <ThemeProvider theme={theme}>{content}</ThemeProvider>
       </ScopedCssBaseline>
     );
-  } else if (props.skin === TailwindSkin) {
+  } else if (skin === "skin-tailwind") {
     content = (
-      <div className="rttui-table light" style={{ ...lightModeVars }}>
+      <div className="rttui-table light" style={{ ...twskin.lightModeVars }}>
+        {content}
+      </div>
+    );
+  } else if (skin === "core") {
+    content = (
+      <div className="rttui-table" style={{ ...defaultSkin.vars }}>
         {content}
       </div>
     );

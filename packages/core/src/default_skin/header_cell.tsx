@@ -1,7 +1,7 @@
 import React from "react";
 import { useColProps } from "../table/hooks/use_col_props";
-import { useColRef } from "../table/hooks/use_col_ref";
 import { shallowEqual } from "../utils";
+
 export const HeaderCell = React.memo(
   React.forwardRef<
     HTMLDivElement,
@@ -10,26 +10,11 @@ export const HeaderCell = React.memo(
       children: React.ReactNode;
     }
   >(({ isMeasureInstance, children }, ref) => {
-    const {
-      isPinned,
-      width,
-      headerId,
-      canDrag,
-      canPin,
-      canResize,
-      isResizing,
-    } = useColProps({
-      callback: ({ header, vheader, column }) => {
-        const canDrag = header.isPlaceholder ? false : true;
-        const canPin = header.column.getCanPin();
-        const canResize = header?.column.getCanResize();
+    const { isPinned, width, headerId } = useColProps({
+      callback: ({ header, vheader }) => {
         const state = vheader.state;
 
         return {
-          canDrag,
-          canPin,
-          canResize,
-          isResizing: column.getIsResizing(),
           isPinned: state.isPinned,
           width: state.width,
           headerId: header.id,
@@ -39,7 +24,6 @@ export const HeaderCell = React.memo(
       dependencies: [{ type: "tanstack_table" }],
       areCallbackOutputEqual: shallowEqual,
     });
-    const colRef = useColRef();
     return (
       <div
         className="th"
@@ -67,68 +51,7 @@ export const HeaderCell = React.memo(
       >
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
           {children}
-          <div style={{ width: "4px" }}></div>
         </div>
-        {canDrag && canPin && (
-          <div className="flex gap-1 justify-center">
-            {isPinned !== "start" ? (
-              <button
-                className="border rounded px-2"
-                onClick={() => {
-                  colRef().column.pin("left");
-                }}
-              >
-                {"<="}
-              </button>
-            ) : null}
-            {isPinned ? (
-              <button
-                className="border rounded px-2"
-                onClick={() => {
-                  colRef().column.pin(false);
-                  // table.resetColumnSizing(true);
-                }}
-              >
-                X
-              </button>
-            ) : null}
-            {isPinned !== "end" ? (
-              <button
-                className="border rounded px-2"
-                onClick={() => {
-                  colRef().column.pin("right");
-                }}
-              >
-                {"=>"}
-              </button>
-            ) : null}
-          </div>
-        )}
-        {canResize && (
-          <div
-            {...{
-              onDoubleClick: () => colRef().column.resetSize(),
-              onMouseDown: (ev) => colRef().header.getResizeHandler()(ev),
-              onTouchStart: (ev) => colRef().header.getResizeHandler()(ev),
-              className: `resizer ${colRef().column.getIsResizing() ? "isResizing" : ""}`,
-              style: {
-                position: "absolute",
-                top: 0,
-                height: "100%",
-                right: 0,
-                width: "5px",
-                background: "var(--table-border-color)",
-                cursor: "col-resize",
-                userSelect: "none",
-                touchAction: "none",
-                opacity: isResizing ? 1 : 0,
-                backgroundColor: isResizing
-                  ? "var(--table-border-color)"
-                  : "var(--table-border-color)",
-              },
-            }}
-          />
-        )}
       </div>
     );
   }),

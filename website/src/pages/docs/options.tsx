@@ -1,11 +1,11 @@
 import { useTheme } from "@/contexts/use_theme";
 import { decorateColumnHelper, ReactTanstackTableUi } from "@rttui/core";
 import {
-  CellCode,
   CellLink,
   CellText,
   darkModeVars,
   lightModeVars,
+  CellNumber,
   TailwindSkin,
 } from "@rttui/skin-tailwind";
 import {
@@ -144,7 +144,7 @@ const columns = [
   columnHelper.accessor("type", {
     header: "Type",
     cell: (props) => {
-      return <CellCode code={props.getValue()} />;
+      return <CellNumber>{props.getValue()}</CellNumber>;
     },
   }),
   columnHelper.accessor("description", {

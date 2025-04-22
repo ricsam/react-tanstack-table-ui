@@ -67,6 +67,12 @@ export const navigation: NavItem[] = [
     })),
   },
   {
+    title: "Blog",
+    children: [
+      { title: "RTTUI Architecture", path: "/blog/architecture" },
+    ],
+  },
+  {
     title: "API Reference",
     children: [
       { title: "API Reference", path: "/api" },

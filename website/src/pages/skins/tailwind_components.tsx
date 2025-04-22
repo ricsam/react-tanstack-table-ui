@@ -128,33 +128,6 @@ columnHelper.accessor('type', {
 })`}
       </CodeBlock>
 
-      <h3>CellStatus</h3>
-      <p>
-        Shows a status indicator with color coding.
-      </p>
-      <CodeBlock language="tsx">
-{`import { CellStatus } from '@rttui/skin-tailwind';
-
-columnHelper.accessor('status', {
-  header: 'Status',
-  cell: ({ getValue }) => {
-    const status = getValue();
-    return (
-      <CellStatus 
-        status={status}
-        // Map status values to colors
-        colorMap={{
-          active: 'green',
-          pending: 'yellow',
-          inactive: 'gray',
-          error: 'red'
-        }}
-      />
-    );
-  },
-})`}
-      </CodeBlock>
-
       <h3>CellTag</h3>
       <p>
         Displays one or more tags.
@@ -181,19 +154,6 @@ columnHelper.accessor('tags', {
 columnHelper.accessor('website', {
   header: 'Website',
   cell: ({ getValue }) => <CellLink href={getValue()}>{getValue()}</CellLink>,
-})`}
-      </CodeBlock>
-
-      <h3>CellCode</h3>
-      <p>
-        Displays code snippets with monospace font and optional syntax highlighting.
-      </p>
-      <CodeBlock language="tsx">
-{`import { CellCode } from '@rttui/skin-tailwind';
-
-columnHelper.accessor('code', {
-  header: 'Code Snippet',
-  cell: ({ getValue }) => <CellCode>{getValue()}</CellCode>,
 })`}
       </CodeBlock>
 
@@ -244,35 +204,6 @@ columnHelper.accessor('name', {
       {getValue()}
     </CellText>
   ),
-})`}
-      </CodeBlock>
-
-      <p>
-        You can also extend these components to create your own custom variants:
-      </p>
-      <CodeBlock language="tsx">
-{`import { CellStatus } from '@rttui/skin-tailwind';
-
-// Create a custom status component with predefined color mappings
-export function OrderStatus({ status }) {
-  return (
-    <CellStatus
-      status={status}
-      colorMap={{
-        completed: 'green',
-        processing: 'blue',
-        shipped: 'purple',
-        cancelled: 'red',
-        refunded: 'yellow',
-      }}
-    />
-  );
-}
-
-// Usage in a column definition
-columnHelper.accessor('orderStatus', {
-  header: 'Order Status',
-  cell: ({ getValue }) => <OrderStatus status={getValue()} />,
 })`}
       </CodeBlock>
     </div>

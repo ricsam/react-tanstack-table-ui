@@ -20,7 +20,5 @@ export { Cell } from "./cell";
 // eslint-disable-next-line react-refresh/only-export-components
 export { darkModeVars, lightModeVars } from "./vars";
 
-export { CellCode } from "./cell_code";
 export { CellLink } from "./cell_link";
 export { CellPercent } from "./cell_percent";
-export { CellStatus } from "./cell_status";

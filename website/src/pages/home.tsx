@@ -234,7 +234,7 @@ export function HomePage() {
     const groupedColumns = [
       columnHelper.group({
         id: "group_user_info",
-        header: "User Information",
+        header: "User Info",
         columns: baseColumns.slice(0, 2),
       }),
       columnHelper.group({

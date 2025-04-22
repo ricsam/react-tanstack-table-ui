@@ -1,0 +1,56 @@
+import { Images } from "./images";
+
+# Building High-Performance Data Tables with Sticky Columns in React
+
+Building data-intensive tables and data grids with many rows and columns is challenging from a performance perspective. `<ReactTanstackTableUi />` was developed specifically for excellent performance while supporting browser-native sticky columns and rows.
+
+## Why Build Another Table Component?
+
+Sticky columns are crucial in large datasets as they allow users to pin critical columns, maintaining context during horizontal scrolling.
+
+When trying to build a table that is as performant as possible while scrolling, each moving element should have `position: absolute` and be translated to the correct location using `CSS transform`. Having the moving elements outside the normal document flow allows the DOM to update without causing heavy browser reflows.
+
+However, this approach makes implementing browser-native sticky columns or rows impossible, as elements outside the normal document flow can't be sticky.
+
+One solution to this is to implement sticky columns **on top of** the scrolling element, synchronizing scroll positions using JavaScript. This approach, while performant, may look a bit off, as there can be a latency in the sticky columns moving while scrolling vertically.
+
+---
+
+## How the Browser Handles Scroll Performance
+
+Modern browsers use multiple threads to separate concerns:
+
+- **Main thread**: Handles JavaScript execution, layout, styling, DOM changes, etc.
+- **Compositor thread** (or rendering thread): Handles visual updates like scrolling, animations, and GPU-accelerated drawing.
+
+Browsers aim to offload scrolling to the **compositor thread** to keep scrolling smooth—even under heavy JS computation. This offloading is why native scrolling feels fluid even when the main thread is busy: the compositor doesn't wait for JavaScript.
+
+However, there's a catch.
+
+If a JavaScript component (like a manually implemented sticky header or pinned column) wants to respond to a scroll event, it must **poll the scroll position from the main thread**, which introduces delay. This can result in visible desynchronization between the main table scroll and the sticky elements.
+
+Other libraries, like **AG Grid**, often choose this JavaScript synchronization strategy. While it makes scrolling performant, it can make sticky elements feel like they move at different speeds.
+
+---
+
+## Using Native Stickiness with `<ReactTanstackTableUi />`
+
+For `<ReactTanstackTableUi />`, the goal was to use **browser-native sticky elements** and **normal document flow**, in contrast to many other data-grid components. This strategy introduces slightly more layout overhead, but results in **perfect scroll behavior** for sticky headers and columns.
+
+As shown in the screenshots below, scripting performance (JavaScript execution) was heavily optimized to offset the slower layout caused by this rendering strategy.
+
+<Images />
+
+---
+
+## Optimizing Scripting Performance with TanStack Table
+
+The component uses [`@tanstack/react-table`](https://tanstack.com/table) to manage table state. However, `@tanstack/react-table` currently lacks **fine-grained re-render optimizations**.
+
+To address this limitation:
+
+- `<ReactTanstackTableUi />` includes a **specialized wrapper component** that monitors and consolidates props, state, and DOM updates.
+- These updates are funneled into a **structured internal store** (similar to a "render model"), which computes only the changes necessary for rendering.
+- The table root is rendered through a **memoized entry point** (`React.memo`) to prevent unnecessary re-renders when the parent component updates.
+
+This results in a table that can handle complex React components in each cell, pin columns and rows natively, and scroll fluidly—while keeping the JavaScript execution as light as possible.

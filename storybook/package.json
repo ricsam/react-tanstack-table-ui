@@ -7,7 +7,9 @@
   "dependencies": {
     "@rttui/core": "workspace:^",
     "@rttui/skin-anocca": "workspace:^",
-    "@rttui/skin-tailwind": "workspace:^"
+    "@rttui/skin-tailwind": "workspace:^",
+    "@rttui/skin-mui": "workspace:^",
+    "@storybook/client-api": "^7.6.17"
   },
   "scripts": {
     "dev": "vite",

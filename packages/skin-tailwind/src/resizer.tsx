@@ -49,6 +49,13 @@ export function Resizer() {
         ev.stopPropagation();
         ev.preventDefault();
       }}
+      onClick={(ev) => {
+        if (ev.metaKey) {
+          ev.stopPropagation();
+          ev.preventDefault();
+          crushHeader(colRef().header);
+        }
+      }}
       onMouseDown={(ev: any) => colRef().header.getResizeHandler()(ev)}
       onTouchStart={(ev: any) => colRef().header.getResizeHandler()(ev)}
       className={`absolute top-0 right-0 h-full w-1 cursor-col-resize transition-opacity opacity-0 hover:opacity-50 hover:w-1 bg-indigo-500 dark:bg-indigo-400 ${isResizing ? "opacity-50 w-1" : ""}`}

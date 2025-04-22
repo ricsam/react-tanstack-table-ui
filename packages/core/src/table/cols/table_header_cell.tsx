@@ -1,4 +1,4 @@
-import { flexRender } from "@tanstack/react-table";
+import { flexRender, Header } from "@tanstack/react-table";
 import React from "react";
 import { useMeasureCellContext } from "../../measure_cell_context";
 import { createTablePropsSelector } from "../../utils";
@@ -102,11 +102,14 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
         ref={
           measuring
             ? (ref) => {
-                const getHeader = () =>
-                  tableRef.current.virtualData.header.headerLookup[groupIndex][
-                    headerIndex
-                  ].header;
+                const getHeader = (): Header<any, any> | undefined =>
+                  tableRef.current.virtualData.header.headerLookup?.[
+                    groupIndex
+                  ]?.[headerIndex]?.header;
                 const header = getHeader();
+                if (!header) {
+                  return;
+                }
                 measuring.storeRef(ref, {
                   type: "header",
                   id: header.id,

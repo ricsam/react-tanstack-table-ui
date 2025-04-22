@@ -29,6 +29,9 @@ import { HeaderGroupsPage } from "@/pages/core-concepts/header_groups";
 import { AddResizerPage } from "@/pages/core-concepts/add_resizer";
 import { SkinsLandingPage } from "@/pages/skins/skins_landing_page";
 
+// Blog posts
+import { BlogComponent } from "@/blog/architecture_blog_post";
+
 // Root route with the main layout
 export const rootRoute = createRootRoute({
   component: RootLayout,
@@ -198,14 +201,17 @@ export const apiRoute = createRoute({
   component: APIPage,
 });
 
+// Blog Routes
+export const blogArchitectureRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/blog/architecture",
+  component: BlogComponent,
+});
+
 // Create the route tree using the routes
 export const routeTree = rootRoute.addChildren([
   homeRoute,
-  docsRoute.addChildren([
-    docsIndexRoute,
-    gettingStartedRoute,
-    optionsRoute,
-  ]),
+  docsRoute.addChildren([docsIndexRoute, gettingStartedRoute, optionsRoute]),
   skinsRoute,
   defaultSkinRoute,
   anoccaSkinRoute,
@@ -226,4 +232,5 @@ export const routeTree = rootRoute.addChildren([
   examplesRoute,
   ...exampleRoutes,
   apiRoute,
+  blogArchitectureRoute,
 ]);
