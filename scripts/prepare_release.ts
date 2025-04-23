@@ -1,6 +1,5 @@
 import { $, Glob } from "bun";
 import path from "path";
-import fs from "fs/promises";
 const glob = new Glob("*/package.json");
 
 const projectRoot = path.join(__dirname, "../");

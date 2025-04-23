@@ -1,6 +1,16 @@
 /// <reference types="vite/client" />
 
 declare module '*.mdx' {
-  let MDXComponent: (props: any) => JSX.Element
-  export default MDXComponent
-} 
+  import type { MDXProps } from 'mdx/types'
+  import type { Toc } from '@stefanprobst/rehype-extract-toc'
+
+  export const tableOfContents: Toc
+  export default function MDXContent(props: MDXProps): JSX.Element
+}
+declare module '*.md' {
+  import type { MDXProps } from 'mdx/types'
+  import type { Toc } from '@stefanprobst/rehype-extract-toc'
+
+  export const tableOfContents: Toc
+  export default function MDXContent(props: MDXProps): JSX.Element
+}

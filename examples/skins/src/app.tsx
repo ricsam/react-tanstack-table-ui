@@ -151,7 +151,7 @@ export function App() {
                 height={bounds.height}
                 table={table as Table<any>}
                 skin={activeSkin}
-                renderSubComponent={({ row }) => {
+                renderSubComponent={(row) => {
                   return (
                     <pre style={{ fontSize: "10px", textAlign: "left" }}>
                       <code>{JSON.stringify(row.original, null, 2)}</code>

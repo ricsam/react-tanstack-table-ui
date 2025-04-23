@@ -12,6 +12,7 @@ import {
   ReactTanstackTableUi,
 } from "./react_tanstack_table_ui_story_component";
 import { useSkinParam } from "./use_skin_param";
+import { AutoSizer } from "@rttui/core";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -413,5 +414,24 @@ export const FullExample: Story = {
     renderSubComponent(row) {
       return <div className="p-4 bg-gray-100">{row.original.name}</div>;
     },
+  },
+};
+
+export const AutoSizerExample: Story = {
+  args: {
+    data: "big",
+    columns: "many",
+    width: undefined,
+    height: undefined,
+  },
+  render: function Render(args) {
+    const skin = useSkinParam();
+    return (
+      <div style={{ width: "50vw", height: "50vh", display: "flex" }}>
+        <AutoSizer style={{ flex: 1, width: "100%", height: "100%" }}>
+          <ReactTanstackTableUi {...args} skin={skin} />
+        </AutoSizer>
+      </div>
+    );
   },
 };

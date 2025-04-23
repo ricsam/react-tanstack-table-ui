@@ -471,7 +471,7 @@ export function HomePage() {
                   </p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                  Choose from pre-built Material UI or Anocca themes, or create
+                  Choose from pre-built Material UI or Bleu themes, or create
                   your own custom skin.
                 </dd>
               </div>

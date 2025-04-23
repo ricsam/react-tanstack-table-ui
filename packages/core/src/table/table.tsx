@@ -17,6 +17,7 @@ import {
 } from "./table_context";
 import { ReactTanstackTableUiProps, UiProps } from "./types";
 import { useRttuiTable } from "./use_rttui_table";
+import { AutoSizerContext } from "./contexts/auto_sizer_context";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -29,10 +30,13 @@ declare module "@tanstack/react-table" {
 export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
   props: ReactTanstackTableUiProps<T>,
 ) {
+  const autoSizerContext = React.useContext(AutoSizerContext);
+  const width = props.width ?? autoSizerContext?.width;
+  const height = props.height ?? autoSizerContext?.height;
   return (
     <MeasureProvider
-      width={props.width}
-      height={props.height}
+      width={width}
+      height={height}
       crushMinSizeBy={props.crushMinSizeBy}
       scrollbarWidth={props.scrollbarWidth}
       skin={props.skin}
@@ -44,7 +48,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
     >
       <MeasureSwitch>
         <TablePropsProvider>
-          <TablePropsUpdater {...props} />
+          <TablePropsUpdater {...props} width={width} height={height} />
         </TablePropsProvider>
       </MeasureSwitch>
     </MeasureProvider>

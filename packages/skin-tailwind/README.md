@@ -71,5 +71,3 @@ The following components are exported:
 - `CellPercent`
 - `darkModeVars`: CSS variable definitions for dark mode.
 - `lightModeVars`: CSS variable definitions for light mode.
-
-</rewritten_file> 

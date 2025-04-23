@@ -9,6 +9,7 @@ interface SidebarLinkItem {
 interface SidebarItemWithChildren {
   title: string;
   children: (SidebarLinkItem | SidebarItemWithChildren)[];
+  defaultExpanded?: boolean;
 }
 
 type SidebarItem = SidebarLinkItem | SidebarItemWithChildren;
@@ -17,12 +18,14 @@ interface SidebarSectionProps {
   title: string;
   items: SidebarItem[];
   defaultExpanded?: boolean;
+  path?: string;
 }
 
 export function SidebarSection({
   title,
   items,
   defaultExpanded = true,
+  path,
 }: SidebarSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -57,10 +60,15 @@ export function SidebarSection({
           title={item.title}
           items={item.children}
           depth={depth + 1}
+          defaultExpanded={item.defaultExpanded}
         />
       );
     }
   };
+
+  if (items.length === 0 && path) {
+    return renderItem({ title, path }, 1);
+  }
 
   return (
     <div className="space-y-1">
@@ -96,14 +104,16 @@ interface SidebarNestedSectionProps {
   title: string;
   items: (SidebarLinkItem | SidebarItemWithChildren)[];
   depth: number;
+  defaultExpanded?: boolean;
 }
 
 function SidebarNestedSection({
   title,
   items,
   depth,
+  defaultExpanded = false,
 }: SidebarNestedSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const isLinkItem = (item: SidebarItem): item is SidebarLinkItem => {
     return "path" in item;
   };
@@ -132,7 +142,12 @@ function SidebarNestedSection({
           {title}
         </div>
         {isExpanded && (
-          <div style={{ paddingLeft: `${16 + (depth - 1) * 16}px`, marginLeft: '-8px' }}>
+          <div
+            style={{
+              paddingLeft: `${16 + (depth - 1) * 16}px`,
+              marginLeft: "-8px",
+            }}
+          >
             <div className="space-y-1 border-l border-gray-200 dark:border-gray-700">
               {items.map((item) => {
                 if (isLinkItem(item)) {
@@ -159,6 +174,7 @@ function SidebarNestedSection({
                       title={item.title}
                       items={item.children}
                       depth={depth + 1}
+                      defaultExpanded={item.defaultExpanded}
                     />
                   );
                 }

@@ -53,6 +53,7 @@ import type { CheckboxProps } from "./default_skin/checkbox";
 import type { CellAvatarProps } from "./default_skin/cell_avatar";
 import type { CellAvatarWithTextProps } from "./default_skin/cell_avatar_with_text";
 import type { ReactTanstackTableUiProps } from "./table/types";
+import { AutoSizer } from "./auto_sizer";
 
 export {
   ReactTanstackTableUi,
@@ -91,6 +92,7 @@ export {
   Cell,
   CellLink,
   CellPercent,
+  AutoSizer,
 };
 export type {
   Skin,

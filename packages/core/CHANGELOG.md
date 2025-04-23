@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.36
+
+### Patch Changes
+
+- Add auto resizer component
+
 ## 1.0.35
 
 ### Patch Changes

@@ -8,6 +8,7 @@ interface NavLinkItem {
 interface NavGroupItem {
   title: string;
   children: (NavLinkItem | NavGroupItem)[];
+  defaultExpanded?: boolean;
 }
 
 export type NavItem = NavLinkItem | NavGroupItem;
@@ -15,67 +16,60 @@ export type NavItem = NavLinkItem | NavGroupItem;
 export const navigation: NavItem[] = [
   {
     title: "Getting Started",
-    children: [
-      { title: "Introduction", path: "/docs/getting-started" },
-      { title: "Options", path: "/docs/options" },
-    ],
+    path: "/docs/getting-started",
   },
   {
-    title: "Core Concepts",
-    children: [
-      { title: "Column Auto Sizing", path: "/core-concepts/column-auto-sizing" },
-      { title: "Table Auto Sizing", path: "/core-concepts/table-auto-sizing" },
-      { title: "Toggle Column Pinning", path: "/core-concepts/toggle-col-pinning" },
-      { title: "Toggle Row Pinning", path: "/core-concepts/toggle-row-pinning" },
-      { title: "Header Groups", path: "/core-concepts/header-groups" },
-      { title: "Adding Resizers", path: "/core-concepts/add-resizer" },
-    ],
+    title: "API",
+    path: "/docs/api",
   },
   {
     title: "Skins",
     children: [
-      { title: "Default Skin", path: "/skins/default" },
-      { 
-        title: "Bleu Skin", 
+      {
+        title: "Introduction",
+        path: "/skins/",
+      },
+      {
+        title: "Default",
+        children: [
+          { title: "Setup", path: "/skins/default" },
+          { title: "Storybook", path: "/skins/default/storybook" },
+        ],
+      },
+      {
+        title: "Bleu",
         children: [
           { title: "Setup", path: "/skins/bleu" },
           { title: "Storybook", path: "/skins/bleu/storybook" },
-        ]
+        ],
       },
-      { 
-        title: "MUI Skin", 
+      {
+        title: "MUI",
         children: [
           { title: "Setup", path: "/skins/mui" },
           { title: "Storybook", path: "/skins/mui/storybook" },
-        ]
+        ],
       },
-      { 
-        title: "Tailwind Skin", 
+      {
+        title: "Tailwind",
         children: [
           { title: "Setup", path: "/skins/tailwind" },
-          { title: "Components", path: "/skins/tailwind/components" },
           { title: "Storybook", path: "/skins/tailwind/storybook" },
-        ]
+        ],
       },
     ],
+    defaultExpanded: true,
   },
   {
     title: "Examples",
-    children: Object.values(examples).map(example => ({
+    children: Object.values(examples).map((example) => ({
       title: example.title,
       path: `/examples/${example.id}`,
     })),
   },
   {
     title: "Blog",
-    children: [
-      { title: "RTTUI Architecture", path: "/blog/architecture" },
-    ],
+    children: [{ title: "RTTUI Architecture", path: "/blog/architecture" }],
+    defaultExpanded: true,
   },
-  {
-    title: "API Reference",
-    children: [
-      { title: "API Reference", path: "/api" },
-    ],
-  },
-]; 
+];

@@ -15,7 +15,11 @@ export const TableBody = React.memo(function TableBody() {
       };
     },
     areCallbackOutputEqual: shallowEqual,
-    dependencies: [{ type: "ui_props" }, { type: "tanstack_table" }],
+    dependencies: [
+      { type: "ui_props" },
+      { type: "tanstack_table" },
+      { type: "row_visible_range" },
+    ],
   });
 
   if (!hasRows) {

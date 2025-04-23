@@ -30,7 +30,7 @@ const skins = [
 
 export function SkinsLandingPage() {
   return (
-    <div className="prose max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
       <h1>Skins</h1>
 
       <p>
@@ -47,6 +47,6 @@ export function SkinsLandingPage() {
           <p>{skin.description}</p>
         </React.Fragment>
       ))}
-    </div>
+    </>
   );
 }

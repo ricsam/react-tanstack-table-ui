@@ -10,7 +10,7 @@ export function App() {
         width={1920}
         height={1600}
         table={table}
-        renderSubComponent={({ row }) => {
+        renderSubComponent={(row) => {
           return (
             <pre style={{ fontSize: "10px", textAlign: "left" }}>
               <code>{JSON.stringify(row.original, null, 2)}</code>

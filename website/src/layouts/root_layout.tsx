@@ -1,12 +1,317 @@
-import { Link, Outlet } from "@tanstack/react-router";
-import { useTheme } from "@/contexts/use_theme";
 import logoFullDark from "@/assets/logos/logo-full-dark.svg";
 import logoFullLight from "@/assets/logos/logo-full-light.svg";
 import logoIconDark from "@/assets/logos/logo-icon-dark.svg";
 import logoIconLight from "@/assets/logos/logo-icon-light.svg";
-import { useState, useEffect } from "react";
 import { SidebarSection } from "@/components/sidebar/sidebar_section";
+import { useTheme } from "@/contexts/use_theme";
 import { navigation } from "@/data/navigation";
+import { Toc, TocEntry } from "@stefanprobst/rehype-extract-toc";
+import { Link, Outlet, useMatches } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+// TableOfContents component
+const TableOfContents = ({
+  toc,
+  sidebarOpen,
+}: {
+  toc: Toc;
+  sidebarOpen: boolean;
+}) => {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Check if we have any valid TOC items with IDs
+  const hasValidItems = toc.some(
+    (item) =>
+      Boolean(item.id) ||
+      (item.children && item.children.some((child) => Boolean(child.id))),
+  );
+
+  // Helper function to find the first item with an ID
+  const findFirstItemWithId = useCallback(
+    (items: TocEntry[]): string | null => {
+      for (const item of items) {
+        if (item.id) return item.id;
+        if (item.children && item.children.length > 0) {
+          const childId = findFirstItemWithId(item.children);
+          if (childId) return childId;
+        }
+      }
+      return null;
+    },
+    [],
+  );
+
+  // Check window size
+  useEffect(() => {
+    const checkSize = () => {
+      setIsVisible(window.innerWidth >= (sidebarOpen ? 1280 : 1280));
+    };
+
+    checkSize();
+    window.addEventListener("resize", checkSize);
+    return () => window.removeEventListener("resize", checkSize);
+  }, [sidebarOpen]);
+
+  // Get all headers that should be observed
+  const getHeaderElements = useCallback(() => {
+    return document.querySelectorAll(
+      "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]",
+    );
+  }, []);
+
+  // Find all TOC IDs for tracking
+  const getAllIds = useCallback((entries: TocEntry[]): string[] => {
+    let ids: string[] = [];
+
+    entries.forEach((entry) => {
+      if (entry.id) ids.push(entry.id);
+      if (entry.children && entry.children.length > 0) {
+        ids = [...ids, ...getAllIds(entry.children)];
+      }
+    });
+
+    return ids;
+  }, []);
+
+  const disableScrollRef = useRef(false);
+
+  // Improved scroll spy
+  useEffect(() => {
+    // If there are no valid items, don't set up observers
+    if (!hasValidItems || !isVisible) return;
+
+    const allIds = getAllIds(toc);
+
+    // Function to determine which heading is currently active
+    const determineActiveHeading = () => {
+      // Special case for top of page
+      if (window.scrollY < 100) {
+        const firstId = findFirstItemWithId(toc);
+        if (firstId) {
+          setActiveId(firstId);
+          return;
+        }
+      }
+
+      // Special case for bottom of page
+      const bottomPosition = window.innerHeight + window.scrollY;
+      const isAtBottom = bottomPosition >= document.body.offsetHeight - 50;
+
+      if (isAtBottom) {
+        // Find the last valid ID
+        const lastValidId = allIds[allIds.length - 1];
+        if (lastValidId) {
+          setActiveId(lastValidId);
+          return;
+        }
+      }
+
+      // Get all headings and convert to array
+      const headings = Array.from(getHeaderElements()) as HTMLElement[];
+      if (headings.length === 0) return;
+
+      // Calculate viewport center
+      const viewportHeight = window.innerHeight;
+      const viewportCenter = viewportHeight / 2;
+
+      // Map headings to their positions and calculate section centers
+      const headingData = headings.map((heading, index) => {
+        const rect = heading.getBoundingClientRect();
+        let sectionBottom;
+
+        // Determine section bottom (next heading or viewport bottom)
+        if (index < headings.length - 1) {
+          const nextHeadingRect = headings[index + 1].getBoundingClientRect();
+          sectionBottom = nextHeadingRect.top;
+        } else {
+          // For the last heading, check if we can see the bottom of the page
+          const pageBottomPosition = document.body.offsetHeight;
+          const scrollBottom = window.scrollY + viewportHeight;
+          const remainingPage = Math.max(0, pageBottomPosition - scrollBottom);
+
+          sectionBottom =
+            remainingPage > 0
+              ? viewportHeight // The section extends beyond viewport
+              : document.body.getBoundingClientRect().bottom;
+        }
+
+        // Calculate section center and distance to viewport center
+        const sectionCenter = (rect.top + sectionBottom) / 2;
+        const distanceToCenter = Math.abs(sectionCenter - viewportCenter);
+
+        // Check if section is visible
+        const isVisible =
+          (rect.bottom > 0 && rect.top < viewportHeight) || // At least partially visible
+          (rect.top <= 0 && sectionBottom >= 0); // Header is above viewport but section is visible
+
+        return {
+          id: heading.id,
+          top: rect.top,
+          bottom: sectionBottom,
+          sectionCenter,
+          distanceToCenter,
+          isVisible,
+          // How much of the section is visible as a percentage
+          visiblePercentage: isVisible
+            ? (Math.min(sectionBottom, viewportHeight) -
+                Math.max(rect.top, 0)) /
+              (sectionBottom - rect.top)
+            : 0,
+        };
+      });
+
+      // Filter for visible sections
+      const visibleSections = headingData.filter(
+        (section) => section.isVisible,
+      );
+
+      if (visibleSections.length === 0) {
+        // No sections visible, find closest section (above or below)
+        const closestSection = headingData.sort(
+          (a, b) =>
+            Math.min(Math.abs(a.top), Math.abs(a.bottom - viewportHeight)) -
+            Math.min(Math.abs(b.top), Math.abs(b.bottom - viewportHeight)),
+        )[0];
+        setActiveId(closestSection.id);
+      } else if (visibleSections.length === 1) {
+        // Only one section visible, highlight it
+        setActiveId(visibleSections[0].id);
+      } else {
+        // Multiple sections visible, prioritize by:
+        // 1. Section with center closest to viewport center
+        // 2. Section with most visibility percentage
+
+        // First check if any section has high visibility (over 50%)
+        const highlyVisibleSections = visibleSections.filter(
+          (s) => s.visiblePercentage > 0.5,
+        );
+
+        if (highlyVisibleSections.length > 0) {
+          // If we have highly visible sections, choose the one closest to center
+          const closestToCenter = highlyVisibleSections.sort(
+            (a, b) => a.distanceToCenter - b.distanceToCenter,
+          )[0];
+          setActiveId(closestToCenter.id);
+        } else {
+          // Otherwise just pick the section closest to center
+          const closestToCenter = visibleSections.sort(
+            (a, b) => a.distanceToCenter - b.distanceToCenter,
+          )[0];
+          setActiveId(closestToCenter.id);
+        }
+      }
+    };
+
+    // Initial check
+    determineActiveHeading();
+
+    // Scroll event listener with throttling for better performance
+    let ticking = false;
+    const scrollHandler = () => {
+      if (disableScrollRef.current) return;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          determineActiveHeading();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", scrollHandler, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", scrollHandler);
+    };
+  }, [
+    hasValidItems,
+    toc,
+    getHeaderElements,
+    getAllIds,
+    isVisible,
+    findFirstItemWithId,
+  ]);
+
+  // If there are no valid items or screen is too small, don't render
+  if (!hasValidItems || !isVisible) return null;
+
+  const scrollToHeader = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      disableScrollRef.current = true;
+      window.scrollTo({
+        top: element.offsetTop - 100,
+        behavior: "instant",
+      });
+      window.addEventListener(
+        "scroll",
+        () => {
+          disableScrollRef.current = false;
+        },
+        {
+          once: true,
+          passive: true,
+        },
+      );
+      setActiveId(id);
+    }
+  };
+
+  const renderTocItem = (item: TocEntry, parentDepth = 0) => {
+    // Skip rendering if no id is available
+    if (!item.id) return null;
+
+    const isActive = activeId === item.id;
+    const depth = parentDepth + item.depth;
+    const children = item.children || [];
+    const hasChildren = children.length > 0;
+
+    return (
+      <li key={item.id} className="-ml-px flex flex-col items-start">
+        <button
+          onClick={() => scrollToHeader(item.id!)}
+          className={`
+            inline-block border-l py-2 pl-4 text-left
+            ${
+              isActive
+                ? "border-primary-600 dark:border-primary-400 text-primary-700 dark:text-primary-300 font-medium"
+                : "border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            }
+            text-sm
+          `}
+          style={{
+            paddingLeft: `${2 + depth * 6}px`,
+          }}
+        >
+          {item.value}
+        </button>
+        {hasChildren && (
+          <ul className="w-full flex flex-col border-l border-gray-200 dark:border-gray-700">
+            {children.map((child) => renderTocItem(child, depth))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  return (
+    <nav
+      className="fixed right-8 top-16 w-72 z-10"
+      style={{ display: isVisible ? "block" : "none" }}
+    >
+      <div className="max-h-[calc(100vh-8rem)] overflow-y-auto p-4">
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+          On this page
+        </h3>
+        <ul className="flex flex-col space-y-1 border-l border-gray-200 dark:border-gray-700">
+          {toc.map((item) => renderTocItem(item))}
+        </ul>
+      </div>
+    </nav>
+  );
+};
 
 export function RootLayout() {
   const { theme, toggleTheme } = useTheme();
@@ -14,6 +319,13 @@ export function RootLayout() {
   const logoIcon = theme === "light" ? logoIconLight : logoIconDark;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  const matches = useMatches();
+  const layout = matches.find((match) => match.staticData?.layout)?.staticData
+    ?.layout;
+  const tableOfContents = matches.find(
+    (match) => match.staticData?.tableOfContents,
+  )?.staticData?.tableOfContents;
 
   // Handle responsive behavior
   useEffect(() => {
@@ -100,7 +412,10 @@ export function RootLayout() {
                   key={section.title}
                   title={section.title}
                   items={"children" in section ? section.children : []}
-                  defaultExpanded
+                  path={"path" in section ? section.path : undefined}
+                  defaultExpanded={
+                    "defaultExpanded" in section && section.defaultExpanded
+                  }
                 />
               ))}
             </>
@@ -133,7 +448,7 @@ export function RootLayout() {
                 </svg>
               </Link>
               <Link
-                to="/core-concepts/column-auto-sizing"
+                to={"/core-concepts/column-auto-sizing" as any}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 activeProps={{
                   className:
@@ -156,7 +471,7 @@ export function RootLayout() {
                 </svg>
               </Link>
               <Link
-                to="/skins/default"
+                to={"/skins/default" as any}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 activeProps={{
                   className:
@@ -179,7 +494,7 @@ export function RootLayout() {
                 </svg>
               </Link>
               <Link
-                to="/examples/minimal"
+                to={"/examples/minimal" as any}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 activeProps={{
                   className:
@@ -202,7 +517,7 @@ export function RootLayout() {
                 </svg>
               </Link>
               <Link
-                to="/api"
+                to={"/api" as any}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 activeProps={{
                   className:
@@ -332,20 +647,39 @@ export function RootLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col">
         <main className="flex-1 overflow-auto">
-          <Outlet />
+          <div className={tableOfContents ? "xl:pr-72" : ""}>
+            <div
+              className={
+                layout === "full"
+                  ? "w-full"
+                  : "prose dark:prose-invert max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+              }
+            >
+              <Outlet />
+            </div>
+            {tableOfContents && (
+              <TableOfContents
+                toc={tableOfContents}
+                sidebarOpen={sidebarOpen}
+              />
+            )}
+          </div>
+          <TanStackRouterDevtools position="bottom-right" />
         </main>
         <footer className="border-t border-gray-200 dark:border-gray-700 py-4">
           <div className="px-4">
-            <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
-              MIT License {new Date().getFullYear()}{" "}
-              <a
-                href="https://github.com/ricsam"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                @ricsam
-              </a>
-            </p>
+            <div className="h-[36px] flex items-center justify-center">
+              <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
+                MIT License {new Date().getFullYear()}{" "}
+                <a
+                  href="https://github.com/ricsam"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  @ricsam
+                </a>
+              </p>
+            </div>
           </div>
         </footer>
       </div>

@@ -772,6 +772,7 @@ function useVirtualizers({
       columnOverscan: getColOverscan(),
       initialOffset: getColScrollOffset(),
       observeElementOffset: horObserveElementOffset("header", 0),
+      onChange,
     });
   };
 
@@ -805,7 +806,12 @@ function useVirtualizers({
         observeElementOffset: verObserveElementOffset,
         estimateSize: () => rowRefs.current.skin.rowHeight,
         getItemKey: (index: number) => rowRefs.current._slow_allRows[index].id,
-        onChange: () => {},
+        onChange: (_instance, sync) => {
+          if (!sync) {
+            // this happens for example when resizing a virtual item
+            onChange(false);
+          }
+        },
         measureElement: (
           element: any,
           entry: ResizeObserverEntry | undefined,
@@ -880,7 +886,7 @@ function useVirtualizers({
           virtualizers.colVirtualizers[type][groupIndex];
         currentVirtualizer.virtualizer.setOptions({
           ...currentVirtualizer.virtualizer.options,
-          ...getNewColVirtualizerOptions(group._slow_headers),
+          ...getNewColVirtualizerOptions(group._slow_headers, onChange),
         });
         // update the lookup
         currentVirtualizer._slow_lookup = group._slow_headers;
@@ -898,6 +904,7 @@ function useVirtualizers({
           columnOverscan: getColOverscan(),
           initialOffset: getColScrollOffset(),
           observeElementOffset: horObserveElementOffset(type, groupIndex),
+          onChange,
         }),
         _slow_lookup: group._slow_headers,
         outdated: false,
@@ -923,7 +930,7 @@ function useVirtualizers({
     const main = virtualizers.colVirtualizers.main;
     main.virtualizer.setOptions({
       ...main.virtualizer.options,
-      ...getNewColVirtualizerOptions(_slow_leafHeaders),
+      ...getNewColVirtualizerOptions(_slow_leafHeaders, onChange),
     });
     // update the lookup
     main._slow_lookup = _slow_leafHeaders;
@@ -1109,6 +1116,7 @@ function useVirtualizers({
 
 function getNewColVirtualizerOptions(
   _slow_allHeaders: Header<any, unknown>[],
+  onChange: (sync: boolean) => void,
 ): Pick<
   VirtualizerOptions<any, any>,
   "count" | "estimateSize" | "rangeExtractor" | "getItemKey" | "onChange"
@@ -1133,7 +1141,12 @@ function getNewColVirtualizerOptions(
       return sortedRange;
     },
     getItemKey: (index) => _slow_allHeaders[index].id,
-    onChange: undefined,
+    onChange: (_instance, sync) => {
+      if (!sync) {
+        // this happens for example when resizing a virtual item
+        onChange(false);
+      }
+    },
   };
 }
 function createColVirtualizer({
@@ -1142,11 +1155,13 @@ function createColVirtualizer({
   columnOverscan,
   initialOffset,
   observeElementOffset,
+  onChange,
 }: {
   _slow_allHeaders: Header<any, unknown>[];
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   columnOverscan: number;
   initialOffset: number | undefined;
+  onChange: (sync: boolean) => void;
   observeElementOffset: ObserveElementOffset;
 }) {
   return new Virtualizer({
@@ -1161,8 +1176,7 @@ function createColVirtualizer({
         left: offset,
       });
     },
-    onChange: undefined,
-    ...getNewColVirtualizerOptions(_slow_allHeaders),
+    ...getNewColVirtualizerOptions(_slow_allHeaders, onChange),
   });
 }
 

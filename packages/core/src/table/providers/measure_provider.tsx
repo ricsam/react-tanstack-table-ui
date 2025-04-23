@@ -36,8 +36,10 @@ export const MeasureProvider = (props: {
     [],
   );
 
-  const getWidth = () => props.width ?? props.table.getTotalSize();
-  const getHeight = () => {
+  const getAutoWidth = () => {
+    return props.table.getTotalSize();
+  };
+  const getAutoHeight = () => {
     const skin = props.skin ?? defaultSkin;
     const headerGroups = props.table.getHeaderGroups();
     const footerGroups = props.table.getFooterGroups();
@@ -48,28 +50,39 @@ export const MeasureProvider = (props: {
       group.headers.some((header) => header.column.columnDef.footer),
     ).length;
     const rowCount = props.table.getRowCount();
-    return (
-      props.height ??
+
+    let height =
       skin.headerRowHeight * numHeaders +
-        skin.footerRowHeight * numFooters +
-        skin.rowHeight * rowCount
-    );
+      skin.footerRowHeight * numFooters +
+      skin.rowHeight * rowCount;
+    if (props.scrollbarWidth && getAutoWidth() > getWidth()) {
+      height += props.scrollbarWidth;
+    }
+    return height;
+  };
+
+  const getWidth = () => props.width ?? props.table.getTotalSize();
+  const getHeight = () => {
+    if (props.height) {
+      return props.height;
+    }
+    return getAutoHeight();
   };
   const crushMinSizeBy = props.crushMinSizeBy ?? "header";
   const scrollbarWidth = props.scrollbarWidth ?? 0;
 
-  const width = getWidth();
-  const height = getHeight();
-
   const refsValue = {
     crushMinSizeBy,
-    width,
-    height,
+    getWidth,
+    getHeight,
+    getAutoWidth,
+    getAutoHeight,
     table: props.table,
     scrollbarWidth,
     fillAvailableSpaceAfterCrush: props.fillAvailableSpaceAfterCrush ?? false,
     autoCrushColumns: props.autoCrushColumns ?? false,
     autoCrushNumCols: props.autoCrushNumCols ?? 0,
+    skin: props.skin ?? defaultSkin,
   };
 
   const refs = React.useRef(refsValue);
@@ -218,7 +231,13 @@ export const MeasureProvider = (props: {
         const newSizing = { ...prev };
 
         //#region fill available space after crush
-        const totalWidth = refs.current.width - refs.current.scrollbarWidth;
+        let totalWidth = refs.current.getWidth();
+        if (
+          refs.current.scrollbarWidth &&
+          refs.current.getAutoHeight() > refs.current.getHeight()
+        ) {
+          totalWidth -= refs.current.scrollbarWidth;
+        }
 
         const leafCols = new Set<string>();
         cols.forEach((_, colId) => {
@@ -321,6 +340,8 @@ export const MeasureProvider = (props: {
     };
   }
 
+  const _height = getHeight();
+  const _width = getWidth();
   return (
     <MeasureContext.Provider
       value={React.useMemo(
@@ -328,10 +349,10 @@ export const MeasureProvider = (props: {
           isMeasuring,
           measureCells,
           isMeasuringInstanceLoading: Boolean(isMeasuring),
-          width,
-          height,
+          width: _width,
+          height: _height,
         }),
-        [height, isMeasuring, measureCells, width],
+        [_height, _width, isMeasuring, measureCells],
       )}
     >
       {props.children}
