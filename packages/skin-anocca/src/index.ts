@@ -16,3 +16,4 @@ export { CellBadge } from "./cell_badge";
 export { Cell } from "./cell";
 export { CellLink } from "./cell_link";
 export { CellPercent } from "./cell_percent";
+export { HeaderResizer } from "./header_resizer";

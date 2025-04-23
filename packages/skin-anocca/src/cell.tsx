@@ -4,6 +4,7 @@ import { CellText } from "./cell_text";
 import { CellTextBold } from "./cell_text_bold";
 import { Checkbox } from "./checkbox";
 import { ExpandButton } from "./expand_button";
+import { RowPinButtons } from "./row_pin_buttons";
 
 export const Cell: React.FC<CellProps> = ({
   children,
@@ -57,9 +58,7 @@ export const Cell: React.FC<CellProps> = ({
         />
       )}
       {expandButton && <ExpandButton />}
-      {pinButtons && (
-        <span style={{ fontStyle: "italic", fontSize: "0.8em" }}>(Pin)</span>
-      )}
+      {pinButtons && <RowPinButtons />}
       {useBold ? (
         <CellTextBold className="anocca-selected-cell-text">
           {children}

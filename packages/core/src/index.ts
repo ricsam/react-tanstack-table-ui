@@ -33,7 +33,10 @@ import {
 } from "./default_skin/cell_badge";
 import { Cell, type CellProps } from "./default_skin/cell";
 import { CellLink, type CellLinkProps } from "./default_skin/cell_link";
-import { CellPercent, type CellPercentProps } from "./default_skin/cell_percent";
+import {
+  CellPercent,
+  type CellPercentProps,
+} from "./default_skin/cell_percent";
 
 import { useColProps } from "./table/hooks/use_col_props";
 import { useColRef } from "./table/hooks/use_col_ref";
@@ -50,6 +53,7 @@ import type { CheckboxProps } from "./default_skin/checkbox";
 import type { CellAvatarProps } from "./default_skin/cell_avatar";
 import type { CellAvatarWithTextProps } from "./default_skin/cell_avatar_with_text";
 import type { ReactTanstackTableUiProps } from "./table/types";
+
 export {
   ReactTanstackTableUi,
   useRowVirtualizer,

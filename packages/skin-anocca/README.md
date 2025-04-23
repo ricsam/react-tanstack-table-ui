@@ -60,3 +60,4 @@ The following components are exported:
 - `Cell`
 - `CellLink`
 - `CellPercent`
+- `HeaderResizer`

@@ -1,16 +1,29 @@
-import { Row } from "@tanstack/react-table";
 import { IconButton, Stack } from "@mui/material";
-import { FiX, FiChevronUp, FiChevronDown } from "react-icons/fi";
+import { shallowEqual, useRowProps, useRowRef } from "@rttui/core";
+import { FiChevronDown, FiChevronUp, FiX } from "react-icons/fi";
 
-export function RowPinButtons({ row }: { row: Row<any> }) {
-  if (!row.getCanPin()) {
+export function RowPinButtons() {
+  const { canPin, isPinned } = useRowProps({
+    callback: (vrow) => {
+      const row = vrow.row;
+      return {
+        canPin: row.getCanPin(),
+        isPinned: row.getIsPinned(),
+      };
+    },
+    areCallbackOutputEqual: shallowEqual,
+    dependencies: [{ type: "tanstack_table" }],
+  });
+  const rowRef = useRowRef();
+
+  if (!canPin) {
     return null;
   }
 
-  if (row.getIsPinned()) {
+  if (isPinned) {
     return (
       <IconButton
-        onClick={() => row.pin(false, true, true)}
+        onClick={() => rowRef()?.row.pin(false, true, true)}
         size="small"
         sx={{ color: "text.secondary" }}
       >
@@ -22,14 +35,14 @@ export function RowPinButtons({ row }: { row: Row<any> }) {
   return (
     <Stack direction="row">
       <IconButton
-        onClick={() => row.pin("top", true, true)}
+        onClick={() => rowRef()?.row.pin("top", true, true)}
         size="small"
         sx={{ color: "text.secondary" }}
       >
         <FiChevronUp size={16} />
       </IconButton>
       <IconButton
-        onClick={() => row.pin("bottom", true, true)}
+        onClick={() => rowRef()?.row.pin("bottom", true, true)}
         size="small"
         sx={{ color: "text.secondary" }}
       >

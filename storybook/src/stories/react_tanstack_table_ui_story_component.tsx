@@ -206,11 +206,20 @@ export const ReactTanstackTableUi = (
                   <HeaderPinButtons />
                 </>
               )}
-              {props.enableColumnResizing && <Resizer />}
+              {props.enableColumnResizing && skin === "anocca" ? (
+                <anoccaSkin.HeaderResizer />
+              ) : (
+                <Resizer />
+              )}
             </div>
           ),
           cell: (original) => {
-            return <Cell>{original}</Cell>;
+            return (
+              <Cell>
+                {original}
+                {props.enableColumnResizing && <Resizer />}
+              </Cell>
+            );
           },
         })
       : originalColumnHelper;
