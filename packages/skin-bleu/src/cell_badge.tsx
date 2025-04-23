@@ -12,7 +12,7 @@ const colorStyles: Record<BadgeColor, React.CSSProperties> = {
   pink: { backgroundColor: "#fce7f3", color: "#831843" }, // bg-pink-100, text-pink-800
 };
 
-// Implement the CellBadge component for the Anocca skin
+// Implement the CellBadge component for the Bleu skin
 export const CellBadge: React.FC<CellBadgeProps> = ({
   children,
   color = "gray", // Default to gray if no color is provided

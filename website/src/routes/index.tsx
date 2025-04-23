@@ -12,8 +12,8 @@ import { examples } from "@/data/examples";
 
 // Skins pages
 import { DefaultSkinPage } from "@/pages/skins/default_skin";
-import { AnoccaSkinPage } from "@/pages/skins/anocca_skin";
-import { AnoccaStorybookPage } from "@/pages/skins/anocca_storybook";
+import { BleuSkinPage } from "@/pages/skins/bleu_skin";
+import { BleuStorybookPage } from "@/pages/skins/bleu_storybook";
 import { MuiSkinPage } from "@/pages/skins/mui_skin";
 import { MuiStorybookPage } from "@/pages/skins/mui_storybook";
 import { TailwindSkinPage } from "@/pages/skins/tailwind_skin";
@@ -85,16 +85,16 @@ export const defaultSkinRoute = createRoute({
   component: DefaultSkinPage,
 });
 
-export const anoccaSkinRoute = createRoute({
+export const bleuSkinRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "skins/anocca",
-  component: AnoccaSkinPage,
+  path: "skins/bleu",
+  component: BleuSkinPage,
 });
 
-export const anoccaStorybookRoute = createRoute({
+export const bleuStorybookRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "skins/anocca/storybook",
-  component: AnoccaStorybookPage,
+  path: "skins/bleu/storybook",
+  component: BleuStorybookPage,
 });
 
 export const muiSkinRoute = createRoute({
@@ -214,8 +214,8 @@ export const routeTree = rootRoute.addChildren([
   docsRoute.addChildren([docsIndexRoute, gettingStartedRoute, optionsRoute]),
   skinsRoute,
   defaultSkinRoute,
-  anoccaSkinRoute,
-  anoccaStorybookRoute,
+  bleuSkinRoute,
+  bleuStorybookRoute,
   muiSkinRoute,
   muiStorybookRoute,
   tailwindSkinRoute,

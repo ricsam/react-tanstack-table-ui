@@ -1,7 +1,7 @@
 import { CellCurrencyProps } from "@rttui/core";
 import React from "react";
 
-// Implement the CellCurrency component for the Anocca skin
+// Implement the CellCurrency component for the Bleu skin
 export const CellCurrency: React.FC<CellCurrencyProps> = ({
   value,
   currency = "USD", // Default to USD if no currency is provided
@@ -20,7 +20,7 @@ export const CellCurrency: React.FC<CellCurrencyProps> = ({
     fontSize: "0.875rem", // Equivalent to text-sm
     color: "#6b7280", // Equivalent to text-gray-500 (Placeholder)
     fontVariantNumeric: "tabular-nums", // Align numbers
-    // Anocca skin might specify different colors, alignment, etc.
+    // Bleu skin might specify different colors, alignment, etc.
   };
 
   return <span style={style}>{formatter.format(value)}</span>;

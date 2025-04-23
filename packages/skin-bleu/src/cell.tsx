@@ -60,7 +60,7 @@ export const Cell: React.FC<CellProps> = ({
       {expandButton && <ExpandButton />}
       {pinButtons && <RowPinButtons />}
       {useBold ? (
-        <CellTextBold className="anocca-selected-cell-text">
+        <CellTextBold className="bleu-selected-cell-text">
           {children}
         </CellTextBold>
       ) : (

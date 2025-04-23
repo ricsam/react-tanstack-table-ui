@@ -7,7 +7,7 @@ interface CellLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   srText?: string; // Additional text for screen readers
 }
 
-// Implement the CellLink component for the Anocca skin
+// Implement the CellLink component for the Bleu skin
 export const CellLink: React.FC<CellLinkProps> = ({
   href,
   children,
@@ -15,7 +15,7 @@ export const CellLink: React.FC<CellLinkProps> = ({
   style, // Allow consuming style prop
   ...props // Pass through other anchor attributes (target, rel, etc.)
 }) => {
-  // Basic link styling - Anocca will likely provide specific link styles
+  // Basic link styling - Bleu will likely provide specific link styles
   const baseStyle: React.CSSProperties = {
     fontSize: "0.875rem", // Equivalent to text-sm
     fontWeight: 500, // Equivalent to font-medium
@@ -23,7 +23,7 @@ export const CellLink: React.FC<CellLinkProps> = ({
     textDecoration: "none", // Common practice, hover effect can add underline
     cursor: "pointer",
     // Add hover effect (though direct inline hover isn't possible)
-    // Anocca would likely use CSS classes for this
+    // Bleu would likely use CSS classes for this
   };
 
   // Style for screen reader only text

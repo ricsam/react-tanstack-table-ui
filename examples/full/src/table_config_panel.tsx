@@ -97,14 +97,14 @@ export const TableConfigPanel = ({
             onChange={(e) =>
               onChange({
                 ...config,
-                skin: e.target.value as "default" | "mui" | "anocca",
+                skin: e.target.value as "default" | "mui" | "bleu",
               })
             }
             style={{ width: "100%", padding: "5px" }}
           >
             <option value="default">Default Skin</option>
             <option value="mui">Material UI Skin</option>
-            <option value="anocca">Anocca Skin</option>
+            <option value="bleu">Bleu Skin</option>
           </select>
         </div>
 

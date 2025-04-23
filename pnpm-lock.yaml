@@ -82,7 +82,7 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
 
-  packages/skin-anocca:
+  packages/skin-bleu:
     dependencies:
       '@rttui/core':
         specifier: workspace:^
@@ -177,9 +177,9 @@ importers:
       '@rttui/core':
         specifier: workspace:^
         version: link:../packages/core
-      '@rttui/skin-anocca':
+      '@rttui/skin-bleu':
         specifier: workspace:^
-        version: link:../packages/skin-anocca
+        version: link:../packages/skin-bleu
       '@rttui/skin-mui':
         specifier: workspace:^
         version: link:../packages/skin-mui
@@ -323,9 +323,9 @@ importers:
       '@rttui/core':
         specifier: workspace:*
         version: link:../packages/core
-      '@rttui/skin-anocca':
+      '@rttui/skin-bleu':
         specifier: workspace:*
-        version: link:../packages/skin-anocca
+        version: link:../packages/skin-bleu
       '@rttui/skin-mui':
         specifier: workspace:*
         version: link:../packages/skin-mui

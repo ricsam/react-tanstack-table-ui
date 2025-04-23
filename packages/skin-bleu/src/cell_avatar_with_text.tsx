@@ -2,7 +2,7 @@ import React from "react";
 import { CellAvatar } from "./cell_avatar"; // Import the existing CellAvatar and its props
 import { CellAvatarWithTextProps } from "@rttui/core";
 
-// Implement the CellAvatarWithText component for the Anocca skin
+// Implement the CellAvatarWithText component for the Bleu skin
 export const CellAvatarWithText: React.FC<CellAvatarWithTextProps> = ({
   src,
   alt,
@@ -22,7 +22,7 @@ export const CellAvatarWithText: React.FC<CellAvatarWithTextProps> = ({
   const textStyle: React.CSSProperties = {
     fontSize: "0.875rem", // Equivalent to text-sm (14px)
     fontWeight: 500, // Equivalent to font-medium
-    color: "#111827", // Equivalent to text-gray-900 (Placeholder, Anocca might have specific colors)
+    color: "#111827", // Equivalent to text-gray-900 (Placeholder, Bleu might have specific colors)
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap", // Equivalent to truncate

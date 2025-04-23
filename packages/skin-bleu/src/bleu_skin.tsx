@@ -24,7 +24,7 @@ import {
 import React, { CSSProperties } from "react";
 import { TableHeaderRow } from "./table_header_row";
 
-const AnoccaSkin: Skin = {
+const BleuSkin: Skin = {
   rowHeight: 32,
   headerRowHeight: 32,
   footerRowHeight: 32,
@@ -500,4 +500,4 @@ const TableHeaderCell = React.memo(
   }),
 );
 
-export { AnoccaSkin };
+export { BleuSkin };

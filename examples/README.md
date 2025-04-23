@@ -29,7 +29,7 @@ A minimal setup demonstrating the core functionality with minimal configuration:
 Examples demonstrating the various skin options:
 
 - Material UI skin
-- Anocca skin
+- Bleu skin
 - Customization options for each skin
 
 ## Running Examples Locally

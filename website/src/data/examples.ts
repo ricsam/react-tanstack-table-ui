@@ -37,7 +37,7 @@ export const examples: Record<string, Example> = {
   skins: {
     id: "skins",
     title: "Custom Skins Example",
-    description: "Explore different skin options including Material UI and Anocca themes.",
+    description: "Explore different skin options including Material UI and Bleu themes.",
     path: "/examples/skins",
     dirName: "skins",
     mainFile: "src/app.tsx",

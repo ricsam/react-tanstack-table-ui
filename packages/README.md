@@ -21,12 +21,12 @@ Material UI implementation of the TanStack Table UI components:
 - Material Design compliant elements
 - Seamless integration with existing MUI applications
 
-### Skin - Anocca (`@rttui/skin-anocca`)
+### Skin - Bleu (`@rttui/skin-bleu`)
 
-Anocca-themed implementation of the table components:
+Bleu-themed implementation of the table components:
 
-- Custom styling for Anocca brand requirements
-- Specialized components for Anocca's use cases
+- Custom styling for Bleu brand requirements
+- Specialized components for Bleu's use cases
 
 ### Fixtures (`@rttui/fixtures`)
 

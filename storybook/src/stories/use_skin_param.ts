@@ -1,11 +1,11 @@
 import { useArgs } from "@storybook/client-api";
 import { useEffect, useState } from "react";
 
-type SkinString = "core" | "anocca" | "tailwind" | "mui";
+type SkinString = "core" | "bleu" | "tailwind" | "mui";
 
 const validSkins: Set<string> = new Set([
   "core",
-  "anocca",
+  "bleu",
   "tailwind",
   "mui",
 ]);

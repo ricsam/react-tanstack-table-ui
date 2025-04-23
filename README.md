@@ -6,7 +6,7 @@ A collection of components and utilities for building powerful, customizable tab
 
 - 🚀 Based on [TanStack Table](https://tanstack.com/table) (formerly React Table v8)
 - 📜 Virtual scrolling support via [TanStack Virtual](https://tanstack.com/virtual)
-- 🎨 Multiple skins (Material UI, Anocca, and more)
+- 🎨 Multiple skins (Material UI, Bleu, and more)
 - 🔌 Extensible architecture for custom skins
 - 📦 Modular packages for flexible integration
 
@@ -145,7 +145,7 @@ Try our interactive examples:
 
 - `core`: Core functionality and base components
 - `skin-mui`: Material UI implementation
-- `skin-anocca`: Anocca-themed components
+- `skin-bleu`: Bleu-themed components
 - `fixtures`: Test fixtures and utilities
 - `docs`: Documentation website
 

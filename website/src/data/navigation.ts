@@ -36,10 +36,10 @@ export const navigation: NavItem[] = [
     children: [
       { title: "Default Skin", path: "/skins/default" },
       { 
-        title: "Anocca Skin", 
+        title: "Bleu Skin", 
         children: [
-          { title: "Setup", path: "/skins/anocca" },
-          { title: "Storybook", path: "/skins/anocca/storybook" },
+          { title: "Setup", path: "/skins/bleu" },
+          { title: "Storybook", path: "/skins/bleu/storybook" },
         ]
       },
       { 

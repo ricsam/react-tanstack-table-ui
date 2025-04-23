@@ -11,7 +11,7 @@ export interface TableConfig {
     sorting: boolean;
   };
   dataSize: "small" | "big";
-  skin: "default" | "mui" | "anocca";
+  skin: "default" | "mui" | "bleu";
 }
 
 export const defaultTableConfig: TableConfig = {
@@ -57,7 +57,7 @@ export function getConfigSummary(config: TableConfig): string {
     .map(([key]) => key)
     .join(", ");
 
-  const skinInfo = `${config.skin === "default" ? "Default" : config.skin === "mui" ? "Material UI" : "Anocca"} skin`;
+  const skinInfo = `${config.skin === "default" ? "Default" : config.skin === "mui" ? "Material UI" : "Bleu"} skin`;
   const dataInfo = config.dataSize === "big" ? "Large dataset" : `${config.rowCount} rows, ${config.columnCount} columns`;
   
   return `${dataInfo} with ${skinInfo}${features ? ` and ${features}` : ""}`;

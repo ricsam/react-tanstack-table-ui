@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@rttui/core": "workspace:*",
-    "@rttui/skin-anocca": "workspace:*",
+    "@rttui/skin-bleu": "workspace:*",
     "@rttui/skin-mui": "workspace:*",
     "@rttui/skin-tailwind": "workspace:*",
     "@tanstack/react-router": "^1.15.10",

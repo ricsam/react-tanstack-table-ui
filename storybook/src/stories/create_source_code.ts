@@ -1,7 +1,7 @@
 export const createSourceCode = (opts?: { hookOptions?: string, props?: string, nameMeta?: string }) => {
   return `import { createColumnHelper, useReactTable, getCoreRowModel } from "@tanstack/react-table";
 import { Box } from "@mui/material";
-import { HeaderPinButtons } from "@rttui/skin-anocca";
+import { HeaderPinButtons } from "@rttui/skin-bleu";
 import { ReactTanstackTableUi, decorateColumnHelper } from "@rttui/core";
 
 type Person = {

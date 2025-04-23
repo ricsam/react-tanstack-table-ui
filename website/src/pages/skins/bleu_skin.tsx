@@ -1,41 +1,41 @@
 import { CodeBlock } from "@/components/code_block";
 
-export function AnoccaSkinPage() {
+export function BleuSkinPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 prose prose-gray dark:prose-invert">
-      <h1>Anocca Skin</h1>
+      <h1>Bleu Skin</h1>
       <p>
-        The Anocca skin for React TanStack Table UI provides a specialized design system
-        developed by Anocca. This skin is built on top of Material UI components but with a
+        The Bleu skin for React TanStack Table UI provides a specialized design system
+        developed by Bleu. This skin is built on top of Material UI components but with a
         custom design specification.
       </p>
 
       <h2>Installation</h2>
       <p>
-        To use the Anocca skin, you need to install the following packages:
+        To use the Bleu skin, you need to install the following packages:
       </p>
 
       <CodeBlock language="bash">
-        {`npm install @rttui/skin-anocca @mui/material @emotion/react @emotion/styled`}
+        {`npm install @rttui/skin-bleu @mui/material @emotion/react @emotion/styled`}
       </CodeBlock>
 
       <p>
-        This installs the Anocca skin along with its peer dependencies: Material UI and Emotion for styling.
+        This installs the Bleu skin along with its peer dependencies: Material UI and Emotion for styling.
       </p>
 
       <h2>Setup</h2>
       <p>
-        After installation, you need to set up the Anocca theme provider in your application:
+        After installation, you need to set up the Bleu theme provider in your application:
       </p>
 
       <CodeBlock language="tsx">
 {`import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { VirtualizedTable, AnoccaTheme } from '@rttui/skin-anocca';
+import { VirtualizedTable, BleuTheme } from '@rttui/skin-bleu';
 
 function App() {
   return (
-    <ThemeProvider theme={AnoccaTheme}>
+    <ThemeProvider theme={BleuTheme}>
       {/* CssBaseline provides a consistent baseline */}
       <CssBaseline />
       
@@ -59,11 +59,11 @@ function YourTables() {
 
       <h2>Usage</h2>
       <p>
-        Once set up, you can use the <code>VirtualizedTable</code> component from the Anocca skin package:
+        Once set up, you can use the <code>VirtualizedTable</code> component from the Bleu skin package:
       </p>
 
       <CodeBlock language="tsx">
-{`import { VirtualizedTable } from '@rttui/skin-anocca';
+{`import { VirtualizedTable } from '@rttui/skin-bleu';
 import { createColumnHelper } from '@rttui/core';
 
 const columnHelper = createColumnHelper<YourDataType>();
@@ -89,20 +89,20 @@ function DataTable() {
 
       <h2>Theme Customization</h2>
       <p>
-        You can customize the Anocca theme by creating a custom theme that extends the base Anocca theme:
+        You can customize the Bleu theme by creating a custom theme that extends the base Bleu theme:
       </p>
 
       <CodeBlock language="tsx">
 {`import { createTheme } from '@mui/material/styles';
-import { AnoccaTheme } from '@rttui/skin-anocca';
+import { BleuTheme } from '@rttui/skin-bleu';
 
-// Create a custom theme extending the Anocca theme
+// Create a custom theme extending the Bleu theme
 const customTheme = createTheme({
-  ...AnoccaTheme,
+  ...BleuTheme,
   palette: {
-    ...AnoccaTheme.palette,
+    ...BleuTheme.palette,
     primary: {
-      ...AnoccaTheme.palette.primary,
+      ...BleuTheme.palette.primary,
       main: '#your-custom-primary-color',
     },
     // Customize other colors as needed
@@ -118,17 +118,17 @@ const customTheme = createTheme({
 
       <h2>Features Coming Soon</h2>
       <p>
-        We are actively working on additional features for the Anocca skin:
+        We are actively working on additional features for the Bleu skin:
       </p>
 
       <ul>
         <li>
           <strong>Custom Sorting Components</strong>: Specialized sorting indicators and controls 
-          that follow the Anocca design system.
+          that follow the Bleu design system.
         </li>
         <li>
           <strong>Column Pinning UI</strong>: Intuitive interfaces for pinning columns that match
-          the Anocca design language.
+          the Bleu design language.
         </li>
         <li>
           <strong>Row Selection Components</strong>: Custom checkboxes and selection controls 
@@ -136,22 +136,22 @@ const customTheme = createTheme({
         </li>
         <li>
           <strong>Custom Cell Components</strong>: Specialized cell renderers for different data types
-          that align with the Anocca design system.
+          that align with the Bleu design system.
         </li>
         <li>
           <strong>Filtering and Pagination</strong>: Advanced interfaces for data filtering and 
-          pagination that follow Anocca design patterns.
+          pagination that follow Bleu design patterns.
         </li>
       </ul>
 
       <p>
-        Stay tuned for updates as we continue to enhance the Anocca skin with additional components 
+        Stay tuned for updates as we continue to enhance the Bleu skin with additional components 
         and features!
       </p>
 
       <h2>Compatibility</h2>
       <p>
-        The Anocca skin has the following compatibility:
+        The Bleu skin has the following compatibility:
       </p>
 
       <ul>
@@ -162,7 +162,7 @@ const customTheme = createTheme({
 
       <h2>Support</h2>
       <p>
-        For issues specific to the Anocca skin, please contact the Anocca team or refer to 
+        For issues specific to the Bleu skin, please contact the Bleu team or refer to 
         their internal documentation. For general React TanStack Table UI questions, use the 
         standard support channels.
       </p>

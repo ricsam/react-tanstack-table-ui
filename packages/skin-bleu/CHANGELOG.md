@@ -1,4 +1,10 @@
-# @rttui/skin-anocca
+# @rttui/skin-bleu
+
+## 1.0.38
+
+### Patch Changes
+
+- change name
 
 ## 1.0.37
 

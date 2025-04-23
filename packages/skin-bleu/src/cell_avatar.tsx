@@ -8,7 +8,7 @@ const sizeMap = {
   lg: 40, // Corresponds to Tailwind's size-10 (10 * 4px = 40px)
 };
 
-// Implement the CellAvatar component for the Anocca skin
+// Implement the CellAvatar component for the Bleu skin
 export const CellAvatar: React.FC<CellAvatarProps> = ({
   src,
   alt = "",
@@ -22,7 +22,7 @@ export const CellAvatar: React.FC<CellAvatarProps> = ({
     height: `${dimension}px`,
     borderRadius: "50%", // Equivalent to rounded-full
     objectFit: "cover", // Ensures the image covers the area nicely
-    // Placeholder background - Anocca skin might provide specific colors
+    // Placeholder background - Bleu skin might provide specific colors
     backgroundColor: "#f9fafb", // Equivalent to bg-gray-50
   };
 

@@ -1,5 +1,5 @@
 interface StorybookEmbedProps {
-  skin: "mui" | "tailwind" | "anocca" | "core";
+  skin: "mui" | "tailwind" | "bleu" | "core";
 }
 
 export function StorybookEmbed({ skin }: StorybookEmbedProps) {

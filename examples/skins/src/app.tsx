@@ -1,7 +1,7 @@
 import { createTheme, ThemeProvider } from "@mui/material";
 import ScopedCssBaseline from "@mui/material/ScopedCssBaseline";
 import { defaultSkin, ReactTanstackTableUi } from "@rttui/core";
-import { AnoccaSkin } from "@rttui/skin-anocca";
+import { BleuSkin } from "@rttui/skin-bleu";
 import { MuiSkin } from "@rttui/skin-mui";
 import {
   darkModeVars,
@@ -19,7 +19,7 @@ export function App() {
   const { table } = useBigTable();
   const [theme, setTheme] = useHashState<"light" | "dark">("theme", "light");
   const [skin, setSkin] = useHashState<
-    "mui" | "anocca" | "default" | "tailwind"
+    "mui" | "bleu" | "default" | "tailwind"
   >("skin", "mui");
   const [ref, bounds] = useMeasure();
 
@@ -27,8 +27,8 @@ export function App() {
     switch (skin) {
       case "mui":
         return MuiSkin;
-      case "anocca":
-        return AnoccaSkin;
+      case "bleu":
+        return BleuSkin;
       case "tailwind":
         return TailwindSkin;
       default:
@@ -63,7 +63,7 @@ export function App() {
           </div>
         );
       };
-    } else if (skin === "mui" || skin === "anocca") {
+    } else if (skin === "mui" || skin === "bleu") {
       Wrapper = ({
         children,
         theme,
@@ -133,11 +133,11 @@ export function App() {
         <select
           value={skin}
           onChange={(e) =>
-            setSkin(e.target.value as "mui" | "anocca" | "default" | "tailwind")
+            setSkin(e.target.value as "mui" | "bleu" | "default" | "tailwind")
           }
         >
           <option value="mui">Material UI Skin</option>
-          <option value="anocca">Anocca Skin</option>
+          <option value="bleu">Bleu Skin</option>
           <option value="tailwind">Tailwind Skin</option>
           <option value="default">Default Skin</option>
         </select>

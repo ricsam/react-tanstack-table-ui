@@ -15,10 +15,10 @@ const skins = [
     link: "/skins/tailwind",
   },
   {
-    name: "Anocca skin",
+    name: "Bleu skin",
     description:
-      "The Anocca skin is a skin that is designed to work with the core package. It is a skin that is designed to work with the Anocca library.",
-    link: "/skins/anocca",
+      "The Bleu skin is a skin that is designed to work with the core package. It is a skin that is designed to work with the Bleu library.",
+    link: "/skins/bleu",
   },
   {
     name: "Default skin",

@@ -2,7 +2,7 @@ import { CellPercentProps } from "@rttui/core";
 import React from "react";
 
 /**
- * CellPercent component for the Anocca skin.
+ * CellPercent component for the Bleu skin.
  * Formats a number as a percentage.
  */
 export const CellPercent: React.FC<CellPercentProps> = ({
@@ -19,7 +19,7 @@ export const CellPercent: React.FC<CellPercentProps> = ({
     fontSize: "0.875rem", // text-sm
     color: "rgb(107 114 128)", // text-gray-500
     fontVariantNumeric: "tabular-nums",
-    // Anocca doesn't have dark mode built-in like Tailwind,
+    // Bleu doesn't have dark mode built-in like Tailwind,
     // so we only define the light mode color here.
   };
 

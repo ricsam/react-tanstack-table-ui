@@ -312,12 +312,12 @@ const muiSpecialColumnDefs = (columnHelper: ColumnHelper<User>) => ({
 });
 
 export const useBigTable = () => {
-  const [skin] = useHashState<"mui" | "anocca" | "default">("skin", "mui");
+  const [skin] = useHashState<"mui" | "bleu" | "default">("skin", "mui");
   const columnHelper = createColumnHelper<User>();
 
   // Get special column definitions based on skin
   const specialColumnDefs = React.useMemo(() => {
-    if (skin === "mui" || skin === "anocca") {
+    if (skin === "mui" || skin === "bleu") {
       return muiSpecialColumnDefs(columnHelper);
     }
     return defaultSpecialColumnDefs(columnHelper);

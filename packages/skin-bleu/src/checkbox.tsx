@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { CheckboxProps, shallowEqual, useTableProps } from "@rttui/core";
 
-// Implement the Checkbox component for the Anocca skin
+// Implement the Checkbox component for the Bleu skin
 export const Checkbox: React.FC<CheckboxProps> = ({ getProps, onChange }) => {
   const resolvedRef = useRef<HTMLInputElement>(null);
 
@@ -33,7 +33,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ getProps, onChange }) => {
     }
   }, [resolvedRef, indeterminate]);
 
-  // Basic styling for the checkbox - Anocca skin might provide custom styling
+  // Basic styling for the checkbox - Bleu skin might provide custom styling
   const style: React.CSSProperties = {
     width: "16px", // Equivalent to size-4
     height: "16px",

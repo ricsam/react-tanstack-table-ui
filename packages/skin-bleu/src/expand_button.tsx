@@ -4,7 +4,7 @@ import { FiChevronDown, FiChevronRight } from "react-icons/fi"; // Using react-i
 
 // No specific props needed for ExpandButton itself as it uses context hooks
 
-// Implement the ExpandButton component for the Anocca skin
+// Implement the ExpandButton component for the Bleu skin
 export const ExpandButton: React.FC = () => {
   // Use core hooks to get row expansion state
   const { canExpand, isExpanded } = useRowProps({
@@ -26,7 +26,7 @@ export const ExpandButton: React.FC = () => {
     return null;
   }
 
-  // Basic button styling - Anocca skin will likely provide more specific styles
+  // Basic button styling - Bleu skin will likely provide more specific styles
   const buttonStyle: React.CSSProperties = {
     display: "flex",
     alignItems: "center",
@@ -37,12 +37,12 @@ export const ExpandButton: React.FC = () => {
     background: "transparent",
     cursor: "pointer",
     borderRadius: "50%", // Equivalent to rounded-full
-    // Placeholder hover effect - Anocca might use different colors or effects
+    // Placeholder hover effect - Bleu might use different colors or effects
     // ':hover': { backgroundColor: '#f3f4f6' }
     // Hover pseudo-class cannot be applied via inline styles directly
   };
 
-  // Basic icon styling - Anocca might have specific icon colors/sizes
+  // Basic icon styling - Bleu might have specific icon colors/sizes
   const iconStyle: React.CSSProperties = {
     width: "16px", // Equivalent to w-4
     height: "16px", // Equivalent to h-4
