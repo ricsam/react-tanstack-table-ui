@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { useTableProps } from "../table/hooks/use_table_props";
-import { shallowEqual } from "..";
+import { shallowEqual } from "../utils";
 
 export const Checkbox = ({ getProps, onChange }: CheckboxProps) => {
   const resolvedRef = useRef<HTMLInputElement>(null);
@@ -27,13 +27,15 @@ export const Checkbox = ({ getProps, onChange }: CheckboxProps) => {
   }, [resolvedRef, indeterminate]);
 
   return (
-    <div style={{ 
-      position: "relative", 
-      width: "1rem", 
-      height: "1rem", 
-      display: "grid",
-      gridTemplateColumns: "1fr",
-    }}>
+    <div
+      style={{
+        position: "relative",
+        width: "1rem",
+        height: "1rem",
+        display: "grid",
+        gridTemplateColumns: "1fr",
+      }}
+    >
       <input
         type="checkbox"
         style={{
@@ -42,13 +44,14 @@ export const Checkbox = ({ getProps, onChange }: CheckboxProps) => {
           appearance: "none",
           borderRadius: "0.25rem",
           border: `1px solid ${
-            checked || indeterminate 
-              ? "var(--table-primary-color, #4f46e5)" 
+            checked || indeterminate
+              ? "var(--table-primary-color, #4f46e5)"
               : "var(--table-border-color, #d1d5db)"
           }`,
-          backgroundColor: checked || indeterminate 
-            ? "var(--table-primary-color, #4f46e5)" 
-            : "white",
+          backgroundColor:
+            checked || indeterminate
+              ? "var(--table-primary-color, #4f46e5)"
+              : "white",
           width: "100%",
           height: "100%",
           margin: 0,
