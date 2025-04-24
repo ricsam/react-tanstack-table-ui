@@ -4,166 +4,185 @@ A collection of components and utilities for building powerful, customizable tab
 
 ## Features
 
-- 🚀 Based on [TanStack Table](https://tanstack.com/table) (formerly React Table v8)
-- 📜 Virtual scrolling support via [TanStack Virtual](https://tanstack.com/virtual)
-- 🎨 Multiple skins (Material UI, Bleu, and more)
+- 📜 Based on [TanStack Table](https://tanstack.com/table)
+- 🚀 Virtualized and performance optimized
+- 🎨 Multiple skins (Material UI, Tailwind, and more)
 - 🔌 Extensible architecture for custom skins
 - 📦 Modular packages for flexible integration
 
-## Quick Start
+Check out a demo on https://rttui-docs.vercel.app/#live-demo
+
+# Getting Started
+
+This guide will help you get started with React TanStack Table UI. Follow these steps to
+install and set up the library in your React project.
+
+## Installation
+
+You can install React TanStack Table UI:
 
 ```bash
-# Install core package
-npm install @rttui/core @tanstack/react-table
+npm i @rttui/core @tanstack/react-table@8
 ```
 
-## Getting Started
+Additionally, you might want to install one of the available
+[skins](https://rttui-docs.vercel.app/skins). Please read the guide for the skin you would like to use:
 
-Here's a basic example of how to use React TanStack Table UI:
+```bash
+# Material UI skin
+npm i @rttui/skin-mui @mui/material @emotion/react @emotion/styled @mui/icons-material
+
+# Tailwind skin
+npm i @rttui/skin-tailwind
+```
+
+## Basic Setup
+
+Here's a simple example of how to use React TanStack Table UI with the core package, or view it <a href="https://codesandbox.io/p/sandbox/3z6hjf?file=%2Fsrc%2FMyTable.tsx" target="_blank" rel="noopener noreferrer">on codesandbox</a>:
 
 ```tsx
+import { ReactTanstackTableUi, lightModeVars } from "@rttui/core";
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   useReactTable,
-} from '@tanstack/react-table'
-import { defaultSkin, lightModeVars, ReactTanstackTableUi } from '@rttui/core';
+} from "@tanstack/react-table";
 
 type Person = {
-  firstName: string
-  lastName: string
-  age: number
-  visits: number
-  status: string
-  progress: number
-}
+  firstName: string;
+  lastName: string;
+  age: number;
+  visits: number;
+  status: string;
+  progress: number;
+};
 
-const defaultData: Person[] = [
+const data: Person[] = [
   {
-    firstName: 'tanner',
-    lastName: 'linsley',
+    firstName: "tanner",
+    lastName: "linsley",
     age: 24,
     visits: 100,
-    status: 'In Relationship',
+    status: "In Relationship",
     progress: 50,
   },
   {
-    firstName: 'tandy',
-    lastName: 'miller',
+    firstName: "tandy",
+    lastName: "miller",
     age: 40,
     visits: 40,
-    status: 'Single',
+    status: "Single",
     progress: 80,
   },
   {
-    firstName: 'joe',
-    lastName: 'dirte',
+    firstName: "joe",
+    lastName: "dirte",
     age: 45,
     visits: 20,
-    status: 'Complicated',
+    status: "Complicated",
     progress: 10,
   },
-]
+];
 
-const columnHelper = createColumnHelper<Person>()
+const columnHelper = createColumnHelper<Person>();
 
 const columns = [
-  columnHelper.accessor('firstName', {
-    cell: info => info.getValue(),
-    footer: info => info.column.id,
+  columnHelper.accessor("firstName", {
+    cell: (info) => info.getValue(),
+    footer: (info) => info.column.id,
   }),
-  columnHelper.accessor(row => row.lastName, {
-    id: 'lastName',
-    cell: info => <i>{info.getValue()}</i>,
+  columnHelper.accessor((row) => row.lastName, {
+    id: "lastName",
+    cell: (info) => <i>{info.getValue()}</i>,
     header: () => <span>Last Name</span>,
-    footer: info => info.column.id,
+    footer: (info) => info.column.id,
   }),
-  columnHelper.accessor('age', {
-    header: () => 'Age',
-    cell: info => info.renderValue(),
-    footer: info => info.column.id,
+  columnHelper.accessor("age", {
+    header: () => "Age",
+    cell: (info) => info.renderValue(),
+    footer: (info) => info.column.id,
   }),
-  columnHelper.accessor('visits', {
+  columnHelper.accessor("visits", {
     header: () => <span>Visits</span>,
-    footer: info => info.column.id,
+    footer: (info) => info.column.id,
   }),
-  columnHelper.accessor('status', {
-    header: 'Status',
-    footer: info => info.column.id,
+  columnHelper.accessor("status", {
+    header: "Status",
+    footer: (info) => info.column.id,
   }),
-  columnHelper.accessor('progress', {
-    header: 'Profile Progress',
-    footer: info => info.column.id,
+  columnHelper.accessor("progress", {
+    header: "Profile Progress",
+    footer: (info) => info.column.id,
   }),
-]
+];
 
-// Use the table in your component
 function MyTable() {
   const table = useReactTable({
-    data: defaultData,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-  })
-
+  });
 
   return (
-    <div className="h-[400px] w-full" style={lightModeVars}>
-      <ReactTanstackTableUi
-        table={tableInstance}
-        width={800}
-        height={400}
-        skin={defaultSkin}
-      />
+    <div style={lightModeVars}>
+      <ReactTanstackTableUi table={table} />
     </div>
   );
 }
+
+export default MyTable;
 ```
 
-For more advanced features like:
-- Virtual scrolling with large datasets
-- Custom skins and theming
-- Drag and drop functionality
-- Column resizing and reordering
+## Table sizing
 
-Check out our [documentation](https://rttui-docs.vercel.app) and [examples](https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/full).
+By default the width of the table will the aggregated width of the columns and the height will be the aggregated height of the rows. Either set a fixed width and height to make
+the table scroll or use a component to automatically measure the space available. For example:
 
-## Documentation
+```tsx
+import useMeasure from "react-use-measure";
 
-Visit our [documentation site](https://rttui-docs.vercel.app) for comprehensive guides, examples, and API references.
+const [ref, { width, height }] = useMeasure();
 
-## Examples
+<>
+  // Create a wrapper that is dynamically sized and position relative
+  <div style={{ position: "relative", flex: 1, ...lightModeVars }}>
+    {/*
+    Create an inner element that will be position absolute to mirror the size of
+    the wrapper. This is the element that is measured. It is important that this
+    element is position absolute so it doesn't change the size of the wrapper
+    after measuring which could cause an infinite measure-resize-measure-resize
+    loop
+    */}
+    <div style={{ position: "absolute", inset: 0 }} ref={ref}>
+      {width && height && (
+        <ReactTanstackTableUi table={table} width={width} height={height} />
+      )}
+    </div>
+  </div>
+</>;
+```
 
-Try our interactive examples:
+or you can import an autosizer from the `@rttui/core`, which does the above more or less, so you don't have to install more dependencies:
 
-- [Full Example](https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/full?embed=1&theme=dark&preset=node&file=src/app.tsx)
-- [Codesandbox](https://codesandbox.io/p/devbox/github/ricsam/react-tanstack-table-ui/tree/main/examples/full?embed=1&theme=dark&file=src/app.tsx)
+```tsx
+import { AutoSizer } from "@rttui/core";
 
-## Repository Structure
+<AutoSizer style={{ flex: 1, ...lightModeVars }}>
+  <ReactTanstackTableUi table={table} />
+</AutoSizer>;
+```
 
-### Packages
+The `<AutoSizer />` component will create a context to provide the width and height to the `<ReactTanstackTableUi />` component.
 
-- `core`: Core functionality and base components
-- `skin-mui`: Material UI implementation
-- `skin-bleu`: Bleu-themed components
-- `fixtures`: Test fixtures and utilities
-- `docs`: Documentation website
+## Next Steps
 
-### Examples
+Now that you have a basic table set up, you can explore the following topics:
 
-Example projects demonstrating various use cases:
+- Explore [the examples](https://rttui-docs.vercel.app/examples)
+- Discover [different skins](https://rttui-docs.vercel.app/skins)
+- Learn about [table virtualization performance](https://rttui-docs.vercel.app/blog/architecture) for large datasets
 
-- `full`: Complete example with all features
-- `minimal`: Minimal setup example
-- `skins`: Examples of different visual themes
-
-### Scripts
-
-- `link_lib_to_examples.ts`: Development utility to link local packages to examples
-
-## Contributing
-
-Contributions are welcome! Please check the [contributing guidelines](CONTRIBUTING.md) for more information.
+Check out the complete [API reference](https://rttui-docs.vercel.app/docs/api) for detailed documentation on all components and options.
 
 ## License
 

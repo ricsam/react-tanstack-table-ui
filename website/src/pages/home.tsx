@@ -496,7 +496,7 @@ export function HomePage() {
       </div>
 
       {/* Live Demo Section */}
-      <div ref={demoSectionRef} className="py-16 bg-white dark:bg-gray-900">
+      <div ref={demoSectionRef} className="py-16 bg-white dark:bg-gray-900" id="live-demo">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
             <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
