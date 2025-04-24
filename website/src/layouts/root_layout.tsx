@@ -20,6 +20,8 @@ const TableOfContents = ({
 }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const tocContainerRef = useRef<HTMLDivElement>(null);
+  const activeItemRef = useRef<string | null>(null);
 
   // Check if we have any valid TOC items with IDs
   const hasValidItems = toc.some(
@@ -76,6 +78,37 @@ const TableOfContents = ({
   }, []);
 
   const disableScrollRef = useRef(false);
+
+  // Scroll active TOC item into view when activeId changes
+  useEffect(() => {
+    if (!activeId || activeId === activeItemRef.current) return;
+
+    // Update the ref to avoid unnecessary scrolling
+    activeItemRef.current = activeId;
+
+    // Find the active TOC item
+    const activeElement = document.getElementById(`toc-item-${activeId}`);
+    const container = tocContainerRef.current;
+
+    if (activeElement && container) {
+      // Calculate position
+      const containerRect = container.getBoundingClientRect();
+      const activeRect = activeElement.getBoundingClientRect();
+      
+      // Check if element is outside viewport
+      const isVisible = 
+        activeRect.top >= containerRect.top &&
+        activeRect.bottom <= containerRect.bottom;
+      
+      if (!isVisible) {
+        // Scroll the element into view with a smooth effect
+        container.scrollTo({
+          top: activeElement.offsetTop - container.offsetHeight / 2 + activeElement.offsetHeight / 2,
+          behavior: "smooth"
+        });
+      }
+    }
+  }, [activeId]);
 
   // Improved scroll spy
   useEffect(() => {
@@ -271,6 +304,7 @@ const TableOfContents = ({
     return (
       <li key={item.id} className="-ml-px flex flex-col items-start">
         <button
+          id={`toc-item-${item.id}`}
           onClick={() => scrollToHeader(item.id!)}
           className={`
             inline-block border-l py-2 pl-4 text-left
@@ -301,7 +335,10 @@ const TableOfContents = ({
       className="fixed right-8 top-16 w-72 z-10"
       style={{ display: isVisible ? "block" : "none" }}
     >
-      <div className="max-h-[calc(100vh-8rem)] overflow-y-auto p-4">
+      <div 
+        ref={tocContainerRef}
+        className="max-h-[calc(100vh-8rem)] overflow-y-auto p-4"
+      >
         <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
           On this page
         </h3>
