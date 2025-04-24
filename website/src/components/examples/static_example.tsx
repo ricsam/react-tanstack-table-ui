@@ -110,7 +110,7 @@ export function StaticExample() {
         <div className="flex-1 min-h-[500px] sm:min-h-[600px] h-full w-full">
           <iframe
             src={tabs.find((tab) => tab.id === activeTab)?.href}
-            className="w-full h-full"
+            className="w-full h-full min-h-[500px] sm:min-h-[600px]"
             title={example.title}
             allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
             sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"

@@ -45,6 +45,9 @@ export function SidebarSection({
           to={item.path}
           className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
           style={{ paddingLeft: `${16 + depth * 16}px` }}
+          activeOptions={{
+            exact: true,
+          }}
           activeProps={{
             className:
               "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",

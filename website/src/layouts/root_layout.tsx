@@ -321,9 +321,9 @@ export function RootLayout() {
   const [isMobile, setIsMobile] = useState(false);
 
   const matches = useMatches();
-  const layout = matches.find((match) => match.staticData?.layout)?.staticData
+  const layout = matches.reverse().find((match) => match.staticData?.layout)?.staticData
     ?.layout;
-  const tableOfContents = matches.find(
+  const tableOfContents = matches.reverse().find(
     (match) => match.staticData?.tableOfContents,
   )?.staticData?.tableOfContents;
 
