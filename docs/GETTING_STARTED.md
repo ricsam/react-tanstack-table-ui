@@ -164,9 +164,8 @@ The `<AutoSizer />` component will create a context to provide the width and hei
 
 Now that you have a basic table set up, you can explore the following topics:
 
-- Learn about <a href="#" className="text-primary-600">table virtualization</a> for large datasets
-- Explore <a href="#" className="text-primary-600">sorting, filtering, and pagination</a>
-- Discover <a href="#" className="text-primary-600">custom cell rendering</a>
-- Create your own <a href="#" className="text-primary-600">custom skin</a>
+- Explore [the examples](https://rttui-docs.vercel.app/examples)
+- Discover [different skins](https://rttui-docs.vercel.app/skins)
+- Learn about [table virtualization performance](https://rttui-docs.vercel.app/blog/architecture) for large datasets
 
-Check out the complete <a href="#" className="text-primary-600">API reference</a> for detailed documentation on all components and options.
+Check out the complete [API reference](https://rttui-docs.vercel.app/docs/api) for detailed documentation on all components and options.
