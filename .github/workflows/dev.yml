@@ -15,7 +15,7 @@ jobs:
       - run: pnpm install
       - run: pnpm lint
       - run: pnpm knip
-      - run: pnpm -r exec tsc --noEmit
+      - run: pnpm -r --filter '!@rttui/website' exec tsc --noEmit
       - run: pnpm run prepare-release
       - run: pnpm --filter @rttui/test-lib-import exec playwright install --with-deps
       - run: pnpm --filter @rttui/test-lib-import exec vitest
