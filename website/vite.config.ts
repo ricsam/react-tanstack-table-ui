@@ -32,6 +32,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "~docs": path.resolve(__dirname, "../docs"),
       "~packages": path.resolve(__dirname, "../packages"),
+      "@mdx-js/react": path.resolve(__dirname, "./node_modules/@mdx-js/react"),
     },
   },
 });
