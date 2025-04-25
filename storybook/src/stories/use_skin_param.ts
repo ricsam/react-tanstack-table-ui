@@ -3,12 +3,7 @@ import { useEffect, useState } from "react";
 
 type SkinString = "core" | "bleu" | "tailwind" | "mui";
 
-const validSkins: Set<string> = new Set([
-  "core",
-  "bleu",
-  "tailwind",
-  "mui",
-]);
+const validSkins: Set<string> = new Set(["core", "bleu", "tailwind", "mui"]);
 
 const getSkinFromUrl = (frameWindow: Window) => {
   const params = new URLSearchParams(
@@ -63,7 +58,6 @@ const getFrameInfo = (): FrameInfo => {
   // Use a standard function declaration for easier typing with recursion
   function findRelevantFrame(): FrameInfo {
     i++;
-    // Check if current frame has 'path' OR if we reached the top/limit
     if (frameWindow.parent === frameWindow) {
       return {
         currentWindow: frameWindow,
@@ -93,6 +87,11 @@ export const useSkinParam = (): SkinString => {
 
   // Find the relevant window and search params (searching up the hierarchy for 'path')
   const { currentWindow, skinFromUrl, skinFromLs } = getFrameInfo();
+  console.log({
+    currentWindow,
+    skinFromUrl,
+    skinFromLs,
+  });
 
   const skinFromStorage = skinFromUrl ?? skinFromLs ?? "core";
   const [updatedSkin, setUpdatedSkin] = useState(skinFromStorage);

@@ -81,7 +81,7 @@ export const Checkbox = ({ getProps, onChange }: CheckboxProps) => {
           alignSelf: "center",
           justifySelf: "center",
           stroke: "white",
-          opacity: checked ? 1 : 0,
+          opacity: (checked && !indeterminate) ? 1 : 0,
         }}
         viewBox="0 0 14 14"
         fill="none"

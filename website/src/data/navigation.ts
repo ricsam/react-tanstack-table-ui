@@ -67,9 +67,4 @@ export const navigation: NavItem[] = [
       path: `/examples/${example.id}`,
     })),
   },
-  {
-    title: "Blog",
-    children: [{ title: "RTTUI Architecture", path: "/blog/architecture" }],
-    defaultExpanded: true,
-  },
 ];

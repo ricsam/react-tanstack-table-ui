@@ -22,6 +22,7 @@ import { Resizer } from "./default_skin/resizer";
 import { ExpandButton } from "./default_skin/expand_button";
 import { RowPinButtons } from "./default_skin/row_pin_buttons";
 import { CellTextBold } from "./default_skin/cell_text_bold";
+import { Header } from "./default_skin/header";
 import {
   CellCurrency,
   type CellCurrencyProps,
@@ -93,6 +94,7 @@ export {
   CellLink,
   CellPercent,
   AutoSizer,
+  Header,
 };
 export type {
   Skin,

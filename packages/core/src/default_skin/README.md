@@ -9,7 +9,6 @@ This skin is part of the `@rttui/core` package. Its dependencies are managed wit
 - `react`
 - `react-dom`
 - `@tanstack/react-table`
-- `@tanstack/react-virtual`
 
 Ensure these are installed in your project.
 
@@ -19,8 +18,6 @@ Since this skin is part of the core package, you install it by installing the co
 
 ```bash
 npm install @rttui/core
-# or
-yarn add @rttui/core
 ```
 
 ## Usage
@@ -28,12 +25,12 @@ yarn add @rttui/core
 The primary export for using the skin is the `defaultSkin` object from `@rttui/core`:
 
 ```tsx
-import { VirtualizedTable } from '@rttui/core';
+import { ReactTanstackTableUi } from '@rttui/core';
 import { defaultSkin } from '@rttui/core'; // Import the skin object
 
 // ... component setup ...
 
-<VirtualizedTable
+<ReactTanstackTableUi
   {/* ... other props ... */}
   skin={defaultSkin}
 />
@@ -45,7 +42,6 @@ The following component files are exported from `./index.ts` primarily for poten
 
 - `HeaderPinButtons`
 - `Checkbox`
-- `HeaderCell`
 - `CellAvatar`
 - `CellAvatarWithText`
 - `CellNumber`
@@ -60,3 +56,4 @@ The following component files are exported from `./index.ts` primarily for poten
 - `Cell`
 - `CellLink`
 - `CellPercent`
+- `Header

@@ -1,103 +1,42 @@
-import { iterateOverColumns } from "@rttui/core";
+import {
+  Cell,
+  Header,
+  decorateColumnHelper,
+  iterateOverColumns,
+} from "@rttui/core";
 import { User, generateTableData } from "@rttui/fixtures";
-import { createColumnHelper, ColumnDef, ColumnOrderState, useReactTable, getExpandedRowModel, getCoreRowModel } from "@tanstack/react-table";
+import {
+  ColumnDef,
+  ColumnOrderState,
+  createColumnHelper,
+  getCoreRowModel,
+  getExpandedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import React from "react";
-import { IndeterminateCheckbox } from "./indeterminate_checkbox";
 
-export const useBigTable = () => {
+export const useTable = () => {
   const columns = React.useMemo(() => {
-    const columnHelper = createColumnHelper<User>();
-
-    const includeLeafRows = true;
-    const includeParentRows = true;
+    const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
+      header: (original) => (
+        <Header pinButtons resizer>
+          {original}
+        </Header>
+      ),
+    });
 
     const columns: ColumnDef<User, any>[] = [
       // Combined column with all controls
       columnHelper.accessor("fullName", {
-        header: ({ table }) => (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {/* Select all checkbox */}
-            <IndeterminateCheckbox
-              {...{
-                checked: table.getIsAllRowsSelected(),
-                indeterminate: table.getIsSomeRowsSelected(),
-                onChange: table.getToggleAllRowsSelectedHandler(),
-              }} />
-
-            {/* Expand all button */}
-            <button
-              {...{
-                onClick: table.getToggleAllRowsExpandedHandler(),
-              }}
-            >
-              {table.getIsAllRowsExpanded() ? "⬇️" : "➡️"}
-            </button>
-
-            <span>Full Name</span>
-          </div>
+        header: () => (
+          <Header checkbox>
+            Full Name
+          </Header>
         ),
-        cell: ({ row, getValue }) => (
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              alignItems: "center",
-              paddingLeft: `${row.depth * 20}px`,
-            }}
-          >
-            {/* Selection checkbox */}
-            <IndeterminateCheckbox
-              {...{
-                checked: row.getIsSelected(),
-                disabled: !row.getCanSelect(),
-                indeterminate: row.getIsSomeSelected(),
-                onChange: row.getToggleSelectedHandler(),
-              }} />
-
-            {/* Expand/collapse button */}
-            {row.getCanExpand() ? (
-              <button
-                {...{
-                  onClick: row.getToggleExpandedHandler(),
-                  style: { cursor: "pointer" },
-                }}
-              >
-                {row.getIsExpanded() ? "⬇️" : "➡️"}
-              </button>
-            ) : (
-              <span style={{ width: "24px", display: "inline-block" }}>🔵</span>
-            )}
-
-            {/* Pin buttons */}
-            {row.getIsPinned() ? (
-              <button
-                onClick={() => row.pin(false, includeLeafRows, includeParentRows)}
-              >
-                ❌
-              </button>
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "4px",
-                }}
-              >
-                <button
-                  onClick={() => row.pin("top", includeLeafRows, includeParentRows)}
-                >
-                  ⬆️
-                </button>
-                <button
-                  onClick={() => row.pin("bottom", includeLeafRows, includeParentRows)}
-                >
-                  ⬇️
-                </button>
-              </div>
-            )}
-
-            {/* Name content */}
-            <span>{getValue()}</span>
-          </div>
+        cell: ({ getValue }) => (
+          <Cell checkbox expandButton pinButtons>
+            {getValue()}
+          </Cell>
         ),
         id: "full-name",
         size: 300, // Increased size to accommodate all controls
@@ -301,43 +240,16 @@ export const useBigTable = () => {
       }),
     ];
 
-    // Create additional columns to get to about 100 columns total
-    // Using a variety of fields instead of just duplicating department
-    const fieldCycles = [
-      "fullName",
-      "email",
-      "city",
-      "country",
-      "favoriteGame",
-      "experienceYears",
-      "rating",
-      "department",
-      "jobTitle",
-      "salary",
-    ];
-
-    const remainingColumns = 100 - columns.length;
-    for (let i = 0; i < remainingColumns; i += 1) {
-      const field = fieldCycles[i % fieldCycles.length];
-      columns.push(
-        columnHelper.accessor(field as any, {
-          header: `Extra ${i + 1}`,
-          cell: (info) => info.getValue(),
-          id: `extra-${i + 1}`,
-          size: 150,
-        })
-      );
-    }
-
     return columns;
   }, []);
 
   const [data, setData] = React.useState<User[]>(() =>
     // Use a fixed seed for consistent test data
-    generateTableData({ maxRows: 1e5, seed: 12345 })
+    generateTableData({ maxRows: 5000, seed: 12345 }),
   );
 
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() => iterateOverColumns(columns)
+  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() =>
+    iterateOverColumns(columns),
   );
   const getSubRows = (row: User) => {
     return row.otherCountries;
@@ -361,6 +273,7 @@ export const useBigTable = () => {
       minSize: 60,
       maxSize: 800,
     },
+    enableColumnPinning: true,
     columnResizeMode: "onChange",
     getRowCanExpand: () => true,
     getExpandedRowModel: getExpandedRowModel(),

@@ -7,6 +7,7 @@ import { RowPinButtons } from "./row_pin_buttons";
 import { useRowProps } from "../table/hooks/use_row_props";
 import { shallowEqual } from "../utils";
 import { useRowRef } from "../table/hooks/use_row_ref";
+import { Resizer } from "./resizer";
 
 export type CellProps = {
   children?: React.ReactNode;
@@ -14,6 +15,7 @@ export type CellProps = {
   expandButton?: boolean;
   pinButtons?: boolean;
   highlightSelected?: boolean;
+  resizer?: boolean;
 };
 export function Cell({
   children,
@@ -21,6 +23,7 @@ export function Cell({
   expandButton,
   pinButtons,
   highlightSelected,
+  resizer,
 }: CellProps) {
   const { depth, checked } = useRowProps({
     callback: (vrow) => {
@@ -83,6 +86,7 @@ export function Cell({
       ) : (
         <CellText>{children}</CellText>
       )}
+      {resizer && <Resizer />}
     </div>
   );
 }
