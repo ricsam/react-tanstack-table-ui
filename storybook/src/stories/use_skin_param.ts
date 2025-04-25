@@ -37,7 +37,6 @@ const storeSkin = (currentWindow: Window, skin: SkinString) => {
 };
 // Define the expected return type for useMemo
 type FrameInfo = {
-  currentWindow: Window;
   skinFromUrl: SkinString | undefined;
   skinFromLs: SkinString | undefined;
 };
@@ -55,23 +54,25 @@ const getFrameInfo = (): FrameInfo => {
     }
     return undefined;
   };
+  let skinFromLs = parseLs(frameWindow);
+  let skinFromUrl = getSkinFromUrl(frameWindow);
   // Use a standard function declaration for easier typing with recursion
   function findRelevantFrame(): FrameInfo {
     i++;
-    if (frameWindow.parent === frameWindow) {
+    skinFromUrl = getSkinFromUrl(frameWindow);
+    skinFromLs = skinFromLs ?? parseLs(frameWindow);
+    if (skinFromUrl) {
       return {
-        currentWindow: frameWindow,
-        skinFromUrl: getSkinFromUrl(frameWindow),
-        skinFromLs: parseLs(frameWindow),
+        skinFromUrl,
+        skinFromLs,
       }; // Found it
     }
 
     if (i > 10) {
       // Safety break or Top window reached
       return {
-        currentWindow: initialWindow,
-        skinFromUrl: getSkinFromUrl(initialWindow),
-        skinFromLs: parseLs(initialWindow),
+        skinFromUrl,
+        skinFromLs,
       };
     }
 
@@ -85,10 +86,9 @@ const getFrameInfo = (): FrameInfo => {
 export const useSkinParam = (): SkinString => {
   const [{ skin: propSkin }, updateArgs] = useArgs<{ skin?: SkinString }>();
 
-  // Find the relevant window and search params (searching up the hierarchy for 'path')
-  const { currentWindow, skinFromUrl, skinFromLs } = getFrameInfo();
+  // Find the search params (searching up the hierarchy for 'path')
+  const { skinFromUrl, skinFromLs } = getFrameInfo();
   console.log({
-    currentWindow,
     skinFromUrl,
     skinFromLs,
   });
@@ -100,7 +100,7 @@ export const useSkinParam = (): SkinString => {
 
   useEffect(() => {
     updateArgs({ skin: skinFromStorage });
-    storeSkin(currentWindow, skinFromStorage);
+    storeSkin(window, skinFromStorage);
     setListenForUpdates(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -108,9 +108,9 @@ export const useSkinParam = (): SkinString => {
   useEffect(() => {
     if (listenForUpdates && propSkin && propSkin !== updatedSkin) {
       setUpdatedSkin(propSkin);
-      storeSkin(currentWindow, propSkin);
+      storeSkin(window, propSkin);
     }
-  }, [listenForUpdates, propSkin, currentWindow, updatedSkin]);
+  }, [listenForUpdates, propSkin, updatedSkin]);
 
   // Return the skin from args. Provide a default fallback.
   return updatedSkin;
