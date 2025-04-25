@@ -6,7 +6,7 @@ interface StorybookEmbedProps {
 export function StorybookEmbed({ skin, storyId }: StorybookEmbedProps) {
   let storybookUrl = `https://rttui-docs.vercel.app/static_sb/skins/index.html?path=/docs/reacttanstacktableui--docs#sb_skin=${skin}`;
   if (storyId) {
-    storybookUrl += `https://rttui-docs.vercel.app/static_sb/skins/index.html?globals=&args=skin%3A${skin}&id=${storyId}&viewMode=story#sb_skin=${skin}`;
+    storybookUrl = `https://rttui-docs.vercel.app/static_sb/skins/index.html?globals=&args=skin%3A${skin}&id=${storyId}&viewMode=story#sb_skin=${skin}`;
   }
 
   return (
