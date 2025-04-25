@@ -5,10 +5,9 @@ A collection of components and utilities for building powerful, customizable tab
 ## Features
 
 - 📜 Based on [TanStack Table](https://tanstack.com/table)
-- 🚀 Virtualized and performance optimized
+- 🚀 Made for a lot of data
 - 🎨 Multiple skins (Material UI, Tailwind, and more)
 - 🔌 Extensible architecture for custom skins
-- 📦 Modular packages for flexible integration
 
 Check out a demo on https://rttui-docs.vercel.app/#live-demo
 
@@ -180,7 +179,6 @@ Now that you have a basic table set up, you can explore the following topics:
 
 - Explore [the examples](https://rttui-docs.vercel.app/examples)
 - Discover [different skins](https://rttui-docs.vercel.app/skins)
-- Learn about [table virtualization performance](https://rttui-docs.vercel.app/blog/architecture) for large datasets
 
 Check out the complete [API reference](https://rttui-docs.vercel.app/docs/api) for detailed documentation on all components and options.
 
