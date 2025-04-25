@@ -54,6 +54,7 @@ export const navigation: NavItem[] = [
         title: "Tailwind",
         children: [
           { title: "Setup", path: "/skins/tailwind" },
+          { title: "Demo", path: "/skins/tailwind/demo" },
           { title: "Storybook", path: "/skins/tailwind/storybook" },
         ],
       },

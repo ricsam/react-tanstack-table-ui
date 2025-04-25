@@ -1,7 +1,7 @@
 import { StorybookEmbed } from "@/components/storybook/storybook_embed";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/skins/tailwind/style")({
+export const Route = createFileRoute("/skins/tailwind/demo")({
   component: RouteComponent,
   staticData: {
     layout: "full",
