@@ -4,7 +4,7 @@ A collection of components and utilities for building powerful, customizable tab
 
 ## Features
 
-- 📜 Based on [TanStack Table](https://tanstack.com/table)
+- 📜 Based on [TanStack Table](https://tanstack.com/table) and aims to implement UI support for all the TanStack Table features
 - 🚀 Made for a lot of data
 - 🎨 Multiple skins (Material UI, Tailwind, and more)
 - 🔌 Extensible architecture for custom skins

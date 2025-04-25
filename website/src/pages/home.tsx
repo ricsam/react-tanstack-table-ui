@@ -442,7 +442,7 @@ export function HomePage() {
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
                   Built on top of <a href="https://tanstack.com/table/latest" target="_blank" rel="noopener noreferrer">TanStack Table</a> for
-                  powerful table functionality.
+                  powerful table functionality and aims to implement UI for all the TanStack Table features.
                 </dd>
               </div>
 
