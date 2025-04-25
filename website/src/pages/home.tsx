@@ -366,7 +366,7 @@ export function HomePage() {
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               A collection of components and utilities for building powerful,
-              customizable tables with TanStack Table and virtual scrolling
+              customizable tables with <a href="https://tanstack.com/table/latest" target="_blank" rel="noopener noreferrer">TanStack Table</a> and virtual scrolling
               support.
             </p>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
@@ -441,7 +441,7 @@ export function HomePage() {
                   </p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                  Built on top of TanStack Table v8 (formerly React Table) for
+                  Built on top of <a href="https://tanstack.com/table/latest" target="_blank" rel="noopener noreferrer">TanStack Table</a> for
                   powerful table functionality.
                 </dd>
               </div>
@@ -456,8 +456,8 @@ export function HomePage() {
                   </p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                  Handle large datasets efficiently with TanStack Virtual for
-                  smooth scrolling performance.
+                  Handle large datasets efficiently with <a href="https://tanstack.com/virtual/latest" target="_blank" rel="noopener noreferrer">TanStack Virtual</a> for
+                  a smooth scrolling performance.
                 </dd>
               </div>
 
@@ -471,7 +471,7 @@ export function HomePage() {
                   </p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                  Choose from pre-built Material UI or Bleu themes, or create
+                  Choose from pre-built Material UI or Tailwind themes, or create
                   your own custom skin.
                 </dd>
               </div>
