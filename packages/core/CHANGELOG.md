@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.37
+
+### Patch Changes
+
+- add <Header /> skin component
+
 ## 1.0.36
 
 ### Patch Changes

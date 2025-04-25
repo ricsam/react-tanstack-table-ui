@@ -1,6 +1,6 @@
 {
   "name": "@rttui/skin-tailwind",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "main": "./src/index.tsx",
   "dependencies": {
     "@rttui/core": "workspace:^"
