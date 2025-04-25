@@ -94,17 +94,20 @@ const TableOfContents = ({
       // Calculate position
       const containerRect = container.getBoundingClientRect();
       const activeRect = activeElement.getBoundingClientRect();
-      
+
       // Check if element is outside viewport
-      const isVisible = 
+      const isVisible =
         activeRect.top >= containerRect.top &&
         activeRect.bottom <= containerRect.bottom;
-      
+
       if (!isVisible) {
         // Scroll the element into view with a smooth effect
         container.scrollTo({
-          top: activeElement.offsetTop - container.offsetHeight / 2 + activeElement.offsetHeight / 2,
-          behavior: "smooth"
+          top:
+            activeElement.offsetTop -
+            container.offsetHeight / 2 +
+            activeElement.offsetHeight / 2,
+          behavior: "smooth",
         });
       }
     }
@@ -335,7 +338,7 @@ const TableOfContents = ({
       className="fixed right-8 top-16 w-72 z-10"
       style={{ display: isVisible ? "block" : "none" }}
     >
-      <div 
+      <div
         ref={tocContainerRef}
         className="max-h-[calc(100vh-8rem)] overflow-y-auto p-4"
       >
@@ -358,11 +361,12 @@ export function RootLayout() {
   const [isMobile, setIsMobile] = useState(false);
 
   const matches = useMatches();
-  const layout = matches.reverse().find((match) => match.staticData?.layout)?.staticData
-    ?.layout;
-  const tableOfContents = matches.reverse().find(
-    (match) => match.staticData?.tableOfContents,
-  )?.staticData?.tableOfContents;
+  const layout = matches.reverse().find((match) => match.staticData?.layout)
+    ?.staticData?.layout;
+  const tableOfContents = matches
+    .reverse()
+    .find((match) => match.staticData?.tableOfContents)
+    ?.staticData?.tableOfContents;
 
   // Handle responsive behavior
   useEffect(() => {
@@ -485,13 +489,13 @@ export function RootLayout() {
                 </svg>
               </Link>
               <Link
-                to={"/core-concepts/column-auto-sizing" as any}
+                to={"/docs/api"}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 activeProps={{
                   className:
                     "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
                 }}
-                title="Core Concepts"
+                title="API Reference"
               >
                 <svg
                   className="w-5 h-5"
@@ -503,12 +507,12 @@ export function RootLayout() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
               </Link>
               <Link
-                to={"/skins/default" as any}
+                to={"/skins"}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 activeProps={{
                   className:
@@ -531,7 +535,7 @@ export function RootLayout() {
                 </svg>
               </Link>
               <Link
-                to={"/examples/minimal" as any}
+                to={"/examples"}
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 activeProps={{
                   className:
@@ -550,29 +554,6 @@ export function RootLayout() {
                     strokeLinejoin="round"
                     strokeWidth={2}
                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </Link>
-              <Link
-                to={"/api" as any}
-                className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                activeProps={{
-                  className:
-                    "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300",
-                }}
-                title="API Reference"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
               </Link>

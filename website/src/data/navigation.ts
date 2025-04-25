@@ -68,4 +68,8 @@ export const navigation: NavItem[] = [
       path: `/examples/${example.id}`,
     })),
   },
+  {
+    title: "Roadmap",
+    path: "/roadmap",
+  },
 ];
