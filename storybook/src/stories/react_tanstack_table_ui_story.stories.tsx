@@ -346,8 +346,8 @@ export const CanChangeContentOfCell: Story = {
       },
     },
     shouldUpdate: {
-      cell: (a, b) => a.column.columnDef.cell !== b.column.columnDef.cell,
-      header: () => false,
+      cell: (props) => props.context.prev.cell !== props.context.next.cell,
+      header: (props) => props.context.prev.header !== props.context.next.header,
     },
   },
   render: function Render(args) {

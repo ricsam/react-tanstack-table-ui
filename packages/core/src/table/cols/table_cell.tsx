@@ -42,30 +42,49 @@ const cellDefSelector = createTablePropsSelector(
   }: TableCellProps & {
     getShouldUpdateFn?: () => ShouldUpdate["cell"] | undefined;
   }) => ({
-    selector(props) {
-      const cell =
-        props.virtualData.body.cellLookup[rowIndex][columnIndex].cell;
-      return cell;
-    },
     shouldUnmount: (table) => {
       return (
         table.virtualData.body.cellLookup[rowIndex]?.[columnIndex] === undefined
       );
     },
-    callback: (cell) => {
+    callback: (props) => {
+      const cell =
+        props.virtualData.body.cellLookup[rowIndex][columnIndex].cell;
       return {
         cellDef: cell.column.columnDef.cell,
         cellContext: cell.getContext(),
+        isScrolling: props.virtualData.isScrolling,
+        isResizingColumn: props.virtualData.isResizingColumn,
       };
     },
-    dependencies: [{ type: "tanstack_table" }],
+    dependencies: [
+      { type: "tanstack_table" },
+      { type: "is_scrolling" },
+      { type: "is_resizing_column" },
+    ],
     areCallbackOutputEqual: (prev, next) => {
       const shouldUpdateFn = getShouldUpdateFn?.();
       if (shouldUpdateFn) {
-        const arePropsEqual = shouldUpdateFn(prev.cellContext, next.cellContext)
+        const arePropsEqual = shouldUpdateFn({
+          context: {
+            prev: prev.cellContext,
+            next: next.cellContext,
+          },
+          isScrolling: next.isScrolling,
+          isResizingColumn: next.isResizingColumn,
+        })
           ? false
           : true;
         return arePropsEqual;
+      } else {
+        // for performance, by default, we don't allow the cells to re-render if the table is scrolling or resizing a column
+        if (
+          next.isScrolling.horizontal ||
+          next.isScrolling.vertical ||
+          next.isResizingColumn
+        ) {
+          return true;
+        }
       }
 
       // shallow equal will not work because the objects will always be different

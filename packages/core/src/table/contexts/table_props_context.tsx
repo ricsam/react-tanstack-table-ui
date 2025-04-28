@@ -8,6 +8,8 @@ export type Dependency =
   | { type: "row_offsets" }
   | { type: "col_visible_range_main" }
   | { type: "col_offsets_main" }
+  | { type: "is_scrolling"; direction?: "horizontal" | "vertical" }
+  | { type: "is_resizing_column"; columnId?: string }
   | {
       type: "col_offsets";
       groupType?: "header" | "footer";

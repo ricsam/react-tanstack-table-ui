@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.38
+
+### Patch Changes
+
+- add more options to the should update function
+
 ## 1.0.37
 
 ### Patch Changes

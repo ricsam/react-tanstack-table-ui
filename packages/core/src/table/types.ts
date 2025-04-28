@@ -129,6 +129,11 @@ export type RttuiTable = {
   virtualData: {
     header: RttuiHeaderGroups;
     footer: RttuiHeaderGroups;
+    isResizingColumn: string | false;
+    isScrolling: {
+      vertical: boolean;
+      horizontal: boolean;
+    };
     body: {
       rowVirtualizer: Virtualizer<any, any>;
       colVirtualizer: Virtualizer<any, any>;
@@ -181,15 +186,18 @@ export type RttuiRef = {
   autoSizeColumns: () => void;
 };
 
+type UpdateProps<T extends CellContext<any, any> | HeaderContext<any, any>> = {
+  context: {
+    prev: T;
+    next: T;
+  };
+  isScrolling: RttuiTable["virtualData"]["isScrolling"];
+  isResizingColumn: string | false;
+};
+
 export type ShouldUpdate = {
-  cell?: (
-    prevContext: CellContext<any, any>,
-    newContext: CellContext<any, any>,
-  ) => boolean;
-  header?: (
-    prevContext: HeaderContext<any, any>,
-    newContext: HeaderContext<any, any>,
-  ) => boolean;
+  cell?: (props: UpdateProps<CellContext<any, any>>) => boolean;
+  header?: (props: UpdateProps<HeaderContext<any, any>>) => boolean;
 };
 
 type VirtualCell = {

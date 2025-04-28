@@ -18,39 +18,56 @@ const headerDefSelector = createTablePropsSelector(
     type: "header" | "footer";
     getShouldUpdateFn?: () => ShouldUpdate["header"] | undefined;
   }) => ({
-    selector: (props) => {
-      const headerGroups =
-        type === "header" ? props.virtualData.header : props.virtualData.footer;
-      const header = headerGroups.headerLookup[groupIndex][headerIndex];
-
-      const headerInstance = header.header;
-      return headerInstance;
-    },
     shouldUnmount: (table) => {
       return (
         table.virtualData[type]?.headerLookup[groupIndex]?.[headerIndex] ===
         undefined
       );
     },
-    callback: (headerInstance) => {
+    callback: (props) => {
+      const headerGroups =
+        type === "header" ? props.virtualData.header : props.virtualData.footer;
+      const header = headerGroups.headerLookup[groupIndex][headerIndex];
+
+      const headerInstance = header.header;
+
       return {
         headerDef: headerInstance.column.columnDef[type],
         headerContext: headerInstance.getContext(),
         isPlaceholder: headerInstance.isPlaceholder,
         headerId: headerInstance.id,
+        isScrolling: props.virtualData.isScrolling,
+        isResizingColumn: props.virtualData.isResizingColumn,
       };
     },
-    dependencies: [{ type: "ui_props" }, { type: "tanstack_table" }],
+    dependencies: [
+      { type: "tanstack_table" },
+      { type: "is_scrolling" },
+      { type: "is_resizing_column" },
+    ],
     areCallbackOutputEqual: (prev, next) => {
       const shouldUpdateFn = getShouldUpdateFn?.();
       if (shouldUpdateFn) {
-        const arePropsEqual = shouldUpdateFn(
-          prev.headerContext,
-          next.headerContext,
-        )
+        const arePropsEqual = shouldUpdateFn({
+          context: {
+            prev: prev.headerContext,
+            next: next.headerContext,
+          },
+          isScrolling: next.isScrolling,
+          isResizingColumn: next.isResizingColumn,
+        })
           ? false
           : true;
         return arePropsEqual;
+      } else {
+        // for performance, by default, we don't allow the cells to re-render if the table is scrolling or resizing a column
+        if (
+          next.isScrolling.horizontal ||
+          next.isScrolling.vertical ||
+          next.isResizingColumn
+        ) {
+          return true;
+        }
       }
 
       // shallow equal will not work because the objects will always be different

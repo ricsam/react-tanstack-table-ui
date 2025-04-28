@@ -39,6 +39,8 @@ export const TablePropsProvider = ({
 
       col_visible_range: getSet("col_visible_range"),
       row_visible_range: getSet("row_visible_range"),
+      is_scrolling: getSet("is_scrolling"),
+      is_resizing_column: getSet("is_resizing_column"),
     };
 
     const getTable = () => {
@@ -94,6 +96,33 @@ export const TablePropsProvider = ({
                 return;
               }
             }
+
+            if (
+              dependency.type === "is_scrolling" &&
+              listener.dependency.type === "is_scrolling"
+            ) {
+              if (
+                dependency.direction &&
+                listener.dependency.direction &&
+                dependency.direction !== listener.dependency.direction
+              ) {
+                return;
+              }
+            }
+
+            if (
+              dependency.type === "is_resizing_column" &&
+              listener.dependency.type === "is_resizing_column"
+            ) {
+              if (
+                typeof dependency.columnId === "string" &&
+                typeof listener.dependency.columnId === "string" &&
+                dependency.columnId !== listener.dependency.columnId
+              ) {
+                return;
+              }
+            }
+
             if (dependency.type !== listener.dependency.type) {
               return;
             }

@@ -127,22 +127,30 @@ type RttuiRef = {
 <a id="performance"></a>
 #### `shouldUpdate`
 
-Controls when cells/headers should re-render for performance optimization. By default, every cell will be re-rendered on each frame. To improve performance, you can return `false` from this function for cells or headers that haven't changed.
+Controls when cells/headers should re-render for performance optimization. By default, every cell will be re-rendered on each frame (except during scrolling or column resizing). To improve performance, you can return `false` from this function for cells or headers that haven't changed.
 
 ```tsx
-import { CellContext } from '@tanstack/react-table';
+import { CellContext, HeaderContext } from '@tanstack/react-table';
+
+type UpdateProps<T extends CellContext<any, any> | HeaderContext<any, any>> = {
+  context: {
+    prev: T;
+    next: T;
+  };
+  isScrolling: {
+    horizontal: boolean;
+    vertical: boolean;
+  };
+  isResizingColumn: string | false;
+};
 
 type ShouldUpdate = {
-  cell?: (
-    prevContext: CellContext,
-    newContext: CellContext,
-  ) => boolean;
-  header?: (
-    prevContext: HeaderContext,
-    newContext: HeaderContext,
-  ) => boolean;
+  cell?: (props: UpdateProps<CellContext<any, any>>) => boolean;
+  header?: (props: UpdateProps<HeaderContext<any, any>>) => boolean;
 };
 ```
+
+When implementing a `shouldUpdate` function, return `true` if the component should update, or `false` if it should not. This gives you precise control over when cells and headers re-render based on changes to their context, scroll state, or column resizing state. If a column is being resized, `isResizingColumn` will contain the column ID as a string, otherwise it will be `false`.
 
 <a id="column-meta"></a>
 ### Column Meta Options

@@ -216,6 +216,11 @@ function _slow_updateRttuiTable({
     tanstackTable: table,
     uiProps,
     virtualData: {
+      isScrolling: {
+        vertical: virtualizers.rowVirtualizer.isScrolling,
+        horizontal: virtualizers.colVirtualizers.main.virtualizer.isScrolling,
+      },
+      isResizingColumn: table.getState().columnSizingInfo.isResizingColumn,
       body: {
         rowVirtualizer: virtualizers.rowVirtualizer,
         colVirtualizer: virtualizers.colVirtualizers.main.virtualizer,
@@ -337,6 +342,25 @@ function diffRttuiTable(prev: RttuiTable | undefined, next: RttuiTable) {
     prev.virtualData.body.offsetRight !== next.virtualData.body.offsetRight
   ) {
     diff.push({ type: "col_offsets_main" });
+  }
+  if (
+    prev.virtualData.isScrolling.horizontal !==
+    next.virtualData.isScrolling.horizontal
+  ) {
+    diff.push({ type: "is_scrolling", direction: "horizontal" });
+  }
+  if (
+    prev.virtualData.isScrolling.vertical !==
+    next.virtualData.isScrolling.vertical
+  ) {
+    diff.push({ type: "is_scrolling", direction: "vertical" });
+  }
+
+  if (prev.virtualData.isResizingColumn !== next.virtualData.isResizingColumn) {
+    diff.push({
+      type: "is_resizing_column",
+      columnId: next.virtualData.isResizingColumn || undefined,
+    });
   }
 
   const serializeRows = (rows: RttuiRow[]) => {
