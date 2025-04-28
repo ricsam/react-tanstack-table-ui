@@ -365,6 +365,9 @@ export function HomePage() {
               </span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+              <span className="inline-block bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-1 rounded-md text-sm font-medium mb-2">Project is in Alpha: API may change between releases</span>
+            </p>
+            <p className="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               A collection of components and utilities for building powerful,
               customizable tables with <a href="https://tanstack.com/table/latest" target="_blank" rel="noopener noreferrer">TanStack Table</a> and virtual scrolling
               support.
@@ -441,8 +444,16 @@ export function HomePage() {
                   </p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                  Built on top of <a href="https://tanstack.com/table/latest" target="_blank" rel="noopener noreferrer">TanStack Table</a> for
-                  powerful table functionality and aims to implement UI for all the TanStack Table features.
+                  Built on top of{" "}
+                  <a
+                    href="https://tanstack.com/table/latest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    TanStack Table
+                  </a>{" "}
+                  for powerful table functionality and aims to implement UI for
+                  all the TanStack Table features.
                 </dd>
               </div>
 
@@ -456,8 +467,15 @@ export function HomePage() {
                   </p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                  Handle large datasets efficiently with <a href="https://tanstack.com/virtual/latest" target="_blank" rel="noopener noreferrer">TanStack Virtual</a> for
-                  a smooth scrolling performance.
+                  Handle large datasets efficiently with{" "}
+                  <a
+                    href="https://tanstack.com/virtual/latest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    TanStack Virtual
+                  </a>{" "}
+                  for a smooth scrolling performance.
                 </dd>
               </div>
 
@@ -471,8 +489,8 @@ export function HomePage() {
                   </p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                  Choose from pre-built Material UI or Tailwind themes, or create
-                  your own custom skin.
+                  Choose from pre-built Material UI or Tailwind themes, or
+                  create your own custom skin.
                 </dd>
               </div>
 
@@ -496,7 +514,11 @@ export function HomePage() {
       </div>
 
       {/* Live Demo Section */}
-      <div ref={demoSectionRef} className="py-16 bg-white dark:bg-gray-900" id="live-demo">
+      <div
+        ref={demoSectionRef}
+        className="py-16 bg-white dark:bg-gray-900"
+        id="live-demo"
+      >
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center mb-12">
             <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">

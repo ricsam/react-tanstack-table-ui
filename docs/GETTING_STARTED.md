@@ -1,5 +1,7 @@
 # Getting Started
 
+> **⚠️ ALPHA STATUS**: This package is currently in alpha. The API is not stable and may change between releases. Breaking changes can be introduced without notice in any release. Use with caution in production environments.
+
 This guide will help you get started with React TanStack Table UI. Follow these steps to
 install and set up the library in your React project.
 

@@ -17,5 +17,13 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.8.2"
-  }
+  },
+  "description": "A virtualized table component for React using TanStack Table",
+  "keywords": ["react", "table", "virtualized", "tanstack", "alpha"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ricsam/react-tanstack-table-ui.git"
+  },
+  "author": "ricsam",
+  "license": "MIT"
 }

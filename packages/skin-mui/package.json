@@ -13,5 +13,13 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.8"
-  }
+  },
+  "description": "Material UI skin for React TanStack Table UI",
+  "keywords": ["react", "table", "material-ui", "mui", "skin"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ricsam/react-tanstack-table-ui.git"
+  },
+  "author": "ricsam",
+  "license": "MIT"
 }

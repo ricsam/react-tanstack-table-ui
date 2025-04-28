@@ -1,5 +1,7 @@
 # React TanStack Table UI
 
+> **⚠️ ALPHA STATUS**: This package is currently in alpha. The API is not stable and may change between releases. Breaking changes can be introduced without notice in any release. Use with caution in production environments.
+
 A collection of components and utilities for building powerful, customizable tables with TanStack Table and virtual scrolling support.
 
 ## Features

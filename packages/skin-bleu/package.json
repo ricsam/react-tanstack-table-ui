@@ -15,5 +15,13 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.8.2"
-  }
+  },
+  "description": "Bleu skin for React TanStack Table UI",
+  "keywords": ["react", "table", "bleu", "skin"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ricsam/react-tanstack-table-ui.git"
+  },
+  "author": "ricsam",
+  "license": "MIT"
 }
