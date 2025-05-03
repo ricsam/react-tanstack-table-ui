@@ -4,8 +4,16 @@
   "type": "registry:component",
   "title": "Complex Table",
   "description": "A complex table showing hooks, libs and components.",
+  "dependencies": [
+    "@rttui/core",
+    "@tanstack/react-table"
+  ],
   "registryDependencies": [
-    "card"
+    "card",
+    "https://rttui-chadcn-registry.vercel.app/r/skin.json",
+    "https://rttui-chadcn-registry.vercel.app/r/cell.json",
+    "https://rttui-chadcn-registry.vercel.app/r/header.json",
+    "https://rttui-chadcn-registry.vercel.app/r/filter.json"
   ],
   "files": [
     {
