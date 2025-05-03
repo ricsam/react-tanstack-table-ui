@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.39
+
+### Patch Changes
+
+- add chadcn theme
+
 ## 1.0.38
 
 ### Patch Changes

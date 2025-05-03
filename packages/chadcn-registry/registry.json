@@ -1,0 +1,265 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "rttui-chadcn-registry",
+  "homepage": "https://rttui-chadcn-registry.vercel.app",
+  "items": [
+    {
+      "name": "cell-text-bold",
+      "type": "registry:component",
+      "title": "Cell Text Bold",
+      "description": "A simple cell text bold component",
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/cell-text-bold.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "cell-text",
+      "type": "registry:component",
+      "title": "Cell Text",
+      "description": "A simple cell text component",
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/cell-text.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "cell",
+      "type": "registry:component",
+      "title": "Cell",
+      "description": "A simple cell",
+      "dependencies": ["@rttui/core"],
+      "registryDependencies": [
+        "https://rttui-chadcn-registry.vercel.app/r/cell-text.json",
+        "https://rttui-chadcn-registry.vercel.app/r/cell-text-bold.json",
+        "https://rttui-chadcn-registry.vercel.app/r/checkbox.json",
+        "https://rttui-chadcn-registry.vercel.app/r/expand-button.json",
+        "https://rttui-chadcn-registry.vercel.app/r/row-pin-buttons.json"
+      ],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/cell.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "checkbox",
+      "type": "registry:component",
+      "title": "Checkbox",
+      "description": "A simple checkbox",
+      "dependencies": ["@rttui/core"],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/checkbox.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "expand-button",
+      "type": "registry:component",
+      "title": "Expand Button",
+      "description": "A simple expand button",
+      "dependencies": ["@rttui/core"],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/expand-button.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "filter",
+      "type": "registry:component",
+      "title": "Filter",
+      "description": "A simple filter",
+      "dependencies": ["@rttui/core"],
+      "registryDependencies": ["input"],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/filter.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "header-pin-buttons",
+      "type": "registry:component",
+      "title": "Header Pin Buttons",
+      "description": "A simple header pin buttons",
+      "dependencies": ["@rttui/core"],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/header-pin-buttons.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "header",
+      "type": "registry:component",
+      "title": "Header",
+      "description": "A simple header",
+      "dependencies": ["@rttui/core", "lucide-react"],
+      "registryDependencies": [
+        "dropdown-menu",
+        "button",
+        "https://rttui-chadcn-registry.vercel.app/r/checkbox.json",
+        "https://rttui-chadcn-registry.vercel.app/r/header-pin-buttons.json",
+        "https://rttui-chadcn-registry.vercel.app/r/resizer.json"
+      ],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/header.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "resizer",
+      "type": "registry:component",
+      "title": "Resizer",
+      "description": "A simple resizer",
+      "dependencies": ["@rttui/core"],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/resizer.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "row-pin-buttons",
+      "type": "registry:component",
+      "title": "Row Pin Buttons",
+      "description": "A simple row pin buttons",
+      "dependencies": ["@rttui/core"],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/row-pin-buttons.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "skin",
+      "type": "registry:ui",
+      "title": "Skin",
+      "description": "The table skin",
+      "dependencies": ["@rttui/core"],
+      "registryDependencies": ["card"],
+      "files": [
+        {
+          "path": "registry/new-york/rttui/skin.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "hello-world",
+      "type": "registry:component",
+      "title": "Hello World",
+      "description": "A simple hello world component",
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "registry/new-york/blocks/hello-world/hello-world.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "example-form",
+      "type": "registry:component",
+      "title": "Example Form",
+      "description": "A contact form with Zod validation.",
+      "dependencies": ["zod"],
+      "registryDependencies": ["button", "input", "label", "textarea", "card"],
+      "files": [
+        {
+          "path": "registry/new-york/blocks/example-form/example-form.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "complex-component",
+      "type": "registry:component",
+      "title": "Complex Component",
+      "description": "A complex component showing hooks, libs and components.",
+      "registryDependencies": ["card"],
+      "files": [
+        {
+          "path": "registry/new-york/blocks/complex-component/page.tsx",
+          "type": "registry:page",
+          "target": "app/pokemon/page.tsx"
+        },
+        {
+          "path": "registry/new-york/blocks/complex-component/components/pokemon-card.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/new-york/blocks/complex-component/components/pokemon-image.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/new-york/blocks/complex-component/lib/pokemon.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/new-york/blocks/complex-component/hooks/use-pokemon.ts",
+          "type": "registry:hook"
+        }
+      ]
+    },
+    {
+      "name": "complex-table",
+      "type": "registry:component",
+      "title": "Complex Table",
+      "description": "A complex table showing hooks, libs and components.",
+      "registryDependencies": ["card"],
+      "files": [
+        {
+          "path": "registry/new-york/blocks/complex-table/page.tsx",
+          "type": "registry:page",
+          "target": "app/rttui/page.tsx"
+        },
+        {
+          "path": "registry/new-york/blocks/complex-table/components/complex-table.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/new-york/blocks/complex-table/lib/generate-table-data.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/new-york/blocks/complex-table/hooks/use-table.tsx",
+          "type": "registry:hook"
+        }
+      ]
+    },
+    {
+      "name": "example-with-css",
+      "type": "registry:component",
+      "title": "Example with CSS",
+      "description": "A login form with a CSS file.",
+      "files": [
+        {
+          "path": "registry/new-york/blocks/example-with-css/example-card.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/new-york/blocks/example-with-css/example-card.css",
+          "type": "registry:component"
+        }
+      ]
+    }
+  ]
+}

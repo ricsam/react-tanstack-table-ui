@@ -1,6 +1,6 @@
 {
   "name": "@rttui/skin-bleu",
-  "version": "1.0.41",
+  "version": "1.0.42",
   "main": "./src/index.ts",
   "dependencies": {
     "@rttui/core": "workspace:^"
@@ -10,14 +10,19 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.8",
     "react-icons": "^5.5.0",
-    "@types/react": "^19.0.7",
-    "@types/react-dom": "^19.0.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "typescript": "^5.8.2"
   },
   "description": "Bleu skin for React TanStack Table UI",
-  "keywords": ["react", "table", "bleu", "skin"],
+  "keywords": [
+    "react",
+    "table",
+    "bleu",
+    "skin"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ricsam/react-tanstack-table-ui.git"

@@ -1,3 +1,4 @@
+"use client";
 import { Header } from "@tanstack/react-table";
 import { createContext, useContext } from "react";
 import { CellRefs } from "./table/types";

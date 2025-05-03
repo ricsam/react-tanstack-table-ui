@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.34
+
+### Patch Changes
+
+- add chadcn theme
+- Updated dependencies
+  - @rttui/core@1.0.39
+
 ## 0.0.33
 
 ### Patch Changes

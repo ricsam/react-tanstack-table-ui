@@ -1,3 +1,4 @@
+"use client";
 import React, { useLayoutEffect, useRef } from "react";
 import { useTableProps } from "../table/hooks/use_table_props";
 import { shallowEqual } from "../utils";

@@ -1,7 +1,7 @@
 import React from "react";
 import { useColProps } from "../table/hooks/use_col_props";
 import { useColRef } from "../table/hooks/use_col_ref";
-import { useCrushHeader } from "../use_crush_header";
+import { useCrushHeader } from "../table/hooks/use_crush_header";
 import { shallowEqual } from "../utils";
 
 // TODO: Implement default skin component

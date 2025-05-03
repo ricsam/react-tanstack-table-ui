@@ -1,3 +1,4 @@
+"use client";
 import { createContext } from "react";
 import { MeasureData } from "../types";
 
@@ -15,6 +16,7 @@ export type MeasureContextType = {
   width: number;
   height: number;
   isMeasuringInstanceLoading: boolean;
+  crushAllColumns: () => void;
 };
 
 export const MeasureContext = createContext<MeasureContextType | undefined>(

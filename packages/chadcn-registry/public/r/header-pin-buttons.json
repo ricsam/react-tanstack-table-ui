@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "header-pin-buttons",
+  "type": "registry:component",
+  "title": "Header Pin Buttons",
+  "description": "A simple header pin buttons",
+  "dependencies": [
+    "@rttui/core"
+  ],
+  "files": [
+    {
+      "path": "registry/new-york/rttui/header-pin-buttons.tsx",
+      "content": "import { shallowEqual, useColProps, useColRef } from \"@rttui/core\";\n\nexport function HeaderPinButtons() {\n  const { isPinned } = useColProps({\n    callback: ({ vheader, column }) => {\n      return {\n        isPinned: vheader.state.isPinned,\n        canPin: column.getCanPin(),\n      };\n    },\n    dependencies: [{ type: \"tanstack_table\" }],\n    areCallbackOutputEqual: shallowEqual,\n  });\n\n  const colRef = useColRef();\n\n  return (\n    <div className=\"flex gap-1 text-muted-foreground\">\n      {isPinned !== \"start\" ? (\n        <button\n          className=\"p-1 rounded opacity-50 hover:opacity-100 hover:bg-accent\"\n          onClick={() => {\n            colRef().column.pin(\"left\");\n          }}\n        >\n          <svg\n            xmlns=\"http://www.w3.org/2000/svg\"\n            width=\"16\"\n            height=\"16\"\n            viewBox=\"0 0 24 24\"\n            fill=\"none\"\n            stroke=\"currentColor\"\n            strokeWidth=\"2\"\n            strokeLinecap=\"round\"\n            strokeLinejoin=\"round\"\n          >\n            <polyline points=\"15 18 9 12 15 6\"></polyline>\n          </svg>\n        </button>\n      ) : null}\n      {isPinned ? (\n        <button\n          className=\"p-1 rounded opacity-70 hover:opacity-100 hover:bg-accent\"\n          onClick={() => {\n            colRef().column.pin(false);\n          }}\n        >\n          <svg\n            xmlns=\"http://www.w3.org/2000/svg\"\n            width=\"16\"\n            height=\"16\"\n            viewBox=\"0 0 24 24\"\n            fill=\"none\"\n            stroke=\"currentColor\"\n            strokeWidth=\"2\"\n            strokeLinecap=\"round\"\n            strokeLinejoin=\"round\"\n          >\n            <line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line>\n            <line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line>\n          </svg>\n        </button>\n      ) : null}\n      {isPinned !== \"end\" ? (\n        <button\n          className=\"p-1 rounded opacity-50 hover:opacity-100 hover:bg-accent\"\n          onClick={() => {\n            colRef().column.pin(\"right\");\n          }}\n        >\n          <svg\n            xmlns=\"http://www.w3.org/2000/svg\"\n            width=\"16\"\n            height=\"16\"\n            viewBox=\"0 0 24 24\"\n            fill=\"none\"\n            stroke=\"currentColor\"\n            strokeWidth=\"2\"\n            strokeLinecap=\"round\"\n            strokeLinejoin=\"round\"\n          >\n            <polyline points=\"9 18 15 12 9 6\"></polyline>\n          </svg>\n        </button>\n      ) : null}\n    </div>\n  );\n}\n",
+      "type": "registry:component"
+    }
+  ]
+}

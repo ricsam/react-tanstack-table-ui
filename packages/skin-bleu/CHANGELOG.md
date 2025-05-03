@@ -1,5 +1,13 @@
 # @rttui/skin-bleu
 
+## 1.0.42
+
+### Patch Changes
+
+- add chadcn theme
+- Updated dependencies
+  - @rttui/core@1.0.39
+
 ## 1.0.41
 
 ### Patch Changes

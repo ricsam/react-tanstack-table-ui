@@ -1,12 +1,12 @@
 {
   "name": "@rttui/fixtures",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "type": "module",
   "main": "./src/index.ts",
   "devDependencies": {
-    "@tanstack/react-table": "^8.20.6",
-    "@types/react": "^19.0.7",
-    "react": "^19.0.0",
+    "@tanstack/react-table": "8.20.6",
+    "@types/react": "19.0.7",
+    "react": "19.0.0",
     "typescript": "^5.8.2"
   }
 }

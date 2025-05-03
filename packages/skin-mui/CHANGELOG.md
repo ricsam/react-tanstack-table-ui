@@ -1,5 +1,13 @@
 # @rttui/skin-mui
 
+## 1.0.40
+
+### Patch Changes
+
+- add chadcn theme
+- Updated dependencies
+  - @rttui/core@1.0.39
+
 ## 1.0.39
 
 ### Patch Changes

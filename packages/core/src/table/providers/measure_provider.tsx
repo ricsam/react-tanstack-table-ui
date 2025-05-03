@@ -1,3 +1,4 @@
+"use client";
 import { Column } from "@tanstack/react-table";
 import { Table } from "@tanstack/react-table";
 import React, { useCallback, useState } from "react";
@@ -340,6 +341,9 @@ export const MeasureProvider = (props: {
     };
   }
 
+  const autoSizeColumnsRef = React.useRef(autoSizeColumns);
+  autoSizeColumnsRef.current = autoSizeColumns;
+
   const _height = getHeight();
   const _width = getWidth();
   return (
@@ -351,6 +355,9 @@ export const MeasureProvider = (props: {
           isMeasuringInstanceLoading: Boolean(isMeasuring),
           width: _width,
           height: _height,
+          crushAllColumns: () => {
+            autoSizeColumnsRef.current();
+          },
         }),
         [_height, _width, isMeasuring, measureCells],
       )}

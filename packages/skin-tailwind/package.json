@@ -1,17 +1,22 @@
 {
   "name": "@rttui/skin-tailwind",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "main": "./src/index.tsx",
   "dependencies": {
     "@rttui/core": "workspace:^"
   },
   "devDependencies": {
-    "@types/react": "^19.0.7",
-    "react": "^19.0.0",
+    "@types/react": "19.0.7",
+    "react": "19.0.0",
     "typescript": "^5.8.2"
   },
   "description": "Tailwind CSS skin for React TanStack Table UI",
-  "keywords": ["react", "table", "tailwind", "skin"],
+  "keywords": [
+    "react",
+    "table",
+    "tailwind",
+    "skin"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ricsam/react-tanstack-table-ui.git"

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { RttuiTable } from "./types";
 import { Skin } from "../skin";

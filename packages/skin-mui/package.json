@@ -1,13 +1,13 @@
 {
   "name": "@rttui/skin-mui",
-  "version": "1.0.39",
+  "version": "1.0.40",
   "main": "./src/index.tsx",
   "dependencies": {
     "@rttui/core": "workspace:^"
   },
   "devDependencies": {
-    "@types/react": "^19.0.7",
-    "react": "^19.0.0",
+    "@types/react": "19.0.7",
+    "react": "19.0.0",
     "typescript": "^5.8.2",
     "@mui/material": "^6.4.8",
     "@emotion/react": "^11.14.0",
@@ -15,7 +15,13 @@
     "@mui/icons-material": "^6.4.8"
   },
   "description": "Material UI skin for React TanStack Table UI",
-  "keywords": ["react", "table", "material-ui", "mui", "skin"],
+  "keywords": [
+    "react",
+    "table",
+    "material-ui",
+    "mui",
+    "skin"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ricsam/react-tanstack-table-ui.git"

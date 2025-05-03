@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "resizer",
+  "type": "registry:component",
+  "title": "Resizer",
+  "description": "A simple resizer",
+  "dependencies": [
+    "@rttui/core"
+  ],
+  "files": [
+    {
+      "path": "registry/new-york/rttui/resizer.tsx",
+      "content": "import {\n  shallowEqual,\n  useColProps,\n  useCrushHeader,\n  useColRef,\n} from \"@rttui/core\";\nimport React from \"react\";\n\nexport function Resizer() {\n  const crushHeader = useCrushHeader();\n\n  const { canResize, isResizing } = useColProps({\n    callback: ({ column }) => {\n      return {\n        canResize: column.getCanResize(),\n        isResizing: column.getIsResizing(),\n      };\n    },\n    dependencies: [{ type: \"tanstack_table\" }],\n    areCallbackOutputEqual: shallowEqual,\n  });\n\n  const colRef = useColRef();\n\n  React.useEffect(() => {\n    if (!isResizing) {\n      return;\n    }\n    const preventDefault = (e: Event) => {\n      e.preventDefault();\n    };\n    document.body.addEventListener(\"select\", preventDefault);\n    document.body.addEventListener(\"selectstart\", preventDefault);\n    document.body.style.userSelect = \"none\";\n    return () => {\n      document.body.removeEventListener(\"select\", preventDefault);\n      document.body.removeEventListener(\"selectstart\", preventDefault);\n      document.body.style.userSelect = \"auto\";\n    };\n  }, [isResizing]);\n\n  if (!canResize) {\n    return null;\n  }\n  return (\n    <div\n      onDoubleClick={(ev) => {\n        crushHeader(colRef().header);\n        ev.stopPropagation();\n        ev.preventDefault();\n      }}\n      onClick={(ev) => {\n        if (ev.metaKey) {\n          ev.stopPropagation();\n          ev.preventDefault();\n          crushHeader(colRef().header);\n        }\n      }}\n      onMouseDown={(ev: any) => colRef().header.getResizeHandler()(ev)}\n      onTouchStart={(ev: any) => colRef().header.getResizeHandler()(ev)}\n      className={`absolute top-0 right-0 h-full w-1 cursor-col-resize transition-opacity opacity-0 hover:opacity-50 hover:w-1 bg-primary ${isResizing ? \"opacity-50 w-1\" : \"\"}`}\n    />\n  );\n}\n",
+      "type": "registry:component"
+    }
+  ]
+}

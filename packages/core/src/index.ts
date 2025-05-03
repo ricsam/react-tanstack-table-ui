@@ -44,7 +44,8 @@ import { useColRef } from "./table/hooks/use_col_ref";
 import { useCellProps } from "./table/hooks/use_cell_props";
 import { useRowRef } from "./table/hooks/use_row_ref";
 import { useRowProps } from "./table/hooks/use_row_props";
-import { useCrushHeader } from "./use_crush_header";
+import { useCrushHeader } from "./table/hooks/use_crush_header";
+import { useCrushAllCols } from "./table/hooks/use_crush_all_cols";
 import { decorateColumnHelper } from "./decorate_column_helper";
 import type { HeaderDecorator, CellDecorator } from "./decorate_column_helper";
 import type { RttuiRef } from "./table/types";
@@ -95,6 +96,7 @@ export {
   CellPercent,
   AutoSizer,
   Header,
+  useCrushAllCols,
 };
 export type {
   Skin,

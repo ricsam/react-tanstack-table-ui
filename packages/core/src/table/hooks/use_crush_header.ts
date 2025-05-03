@@ -1,7 +1,7 @@
 import { Header } from "@tanstack/react-table";
-import { useMeasureContext } from "./table/hooks/use_measure_context";
-import { useTableContext } from "./table/table_context";
-import { getSubHeaders } from "./utils";
+import { useMeasureContext } from "./use_measure_context";
+import { useTableContext } from "../table_context";
+import { getSubHeaders } from "../../utils";
 
 export const useCrushHeader = () => {
   const { measureCells } = useMeasureContext();
