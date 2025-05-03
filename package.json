@@ -35,7 +35,8 @@
       "packages/core/src/utils.ts",
       "examples/**/*",
       "website/**/*",
-      ".github/**/*"
+      ".github/**/*",
+      "packages/chadcn-registry/**/*"
     ],
     "ignoreDependencies": [
       "prettier",

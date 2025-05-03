@@ -1,6 +1,5 @@
 import {
   CellContext,
-  ColumnDef,
   ColumnHelper,
   HeaderContext,
 } from "@tanstack/react-table";
