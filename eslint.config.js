@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import filenamesSimple from 'eslint-plugin-filenames-simple'
 
 export default tseslint.config(
-  { ignores: ['**/dist/**/*', '**/public/**/*', '**/storybook-static/**/*', '**/chadcn-registry/**/*'] },
+  { ignores: ['**/dist/**/*', '**/public/**/*', '**/storybook-static/**/*', 'chadcn-registry/**/*'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

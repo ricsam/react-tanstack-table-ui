@@ -36,7 +36,7 @@
       "examples/**/*",
       "website/**/*",
       ".github/**/*",
-      "packages/chadcn-registry/**/*"
+      "chadcn-registry/**/*"
     ],
     "ignoreDependencies": [
       "prettier",
