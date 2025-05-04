@@ -1,5 +1,12 @@
 # @rttui/skin-bleu
 
+## 1.0.43
+
+### Patch Changes
+
+- Updated dependencies
+  - @rttui/core@1.0.40
+
 ## 1.0.42
 
 ### Patch Changes

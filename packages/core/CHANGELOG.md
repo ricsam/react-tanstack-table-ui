@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.40
+
+### Patch Changes
+
+- better defaults
+
 ## 1.0.39
 
 ### Patch Changes
