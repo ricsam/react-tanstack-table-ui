@@ -21,8 +21,17 @@ import { AutoSizerContext } from "./contexts/auto_sizer_context";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
+    /**
+     * @default true
+     */
     autoCrush?: boolean;
+    /**
+     * @default true
+     */
     fillAvailableSpaceAfterCrush?: boolean;
+    /**
+     * @default "both"
+     */
     crushMinSizeBy?: "header" | "cell" | "both";
   }
 }
@@ -33,18 +42,24 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
   const autoSizerContext = React.useContext(AutoSizerContext);
   const width = props.width ?? autoSizerContext?.width;
   const height = props.height ?? autoSizerContext?.height;
+  if (props.width || props.height) {
+    autoSizerContext?.notify({
+      type: "fixedSize",
+      size: { width: props.width, height: props.height },
+    });
+  }
   return (
     <MeasureProvider
       width={width}
       height={height}
-      crushMinSizeBy={props.crushMinSizeBy}
-      scrollbarWidth={props.scrollbarWidth}
+      crushMinSizeBy={props.crushMinSizeBy ?? "both"}
+      scrollbarWidth={props.scrollbarWidth ?? 16}
       skin={props.skin}
-      fillAvailableSpaceAfterCrush={props.fillAvailableSpaceAfterCrush}
-      autoCrushColumns={props.autoCrushColumns}
+      fillAvailableSpaceAfterCrush={props.fillAvailableSpaceAfterCrush ?? true}
+      autoCrushColumns={props.autoCrushColumns ?? true}
       tableRef={props.tableRef}
       table={props.table}
-      autoCrushNumCols={props.autoCrushNumCols}
+      autoCrushNumCols={props.autoCrushNumCols ?? 50}
     >
       <MeasureSwitch>
         <TablePropsProvider>
@@ -144,12 +159,12 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
       : (props.columnOverscan ?? 1),
     renderSubComponent: props.renderSubComponent,
     underlay: props.underlay,
-    autoCrushColumns: props.autoCrushColumns,
+    autoCrushColumns: props.autoCrushColumns ?? true,
     pinColsRelativeTo: props.pinColsRelativeTo ?? "cols",
     pinRowsRelativeTo: props.pinRowsRelativeTo ?? "rows",
-    crushMinSizeBy: props.crushMinSizeBy ?? "header",
-    fillAvailableSpaceAfterCrush: props.fillAvailableSpaceAfterCrush,
-    scrollbarWidth: props.scrollbarWidth,
+    crushMinSizeBy: props.crushMinSizeBy ?? "both",
+    fillAvailableSpaceAfterCrush: props.fillAvailableSpaceAfterCrush ?? true,
+    scrollbarWidth: props.scrollbarWidth ?? 16,
     tableRef: props.tableRef,
     shouldUpdate: props.shouldUpdate,
   };

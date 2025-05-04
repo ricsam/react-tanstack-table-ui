@@ -22,11 +22,11 @@
 
 | Prop | Type | Default |
 |------|------|---------|
-| [`autoCrushColumns`](#column-crushing) | `boolean` | `false` |
+| [`autoCrushColumns`](#column-crushing) | `boolean` | `true` |
 | [`autoCrushNumCols`](#column-crushing) | `number` | `50` |
-| [`crushMinSizeBy`](#column-crushing) | `"header" \| "cell" \| "both"` | `"header"` |
-| [`fillAvailableSpaceAfterCrush`](#space-filling) | `boolean` | `false` |
-| [`scrollbarWidth`](#space-filling) | `number` | — |
+| [`crushMinSizeBy`](#column-crushing) | `"header" \| "cell" \| "both"` | `"both"` |
+| [`fillAvailableSpaceAfterCrush`](#space-filling) | `boolean` | `true` |
+| [`scrollbarWidth`](#space-filling) | `number` | 16 |
 
 ### Pinning Behavior
 

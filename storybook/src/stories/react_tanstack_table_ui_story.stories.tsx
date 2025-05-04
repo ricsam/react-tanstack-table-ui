@@ -435,3 +435,24 @@ export const AutoSizerExample: Story = {
     );
   },
 };
+
+
+export const AutoSizerExample2: Story = {
+  args: {
+    data: "small",
+    columns: "many",
+    width: undefined,
+    height: undefined,
+  },
+  render: function Render(args) {
+    const skin = useSkinParam();
+    return (
+      <div style={{ width: "50vw", height: "50vh" }}>
+        <AutoSizer style={{ width: "100%", border: "1px solid red" }}>
+          <ReactTanstackTableUi {...args} skin={skin} height={300} />
+        </AutoSizer>
+      </div>
+    );
+  },
+};
+

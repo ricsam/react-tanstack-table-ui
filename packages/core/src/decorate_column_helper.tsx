@@ -69,12 +69,12 @@ export const decorateColumnHelper = <T,>(
         };
         iter(columnWithFilter);
         leafColumns.forEach((col) => {
-          if (col.id.startsWith("_decorator_filter_")) {
+          if (col.id?.startsWith("_decorator_filter_")) {
             return;
           }
           const filterCol = {
             ...col,
-            id: "_decorator_filter_" + col.id,
+            id: "_decorator_filter_" + (col.id ?? "unknown_col"),
             header: () => decorators.filter?.(),
           };
           col.columns = [filterCol];

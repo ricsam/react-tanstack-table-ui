@@ -109,8 +109,6 @@ const components: any = {
               <div className="w-full">
                 <AutoSizer
                   style={{ width: "100%" }}
-                  adaptTableToContainer={{ height: false }}
-                  adaptContainerToTable={{ height: true }}
                 >
                   <ReactTanstackTableUi
                     table={table}
