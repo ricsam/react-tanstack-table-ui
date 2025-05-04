@@ -255,8 +255,8 @@ export const Skin: RttuiSkin = {
           "relative flex group/row box-border z-1",
           "border-b border-b-border",
           flatIndex % 2 === 0
-            ? "bg-background group/even"
-            : "bg-muted group/odd",
+            ? "bg-background even"
+            : "bg-muted odd",
           "hover:bg-[#E3F2FD] dark:hover:bg-[#3a473a]",
         )}
         style={{
@@ -321,7 +321,7 @@ export const Skin: RttuiSkin = {
           ref={ref}
           className={cn(
             `td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis`,
-            "group/even:bg-background group/odd:bg-muted",
+            "[.even_&]:bg-background [.odd_&]:bg-muted",
             "group-hover/row:bg-[#E3F2FD] dark:group-hover/row:bg-[#3a473a]",
             `relative border-b border-b-border`,
             ((isPinned === "start" && !isLastPinned) || !isPinned) &&
