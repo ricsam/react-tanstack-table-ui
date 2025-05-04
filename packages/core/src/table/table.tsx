@@ -176,9 +176,36 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
       "row pinning will not work unless enableRowPinning is set to true",
     );
   }
+  const tableState = table.getState();
+
+  if (
+    tableState.columnFilters.length > 0 &&
+    (!table.options.enableColumnFilters || !table.options.getFilteredRowModel)
+  ) {
+    throw new Error(
+      "column filtering will not work unless enableColumnFilters is set to true and getFilteredRowModel is provided",
+    );
+  }
+
   if (table.getIsSomeRowsSelected() && !table.options.enableRowSelection) {
     throw new Error(
       "row selection will not work unless enableRowSelection is set to true",
+    );
+  }
+  if (
+    tableState.columnSizingInfo.isResizingColumn &&
+    table.options.columnResizeMode !== "onChange"
+  ) {
+    throw new Error(
+      "columnResizeMode must be set to 'onChange' to use the column resizing feature",
+    );
+  }
+  if (
+    tableState.sorting.length > 0 &&
+    (!table.options.enableSorting || !table.options.getSortedRowModel)
+  ) {
+    throw new Error(
+      "sorting will not work unless enableSorting is set to true and getSortedRowModel is provided",
     );
   }
 

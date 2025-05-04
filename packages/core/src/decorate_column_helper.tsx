@@ -76,6 +76,7 @@ export const decorateColumnHelper = <T,>(
             ...col,
             id: "_decorator_filter_" + (col.id ?? "unknown_col"),
             header: () => decorators.filter?.(),
+            footer: undefined,
           };
           col.columns = [filterCol];
         });

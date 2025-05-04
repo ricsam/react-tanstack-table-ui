@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.43
+
+### Patch Changes
+
+- more prop validation
+
 ## 1.0.42
 
 ### Patch Changes
