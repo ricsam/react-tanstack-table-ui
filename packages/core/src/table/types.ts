@@ -33,6 +33,7 @@ export type ReactTanstackTableUiProps<T> = {
   tableRef?: React.RefObject<RttuiRef | undefined>;
   autoCrushNumCols?: number;
   shouldUpdate?: ShouldUpdate;
+  autoCrushMaxSize?: number;
   debug?: {
     measureInstance?: boolean;
   };

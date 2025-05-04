@@ -24,7 +24,9 @@
 |------|------|---------|
 | [`autoCrushColumns`](#column-crushing) | `boolean` | `true` |
 | [`autoCrushNumCols`](#column-crushing) | `number` | `50` |
+| [`autoCrushMaxSize`](#column-crushing) | `number` | - |
 | [`crushMinSizeBy`](#column-crushing) | `"header" \| "cell" \| "both"` | `"both"` |
+| [`debug.measureInstance`](#column-crushing) | `boolean` | `false` |
 | [`fillAvailableSpaceAfterCrush`](#space-filling) | `boolean` | `true` |
 | [`scrollbarWidth`](#space-filling) | `number` | 16 |
 
@@ -52,7 +54,9 @@ The following options can be added to column meta in the Tanstack Table instance
 |--------|------|---------|
 | [`autoCrush`](#column-meta) | `boolean` | `true` |
 | [`fillAvailableSpaceAfterCrush`](#column-meta) | `boolean` | `true` |
-| [`crushMinSizeBy`](#column-meta) | `"header" \| "cell" \| "both"` | `"header"` |
+| [`crushMinSizeBy`](#column-meta) | `"header" \| "cell" \| "both"` | `"both"` |
+| [`autoCrushMaxSize`](#column-meta) | `number` | - |
+
 
 ## Detailed Prop Descriptions
 
@@ -92,6 +96,8 @@ These properties improve scrolling performance by pre-rendering rows and columns
 - `autoCrushColumns`: When `true`, all columns will be automatically resized to fit their content (default: `false`).
 - `autoCrushNumCols`: Maximum number of columns to measure when `autoCrushColumns` is enabled (default: `50`).
 - `crushMinSizeBy`: Determines whether minimum column size should be based on the header, cell content, or both (default: `"header"`).
+- `autoCrushMaxSize`: Maximum size (in pixels) that a column can be automatically resized to when crushing. If not specified, columns will use their `maxSize` property or have no maximum size limit.
+- `debug.measureInstance`: Will show the instance of the table where columns are measured to visually debug the css.
 
 <a id="space-filling"></a>
 #### Space Filling
@@ -159,7 +165,8 @@ These options can be set on individual columns through the column meta property:
 
 - `autoCrush`: Enable/disable auto-crush for specific columns (default: `true`).
 - `fillAvailableSpaceAfterCrush`: Enable/disable filling available space for specific columns (default: `true`).
-- `crushMinSizeBy`: Column-specific crush size calculation method (default: `"header"`).
+- `crushMinSizeBy`: Column-specific crush size calculation method (default: `"both"`).
+- `autoCrushMaxSize`: When auto crushing limit wide columns
 
 ## AutoSizer Props Overview
 

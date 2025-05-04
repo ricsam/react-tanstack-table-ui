@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.42
+
+### Patch Changes
+
+- autoCrushMaxSize and measure instance debug option
+
 ## 1.0.41
 
 ### Patch Changes

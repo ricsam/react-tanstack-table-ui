@@ -1,4 +1,4 @@
-import { Column, RowData } from "@tanstack/react-table";
+import { Column, ColumnDef, RowData } from "@tanstack/react-table";
 import React from "react";
 import { defaultSkin } from "../default_skin/default_skin";
 import { MeasureCellProvider } from "../measure_cell_provider";
@@ -33,6 +33,8 @@ declare module "@tanstack/react-table" {
      * @default "both"
      */
     crushMinSizeBy?: "header" | "cell" | "both";
+
+    autoCrushMaxSize?: number;
   }
 }
 
@@ -60,6 +62,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
       tableRef={props.tableRef}
       table={props.table}
       autoCrushNumCols={props.autoCrushNumCols ?? 50}
+      autoCrushMaxSize={props.autoCrushMaxSize}
     >
       <MeasureSwitch debug={props.debug?.measureInstance}>
         <TablePropsProvider>
@@ -123,6 +126,7 @@ function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
                   height: "100%",
                   zIndex: 1000,
                   contain: "strict",
+                  pointerEvents: "none",
                 }
           }
         >
@@ -161,12 +165,43 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
   const { table } = props;
   const measureContext = useMeasureContext();
 
-  // validate props
+  //#region validate props
   if (table.getIsSomeColumnsPinned() && !table.options.enableColumnPinning) {
     throw new Error(
       "column pinning will not work unless enableColumnPinning is set to true",
     );
   }
+  if (table.getIsSomeRowsPinned() && !table.options.enableRowPinning) {
+    throw new Error(
+      "row pinning will not work unless enableRowPinning is set to true",
+    );
+  }
+  if (table.getIsSomeRowsSelected() && !table.options.enableRowSelection) {
+    throw new Error(
+      "row selection will not work unless enableRowSelection is set to true",
+    );
+  }
+
+  const cols = props.table.options.columns;
+  React.useEffect(() => {
+    const colIds = new Set<string>();
+    const iterateOverCols = (cols: ColumnDef<any, any>[]) => {
+      cols.forEach((col) => {
+        if (col.id) {
+          if (colIds.has(col.id)) {
+            throw new Error("column ids must be unique");
+          }
+          colIds.add(col.id);
+          if ("columns" in col && col.columns) {
+            iterateOverCols(col.columns);
+          }
+        }
+      });
+    };
+    iterateOverCols(cols);
+  }, [cols]);
+
+  //#endregion
 
   const uiProps: UiProps = {
     width: measureContext.width,

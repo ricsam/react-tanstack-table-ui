@@ -20,6 +20,7 @@ export const MeasureProvider = (props: {
   autoCrushColumns: boolean | undefined;
   tableRef: React.RefObject<RttuiRef | undefined> | undefined;
   autoCrushNumCols: number | undefined;
+  autoCrushMaxSize: number | undefined;
 }) => {
   const [isMeasuring, setOnMeasureCb] = useState<undefined | IsMeasuring>(
     undefined,
@@ -84,6 +85,7 @@ export const MeasureProvider = (props: {
     autoCrushColumns: props.autoCrushColumns ?? false,
     autoCrushNumCols: props.autoCrushNumCols ?? 0,
     skin: props.skin ?? defaultSkin,
+    autoCrushMaxSize: props.autoCrushMaxSize,
   };
 
   const refs = React.useRef(refsValue);
@@ -91,6 +93,8 @@ export const MeasureProvider = (props: {
 
   const contrainSize = React.useCallback((size: number, col?: Column<any>) => {
     const maxSize =
+      col?.columnDef?.meta?.autoCrushMaxSize ??
+      refs.current.autoCrushMaxSize ??
       col?.columnDef?.maxSize ??
       refs.current.table.options.defaultColumn?.maxSize ??
       Number.POSITIVE_INFINITY;
