@@ -61,7 +61,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
       table={props.table}
       autoCrushNumCols={props.autoCrushNumCols ?? 50}
     >
-      <MeasureSwitch>
+      <MeasureSwitch debug={props.debug?.measureInstance}>
         <TablePropsProvider>
           <TablePropsUpdater {...props} width={width} height={height} />
         </TablePropsProvider>
@@ -70,7 +70,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
   );
 };
 
-function MeasureSwitch(props: { children: React.ReactNode }) {
+function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
   const context = useMeasureContext();
 
   const nonMeasuringContext = React.useMemo(
@@ -101,18 +101,30 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
       <MeasureContext.Provider value={measuringContext}>
         <div
           className="rttui-measure-container"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            visibility: "hidden",
-            pointerEvents: "none",
-            transform: "translateZ(0)",
-            zIndex: -1,
-            contain: "strict",
-          }}
+          style={
+            !props.debug
+              ? {
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  visibility: "hidden",
+                  pointerEvents: "none",
+                  transform: "translateZ(0)",
+                  zIndex: -1,
+                  contain: "strict",
+                }
+              : {
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  zIndex: 1000,
+                  contain: "strict",
+                }
+          }
         >
           <MeasureCellProvider isMeasuring={measuringContext.isMeasuring}>
             {props.children}
@@ -120,6 +132,11 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
         </div>
       </MeasureContext.Provider>
     );
+  }
+
+  const debugInstance = React.useRef(measuringInstance);
+  if (measuringInstance) {
+    debugInstance.current = measuringInstance;
   }
 
   return (
@@ -132,6 +149,7 @@ function MeasureSwitch(props: { children: React.ReactNode }) {
       }}
     >
       {measuringInstance}
+      {!measuringInstance && props.debug && debugInstance.current}
       <MeasureContext.Provider value={nonMeasuringContext}>
         {props.children}
       </MeasureContext.Provider>

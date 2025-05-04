@@ -365,12 +365,21 @@ export function HomePage() {
               </span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              <span className="inline-block bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-1 rounded-md text-sm font-medium mb-2">Project is in Alpha: API may change between releases</span>
+              <span className="inline-block bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-1 rounded-md text-sm font-medium mb-2">
+                Project is in Alpha: API may change between releases
+              </span>
             </p>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               A collection of components and utilities for building powerful,
-              customizable tables with <a href="https://tanstack.com/table/latest" target="_blank" rel="noopener noreferrer">TanStack Table</a> and virtual scrolling
-              support.
+              customizable tables with{" "}
+              <a
+                href="https://tanstack.com/table/latest"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                TanStack Table
+              </a>{" "}
+              and virtual scrolling support.
             </p>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
               <div className="rounded-md whitespace-nowrap">

@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.41
+
+### Patch Changes
+
+- add ability to click rows and add a measure debug option
+
 ## 1.0.40
 
 ### Patch Changes

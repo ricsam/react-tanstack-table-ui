@@ -1,5 +1,12 @@
 # @rttui/skin-mui
 
+## 1.0.42
+
+### Patch Changes
+
+- Updated dependencies
+  - @rttui/core@1.0.41
+
 ## 1.0.41
 
 ### Patch Changes

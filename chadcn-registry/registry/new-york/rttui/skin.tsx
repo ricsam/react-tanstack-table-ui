@@ -8,6 +8,7 @@ import {
   useCellProps,
   useColProps,
   useRowProps,
+  useRowRef,
   useTableContext,
   useTableCssVars,
   useTableProps,
@@ -249,16 +250,32 @@ export const Skin: RttuiSkin = {
     );
   }),
   TableRow: ({ children, relativeIndex: flatIndex }) => {
+    const { canSelect } = useRowProps({
+      callback: (row) => {
+        return {
+          canSelect: row.row.getCanSelect(),
+        };
+      },
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: shallowEqual,
+    });
+    const rowRef = useRowRef();
     return (
       <div
         className={cn(
           "relative flex group/row box-border z-1",
           "border-b border-b-border",
-          flatIndex % 2 === 0
-            ? "bg-background even"
-            : "bg-muted odd",
+          flatIndex % 2 === 0 ? "bg-background even" : "bg-muted odd",
           "hover:bg-[#E3F2FD] dark:hover:bg-[#3a473a]",
+          canSelect && "cursor-pointer",
         )}
+        onClick={
+          !canSelect
+            ? undefined
+            : () => {
+                rowRef()?.row.toggleSelected(true);
+              }
+        }
         style={{
           width: "var(--table-width)",
           height: "var(--row-height)",
