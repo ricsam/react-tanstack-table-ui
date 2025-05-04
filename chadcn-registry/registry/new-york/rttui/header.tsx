@@ -42,11 +42,10 @@ export function Header({
 }) {
   const tableRef = useTableContext().tableRef;
   const colRef = useColRef();
-  const { isSorted, sortIndex, canSort } = useColProps({
+  const { isSorted, canSort } = useColProps({
     callback: ({ column }) => {
       return {
         isSorted: column.getIsSorted(),
-        sortIndex: column.getSortIndex(),
         canSort: column.getCanSort(),
       };
     },

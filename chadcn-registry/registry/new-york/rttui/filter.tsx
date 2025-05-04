@@ -3,10 +3,9 @@ import { shallowEqual, useColProps, useColRef } from "@rttui/core";
 import React from "react";
 
 export function Filter() {
-  const { filterValue, canFilter, colId } = useColProps({
+  const { filterValue, canFilter } = useColProps({
     callback: ({ column }) => {
       return {
-        colId: column.id,
         filterValue: (column.getFilterValue() ?? "") as string,
         canFilter: column.getCanFilter(),
       };

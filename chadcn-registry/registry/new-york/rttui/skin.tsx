@@ -71,11 +71,11 @@ const TableHeaderCell = React.memo(
             ((isPinned === "start" && !isLastPinned) || !isPinned) &&
             !isLast &&
             !(isLastCenter && isSomeColumnsPinnedRight)
-              ? `1px solid var(--color-border)`
+              ? `1px solid var(--border)`
               : undefined,
           borderLeft:
             isPinned === "end" && !isLastPinned
-              ? `1px solid var(--color-border)`
+              ? `1px solid var(--border)`
               : undefined,
         }}
       >
@@ -162,8 +162,8 @@ export const Skin: RttuiSkin = {
         className="table-footer sticky bottom-[-1px] z-10"
         style={{
           width: "var(--table-width)",
-          backgroundColor: "var(--color-card)",
-          borderTop: "1px solid var(--color-border)",
+          backgroundColor: "var(--card)",
+          borderTop: "1px solid var(--border)",
         }}
       >
         {children}
@@ -192,7 +192,7 @@ export const Skin: RttuiSkin = {
         className="table-body relative flex flex-col items-stretch justify-start"
         style={{
           width: "var(--table-width)",
-          backgroundColor: "var(--color-background)",
+          backgroundColor: "var(--background)",
           height: "var(--table-height)",
           willChange: "contents",
         }}
@@ -245,15 +245,16 @@ export const Skin: RttuiSkin = {
       </div>
     );
   },
-  TableRowWrapper: React.forwardRef(
-    ({ children, relativeIndex: flatIndex }, ref) => {
-      return (
-        <div data-index={flatIndex} ref={ref}>
-          {children}
-        </div>
-      );
-    },
-  ),
+  TableRowWrapper: React.forwardRef(function TableRowWrapper(
+    { children, relativeIndex: flatIndex },
+    ref,
+  ) {
+    return (
+      <div data-index={flatIndex} ref={ref}>
+        {children}
+      </div>
+    );
+  }),
   TableRow: ({ children, relativeIndex: flatIndex }) => {
     const vars: Record<string, string> = {
       "--table-cell-bg":
@@ -348,11 +349,11 @@ export const Skin: RttuiSkin = {
               ((isPinned === "start" && !isLastPinned) || !isPinned) &&
               !isLast &&
               !(isLastCenter && isSomeColumnsPinnedRight)
-                ? `1px solid var(--color-border)`
+                ? `1px solid var(--border)`
                 : undefined,
             borderLeft:
               isPinned === "end" && !isLastPinned
-                ? `1px solid var(--color-border)`
+                ? `1px solid var(--border)`
                 : undefined,
           }}
         >
@@ -388,7 +389,7 @@ export const Skin: RttuiSkin = {
     if (position === "left") {
       style.boxShadow =
         "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
-      style.borderRight = "1px solid var(--color-border)";
+      style.borderRight = "1px solid var(--border)";
     } else if (position === "right") {
       style.boxShadow =
         "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
