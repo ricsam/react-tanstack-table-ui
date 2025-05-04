@@ -48,7 +48,12 @@ it("should render the component", async () => {
 
   const { getByText } = render(
     <div style={{ width: 600, height: 400, ...lightModeVars }}>
-      <ReactTanstackTableUi table={result.current} width={600} height={400} />
+      <ReactTanstackTableUi
+        table={result.current}
+        width={600}
+        height={400}
+        autoCrushColumns={false}
+      />
     </div>,
   );
 

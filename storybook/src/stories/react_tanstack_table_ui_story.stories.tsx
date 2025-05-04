@@ -347,7 +347,8 @@ export const CanChangeContentOfCell: Story = {
     },
     shouldUpdate: {
       cell: (props) => props.context.prev.cell !== props.context.next.cell,
-      header: (props) => props.context.prev.header !== props.context.next.header,
+      header: (props) =>
+        props.context.prev.header !== props.context.next.header,
     },
   },
   render: function Render(args) {
@@ -436,7 +437,6 @@ export const AutoSizerExample: Story = {
   },
 };
 
-
 export const AutoSizerExample2: Story = {
   args: {
     data: "small",
@@ -456,3 +456,19 @@ export const AutoSizerExample2: Story = {
   },
 };
 
+export const AutoSizerExample3: Story = {
+  args: {
+    data: "small",
+    columns: "many",
+    width: undefined,
+    height: undefined,
+  },
+  render: function Render(args) {
+    const skin = useSkinParam();
+    return (
+      <div style={{ width: "50vw", height: "50vh", overflow: "auto" }}>
+        <ReactTanstackTableUi {...args} skin={skin} />
+      </div>
+    );
+  },
+};
