@@ -17,7 +17,12 @@ export function ThemeProvider({
     () =>
       (typeof localStorage !== "undefined"
         ? (localStorage.getItem(storageKey) as Theme)
-        : defaultTheme) || defaultTheme,
+        : defaultTheme) ||
+      (typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light") ||
+      defaultTheme,
   );
 
   useEffect(() => {

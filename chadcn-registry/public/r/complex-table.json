@@ -24,7 +24,7 @@
     },
     {
       "path": "registry/new-york/blocks/complex-table/components/complex-table.tsx",
-      "content": "\"use client\";\nimport { AutoSizer, ReactTanstackTableUi } from \"@rttui/core\";\nimport { cn } from \"@/lib/utils\";\nimport { useTable } from \"@/registry/new-york/blocks/complex-table/hooks/use-table\";\nimport { Skin } from \"@/registry/new-york/rttui/skin\";\n\nexport function ComplexTable({ className }: { className?: string }) {\n  const { table } = useTable();\n  return (\n    <div className={cn(\"h-full w-full\", className)}>\n      <AutoSizer\n        style={{\n          flex: 1,\n          height: \"100%\",\n          width: \"100%\",\n        }}\n      >\n        <ReactTanstackTableUi\n          table={table}\n          skin={Skin}\n          autoCrushColumns\n          crushMinSizeBy=\"both\"\n          autoCrushNumCols={50}\n        />\n      </AutoSizer>\n    </div>\n  );\n}\n",
+      "content": "\"use client\";\nimport { AutoSizer, ReactTanstackTableUi } from \"@rttui/core\";\nimport { cn } from \"@/lib/utils\";\nimport { useTable } from \"@/registry/new-york/blocks/complex-table/hooks/use-table\";\nimport { Skin } from \"@/registry/new-york/rttui/skin\";\n\nexport function ComplexTable({ className }: { className?: string }) {\n  const { table } = useTable();\n  return (\n    <div className={cn(\"h-full w-full\", className)}>\n      <AutoSizer\n        style={{\n          flex: 1,\n          height: \"100%\",\n          width: \"100%\",\n        }}\n        adaptTableToContainer={{ width: true, height: true }}\n      >\n        <ReactTanstackTableUi table={table} skin={Skin} autoCrushNumCols={50} />\n      </AutoSizer>\n    </div>\n  );\n}\n",
       "type": "registry:component"
     },
     {

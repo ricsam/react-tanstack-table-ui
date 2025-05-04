@@ -37,6 +37,13 @@ export const navigation: NavItem[] = [
         ],
       },
       {
+        title: "Chadcn",
+        children: [
+          { title: "Setup", path: "/skins/chadcn" },
+          { title: "Demo", path: "/skins/chadcn/demo" },
+        ],
+      },
+      {
         title: "Bleu",
         children: [
           { title: "Setup", path: "/skins/bleu" },

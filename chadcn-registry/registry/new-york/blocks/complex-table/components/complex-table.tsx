@@ -16,12 +16,7 @@ export function ComplexTable({ className }: { className?: string }) {
         }}
         adaptTableToContainer={{ width: true, height: true }}
       >
-        <ReactTanstackTableUi
-          table={table}
-          skin={Skin}
-          autoCrushNumCols={50}
-          debug={{ measureInstance: true }}
-        />
+        <ReactTanstackTableUi table={table} skin={Skin} autoCrushNumCols={50} />
       </AutoSizer>
     </div>
   );

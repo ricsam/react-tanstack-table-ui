@@ -176,8 +176,8 @@ The `AutoSizer` component automatically measures and adjusts the size the ReactT
 |------|------|---------|
 | [`children`](#autosizer-children) | `ReactNode` | — |
 | [`style`](#autosizer-style) | `CSSProperties` | — |
-| [`adaptTableToContainer`](#autosizer-adapt-table) | `{ width?: boolean, height?: boolean }` | `{ width: true, height: true }` |
-| [`adaptContainerToTable`](#autosizer-adapt-container) | `{ width?: boolean, height?: boolean }` | `{ width: false, height: false }` |
+| [`adaptTableToContainer`](#autosizer-adapt-table) | `{ width?: boolean, height?: boolean }` | `{ width: true, height: false }` |
+| [`adaptContainerToTable`](#autosizer-adapt-container) | `{ width?: boolean, height?: boolean }` | `{ width: false, height: true }` |
 
 <a id="autosizer-children"></a>
 #### `children`
@@ -197,9 +197,11 @@ Object that controls whether container dimensions should be passed to the table:
 ```typescript
 {
   width?: boolean;   // default: true - pass container width to table
-  height?: boolean;  // default: true - pass container height to table
+  height?: boolean;  // default: false - pass container height to table
 }
 ```
+
+by default the table will have the width of the container and the height will be the summed height of all rows + headers
 
 <a id="autosizer-adapt-container"></a>
 #### `adaptContainerToTable`
@@ -209,9 +211,11 @@ Object that controls whether table dimensions should be applied to the container
 ```typescript
 {
   width?: boolean;   // default: false - resize container to table width
-  height?: boolean;  // default: false - resize container to table height
+  height?: boolean;  // default: true - resize container to table height
 }
 ```
+
+by default the table will have the width of the container and the height will be the summed height of all rows + headers
 
 ```tsx
 import { AutoSizer, ReactTanstackTableUi } from '@rttui/core';
