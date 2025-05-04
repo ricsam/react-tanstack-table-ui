@@ -55,7 +55,17 @@ const TableHeaderCell = React.memo(
 
     return (
       <div
-        className="th relative flex items-center px-2 py-3.5 text-sm font-semibold text-foreground overflow-hidden whitespace-nowrap hover:bg-accent"
+        className={cn(
+          "box-border shrink-0 th relative flex items-center px-2 py-3.5 text-sm font-semibold text-foreground overflow-hidden whitespace-nowrap bg-transparent hover:bg-accent",
+          ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+            !isLast &&
+            !(isLastCenter && isSomeColumnsPinnedRight)
+            ? "border-r border-r-border"
+            : undefined,
+          isPinned === "end" && !isLastPinned
+            ? "border-l border-l-border"
+            : undefined,
+        )}
         data-header-id={headerId}
         data-is-pinned={isPinned}
         data-column-id={columnId}
@@ -64,19 +74,6 @@ const TableHeaderCell = React.memo(
           height: "var(--header-row-height)",
           width: isMeasureInstance ? "auto" : width,
           zIndex: isPinned ? 11 : 10,
-          flexShrink: 0,
-          boxSizing: "border-box",
-          backgroundColor: "transparent",
-          borderRight:
-            ((isPinned === "start" && !isLastPinned) || !isPinned) &&
-            !isLast &&
-            !(isLastCenter && isSomeColumnsPinnedRight)
-              ? `1px solid var(--border)`
-              : undefined,
-          borderLeft:
-            isPinned === "end" && !isLastPinned
-              ? `1px solid var(--border)`
-              : undefined,
         }}
       >
         <div className="flex-1 flex justify-start">{children}</div>
@@ -159,11 +156,9 @@ export const Skin: RttuiSkin = {
   TableFooter: ({ children }) => {
     return (
       <div
-        className="table-footer sticky bottom-[-1px] z-10"
+        className="table-footer sticky bottom-[-1px] z-10 bg-card border-t border-t-border"
         style={{
           width: "var(--table-width)",
-          backgroundColor: "var(--card)",
-          borderTop: "1px solid var(--border)",
         }}
       >
         {children}
@@ -173,10 +168,9 @@ export const Skin: RttuiSkin = {
   HeaderRow: ({ children }) => {
     return (
       <div
-        className="flex border-b border-b-border"
+        className="flex border-b border-b-border box-border"
         style={{
           height: "var(--header-row-height)",
-          boxSizing: "border-box",
           willChange: "contents",
         }}
       >
@@ -189,10 +183,9 @@ export const Skin: RttuiSkin = {
   TableBody: ({ children }) => {
     return (
       <div
-        className="table-body relative flex flex-col items-stretch justify-start"
+        className="table-body relative flex flex-col items-stretch justify-start bg-background"
         style={{
           width: "var(--table-width)",
-          backgroundColor: "var(--background)",
           height: "var(--table-height)",
           willChange: "contents",
         }}
@@ -256,17 +249,14 @@ export const Skin: RttuiSkin = {
     );
   }),
   TableRow: ({ children, relativeIndex: flatIndex }) => {
-    const vars: Record<string, string> = {
-      "--table-cell-bg":
-        flatIndex % 2 === 0 ? "var(--background)" : "var(--muted)",
-    };
-
     return (
       <div
         className={cn(
           "relative flex group/row",
           "border-b-border",
-          flatIndex % 2 === 0 ? "bg-background" : "bg-muted",
+          flatIndex % 2 === 0
+            ? "bg-background group/even"
+            : "bg-muted group/odd",
           "hover:bg-[#E3F2FD] dark:hover:bg-[#3a473a]",
         )}
         style={{
@@ -334,9 +324,17 @@ export const Skin: RttuiSkin = {
           ref={ref}
           className={cn(
             `td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis`,
-            "bg-[--table-cell-bg] bg-(--table-cell-bg)",
+            "group/even:bg-background group/odd:bg-muted",
             "group-hover/row:bg-[#E3F2FD] dark:group-hover/row:bg-[#3a473a]",
             `relative border-b border-b-border`,
+            ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+              !isLast &&
+              !(isLastCenter && isSomeColumnsPinnedRight)
+              ? `border-r border-r-border`
+              : undefined,
+            isPinned === "end" && !isLastPinned
+              ? `border-l border-l-border`
+              : undefined,
           )}
           data-column-id={columnId}
           style={{
@@ -345,16 +343,6 @@ export const Skin: RttuiSkin = {
             zIndex: isPinned ? 5 : 0,
             boxSizing: "border-box",
             flexShrink: 0,
-            borderRight:
-              ((isPinned === "start" && !isLastPinned) || !isPinned) &&
-              !isLast &&
-              !(isLastCenter && isSomeColumnsPinnedRight)
-                ? `1px solid var(--border)`
-                : undefined,
-            borderLeft:
-              isPinned === "end" && !isLastPinned
-                ? `1px solid var(--border)`
-                : undefined,
           }}
         >
           {isFirst && selected && (
@@ -389,7 +377,6 @@ export const Skin: RttuiSkin = {
     if (position === "left") {
       style.boxShadow =
         "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
-      style.borderRight = "1px solid var(--border)";
     } else if (position === "right") {
       style.boxShadow =
         "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
@@ -398,6 +385,7 @@ export const Skin: RttuiSkin = {
       <div
         className={cn(
           `pinned-${position}-overlay sticky top-0 bottom-0 z-20 pointer-events-none`,
+          position === "left" && "border-r border-r-border",
         )}
         style={style}
       />

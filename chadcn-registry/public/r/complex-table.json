@@ -18,7 +18,7 @@
   "files": [
     {
       "path": "registry/new-york/blocks/complex-table/page.tsx",
-      "content": "import { ComplexTable } from \"@/registry/new-york/blocks/complex-table/components/complex-table\";\n\nexport default function Page() {\n  return (\n    <div className=\"relative w-screen h-screen\">\n      <ComplexTable className=\"absolute inset-0 p-6\" />\n    </div>\n  );\n}\n",
+      "content": "import { cn } from \"@/lib/utils\";\nimport { ComplexTable } from \"@/registry/new-york/blocks/complex-table/components/complex-table\";\n\nexport default function Page() {\n  const theme =\n    typeof window !== \"undefined\" &&\n    window.matchMedia(\"(prefers-color-scheme: dark)\").matches\n      ? \"dark\"\n      : \"light\";\n  return (\n    <div\n      className={cn(\"relative w-screen h-screen\", theme === \"dark\" && \"dark\")}\n    >\n      <ComplexTable className=\"absolute inset-0 p-6 bg-background\" />\n    </div>\n  );\n}\n",
       "type": "registry:page",
       "target": "app/rttui/page.tsx"
     },
