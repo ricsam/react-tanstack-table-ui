@@ -252,8 +252,8 @@ export const Skin: RttuiSkin = {
     return (
       <div
         className={cn(
-          "relative flex group/row",
-          "border-b-border",
+          "relative flex group/row box-border z-1",
+          "border-b border-b-border",
           flatIndex % 2 === 0
             ? "bg-background group/even"
             : "bg-muted group/odd",
@@ -262,10 +262,7 @@ export const Skin: RttuiSkin = {
         style={{
           width: "var(--table-width)",
           height: "var(--row-height)",
-          boxSizing: "border-box",
           willChange: "contents",
-          zIndex: 1,
-          ...vars,
         }}
       >
         {children}
