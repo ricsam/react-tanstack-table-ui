@@ -273,7 +273,7 @@ export const Skin: RttuiSkin = {
           !canSelect
             ? undefined
             : () => {
-                rowRef()?.row.toggleSelected(true);
+                rowRef()?.row.toggleSelected();
               }
         }
         style={{
@@ -339,7 +339,13 @@ export const Skin: RttuiSkin = {
           className={cn(
             `td flex items-center px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis`,
             "[.even_&]:bg-background [.odd_&]:bg-muted",
-            "group-hover/row:bg-[#E3F2FD] dark:group-hover/row:bg-[#3a473a]",
+
+            "[.even_&]:group-hover/row:bg-[#E3F2FD]",
+            "[.odd_&]:group-hover/row:bg-[#E3F2FD]",
+
+            "[.even_&]:dark:group-hover/row:bg-[#0e280e]",
+            "[.odd_&]:dark:group-hover/row:bg-[#0e280e]",
+
             `relative border-b border-b-border`,
             ((isPinned === "start" && !isLastPinned) || !isPinned) &&
               !isLast &&

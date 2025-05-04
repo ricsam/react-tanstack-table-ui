@@ -29,7 +29,7 @@ export const Checkbox = ({ getProps, onChange }: CheckboxProps) => {
     <div className="group grid size-4 grid-cols-1">
       <input
         type="checkbox"
-        className={`col-start-1 row-start-1 appearance-none rounded border border bg-background checked:border-primary checked:bg-primary indeterminate:border-primary indeterminate:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:border disabled:bg-muted disabled:checked:bg-muted forced-colors:appearance-auto`}
+        className={`col-start-1 row-start-1 appearance-none rounded border border bg-background checked:border-primary checked:bg-primary indeterminate:border-primary indeterminate:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:border disabled:bg-muted disabled:checked:bg-muted forced-colors:appearance-auto cursor-pointer`}
         ref={resolvedRef}
         name={"checkbox"}
         checked={checked}
