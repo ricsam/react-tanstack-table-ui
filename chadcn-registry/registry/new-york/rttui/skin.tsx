@@ -86,7 +86,7 @@ const TableHeaderCell = React.memo(
 export const Skin: RttuiSkin = {
   rowHeight: 36,
   headerRowHeight: 56,
-  footerRowHeight: 36,
+  footerRowHeight: 56,
   OverlayContainer: ({ children }) => {
     const { width, height } = useTableProps({
       selector: (props) => props.uiProps,
