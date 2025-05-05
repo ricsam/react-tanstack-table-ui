@@ -26,6 +26,7 @@ it("should render the component", async () => {
 
   const columns = [
     columnHelper.accessor("name", {
+      id: "name",
       header: "Name",
       cell: (info) => <Cell>{info.getValue()}</Cell>,
     }),
