@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@tanstack/react-table": "8.20.6",
-    "@rttui/core": "1.0.43",
+    "@rttui/core": "1.0.44",
     "@rttui/fixtures": "1.0.8",
-    "@rttui/skin-bleu": "1.0.46",
+    "@rttui/skin-bleu": "1.0.47",
     "@types/node": "^22.13.12",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.4",
