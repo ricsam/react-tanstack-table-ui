@@ -222,6 +222,8 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
           if ("columns" in col && col.columns) {
             iterateOverCols(col.columns);
           }
+        } else {
+          throw new Error("All columns must have an id");
         }
       });
     };

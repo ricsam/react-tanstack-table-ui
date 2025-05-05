@@ -1,6 +1,10 @@
 import { IconButton, Stack } from "@mui/material";
 import { shallowEqual, useRowProps, useRowRef } from "@rttui/core";
-import { FiChevronDown, FiChevronUp, FiX } from "react-icons/fi";
+import {
+  MdClose,
+  MdOutlineKeyboardArrowDown,
+  MdOutlineKeyboardArrowUp,
+} from "react-icons/md";
 
 export function RowPinButtons() {
   const { canPin, isPinned } = useRowProps({
@@ -23,11 +27,14 @@ export function RowPinButtons() {
   if (isPinned) {
     return (
       <IconButton
-        onClick={() => rowRef()?.row.pin(false, true, true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          rowRef()?.row.pin(false, true, true);
+        }}
         size="small"
         sx={{ color: "text.secondary" }}
       >
-        <FiX size={16} />
+        <MdClose size={16} />
       </IconButton>
     );
   }
@@ -35,18 +42,24 @@ export function RowPinButtons() {
   return (
     <Stack direction="row">
       <IconButton
-        onClick={() => rowRef()?.row.pin("top", true, true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          rowRef()?.row.pin("top", true, true);
+        }}
         size="small"
         sx={{ color: "text.secondary" }}
       >
-        <FiChevronUp size={16} />
+        <MdOutlineKeyboardArrowUp size={16} />
       </IconButton>
       <IconButton
-        onClick={() => rowRef()?.row.pin("bottom", true, true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          rowRef()?.row.pin("bottom", true, true);
+        }}
         size="small"
         sx={{ color: "text.secondary" }}
       >
-        <FiChevronDown size={16} />
+        <MdOutlineKeyboardArrowDown size={16} />
       </IconButton>
     </Stack>
   );

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import {
   CellContext,
   ColumnHelper,
@@ -38,9 +39,12 @@ export const decorateColumnHelper = <T,>(
         if (_key === "filter") {
           continue;
         }
-        const key = _key as "header"; // or "footer" or "cell"
-        const decorator = _decorator as HeaderDecorator; // or CellDecorator
-        const origRenderFn = col[key];
+        const key = _key as "cell"; // or "header" or "footer" or "cell"
+        const decorator = _decorator as CellDecorator; // or CellDecorator
+        let origRenderFn: string | Function | undefined = col[key];
+        if (key === "cell" && !origRenderFn) {
+          origRenderFn = (props: CellContext<any, any>) => props.getValue();
+        }
         if (origRenderFn) {
           col[key] = (props) => {
             const result = decorator(

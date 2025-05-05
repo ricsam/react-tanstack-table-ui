@@ -17,6 +17,7 @@ import {
   useCellProps,
   useColProps,
   useRowProps,
+  useRowRef,
   useTableContext,
   useTableCssVars,
   useTableProps,
@@ -42,27 +43,33 @@ const BleuSkin: Skin = {
     });
     const cssVars = useTableCssVars();
     return (
-      <div
+      <Paper
         className="rttui-overlay-container"
-        style={{
+        elevation={2}
+        sx={{
           position: "relative",
+          "*": {
+            boxSizing: "border-box",
+          },
+          overflow: "hidden",
+        }}
+        style={{
           width: width + "px",
           height: height + "px",
           ...cssVars,
         }}
       >
         {children}
-      </div>
+      </Paper>
     );
   }),
   OuterContainer: ({ children }) => {
     const { tableContainerRef } = useTableContext();
 
     return (
-      <Paper
+      <Box
         ref={tableContainerRef}
         className="outer-container"
-        elevation={2}
         sx={{
           overflow: "auto",
           width: "var(--table-container-width)",
@@ -74,7 +81,7 @@ const BleuSkin: Skin = {
         }}
       >
         {children}
-      </Paper>
+      </Box>
     );
   },
   TableScroller: () => {
@@ -101,7 +108,6 @@ const BleuSkin: Skin = {
           width: "var(--table-width)",
           zIndex: 2,
           backgroundColor: (theme) => theme.palette.background.paper,
-          boxShadow: (theme) => `0 1px 0 ${theme.palette.divider}`,
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-start",
@@ -119,11 +125,10 @@ const BleuSkin: Skin = {
         className="table-footer"
         sx={{
           position: "sticky",
-          bottom: -1,
+          bottom: 0,
           width: "var(--table-width)",
           zIndex: 2,
           backgroundColor: (theme) => theme.palette.background.paper,
-          boxShadow: (theme) => `0 -1px 0 ${theme.palette.divider}`,
         }}
       >
         {children}
@@ -248,6 +253,16 @@ const BleuSkin: Skin = {
     }),
   ),
   TableRow: React.memo(({ children }) => {
+    const { canSelect } = useRowProps({
+      callback: (row) => {
+        return {
+          canSelect: row.row.getCanSelect(),
+        };
+      },
+      dependencies: [{ type: "tanstack_table" }],
+      areCallbackOutputEqual: shallowEqual,
+    });
+    const rowRef = useRowRef();
     return (
       <TableRow
         component="div"
@@ -269,7 +284,15 @@ const BleuSkin: Skin = {
                 : "#E3F2FD"; // Light blue solid color
             },
           },
+          cursor: canSelect ? "pointer" : "default",
         }}
+        onClick={
+          !canSelect
+            ? undefined
+            : () => {
+                rowRef()?.row.toggleSelected();
+              }
+        }
       >
         {children}
       </TableRow>
@@ -298,7 +321,7 @@ const BleuSkin: Skin = {
           className="expanded-cell"
           colSpan={leafColLength}
           sx={{
-            padding: 2,
+            p: 0,
           }}
         >
           {children}
@@ -354,7 +377,6 @@ const BleuSkin: Skin = {
             alignContent: "center",
             padding: "6px 12px",
             backgroundColor: "var(--row-background-color)",
-            borderBottom: "none",
             flexShrink: 0,
             position: "relative",
             borderRight:
@@ -376,6 +398,8 @@ const BleuSkin: Skin = {
               },
               zIndex: isPinned ? 2 : 0,
             },
+            borderBottom: "none",
+            borderTop: "none",
           }}
         >
           {children}
@@ -490,6 +514,8 @@ const TableHeaderCell = React.memo(
             isPinned === "end" && !isLastPinned
               ? (theme) => `1px solid ${theme.palette.divider}`
               : undefined,
+          borderBottom: "none",
+          borderTop: "none",
         }}
       >
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>

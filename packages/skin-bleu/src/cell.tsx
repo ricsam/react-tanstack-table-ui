@@ -5,6 +5,7 @@ import { CellTextBold } from "./cell_text_bold";
 import { Checkbox } from "./checkbox";
 import { ExpandButton } from "./expand_button";
 import { RowPinButtons } from "./row_pin_buttons";
+import { Resizer } from "./resizer";
 
 export const Cell: React.FC<CellProps> = ({
   children,
@@ -12,6 +13,7 @@ export const Cell: React.FC<CellProps> = ({
   expandButton = false,
   pinButtons = false,
   highlightSelected = false,
+  resizer = false,
 }) => {
   const { depth, isSelected } = useRowProps({
     callback: (vrow) => {
@@ -31,7 +33,7 @@ export const Cell: React.FC<CellProps> = ({
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    paddingLeft: `${depth * 20}px`,
+    paddingLeft: expandButton ? `${depth * 20}px` : "0px",
   };
 
   const useBold = highlightSelected && isSelected;
@@ -66,6 +68,7 @@ export const Cell: React.FC<CellProps> = ({
       ) : (
         <CellText>{children}</CellText>
       )}
+      {resizer && <Resizer />}
     </div>
   );
 };

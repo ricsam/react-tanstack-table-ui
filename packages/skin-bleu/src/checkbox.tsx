@@ -1,10 +1,9 @@
-import React, { useLayoutEffect, useRef } from "react";
+import { Checkbox as MuiCheckbox } from "@mui/material";
 import { CheckboxProps, shallowEqual, useTableProps } from "@rttui/core";
+import React from "react";
 
 // Implement the Checkbox component for the Bleu skin
 export const Checkbox: React.FC<CheckboxProps> = ({ getProps, onChange }) => {
-  const resolvedRef = useRef<HTMLInputElement>(null);
-
   // Use the core hook to get checkbox state based on table context
   const { checked, indeterminate, disabled, value } = useTableProps({
     callback: () => {
@@ -26,28 +25,17 @@ export const Checkbox: React.FC<CheckboxProps> = ({ getProps, onChange }) => {
     },
   });
 
-  // Apply indeterminate state imperatively
-  useLayoutEffect(() => {
-    if (resolvedRef.current) {
-      resolvedRef.current.indeterminate = !!indeterminate;
-    }
-  }, [resolvedRef, indeterminate]);
-
-  // Basic styling for the checkbox - Bleu skin might provide custom styling
-  const style: React.CSSProperties = {
-    width: "16px", // Equivalent to size-4
-    height: "16px",
-    cursor: disabled ? "not-allowed" : "pointer",
-    // Add some margin for spacing if needed
-    margin: "auto", // Center it if used within a flex/grid container
-  };
-
   return (
-    <input
-      type="checkbox"
-      ref={resolvedRef}
-      style={style}
-      checked={!!checked} // Ensure checked is boolean
+    <MuiCheckbox
+      size="small"
+      name="select-row"
+      checked={!!checked}
+      indeterminate={!!indeterminate}
+      disabled={disabled}
+      value={value}
+      onClick={(ev) => {
+        ev.stopPropagation();
+      }}
       onChange={
         onChange
           ? (ev) => {
@@ -56,9 +44,12 @@ export const Checkbox: React.FC<CheckboxProps> = ({ getProps, onChange }) => {
             }
           : undefined
       }
-      disabled={disabled}
-      value={value}
-      aria-checked={indeterminate ? "mixed" : checked ? "true" : "false"}
+      sx={{
+        padding: 0,
+        "& .MuiSvgIcon-root": {
+          fontSize: "16px",
+        },
+      }}
     />
   );
-}; 
+};

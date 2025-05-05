@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.44
+
+### Patch Changes
+
+- bleu theme updates
+
 ## 1.0.43
 
 ### Patch Changes

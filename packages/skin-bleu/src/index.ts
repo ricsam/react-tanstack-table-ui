@@ -17,3 +17,5 @@ export { Cell } from "./cell";
 export { CellLink } from "./cell_link";
 export { CellPercent } from "./cell_percent";
 export { HeaderResizer } from "./header_resizer";
+export { Header } from "./header";
+export { Filter } from "./filter";

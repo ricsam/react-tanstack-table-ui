@@ -18,6 +18,14 @@ export const examples: Record<string, Example> = {
     dirName: "minimal",
     mainFile: "src/app.tsx",
   },
+  bleu: {
+    id: "bleu",
+    title: "Bleu Theme",
+    description: "A minimal example of how to use the library.",
+    path: "/examples/bleu-theme",
+    dirName: "bleu-theme",
+    mainFile: "src/app.tsx",
+  },
 };
 
 // Also export as an array for easier iteration

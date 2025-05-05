@@ -1,6 +1,10 @@
+import { IconButton } from "@mui/material";
+import { shallowEqual, useRowProps, useRowRef } from "@rttui/core";
 import React from "react";
-import { useRowProps, useRowRef, shallowEqual } from "@rttui/core";
-import { FiChevronDown, FiChevronRight } from "react-icons/fi"; // Using react-icons as per guidelines
+import {
+  MdOutlineKeyboardArrowDown,
+  MdOutlineKeyboardArrowRight,
+} from "react-icons/md"; // Using react-icons as per guidelines
 
 // No specific props needed for ExpandButton itself as it uses context hooks
 
@@ -26,41 +30,20 @@ export const ExpandButton: React.FC = () => {
     return null;
   }
 
-  // Basic button styling - Bleu skin will likely provide more specific styles
-  const buttonStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "24px", // Equivalent to w-6
-    height: "24px", // Equivalent to h-6
-    border: "none",
-    background: "transparent",
-    cursor: "pointer",
-    borderRadius: "50%", // Equivalent to rounded-full
-    // Placeholder hover effect - Bleu might use different colors or effects
-    // ':hover': { backgroundColor: '#f3f4f6' }
-    // Hover pseudo-class cannot be applied via inline styles directly
-  };
-
-  // Basic icon styling - Bleu might have specific icon colors/sizes
-  const iconStyle: React.CSSProperties = {
-    width: "16px", // Equivalent to w-4
-    height: "16px", // Equivalent to h-4
-    color: "#4b5563", // Placeholder color (text-gray-600)
-  };
-
-  const IconComponent = isExpanded ? FiChevronDown : FiChevronRight;
+  const IconComponent = isExpanded
+    ? MdOutlineKeyboardArrowDown
+    : MdOutlineKeyboardArrowRight;
 
   return (
-    <button
+    <IconButton
+      size="small"
       onClick={(e) => {
         e.stopPropagation(); // Prevent row click event if needed
         rowRef()?.row.toggleExpanded();
       }}
-      style={buttonStyle}
-      aria-label={isExpanded ? "Collapse row" : "Expand row"}
+      sx={{ color: "text.secondary" }}
     >
-      <IconComponent style={iconStyle} />
-    </button>
+      <IconComponent size={16} />
+    </IconButton>
   );
-}; 
+};
