@@ -1,9 +1,9 @@
 import { shallowEqual, useRowProps, useRowRef } from "@rttui/core";
-import { CellText } from "@/registry/new-york/rttui/cell-text";
-import { CellTextBold } from "@/registry/new-york/rttui/cell-text-bold";
-import { Checkbox } from "@/registry/new-york/rttui/checkbox";
-import { ExpandButton } from "@/registry/new-york/rttui/expand-button";
-import { RowPinButtons } from "@/registry/new-york/rttui/row-pin-buttons";
+import { CellText } from "@/registry/new-york/rttui/rttui-cell-text";
+import { CellTextBold } from "@/registry/new-york/rttui/rttui-cell-text-bold";
+import { Checkbox } from "@/registry/new-york/rttui/rttui-checkbox";
+import { ExpandButton } from "@/registry/new-york/rttui/rttui-expand-button";
+import { RowPinButtons } from "@/registry/new-york/rttui/rttui-row-pin-buttons";
 
 export function Cell({
   children,

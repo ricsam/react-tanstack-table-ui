@@ -1,13 +1,13 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
-  "name": "cell-text",
+  "name": "rttui-cell-text",
   "type": "registry:component",
   "title": "Cell Text",
   "description": "A simple cell text component",
   "registryDependencies": [],
   "files": [
     {
-      "path": "registry/new-york/rttui/cell-text.tsx",
+      "path": "registry/new-york/rttui/rttui-cell-text.tsx",
       "content": "import React from \"react\";\n\n// Cell content components\n\nexport const CellText: React.FC<{ children: React.ReactNode; }> = ({\n  children,\n}) => {\n  return (\n    <span className=\"text-sm text-muted-foreground\">{children}</span>\n  );\n};\n",
       "type": "registry:component"
     }

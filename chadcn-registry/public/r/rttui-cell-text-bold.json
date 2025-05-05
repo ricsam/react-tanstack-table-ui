@@ -1,13 +1,13 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
-  "name": "cell-text-bold",
+  "name": "rttui-cell-text-bold",
   "type": "registry:component",
   "title": "Cell Text Bold",
   "description": "A simple cell text bold component",
   "registryDependencies": [],
   "files": [
     {
-      "path": "registry/new-york/rttui/cell-text-bold.tsx",
+      "path": "registry/new-york/rttui/rttui-cell-text-bold.tsx",
       "content": "import React from \"react\";\n\n\nexport const CellTextBold: React.FC<{ children: React.ReactNode; className?: string }> = ({\n  children,\n  className,\n}) => {\n  return (\n    <span className={`text-sm font-medium ${className}`}>\n      {children}\n    </span>\n  );\n};\n",
       "type": "registry:component"
     }

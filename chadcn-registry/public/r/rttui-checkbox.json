@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
-  "name": "checkbox",
+  "name": "rttui-checkbox",
   "type": "registry:component",
   "title": "Checkbox",
   "description": "A simple checkbox",
@@ -9,7 +9,7 @@
   ],
   "files": [
     {
-      "path": "registry/new-york/rttui/checkbox.tsx",
+      "path": "registry/new-york/rttui/rttui-checkbox.tsx",
       "content": "import { CheckboxProps, shallowEqual, useTableProps } from \"@rttui/core\";\nimport { useLayoutEffect, useRef } from \"react\";\n\nexport const Checkbox = ({ getProps, onChange }: CheckboxProps) => {\n  const resolvedRef = useRef<HTMLInputElement>(null);\n  const { checked, indeterminate, disabled, value } = useTableProps({\n    callback: () => {\n      return getProps();\n    },\n    dependencies: [{ type: \"tanstack_table\" }],\n    areCallbackOutputEqual: shallowEqual,\n    shouldUnmount: () => {\n      try {\n        getProps();\n        return false;\n      } catch (e) {\n        return true;\n      }\n    },\n  });\n\n  useLayoutEffect(() => {\n    if (resolvedRef.current) {\n      resolvedRef.current.indeterminate = !!indeterminate;\n    }\n  }, [resolvedRef, indeterminate]);\n\n  return (\n    <div className=\"group grid size-4 grid-cols-1\">\n      <input\n        type=\"checkbox\"\n        className={`col-start-1 row-start-1 appearance-none rounded border border bg-background checked:border-primary checked:bg-primary indeterminate:border-primary indeterminate:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:border disabled:bg-muted disabled:checked:bg-muted forced-colors:appearance-auto cursor-pointer`}\n        ref={resolvedRef}\n        name={\"checkbox\"}\n        checked={checked}\n        onChange={\n          onChange\n            ? (ev) => {\n                onChange()(ev);\n              }\n            : undefined\n        }\n        disabled={disabled}\n        value={value}\n      />\n      <svg\n        className=\"pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-primary-foreground group-has-[:disabled]:stroke-muted-foreground/50\"\n        viewBox=\"0 0 14 14\"\n        fill=\"none\"\n      >\n        <path\n          className=\"opacity-0 group-has-[:checked]:opacity-100\"\n          d=\"M3 8L6 11L11 3.5\"\n          strokeWidth=\"2\"\n          strokeLinecap=\"round\"\n          strokeLinejoin=\"round\"\n        />\n        <path\n          className=\"opacity-0 group-has-[:indeterminate]:opacity-100\"\n          d=\"M3 7H11\"\n          strokeWidth=\"2\"\n          strokeLinecap=\"round\"\n          strokeLinejoin=\"round\"\n        />\n      </svg>\n    </div>\n  );\n};\n",
       "type": "registry:component"
     }

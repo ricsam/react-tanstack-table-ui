@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rttui-expand-button",
+  "type": "registry:component",
+  "title": "Expand Button",
+  "description": "A simple expand button",
+  "dependencies": [
+    "@rttui/core"
+  ],
+  "files": [
+    {
+      "path": "registry/new-york/rttui/rttui-expand-button.tsx",
+      "content": "import { useRowProps, useRowRef, shallowEqual } from \"@rttui/core\";\n\nexport function ExpandButton() {\n  const { canExpand, isExpanded } = useRowProps({\n    callback: (vrow) => {\n      const row = vrow.row;\n      return {\n        canExpand: row.getCanExpand(),\n        isExpanded: row.getIsExpanded(),\n      };\n    },\n    areCallbackOutputEqual: shallowEqual,\n    dependencies: [{ type: \"tanstack_table\" }],\n  });\n  const rowRef = useRowRef();\n  if (!canExpand) {\n    return null;\n  }\n  return (\n    <button\n      onClick={(ev) => {\n        ev.stopPropagation();\n        rowRef()?.row.toggleExpanded();\n      }}\n      className=\"flex items-center justify-center w-6 h-6 rounded-full hover:bg-accent text-muted-foreground cursor-pointer\"\n    >\n      {isExpanded ? (\n        <svg\n          xmlns=\"http://www.w3.org/2000/svg\"\n          fill=\"none\"\n          viewBox=\"0 0 24 24\"\n          strokeWidth={1.5}\n          stroke=\"currentColor\"\n          className=\"w-4 h-4\"\n        >\n          <path\n            strokeLinecap=\"round\"\n            strokeLinejoin=\"round\"\n            d=\"M19.5 8.25l-7.5 7.5-7.5-7.5\"\n          />\n        </svg>\n      ) : (\n        <svg\n          xmlns=\"http://www.w3.org/2000/svg\"\n          fill=\"none\"\n          viewBox=\"0 0 24 24\"\n          strokeWidth={1.5}\n          stroke=\"currentColor\"\n          className=\"w-4 h-4\"\n        >\n          <path\n            strokeLinecap=\"round\"\n            strokeLinejoin=\"round\"\n            d=\"M8.25 4.5l7.5 7.5-7.5 7.5\"\n          />\n        </svg>\n      )}\n    </button>\n  );\n}\n",
+      "type": "registry:component"
+    }
+  ]
+}

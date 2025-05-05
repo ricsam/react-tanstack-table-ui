@@ -15,9 +15,9 @@ import {
   generateTableData,
   User,
 } from "@/registry/new-york/blocks/complex-table/lib/generate-table-data";
-import { Cell } from "@/registry/new-york/rttui/cell";
-import { Filter } from "@/registry/new-york/rttui/filter";
-import { Header } from "@/registry/new-york/rttui/header";
+import { Cell } from "@/registry/new-york/rttui/rttui-cell";
+import { Filter } from "@/registry/new-york/rttui/rttui-filter";
+import { Header } from "@/registry/new-york/rttui/rttui-header";
 
 const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
   header: (original, context) => {
@@ -268,8 +268,11 @@ export const useTable = () => {
     getSubRows,
     enableRowSelection: true,
     keepPinnedRows: true,
-    getFilteredRowModel: getFilteredRowModel(),
+    enableSorting: true,
     getSortedRowModel: getSortedRowModel(),
+    enableColumnFilters: true,
+    getFilteredRowModel: getFilteredRowModel(),
+    enableRowPinning: true,
   });
   return { data, setData, columnOrder, setColumnOrder, table, getSubRows };
 };

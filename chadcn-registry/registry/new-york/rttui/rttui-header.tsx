@@ -1,4 +1,4 @@
-import { Resizer } from "@/registry/new-york/rttui/resizer";
+import { Resizer } from "@/registry/new-york/rttui/rttui-resizer";
 import {
   shallowEqual,
   useColProps,
@@ -7,8 +7,8 @@ import {
   useCrushHeader,
   useTableContext,
 } from "@rttui/core";
-import { Checkbox } from "@/registry/new-york/rttui/checkbox";
-import { HeaderPinButtons } from "@/registry/new-york/rttui/header-pin-buttons";
+import { Checkbox } from "@/registry/new-york/rttui/rttui-checkbox";
+import { HeaderPinButtons } from "@/registry/new-york/rttui/rttui-header-pin-buttons";
 import { Button } from "@/registry/new-york/ui/button";
 import {
   DropdownMenu,

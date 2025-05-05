@@ -2,7 +2,7 @@
 import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
 import { cn } from "@/lib/utils";
 import { useTable } from "@/registry/new-york/blocks/complex-table/hooks/use-table";
-import { Skin } from "@/registry/new-york/rttui/skin";
+import { Skin } from "@/registry/new-york/rttui/rttui-skin";
 
 export function ComplexTable({ className }: { className?: string }) {
   const { table } = useTable();

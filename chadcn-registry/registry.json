@@ -4,79 +4,79 @@
   "homepage": "https://rttui-chadcn-registry.vercel.app",
   "items": [
     {
-      "name": "cell-text-bold",
+      "name": "rttui-cell-text-bold",
       "type": "registry:component",
       "title": "Cell Text Bold",
       "description": "A simple cell text bold component",
       "registryDependencies": [],
       "files": [
         {
-          "path": "registry/new-york/rttui/cell-text-bold.tsx",
+          "path": "registry/new-york/rttui/rttui-cell-text-bold.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "cell-text",
+      "name": "rttui-cell-text",
       "type": "registry:component",
       "title": "Cell Text",
       "description": "A simple cell text component",
       "registryDependencies": [],
       "files": [
         {
-          "path": "registry/new-york/rttui/cell-text.tsx",
+          "path": "registry/new-york/rttui/rttui-cell-text.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "cell",
+      "name": "rttui-cell",
       "type": "registry:component",
       "title": "Cell",
       "description": "A simple cell",
       "dependencies": ["@rttui/core"],
       "registryDependencies": [
-        "https://rttui-chadcn-registry.vercel.app/r/cell-text.json",
-        "https://rttui-chadcn-registry.vercel.app/r/cell-text-bold.json",
-        "https://rttui-chadcn-registry.vercel.app/r/checkbox.json",
-        "https://rttui-chadcn-registry.vercel.app/r/expand-button.json",
-        "https://rttui-chadcn-registry.vercel.app/r/row-pin-buttons.json"
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-cell-text.json",
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-cell-text-bold.json",
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-checkbox.json",
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-expand-button.json",
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-row-pin-buttons.json"
       ],
       "files": [
         {
-          "path": "registry/new-york/rttui/cell.tsx",
+          "path": "registry/new-york/rttui/rttui-cell.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "checkbox",
+      "name": "rttui-checkbox",
       "type": "registry:component",
       "title": "Checkbox",
       "description": "A simple checkbox",
       "dependencies": ["@rttui/core"],
       "files": [
         {
-          "path": "registry/new-york/rttui/checkbox.tsx",
+          "path": "registry/new-york/rttui/rttui-checkbox.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "expand-button",
+      "name": "rttui-expand-button",
       "type": "registry:component",
       "title": "Expand Button",
       "description": "A simple expand button",
       "dependencies": ["@rttui/core"],
       "files": [
         {
-          "path": "registry/new-york/rttui/expand-button.tsx",
+          "path": "registry/new-york/rttui/rttui-expand-button.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "filter",
+      "name": "rttui-filter",
       "type": "registry:component",
       "title": "Filter",
       "description": "A simple filter",
@@ -84,26 +84,26 @@
       "registryDependencies": ["input"],
       "files": [
         {
-          "path": "registry/new-york/rttui/filter.tsx",
+          "path": "registry/new-york/rttui/rttui-filter.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "header-pin-buttons",
+      "name": "rttui-header-pin-buttons",
       "type": "registry:component",
       "title": "Header Pin Buttons",
       "description": "A simple header pin buttons",
       "dependencies": ["@rttui/core"],
       "files": [
         {
-          "path": "registry/new-york/rttui/header-pin-buttons.tsx",
+          "path": "registry/new-york/rttui/rttui-header-pin-buttons.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "header",
+      "name": "rttui-header",
       "type": "registry:component",
       "title": "Header",
       "description": "A simple header",
@@ -111,53 +111,53 @@
       "registryDependencies": [
         "dropdown-menu",
         "button",
-        "https://rttui-chadcn-registry.vercel.app/r/checkbox.json",
-        "https://rttui-chadcn-registry.vercel.app/r/header-pin-buttons.json",
-        "https://rttui-chadcn-registry.vercel.app/r/resizer.json"
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-checkbox.json",
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-header-pin-buttons.json",
+        "https://rttui-chadcn-registry.vercel.app/r/rttui-resizer.json"
       ],
       "files": [
         {
-          "path": "registry/new-york/rttui/header.tsx",
+          "path": "registry/new-york/rttui/rttui-header.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "resizer",
+      "name": "rttui-resizer",
       "type": "registry:component",
       "title": "Resizer",
       "description": "A simple resizer",
       "dependencies": ["@rttui/core"],
       "files": [
         {
-          "path": "registry/new-york/rttui/resizer.tsx",
+          "path": "registry/new-york/rttui/rttui-resizer.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "row-pin-buttons",
+      "name": "rttui-row-pin-buttons",
       "type": "registry:component",
       "title": "Row Pin Buttons",
       "description": "A simple row pin buttons",
       "dependencies": ["@rttui/core"],
       "files": [
         {
-          "path": "registry/new-york/rttui/row-pin-buttons.tsx",
+          "path": "registry/new-york/rttui/rttui-row-pin-buttons.tsx",
           "type": "registry:component"
         }
       ]
     },
     {
-      "name": "skin",
-      "type": "registry:ui",
+      "name": "rttui-skin",
+      "type": "registry:component",
       "title": "Skin",
       "description": "The table skin",
       "dependencies": ["@rttui/core"],
       "registryDependencies": ["card"],
       "files": [
         {
-          "path": "registry/new-york/rttui/skin.tsx",
+          "path": "registry/new-york/rttui/rttui-skin.tsx",
           "type": "registry:component"
         }
       ]

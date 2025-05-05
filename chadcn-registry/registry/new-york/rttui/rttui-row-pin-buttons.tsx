@@ -22,7 +22,10 @@ export function RowPinButtons() {
   if (isPinned) {
     return (
       <button
-        onClick={() => rowRef()?.row.pin(false, true, true)}
+        onClick={(ev) => {
+          ev.stopPropagation();
+          rowRef()?.row.pin(false, true, true);
+        }}
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-accent text-muted-foreground cursor-pointer"
       >
         <svg
@@ -46,8 +49,11 @@ export function RowPinButtons() {
   return (
     <div className="flex text-muted-foreground">
       <button
-        onClick={() => rowRef()?.row.pin("top", true, true)}
-        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-accent"
+        onClick={(ev) => {
+          ev.stopPropagation();
+          rowRef()?.row.pin("top", true, true);
+        }}
+        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-accent cursor-pointer"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -65,8 +71,11 @@ export function RowPinButtons() {
         </svg>
       </button>
       <button
-        onClick={() => rowRef()?.row.pin("bottom", true, true)}
-        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-accent"
+        onClick={(ev) => {
+          ev.stopPropagation();
+          rowRef()?.row.pin("bottom", true, true);
+        }}
+        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-accent cursor-pointer"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

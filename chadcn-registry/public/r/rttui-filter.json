@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
-  "name": "filter",
+  "name": "rttui-filter",
   "type": "registry:component",
   "title": "Filter",
   "description": "A simple filter",
@@ -12,7 +12,7 @@
   ],
   "files": [
     {
-      "path": "registry/new-york/rttui/filter.tsx",
+      "path": "registry/new-york/rttui/rttui-filter.tsx",
       "content": "import { Input } from \"@/registry/new-york/ui/input\";\nimport { shallowEqual, useColProps, useColRef } from \"@rttui/core\";\nimport React from \"react\";\n\nexport function Filter() {\n  const { filterValue, canFilter } = useColProps({\n    callback: ({ column }) => {\n      return {\n        filterValue: (column.getFilterValue() ?? \"\") as string,\n        canFilter: column.getCanFilter(),\n      };\n    },\n    dependencies: [{ type: \"tanstack_table\" }],\n    areCallbackOutputEqual: shallowEqual,\n  });\n  const colRef = useColRef();\n\n  if (!canFilter) {\n    return null;\n  }\n\n  return (\n    <Input\n      className=\"min-w-30\"\n      value={filterValue}\n      onChange={(e) => {\n        React.startTransition(() => {\n          colRef().column?.setFilterValue(e.target.value);\n        });\n      }}\n    />\n  );\n}\n",
       "type": "registry:component"
     }
