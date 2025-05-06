@@ -33,7 +33,7 @@ export function Cell({
   return (
     <div
       className="flex items-center gap-2 flex-1 flex-shrink-0"
-      style={{ paddingLeft: `${depth * 20}px` }}
+      style={{ paddingLeft: expandButton ? `${depth * 20}px` : "0px" }}
     >
       {checkbox && (
         <Checkbox
@@ -63,9 +63,7 @@ export function Cell({
       {expandButton && <ExpandButton />}
       {/* Name content */}
       {highlightSelected && checked ? (
-        <CellTextBold className="text-primary">
-          {children}
-        </CellTextBold>
+        <CellTextBold className="text-primary">{children}</CellTextBold>
       ) : (
         <CellText>{children}</CellText>
       )}
