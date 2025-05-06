@@ -9,7 +9,6 @@ import { Header } from "@/components/rttui-header";
 import { decorateColumnHelper } from "@rttui/core";
 import {
   ColumnDef,
-  ColumnHelper,
   createColumnHelper,
   getCoreRowModel,
   getExpandedRowModel,
@@ -18,27 +17,27 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-const columnHelper: ColumnHelper<User> = decorateColumnHelper(createColumnHelper<any>() as any, {
-  // header: (original, context) => {
-  //   return (
-  //     <Header
-  //       resizer
-  //       sorting
-  //       options
-  //       checkbox={context.column.id.endsWith("full-name")}
-  //     >
-  //       {original}
-  //     </Header>
-  //   );
-  // },
-  // filter: () => <Filter />,
-  // cell: (original, context) => {
-  //   if (context.column.id.endsWith("full-name")) {
-  //     return original;
-  //   }
-  //   return <Cell>{original}</Cell>;
-  // },
-}) as any;
+const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
+  header: (original, context) => {
+    return (
+      <Header
+        resizer
+        sorting
+        options
+        checkbox={context.column.id.endsWith("full-name")}
+      >
+        {original}
+      </Header>
+    );
+  },
+  filter: () => <Filter />,
+  cell: (original, context) => {
+    if (context.column.id.endsWith("full-name")) {
+      return original;
+    }
+    return <Cell>{original}</Cell>;
+  },
+});
 
 const columns: ColumnDef<User, any>[] = [
   // Combined column with all controls

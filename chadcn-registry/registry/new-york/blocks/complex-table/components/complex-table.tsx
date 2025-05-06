@@ -24,7 +24,7 @@ export function ComplexTable({ className }: { className?: string }) {
           table={table}
           skin={Skin}
           autoCrushNumCols={50}
-          autoCrushMaxSize={400}
+          autoCrushMaxSize={300}
         />
       </AutoSizer>
     </div>
