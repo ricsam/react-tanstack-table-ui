@@ -1,16 +1,4 @@
 "use client";
-import { decorateColumnHelper, iterateOverColumns } from "@rttui/core";
-import {
-  ColumnDef,
-  ColumnOrderState,
-  createColumnHelper,
-  getCoreRowModel,
-  getExpandedRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import React from "react";
 import {
   generateTableData,
   User,
@@ -18,6 +6,16 @@ import {
 import { Cell } from "@/registry/new-york/rttui/rttui-cell";
 import { Filter } from "@/registry/new-york/rttui/rttui-filter";
 import { Header } from "@/registry/new-york/rttui/rttui-header";
+import { decorateColumnHelper } from "@rttui/core";
+import {
+  ColumnDef,
+  createColumnHelper,
+  getCoreRowModel,
+  getExpandedRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
   header: (original, context) => {
