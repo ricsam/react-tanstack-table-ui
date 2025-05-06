@@ -1,11 +1,12 @@
 "use client";
-import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
 import { cn } from "@/lib/utils";
 import { useTable } from "@/registry/new-york/blocks/complex-table/hooks/use-table";
 import { Skin } from "@/registry/new-york/rttui/rttui-skin";
+import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
 
 export function ComplexTable({ className }: { className?: string }) {
-  const { table } = useTable();
+  const table = useTable();
+
   return (
     <div className={cn("h-full w-full", className)}>
       <AutoSizer
@@ -16,7 +17,12 @@ export function ComplexTable({ className }: { className?: string }) {
         }}
         adaptTableToContainer={{ width: true, height: true }}
       >
-        <ReactTanstackTableUi table={table} skin={Skin} autoCrushNumCols={50} />
+        <ReactTanstackTableUi
+          table={table}
+          skin={Skin}
+          autoCrushNumCols={50}
+          autoCrushMaxSize={300}
+        />
       </AutoSizer>
     </div>
   );

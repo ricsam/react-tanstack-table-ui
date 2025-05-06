@@ -229,15 +229,9 @@ const columns: ColumnDef<User, any>[] = [
   }),
 ];
 
-export const useTable = () => {
-  const [data, setData] = React.useState<User[]>(() =>
-    // Use a fixed seed for consistent test data
-    generateTableData({ maxRows: 5000, seed: 12345 }),
-  );
+const data = generateTableData({ maxRows: 5000, seed: 12345 });
 
-  const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(() =>
-    iterateOverColumns(columns),
-  );
+export const useTable = () => {
   const getSubRows = (row: User) => {
     return row.otherCountries;
   };
@@ -245,20 +239,8 @@ export const useTable = () => {
   const table = useReactTable({
     data,
     columns,
-    state: {
-      columnOrder,
-      // Store ID in columnVisibility to hide it
-      columnVisibility: {
-        id: false,
-      },
-    },
-    getRowId(originalRow) {
-      return String(originalRow.id);
-    },
-    onColumnOrderChange: setColumnOrder,
     defaultColumn: {
       minSize: 60,
-      maxSize: 800,
     },
     enableColumnPinning: true,
     columnResizeMode: "onChange",
@@ -274,5 +256,5 @@ export const useTable = () => {
     getFilteredRowModel: getFilteredRowModel(),
     enableRowPinning: true,
   });
-  return { data, setData, columnOrder, setColumnOrder, table, getSubRows };
+  return table;
 };
