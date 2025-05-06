@@ -66,7 +66,15 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
     >
       <MeasureSwitch debug={props.debug?.measureInstance}>
         <TablePropsProvider>
-          <TablePropsUpdater {...props} width={width} height={height} />
+          <TablePropsUpdater
+            {...props}
+            width={width}
+            height={height}
+            initialWidth={props.initialWidth ?? autoSizerContext?.initialWidth}
+            initialHeight={
+              props.initialHeight ?? autoSizerContext?.initialHeight
+            }
+          />
         </TablePropsProvider>
       </MeasureSwitch>
     </MeasureProvider>

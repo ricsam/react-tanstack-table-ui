@@ -10,6 +10,8 @@ export type AutoSizerContextType = {
   height?: number;
   wrapperRef?: React.RefObject<HTMLDivElement | null>;
   notify: (payload: NotifyPayload) => void;
+  initialWidth?: number;
+  initialHeight?: number;
 };
 export const AutoSizerContext = createContext<AutoSizerContextType | undefined>(
   undefined,

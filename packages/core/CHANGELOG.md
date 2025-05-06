@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.45
+
+### Patch Changes
+
+- add initial width / height support for ssr pages
+
 ## 1.0.44
 
 ### Patch Changes

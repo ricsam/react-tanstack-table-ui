@@ -36,7 +36,8 @@
       "examples/**/*",
       "website/**/*",
       ".github/**/*",
-      "chadcn-registry/**/*"
+      "chadcn-registry/**/*",
+      "nextjs-test/**/*"
     ],
     "ignoreDependencies": [
       "prettier",

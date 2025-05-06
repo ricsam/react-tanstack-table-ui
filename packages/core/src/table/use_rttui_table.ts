@@ -726,6 +726,25 @@ function useVirtualizers({
     };
   }>(null);
 
+  const initialRect = React.useMemo(():
+    | undefined
+    | {
+        width: number;
+        height: number;
+      } => {
+    const width = uiProps.width ?? uiProps.initialWidth;
+    const height = uiProps.height ?? uiProps.initialHeight;
+    if (width && height) {
+      return { width, height };
+    }
+    return undefined;
+  }, [
+    uiProps.width,
+    uiProps.height,
+    uiProps.initialWidth,
+    uiProps.initialHeight,
+  ]);
+
   const verScrollCallbackRef = React.useRef<ObserveOffsetCallBack>(undefined);
   const horScrollCallbackRefs = React.useRef<{
     [type in HeaderType]: {
@@ -791,6 +810,7 @@ function useVirtualizers({
    */
   const createFallbackMainVirtualizer = () => {
     return createColVirtualizer({
+      initialRect,
       _slow_allHeaders: _slow_leafHeaders,
       tableContainerRef,
       columnOverscan: getColOverscan(),
@@ -817,6 +837,7 @@ function useVirtualizers({
   if (!virtualizersRef.current) {
     virtualizersRef.current = {
       rowVirtualizer: new Virtualizer({
+        initialRect,
         count: _slow_allRows.length,
         getScrollElement: () => tableContainerRef.current,
         overscan: getRowOverscan(),
@@ -923,6 +944,7 @@ function useVirtualizers({
       virtualizers.colVirtualizers[type][groupIndex] = {
         groupIndex,
         virtualizer: createColVirtualizer({
+          initialRect,
           _slow_allHeaders: group._slow_headers,
           tableContainerRef,
           columnOverscan: getColOverscan(),
@@ -1180,6 +1202,7 @@ function createColVirtualizer({
   initialOffset,
   observeElementOffset,
   onChange,
+  initialRect,
 }: {
   _slow_allHeaders: Header<any, unknown>[];
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -1187,9 +1210,16 @@ function createColVirtualizer({
   initialOffset: number | undefined;
   onChange: (sync: boolean) => void;
   observeElementOffset: ObserveElementOffset;
+  initialRect:
+    | {
+        width: number;
+        height: number;
+      }
+    | undefined;
 }) {
   return new Virtualizer({
     getScrollElement: () => tableContainerRef.current,
+    initialRect,
     horizontal: true,
     overscan: columnOverscan,
     initialOffset,

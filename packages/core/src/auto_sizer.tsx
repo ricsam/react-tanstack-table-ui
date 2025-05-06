@@ -8,7 +8,7 @@ import {
 import React from "react";
 import { shallowEqual } from "./utils";
 
-type AutoSizerProps = {
+export type AutoSizerProps = {
   adaptContainerToTable?: {
     /**
      * @default false
@@ -29,6 +29,14 @@ type AutoSizerProps = {
      */
     height?: boolean;
   };
+  /**
+   * If server rendering you must provide a default width and height
+   */
+  initialWidth?: number;
+  /**
+   * If server rendering you must provide a default width and height
+   */
+  initialHeight?: number;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const AutoSizer = ({
@@ -41,14 +49,32 @@ export const AutoSizer = ({
     width: adaptContainerToTableWidth = false,
     height: adaptContainerToTableHeight = true,
   } = {},
+  initialWidth,
+  initialHeight,
   ...divProps
 }: AutoSizerProps) => {
   const [ref, setRef] = useState<HTMLDivElement | null>(null);
-  const [width, setWidth] = useState<number | undefined>(undefined);
-  const [height, setHeight] = useState<number | undefined>(undefined);
+  const [width, setWidth] = useState<number | undefined>(initialWidth);
+  const [height, setHeight] = useState<number | undefined>(initialHeight);
   const [innerRef, setInnerRef] = useState<HTMLDivElement | null>(null);
-  const [innerWidth, setInnerWidth] = useState<number | undefined>(undefined);
-  const [innerHeight, setInnerHeight] = useState<number | undefined>(undefined);
+  const [innerWidth, setInnerWidth] = useState<number | undefined>(
+    undefined,
+  );
+  const [innerHeight, setInnerHeight] = useState<number | undefined>(
+    undefined,
+  );
+
+  if (adaptTableToContainerWidth && adaptContainerToTableWidth) {
+    throw new Error(
+      "adaptTableToContainer.width and adaptContainerToTable.width cannot both be true",
+    );
+  }
+
+  if (adaptTableToContainerHeight && adaptContainerToTableHeight) {
+    throw new Error(
+      "adaptTableToContainer.height and adaptContainerToTable.height cannot both be true",
+    );
+  }
 
   const wrapperRef = React.useRef<HTMLDivElement>(null);
 
@@ -86,7 +112,7 @@ export const AutoSizer = ({
 
   const sizeRef = React.useRef<Size>(getInnerSize(innerWidth, innerHeight));
 
-  const [callbacks] = React.useState<SizeCallback[]>(() => {
+  const [callbacks] = useState<SizeCallback[]>(() => {
     return [];
   });
 
@@ -126,7 +152,7 @@ export const AutoSizer = ({
     const callbackVal = {
       ...sizeRefVal,
       ...tableFixedSizeVal,
-    }
+    };
     if (shallowEqual(lastCallbackVal.current, callbackVal)) {
       return;
     }
@@ -168,6 +194,8 @@ export const AutoSizer = ({
             height: adaptTableToContainerHeight ? height : undefined,
             wrapperRef,
             notify,
+            initialWidth,
+            initialHeight,
           }
         : undefined,
     [
@@ -176,6 +204,8 @@ export const AutoSizer = ({
       adaptTableToContainerWidth,
       adaptTableToContainerHeight,
       notify,
+      initialWidth,
+      initialHeight,
     ],
   );
 
@@ -215,14 +245,14 @@ export const AutoSizer = ({
       ref={(el) => {
         if (el) {
           const cb: SizeCallback = (size) => {
-            if (size.width) {
+            if (size.width && adaptContainerToTableWidth) {
               if (typeof size.width === "number") {
                 el.style.width = `${size.width}px`;
               } else {
                 el.style.width = size.width;
               }
             }
-            if (size.height) {
+            if (size.height && adaptContainerToTableHeight) {
               if (typeof size.height === "number") {
                 el.style.height = `${size.height}px`;
               } else {

@@ -1,5 +1,11 @@
 # @rttui/chadcn-registry
 
+## 0.0.3
+
+### Patch Changes
+
+- add initial width / height support for ssr pages
+
 ## 0.0.2
 
 ### Patch Changes

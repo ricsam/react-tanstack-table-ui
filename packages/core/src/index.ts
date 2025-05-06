@@ -56,6 +56,7 @@ import type { CellAvatarProps } from "./default_skin/cell_avatar";
 import type { CellAvatarWithTextProps } from "./default_skin/cell_avatar_with_text";
 import type { ReactTanstackTableUiProps } from "./table/types";
 import { AutoSizer } from "./auto_sizer";
+import type { AutoSizerProps } from "./auto_sizer";
 
 export {
   ReactTanstackTableUi,
@@ -99,6 +100,7 @@ export {
   useCrushAllCols,
 };
 export type {
+  AutoSizerProps,
   Skin,
   VirtualHeaderCell,
   HeaderDecorator,

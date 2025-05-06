@@ -29,7 +29,6 @@ export const TableBody = React.memo(function TableBody() {
   return (
     <skin.TableBody>
       <RowsSlice position="top" />
-
       <div
         style={{
           height: "var(--body-offset-top)",

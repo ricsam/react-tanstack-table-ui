@@ -10,6 +10,8 @@
 | [`width`](#dimensions) | `number` | Sum of column widths |
 | [`height`](#dimensions) | `number` | Sum of row heights |
 | [`skin`](#skin) | `Skin` | `import("@rttui/core").defaultSkin` |
+| [`initialWidth`](#server-side-rendering) | `number` | - |
+| [`initialHeight`](#server-side-rendering) | `number` | - |
 
 ### Virtualization Options
 
@@ -119,6 +121,12 @@ These properties improve scrolling performance by pre-rendering rows and columns
 - `renderSubComponent`: Function that returns a React component to be rendered below each row.
 - `underlay`: React component to be rendered inside the table container, below the table content.
 
+<a id="server-side-rendering"></a>
+#### Server-Side Rendering
+
+- `initialWidth`: Initial width value used during server-side rendering. If using AutoSizer, provide initialWidth to the AutoSizer component instead.
+- `initialHeight`: Initial height value used during server-side rendering. If using AutoSizer, provide initialHeight to the AutoSizer component instead.
+
 <a id="table-ref"></a>
 #### `tableRef`
 
@@ -178,6 +186,8 @@ The `AutoSizer` component automatically measures and adjusts the size the ReactT
 | [`style`](#autosizer-style) | `CSSProperties` | — |
 | [`adaptTableToContainer`](#autosizer-adapt-table) | `{ width?: boolean, height?: boolean }` | `{ width: true, height: false }` |
 | [`adaptContainerToTable`](#autosizer-adapt-container) | `{ width?: boolean, height?: boolean }` | `{ width: false, height: true }` |
+| [`initialWidth`](#autosizer-initial-dimensions) | `number` | — |
+| [`initialHeight`](#autosizer-initial-dimensions) | `number` | — |
 
 <a id="autosizer-children"></a>
 #### `children`
@@ -217,6 +227,25 @@ Object that controls whether table dimensions should be applied to the container
 
 by default the table will have the width of the container and the height will be the summed height of all rows + headers
 
+<a id="autosizer-initial-dimensions"></a>
+#### `initialWidth` and `initialHeight`
+
+These props provide initial dimensions for server-side rendering:
+
+- `initialWidth`: Initial width in pixels for the container during server-side rendering
+- `initialHeight`: Initial height in pixels for the container during server-side rendering
+
+When using server-side rendering, you must provide these values to ensure the component renders correctly before client-side hydration. These values will be used for the initial render until the actual dimensions can be measured on the client.
+
+#### Mutually Exclusive Properties
+
+The `adaptTableToContainer` and `adaptContainerToTable` objects contain properties that are mutually exclusive:
+
+- `adaptTableToContainer.width` and `adaptContainerToTable.width` **cannot both be true** - you must choose whether the table adapts to the container width or the container adapts to the table width.
+- `adaptTableToContainer.height` and `adaptContainerToTable.height` **cannot both be true** - you must choose whether the table adapts to the container height or the container adapts to the table height.
+
+Attempting to set both properties to `true` will result in an error. This constraint exists because it would create a circular dependency - the table and container would each try to adapt to the other's size.
+
 ```tsx
 import { AutoSizer, ReactTanstackTableUi } from '@rttui/core';
 
@@ -247,6 +276,14 @@ const table = (
 <AutoSizer 
   adaptTableToContainer={{ height: false }}
   adaptContainerToTable={{ height: true }}
+>
+  {table}
+</AutoSizer>
+
+// Server-side rendering with initial dimensions
+<AutoSizer
+  initialWidth={800}
+  initialHeight={600}
 >
   {table}
 </AutoSizer>

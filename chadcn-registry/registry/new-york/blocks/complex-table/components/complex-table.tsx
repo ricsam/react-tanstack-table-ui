@@ -15,13 +15,16 @@ export function ComplexTable({ className }: { className?: string }) {
           height: "100%",
           width: "100%",
         }}
+        adaptContainerToTable={{ width: false, height: false }}
         adaptTableToContainer={{ width: true, height: true }}
+        initialWidth={800}
+        initialHeight={600}
       >
         <ReactTanstackTableUi
           table={table}
           skin={Skin}
           autoCrushNumCols={50}
-          autoCrushMaxSize={300}
+          autoCrushMaxSize={400}
         />
       </AutoSizer>
     </div>

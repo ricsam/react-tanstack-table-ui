@@ -5,3 +5,4 @@ packages:
   - test/*
   - storybook
   - chadcn-registry
+  - nextjs-test
