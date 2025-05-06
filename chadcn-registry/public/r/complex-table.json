@@ -10,10 +10,10 @@
   ],
   "registryDependencies": [
     "card",
-    "https://rttui-chadcn-registry.vercel.app/r/skin.json",
-    "https://rttui-chadcn-registry.vercel.app/r/cell.json",
-    "https://rttui-chadcn-registry.vercel.app/r/header.json",
-    "https://rttui-chadcn-registry.vercel.app/r/filter.json"
+    "https://rttui-chadcn-registry.vercel.app/r/rttui-skin.json",
+    "https://rttui-chadcn-registry.vercel.app/r/rttui-cell.json",
+    "https://rttui-chadcn-registry.vercel.app/r/rttui-header.json",
+    "https://rttui-chadcn-registry.vercel.app/r/rttui-filter.json"
   ],
   "files": [
     {
