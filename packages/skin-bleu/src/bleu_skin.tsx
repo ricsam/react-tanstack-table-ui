@@ -450,8 +450,9 @@ const TableHeaderCell = React.memo(
     {
       isMeasureInstance: boolean;
       children: React.ReactNode;
+      type: "header" | "footer";
     }
-  >(({ isMeasureInstance, children }, ref) => {
+  >(({ isMeasureInstance, children, type }, ref) => {
     const {
       isSomeColumnsPinnedRight,
       headerId,
@@ -516,6 +517,8 @@ const TableHeaderCell = React.memo(
               : undefined,
           borderBottom: "none",
           borderTop: "none",
+          [type === "header" ? "borderBottom" : "borderTop"]: (theme) =>
+            `1px solid ${theme.palette.divider}`,
         }}
       >
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>

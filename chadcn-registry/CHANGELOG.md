@@ -1,5 +1,11 @@
 # @rttui/chadcn-registry
 
+## 0.0.4
+
+### Patch Changes
+
+- fix styling in the bleu skin
+
 ## 0.0.3
 
 ### Patch Changes

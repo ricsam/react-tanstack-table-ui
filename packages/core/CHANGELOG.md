@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.46
+
+### Patch Changes
+
+- fix styling in the bleu skin
+
 ## 1.0.45
 
 ### Patch Changes

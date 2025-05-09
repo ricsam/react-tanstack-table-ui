@@ -1,12 +1,6 @@
 import { TableRow } from "@mui/material";
 
-export function TableHeaderRow({
-  children,
-  type,
-}: {
-  children: React.ReactNode;
-  type: "header" | "footer";
-}) {
+export function TableHeaderRow({ children }: { children: React.ReactNode }) {
   return (
     <TableRow
       component="div"
@@ -14,8 +8,8 @@ export function TableHeaderRow({
         height: "var(--row-height)",
         display: "flex",
         willChange: "contents",
-        [type === "header" ? "borderBottom" : "borderTop"]: (theme) =>
-          `1px solid ${theme.palette.divider}`,
+        borderBottom: "none",
+        borderTop: "none",
       }}
     >
       {children}

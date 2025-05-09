@@ -1,4 +1,4 @@
-import type { Skin as RttuiSkin } from "@rttui/core";
+import type { Skin  } from "@rttui/core";
 
 import { cn } from "@/lib/utils";
 import { Card } from "@/registry/new-york/ui/card";
@@ -83,7 +83,7 @@ const TableHeaderCell = React.memo(
   }),
 );
 
-export const Skin: RttuiSkin = {
+export const RttuiChadcnSkin: Skin = {
   rowHeight: 36,
   headerRowHeight: 56,
   footerRowHeight: 56,

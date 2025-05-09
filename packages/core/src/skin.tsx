@@ -13,6 +13,7 @@ export type Skin = {
     React.RefAttributes<HTMLDivElement> & {
       isMeasureInstance: boolean;
       children: React.ReactNode;
+      type: "header" | "footer";
     }
   >;
   HeaderRow: React.FC<{ children: React.ReactNode; type: "header" | "footer" }>;

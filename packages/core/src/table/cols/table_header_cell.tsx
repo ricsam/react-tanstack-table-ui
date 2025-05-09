@@ -116,6 +116,7 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
     >
       <skin.HeaderCell
         isMeasureInstance={Boolean(measuring)}
+        type={type}
         ref={
           measuring
             ? (ref) => {

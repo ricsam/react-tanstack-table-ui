@@ -9,6 +9,10 @@ export function App() {
   return (
     <AutoSizer
       style={{ flex: 1 }}
+      adaptContainerToTable={{
+        width: false,
+        height: false,
+      }}
       adaptTableToContainer={{
         width: true,
         height: true,

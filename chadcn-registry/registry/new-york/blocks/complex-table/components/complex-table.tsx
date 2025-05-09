@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { useTable } from "@/registry/new-york/blocks/complex-table/hooks/use-table";
-import { Skin } from "@/registry/new-york/rttui/rttui-skin";
+import { RttuiChadcnSkin } from "@/registry/new-york/rttui/rttui-skin";
 import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
 
 export function ComplexTable({ className }: { className?: string }) {
@@ -22,9 +22,16 @@ export function ComplexTable({ className }: { className?: string }) {
       >
         <ReactTanstackTableUi
           table={table}
-          skin={Skin}
+          skin={RttuiChadcnSkin}
           autoCrushNumCols={50}
           autoCrushMaxSize={300}
+          renderSubComponent={(row) => {
+            return (
+              <pre className="text-xs text-left px-1 py-0">
+                <code>{JSON.stringify(row.original, null, 2)}</code>
+              </pre>
+            );
+          }}
         />
       </AutoSizer>
     </div>
