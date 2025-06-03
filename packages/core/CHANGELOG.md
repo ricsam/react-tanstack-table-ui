@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.48
+
+### Patch Changes
+
+- 77ff516: render the measureing container in the body instead with react dom portal
+
 ## 1.0.47
 
 ### Patch Changes

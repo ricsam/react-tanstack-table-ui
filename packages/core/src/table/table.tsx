@@ -18,6 +18,7 @@ import {
 import { ReactTanstackTableUiProps, UiProps } from "./types";
 import { useRttuiTable } from "./use_rttui_table";
 import { AutoSizerContext } from "./contexts/auto_sizer_context";
+import ReactDOM from "react-dom";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -107,8 +108,13 @@ function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
 
   let measuringInstance: React.ReactNode | undefined;
 
-  if (measuringContext.isMeasuring) {
-    measuringInstance = (
+  if (
+    measuringContext.isMeasuring &&
+    typeof window !== "undefined" &&
+    typeof document !== "undefined" &&
+    document.body
+  ) {
+    measuringInstance = ReactDOM.createPortal(
       <MeasureContext.Provider value={measuringContext}>
         <div
           className="rttui-measure-container"
@@ -125,6 +131,7 @@ function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
                   transform: "translateZ(0)",
                   zIndex: -1,
                   contain: "strict",
+                  zoom: 1,
                 }
               : {
                   position: "fixed",
@@ -135,6 +142,7 @@ function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
                   zIndex: 1000,
                   contain: "strict",
                   pointerEvents: "none",
+                  zoom: 1,
                 }
           }
         >
@@ -142,7 +150,8 @@ function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
             {props.children}
           </MeasureCellProvider>
         </div>
-      </MeasureContext.Provider>
+      </MeasureContext.Provider>,
+      document.body,
     );
   }
 
