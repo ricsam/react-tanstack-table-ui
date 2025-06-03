@@ -20,14 +20,14 @@ importers:
         specifier: ^6.4.8
         version: 6.4.11(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@rttui/core':
-        specifier: 1.0.44
-        version: 1.0.44(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.47
+        version: 1.0.47(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@rttui/fixtures':
         specifier: 1.0.8
         version: 1.0.8
       '@rttui/skin-bleu':
-        specifier: 1.0.47
-        version: 1.0.47(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.51
+        version: 1.0.51(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@tanstack/react-table':
         specifier: 8.20.6
         version: 8.20.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -62,8 +62,8 @@ importers:
   minimal:
     dependencies:
       '@rttui/core':
-        specifier: 1.0.44
-        version: 1.0.44(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.47
+        version: 1.0.47(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@rttui/fixtures':
         specifier: 1.0.8
         version: 1.0.8
@@ -589,14 +589,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rttui/core@1.0.44':
-    resolution: {integrity: sha512-AT3AL0Wkc682RW5/UxEFGBTtEXLO47Yh2TASfjomq3WAJPbS/bNZoZnFhirg+ByW+zeXq6StL60RRES8qw1LnQ==}
+  '@rttui/core@1.0.47':
+    resolution: {integrity: sha512-bHkqyln/M+a2S72Rrjf/47FmGv6UjhvSAd23dsuP1T3vAfTNO/YP6ebw/jMci60OAIEu3SoXwb1gguq4b0wkiA==}
 
   '@rttui/fixtures@1.0.8':
     resolution: {integrity: sha512-DCSDq1aIOO0Dz4yZplc7HuQY53H49SaJzte1MtZYPj/Bcop58jtVgyjv52ae67RtzGNOU3BfwS2YriISDDgxZw==}
 
-  '@rttui/skin-bleu@1.0.47':
-    resolution: {integrity: sha512-43C7xaQ66eGtyxTRIifFtHYKmetsjmizbLRLjEN/J+zapg8Spi2BNVlV34Ltg9ls4I4HR6r06n4SsfbpxXJSPg==}
+  '@rttui/skin-bleu@1.0.51':
+    resolution: {integrity: sha512-9c/TpZhToTBE315szSraT8vmk3/CxnSVc0q1Y2FE5D7XQGAUrHWPWoifpxei94i5D8eic4G6/i865gVAy0HFlw==}
 
   '@tanstack/react-table@8.20.6':
     resolution: {integrity: sha512-w0jluT718MrOKthRcr2xsjqzx+oEM7B7s/XXyfs19ll++hlId3fjTm+B2zrR3ijpANpkzBAr15j1XGVOMxpggQ==}
@@ -1465,7 +1465,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.38.0':
     optional: true
 
-  '@rttui/core@1.0.44(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@rttui/core@1.0.47(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@tanstack/react-virtual': 3.13.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
@@ -1474,9 +1474,9 @@ snapshots:
 
   '@rttui/fixtures@1.0.8': {}
 
-  '@rttui/skin-bleu@1.0.47(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@rttui/skin-bleu@1.0.51(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
-      '@rttui/core': 1.0.44(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@rttui/core': 1.0.47(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
       - react
       - react-dom
