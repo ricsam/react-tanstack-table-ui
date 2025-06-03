@@ -58,14 +58,16 @@ function AutosizeSubmenuItems({
 export function ColumnOptions({
   onSort,
   onPin,
+  sorted
 }: {
+  sorted?: "asc" | "desc" | false;
   onSort?: (sort: "asc" | "desc") => void;
   onPin?: (pin: "left" | "right") => void;
 }) {
   const crushHeader = useCrushHeader();
   const crushAllColumns = useCrushAllCols();
   const colRef = useColRef();
-  const { isSorted, canSort, isPinned, canPin } = useColProps({
+  const { isSorted: tsIsSorted, canSort, isPinned, canPin } = useColProps({
     callback: ({ column }) => {
       return {
         isSorted: column.getIsSorted(),
@@ -77,6 +79,8 @@ export function ColumnOptions({
     areCallbackOutputEqual: shallowEqual,
     dependencies: [{ type: "tanstack_table" }],
   });
+
+  const isSorted = sorted ?? tsIsSorted;
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [activePopper, setActivePopper] = useState<string | null>(null);

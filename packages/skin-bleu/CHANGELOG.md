@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.52
+
+### Patch Changes
+
+- update column options to accept controlled sort props
+
 ## 1.0.51
 
 ### Patch Changes
