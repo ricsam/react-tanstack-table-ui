@@ -19,3 +19,4 @@ export { CellPercent } from "./cell_percent";
 export { HeaderResizer } from "./header_resizer";
 export { Header } from "./header";
 export { Filter } from "./filter";
+export { ColumnOptions } from "./column_options";
