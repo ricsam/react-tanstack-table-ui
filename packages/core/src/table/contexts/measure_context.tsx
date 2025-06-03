@@ -16,7 +16,7 @@ export type MeasureContextType = {
   width: number;
   height: number;
   isMeasuringInstanceLoading: boolean;
-  crushAllColumns: () => void;
+  crushAllColumns: (crushBy: "header" | "cell" | "both" | "default") => void;
 };
 
 export const MeasureContext = createContext<MeasureContextType | undefined>(

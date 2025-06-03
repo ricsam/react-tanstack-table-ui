@@ -270,6 +270,11 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
     skin,
   });
 
+  const renderHeaderPlaceholderRef = React.useRef(
+    props.renderHeaderPlaceholder,
+  );
+  renderHeaderPlaceholderRef.current = props.renderHeaderPlaceholder;
+
   // tanstack table causes a re-render when its state changes
   // but we don't want <ReactTanstackTableUi /> to update just because the parent updates, only if the table state changes
   // or one of the other ReactTanstackTableUiProps changes
@@ -282,6 +287,15 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
           loading: Boolean(measureContext.isMeasuringInstanceLoading),
           skin,
           tableRef: rttuiRef,
+          renderHeaderPlaceholder: (headerDef, headerContext) => {
+            if (renderHeaderPlaceholderRef.current) {
+              return renderHeaderPlaceholderRef.current(
+                headerDef,
+                headerContext,
+              );
+            }
+            return null;
+          },
         };
       }, [measureContext.isMeasuringInstanceLoading, skin, rttuiRef])}
     >

@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.47
+
+### Patch Changes
+
+- add option for custom placeholder rendering and improve the column options component
+
 ## 1.0.46
 
 ### Patch Changes

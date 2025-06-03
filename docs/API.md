@@ -45,6 +45,7 @@
 |------|------|---------|
 | [`renderSubComponent`](#rendering) | `(row: Row) => ReactNode` | — |
 | [`underlay`](#rendering) | `ReactNode` | — |
+| [`renderHeaderPlaceholder`](#rendering) | `(headerDef: undefined \| ColumnDefTemplate<HeaderContext<any, any>>, headerContext: HeaderContext<any, any>) => ReactNode` | - |
 | [`tableRef`](#table-ref) | `RefObject<RttuiRef \| undefined>` | — |
 | [`shouldUpdate`](#performance) | `ShouldUpdate` | — |
 
@@ -120,6 +121,7 @@ These properties improve scrolling performance by pre-rendering rows and columns
 
 - `renderSubComponent`: Function that returns a React component to be rendered below each row.
 - `underlay`: React component to be rendered inside the table container, below the table content.
+- `renderHeaderPlaceholder`: Function that returns a React component to be rendered in the header placeholder. Placeholder headers are used to fill in the gaps when a column is hidden or when a column is part of a group column.
 
 <a id="server-side-rendering"></a>
 #### Server-Side Rendering

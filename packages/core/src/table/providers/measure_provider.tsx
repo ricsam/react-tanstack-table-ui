@@ -4,7 +4,7 @@ import { Table } from "@tanstack/react-table";
 import React, { useCallback, useState } from "react";
 import { defaultSkin } from "../../default_skin/default_skin";
 import { Skin } from "../../skin";
-import { MeasureData, CellRefs, RttuiRef } from "../types";
+import { MeasureData, CellRefs, RttuiRef, CrushBy } from "../types";
 import { getSubHeaders } from "../../utils";
 import { IsMeasuring, MeasureContext } from "../contexts/measure_context";
 
@@ -12,7 +12,7 @@ export const MeasureProvider = (props: {
   children: React.ReactNode;
   width: number | undefined;
   height: number | undefined;
-  crushMinSizeBy: "header" | "cell" | "both" | undefined;
+  crushMinSizeBy: CrushBy | undefined;
   scrollbarWidth: number | undefined;
   table: Table<any>;
   skin: Skin | undefined;
@@ -106,16 +106,20 @@ export const MeasureProvider = (props: {
   }, []);
 
   const crushCols = React.useCallback(
-    (cols: MeasureData["cols"]) => {
+    (cols: MeasureData["cols"], crushBy: CrushBy | "default") => {
       refs.current.table.setColumnSizing((prev) => {
         const newSizing = { ...prev };
 
         const colsToCrush = new Map<string, CellRefs>();
 
         const getCrushMinSizeBy = (col?: Column<any>) => {
-          return (
-            col?.columnDef?.meta?.crushMinSizeBy ?? refs.current.crushMinSizeBy
-          );
+          if (crushBy === "default") {
+            return (
+              col?.columnDef?.meta?.crushMinSizeBy ??
+              refs.current.crushMinSizeBy
+            );
+          }
+          return crushBy;
         };
 
         cols.forEach((col, colId) => {
@@ -316,22 +320,25 @@ export const MeasureProvider = (props: {
   );
 
   const onMeasureCb = React.useCallback(
-    (cols: MeasureData["cols"]) => {
-      crushCols(cols);
+    (cols: MeasureData["cols"], crushBy: CrushBy | "default") => {
+      crushCols(cols, crushBy);
       fillAvailableSpaceAfterCrush(cols);
     },
     [crushCols, fillAvailableSpaceAfterCrush],
   );
 
-  const autoSizeColumns = React.useCallback(() => {
-    measureCells({
-      callback: ({ cols }) => onMeasureCb(cols),
-      horizontalScrollOffset: 0,
-      verticalScrollOffset: 0,
-      horizontalOverscan: refs.current.autoCrushNumCols,
-      verticalOverscan: 0,
-    });
-  }, [measureCells, onMeasureCb]);
+  const autoSizeColumns = React.useCallback(
+    (crushBy: CrushBy | "default" = "default") => {
+      measureCells({
+        callback: ({ cols }) => onMeasureCb(cols, crushBy),
+        horizontalScrollOffset: 0,
+        verticalScrollOffset: 0,
+        horizontalOverscan: refs.current.autoCrushNumCols,
+        verticalOverscan: 0,
+      });
+    },
+    [measureCells, onMeasureCb],
+  );
 
   React.useEffect(() => {
     if (refs.current.autoCrushColumns) {
@@ -359,8 +366,8 @@ export const MeasureProvider = (props: {
           isMeasuringInstanceLoading: Boolean(isMeasuring),
           width: _width,
           height: _height,
-          crushAllColumns: () => {
-            autoSizeColumnsRef.current();
+          crushAllColumns: (crushBy: CrushBy | "default" = "default") => {
+            autoSizeColumnsRef.current(crushBy);
           },
         }),
         [_height, _width, isMeasuring, measureCells],

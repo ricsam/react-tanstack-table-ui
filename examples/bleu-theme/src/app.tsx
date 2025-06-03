@@ -1,5 +1,5 @@
 import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
-import { BleuSkin } from "@rttui/skin-bleu";
+import { BleuSkin, Resizer } from "@rttui/skin-bleu";
 import { useTable } from "./use_table";
 import { Box } from "@mui/material";
 
@@ -21,6 +21,9 @@ export function App() {
       <ReactTanstackTableUi
         table={table}
         skin={BleuSkin}
+        renderHeaderPlaceholder={() => {
+          return <Resizer />;
+        }}
         renderSubComponent={(row) => {
           return (
             <Box

@@ -18,11 +18,12 @@ const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
       accessibleResizer
       sorting
       checkbox={context.column.id.endsWith("full-name")}
+      resizer
     >
       {original}
     </Header>
   ),
-  filter: () => <Filter />,
+  filter: () => <Filter resizer />,
   cell: (original, context) => (
     <Cell
       {...(context.column.id.endsWith("full-name")

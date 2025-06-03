@@ -499,7 +499,7 @@ const TableHeaderCell = React.memo(
           alignItems: "center",
           gap: "8px",
           justifyContent: "space-between",
-          padding: "6px 12px",
+          padding: 0,
           boxSizing: "border-box",
           fontWeight: 600,
           backgroundColor: isPinned
@@ -521,9 +521,18 @@ const TableHeaderCell = React.memo(
             `1px solid ${theme.palette.divider}`,
         }}
       >
-        <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
+        <Box
+          style={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "flex-start",
+            height: "100%",
+            width: "100%",
+            padding: "0 12px",
+          }}
+        >
           {children}
-        </div>
+        </Box>
       </TableCell>
     );
   }),

@@ -1,4 +1,13 @@
-import { Divider, IconButton, Menu, MenuItem } from "@mui/material";
+import {
+  Divider,
+  IconButton,
+  Menu,
+  MenuItem,
+  Popper,
+  Paper,
+  MenuList,
+  Fade,
+} from "@mui/material";
 import {
   shallowEqual,
   useColProps,
@@ -6,15 +15,53 @@ import {
   useCrushAllCols,
   useCrushHeader,
 } from "@rttui/core";
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useState, useRef, useEffect } from "react";
 import { FiMoreHorizontal as MoreHorizontal } from "react-icons/fi";
 import {
   LuArrowDown as ArrowDown,
   LuArrowUp as ArrowUp,
   LuCheck as Check,
+  LuChevronRight as ChevronRight,
 } from "react-icons/lu";
 
-export function ColumnOptions() {
+interface AutosizeSubmenuItemsProps {
+  onCrush: (type: "header" | "cell" | "both") => void;
+  closeAllMenus: () => void;
+}
+
+function AutosizeSubmenuItems({
+  onCrush,
+  closeAllMenus,
+}: AutosizeSubmenuItemsProps) {
+  const handleItemClick = (type: "header" | "cell" | "both") => {
+    onCrush(type);
+    closeAllMenus();
+  };
+
+  return (
+    <Paper sx={{ boxShadow: 3 }}>
+      <MenuList autoFocusItem>
+        <MenuItem onClick={() => handleItemClick("header")}>
+          Autosize by headers
+        </MenuItem>
+        <MenuItem onClick={() => handleItemClick("cell")}>
+          Autosize by cells
+        </MenuItem>
+        <MenuItem onClick={() => handleItemClick("both")}>
+          Autosize by both
+        </MenuItem>
+      </MenuList>
+    </Paper>
+  );
+}
+
+export function ColumnOptions({
+  onSort,
+  onPin,
+}: {
+  onSort?: (sort: "asc" | "desc") => void;
+  onPin?: (pin: "left" | "right") => void;
+}) {
   const crushHeader = useCrushHeader();
   const crushAllColumns = useCrushAllCols();
   const colRef = useColRef();
@@ -32,7 +79,51 @@ export function ColumnOptions() {
   });
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  const [activePopper, setActivePopper] = useState<string | null>(null);
+  const [popperAnchorEl, setPopperAnchorEl] = useState<HTMLElement | null>(
+    null,
+  );
+  const popperCloseTimerRef = useRef<number | null>(null);
+
+  const clearPopperCloseTimer = () => {
+    if (popperCloseTimerRef.current !== null) {
+      clearTimeout(popperCloseTimerRef.current);
+      popperCloseTimerRef.current = null;
+    }
+  };
+
+  const openPopper = (type: string, anchor: HTMLElement) => {
+    clearPopperCloseTimer();
+    if (activePopper && activePopper !== type) {
+      setActivePopper(null);
+      requestAnimationFrame(() => {
+        setActivePopper(type);
+        setPopperAnchorEl(anchor);
+      });
+    } else {
+      setActivePopper(type);
+      setPopperAnchorEl(anchor);
+    }
+  };
+
+  const closePopper = (immediate = false) => {
+    clearPopperCloseTimer();
+    if (immediate) {
+      setActivePopper(null);
+      setPopperAnchorEl(null);
+    } else {
+      popperCloseTimerRef.current = window.setTimeout(() => {
+        setActivePopper(null);
+        setPopperAnchorEl(null);
+      }, 150);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearPopperCloseTimer();
+    };
+  }, []);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -40,6 +131,7 @@ export function ColumnOptions() {
 
   const handleClose = () => {
     setAnchorEl(null);
+    closePopper(true);
   };
 
   return (
@@ -53,7 +145,7 @@ export function ColumnOptions() {
       </IconButton>
       <Menu
         anchorEl={anchorEl}
-        open={open}
+        open={Boolean(anchorEl)}
         onClose={handleClose}
         anchorOrigin={{
           vertical: "bottom",
@@ -68,10 +160,14 @@ export function ColumnOptions() {
           <MenuItem
             key="sort-asc"
             onClick={() => {
-              if (isSorted === "asc") {
-                colRef().column.clearSorting();
+              if (onSort) {
+                onSort("asc");
               } else {
-                colRef().column.toggleSorting(false);
+                if (isSorted === "asc") {
+                  colRef().column.clearSorting();
+                } else {
+                  colRef().column.toggleSorting(false);
+                }
               }
               handleClose();
             }}
@@ -84,10 +180,14 @@ export function ColumnOptions() {
           <MenuItem
             key="sort-desc"
             onClick={() => {
-              if (isSorted === "desc") {
-                colRef().column.clearSorting();
+              if (onSort) {
+                onSort("desc");
               } else {
-                colRef().column.toggleSorting(true);
+                if (isSorted === "desc") {
+                  colRef().column.clearSorting();
+                } else {
+                  colRef().column.toggleSorting(true);
+                }
               }
               handleClose();
             }}
@@ -104,12 +204,21 @@ export function ColumnOptions() {
           <MenuItem
             key="pin-left"
             onClick={() => {
-              if (isPinned === "left") {
-                colRef().column.pin(false);
+              if (onPin) {
+                onPin("left");
               } else {
-                colRef().column.pin("left");
+                if (isPinned === "left") {
+                  colRef().column.pin(false);
+                } else {
+                  colRef().column.pin("left");
+                }
               }
               handleClose();
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
             Pin left
@@ -118,12 +227,21 @@ export function ColumnOptions() {
           <MenuItem
             key="pin-right"
             onClick={() => {
-              if (isPinned === "right") {
-                colRef().column.pin(false);
+              if (onPin) {
+                onPin("right");
               } else {
-                colRef().column.pin("right");
+                if (isPinned === "right") {
+                  colRef().column.pin(false);
+                } else {
+                  colRef().column.pin("right");
+                }
               }
               handleClose();
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
             Pin right
@@ -133,21 +251,76 @@ export function ColumnOptions() {
         ]}
         <MenuItem
           onClick={() => {
-            crushHeader(colRef().header);
+            crushHeader(colRef().header, "default");
             handleClose();
+          }}
+          onMouseEnter={(e) => openPopper("column", e.currentTarget)}
+          onMouseLeave={() => closePopper()}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
           Autosize this column
+          <ChevronRight />
         </MenuItem>
         <MenuItem
           onClick={() => {
-            crushAllColumns();
+            crushAllColumns("default");
             handleClose();
+          }}
+          onMouseEnter={(e) => openPopper("all", e.currentTarget)}
+          onMouseLeave={() => closePopper()}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "8px",
           }}
         >
           Autosize all columns
+          <ChevronRight />
         </MenuItem>
       </Menu>
+
+      <Popper
+        open={Boolean(activePopper && popperAnchorEl)}
+        anchorEl={popperAnchorEl}
+        placement="right-start"
+        transition
+        disablePortal={false}
+        style={{ zIndex: 1301 }}
+        modifiers={[
+          {
+            name: "offset",
+            options: {
+              offset: [-8, 0],
+            },
+          },
+        ]}
+        onMouseEnter={clearPopperCloseTimer}
+        onMouseLeave={() => closePopper()}
+      >
+        {({ TransitionProps }) => (
+          <Fade {...TransitionProps} timeout={200}>
+            <div>
+              {activePopper === "column" && (
+                <AutosizeSubmenuItems
+                  onCrush={(type) => crushHeader(colRef().header, type)}
+                  closeAllMenus={handleClose}
+                />
+              )}
+              {activePopper === "all" && (
+                <AutosizeSubmenuItems
+                  onCrush={(type) => crushAllColumns(type)}
+                  closeAllMenus={handleClose}
+                />
+              )}
+            </div>
+          </Fade>
+        )}
+      </Popper>
     </>
   );
 }

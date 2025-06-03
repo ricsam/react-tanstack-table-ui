@@ -88,7 +88,7 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
   headerIndex: number;
 }) {
   const measuring = useMeasureCellContext();
-  const { skin } = useTableContext();
+  const { skin, renderHeaderPlaceholder } = useTableContext();
 
   const { tableRef } = useTableContext();
 
@@ -101,8 +101,10 @@ export const TableHeaderCell = React.memo(function TableHeaderCell({
     });
 
   const content = React.useMemo(() => {
-    return isPlaceholder ? null : flexRender(headerDef, headerContext);
-  }, [headerDef, headerContext, isPlaceholder]);
+    return isPlaceholder
+      ? renderHeaderPlaceholder(headerDef, headerContext)
+      : flexRender(headerDef, headerContext);
+  }, [headerDef, headerContext, isPlaceholder, renderHeaderPlaceholder]);
 
   if (measuring) {
     measuring.registerCell(headerId);

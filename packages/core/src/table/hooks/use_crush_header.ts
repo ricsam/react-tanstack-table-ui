@@ -2,19 +2,27 @@ import { Header } from "@tanstack/react-table";
 import { useMeasureContext } from "./use_measure_context";
 import { useTableContext } from "../table_context";
 import { getSubHeaders } from "../../utils";
+import { CrushBy } from "../types";
 
 export const useCrushHeader = () => {
   const { measureCells } = useMeasureContext();
   const { tableRef } = useTableContext();
-  return (header: Header<any, any>) => {
+  return (
+    header: Header<any, any>,
+    crushBy: CrushBy | "default" = "default",
+  ) => {
     measureCells({
       callback: ({ cols }) => {
         tableRef.current.tanstackTable.setColumnSizing((prev) => {
           const defaultCrushMinSizeBy = tableRef.current.uiProps.crushMinSizeBy;
           const newSizing = { ...prev };
-          const crushMinSizeBy =
+          let crushMinSizeBy =
             header.column.columnDef.meta?.crushMinSizeBy ??
             defaultCrushMinSizeBy;
+
+          if (crushBy !== "default") {
+            crushMinSizeBy = crushBy;
+          }
 
           let headerWidth: undefined | number;
           const headerSizing = cols.get(header.column.id);

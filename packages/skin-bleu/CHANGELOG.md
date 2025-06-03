@@ -1,5 +1,13 @@
 # @rttui/skin-bleu
 
+## 1.0.51
+
+### Patch Changes
+
+- add option for custom placeholder rendering and improve the column options component
+- Updated dependencies
+  - @rttui/core@1.0.47
+
 ## 1.0.50
 
 ### Patch Changes
