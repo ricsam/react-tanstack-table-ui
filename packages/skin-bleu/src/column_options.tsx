@@ -1,12 +1,13 @@
 import {
+  Badge,
   Divider,
+  Fade,
   IconButton,
   Menu,
   MenuItem,
-  Popper,
-  Paper,
   MenuList,
-  Fade,
+  Paper,
+  Popper,
 } from "@mui/material";
 import {
   shallowEqual,
@@ -15,7 +16,7 @@ import {
   useCrushAllCols,
   useCrushHeader,
 } from "@rttui/core";
-import { MouseEvent, useState, useRef, useEffect } from "react";
+import { MouseEvent, useEffect, useRef, useState } from "react";
 import { FiMoreHorizontal as MoreHorizontal } from "react-icons/fi";
 import {
   LuArrowDown as ArrowDown,
@@ -58,16 +59,29 @@ function AutosizeSubmenuItems({
 export function ColumnOptions({
   onSort,
   onPin,
-  sorted
+  sorted,
+  children,
+  renderIcon,
+  active,
 }: {
   sorted?: "asc" | "desc" | false;
   onSort?: (sort: "asc" | "desc") => void;
   onPin?: (pin: "left" | "right") => void;
+  children?: React.ReactNode;
+  renderIcon?: (
+    handleClick: (event: MouseEvent<HTMLButtonElement>) => void,
+  ) => React.ReactNode;
+  active?: boolean;
 }) {
   const crushHeader = useCrushHeader();
   const crushAllColumns = useCrushAllCols();
   const colRef = useColRef();
-  const { isSorted: tsIsSorted, canSort, isPinned, canPin } = useColProps({
+  const {
+    isSorted: tsIsSorted,
+    canSort,
+    isPinned,
+    canPin,
+  } = useColProps({
     callback: ({ column }) => {
       return {
         isSorted: column.getIsSorted(),
@@ -140,13 +154,31 @@ export function ColumnOptions({
 
   return (
     <>
-      <IconButton
-        size="small"
-        onClick={handleClick}
-        sx={{ padding: 0, width: "32px", height: "32px" }}
-      >
-        <MoreHorizontal />
-      </IconButton>
+      {renderIcon ? (
+        renderIcon(handleClick)
+      ) : (
+        <Badge
+          badgeContent={" "}
+          sx={{
+            "& .MuiBadge-badge": {
+              bgcolor: "text.disabled",
+            },
+          }}
+          variant="dot"
+          invisible={
+            (!canSort && !canPin) || (!isSorted && !isPinned && !active)
+          }
+          overlap="circular"
+        >
+          <IconButton
+            size="small"
+            onClick={handleClick}
+            sx={{ padding: 0, width: "32px", height: "32px" }}
+          >
+            <MoreHorizontal />
+          </IconButton>
+        </Badge>
+      )}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -286,6 +318,7 @@ export function ColumnOptions({
           Autosize all columns
           <ChevronRight />
         </MenuItem>
+        {children}
       </Menu>
 
       <Popper

@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.54
+
+### Patch Changes
+
+- improve column options menu in bleu
+
 ## 1.0.53
 
 ### Patch Changes
