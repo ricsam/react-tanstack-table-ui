@@ -1,5 +1,12 @@
 # nextjs-test
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @rttui/core@1.0.49
+
 ## 0.1.4
 
 ### Patch Changes

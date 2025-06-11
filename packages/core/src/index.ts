@@ -58,6 +58,7 @@ import type { ReactTanstackTableUiProps } from "./table/types";
 import { AutoSizer } from "./auto_sizer";
 import type { AutoSizerProps } from "./auto_sizer";
 import type { CrushBy } from "./table/types";
+import { useAutoSizer } from "./table/hooks/use_autosizer";
 
 export {
   ReactTanstackTableUi,
@@ -99,6 +100,7 @@ export {
   AutoSizer,
   Header,
   useCrushAllCols,
+  useAutoSizer,
 };
 export type {
   CrushBy,
