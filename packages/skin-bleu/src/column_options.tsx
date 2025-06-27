@@ -61,16 +61,14 @@ export function ColumnOptions({
   onPin,
   sorted,
   children,
-  renderIcon,
+  icon,
   active,
 }: {
   sorted?: "asc" | "desc" | false;
   onSort?: (sort: "asc" | "desc") => void;
   onPin?: (pin: "left" | "right") => void;
   children?: React.ReactNode;
-  renderIcon?: (
-    handleClick: (event: MouseEvent<HTMLButtonElement>) => void,
-  ) => React.ReactNode;
+  icon?: React.ReactNode;
   active?: boolean;
 }) {
   const crushHeader = useCrushHeader();
@@ -154,31 +152,25 @@ export function ColumnOptions({
 
   return (
     <>
-      {renderIcon ? (
-        renderIcon(handleClick)
-      ) : (
-        <Badge
-          badgeContent={" "}
-          sx={{
-            "& .MuiBadge-badge": {
-              bgcolor: "text.disabled",
-            },
-          }}
-          variant="dot"
-          invisible={
-            (!canSort && !canPin) || (!isSorted && !isPinned && !active)
-          }
-          overlap="circular"
+      <Badge
+        badgeContent={" "}
+        sx={{
+          "& .MuiBadge-badge": {
+            bgcolor: "text.disabled",
+          },
+        }}
+        variant="dot"
+        invisible={(!canSort && !canPin) || (!isSorted && !isPinned && !active)}
+        overlap="circular"
+      >
+        <IconButton
+          size="small"
+          onClick={handleClick}
+          sx={{ padding: 0, width: "32px", height: "32px" }}
         >
-          <IconButton
-            size="small"
-            onClick={handleClick}
-            sx={{ padding: 0, width: "32px", height: "32px" }}
-          >
-            <MoreHorizontal />
-          </IconButton>
-        </Badge>
-      )}
+          {icon ? icon : <MoreHorizontal />}
+        </IconButton>
+      </Badge>
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
