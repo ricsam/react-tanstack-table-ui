@@ -30,15 +30,15 @@ const BleuSkin: Skin = {
   headerRowHeight: 32,
   footerRowHeight: 32,
   OverlayContainer: React.memo(function OverlayContainer({ children }) {
-    const { width, height } = useTableProps({
-      selector: (props) => props.uiProps,
-      callback: ({ width, height }) => {
+    const { width, height, hasFocus } = useTableProps({
+      callback: (props) => {
         return {
-          width,
-          height,
+          width: props.uiProps.width,
+          height: props.uiProps.height,
+          hasFocus: props.selection.tableHasFocus,
         };
       },
-      dependencies: [{ type: "ui_props" }],
+      dependencies: [{ type: "ui_props" }, { type: "selection" }],
       areCallbackOutputEqual: shallowEqual,
     });
     const cssVars = useTableCssVars();
@@ -56,6 +56,7 @@ const BleuSkin: Skin = {
         style={{
           width: width + "px",
           height: height + "px",
+          boxShadow: hasFocus ? "0 0 0 2px #2196f3" : "none",
           ...cssVars,
         }}
       >
@@ -63,12 +64,12 @@ const BleuSkin: Skin = {
       </Paper>
     );
   }),
-  OuterContainer: ({ children }) => {
-    const { tableContainerRef } = useTableContext();
+  ScrollContainer: ({ children }) => {
+    const { scrollContainerRef } = useTableContext();
 
     return (
       <Box
-        ref={tableContainerRef}
+        ref={scrollContainerRef}
         className="outer-container"
         sx={{
           overflow: "auto",
@@ -338,9 +339,17 @@ const BleuSkin: Skin = {
         isLastCenter,
         width,
         isSomeColumnsPinnedRight,
+        isSelected,
+        selectionBorders,
+        currentSelectionBorders,
       } = useCellProps({
         callback: (cell, table) => {
           const state = cell.header.state;
+          const sc = {
+            row: cell.rowIndex,
+            col: cell.columnIndex,
+          };
+          const isSelected = table.selection.isSelected(sc);
           return {
             isPinned: state.isPinned,
             isLastPinned: state.isLastPinned,
@@ -349,11 +358,54 @@ const BleuSkin: Skin = {
             width: state.width,
             isSomeColumnsPinnedRight:
               table.tanstackTable.getIsSomeColumnsPinned("right"),
+            isSelected,
+            selectionBorders: table.selection.selectionBorders(sc),
+            inNegativeSelection: table.selection.inNegativeSelection(sc),
+            currentSelectionBorders:
+              table.selection.currentSelectionBorders(sc),
           };
         },
         areCallbackOutputEqual: shallowEqual,
-        dependencies: [{ type: "tanstack_table" }],
+        dependencies: [{ type: "tanstack_table" }, { type: "selection" }],
       });
+
+      const selectionShadows: string[] = [];
+      selectionBorders.forEach((border) => {
+        switch (border) {
+          case "top":
+            selectionShadows.push(`inset 0 2px 0 0 #2196F3`);
+            break;
+          case "right":
+            selectionShadows.push(`inset -2px 0 0 0 #2196F3`);
+            break;
+          case "bottom":
+            selectionShadows.push(`inset 0 -2px 0 0 #2196F3`);
+            break;
+          case "left":
+            selectionShadows.push(`inset 2px 0 0 0 #2196F3`);
+            break;
+        }
+      });
+
+      currentSelectionBorders.forEach((border) => {
+        switch (border) {
+          case "top":
+            selectionShadows.push(`inset 0 2px 0 0#c5b4b3`);
+            break;
+          case "right":
+            selectionShadows.push(`inset -2px 0 0 0 #c5b4b3`);
+            break;
+          case "bottom":
+            selectionShadows.push(`inset 0 -2px 0 0 #c5b4b3`);
+            break;
+          case "left":
+            selectionShadows.push(`inset 2px 0 0 0 #c5b4b3`);
+            break;
+        }
+      });
+
+      const selectionBoxShadow =
+        selectionShadows.length > 0 ? selectionShadows.join(", ") : undefined;
 
       return (
         <TableCell
@@ -361,46 +413,56 @@ const BleuSkin: Skin = {
           component="div"
           ref={ref}
           style={{ width: isMeasureInstance ? "auto" : width }}
-          sx={{
-            height: "var(--row-height)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            zIndex: isPinned ? 5 : 0,
-            boxSizing: "border-box",
-            fontSize: "0.875rem",
-            color: "text.primary",
-            alignItems: "center",
-            gap: "8px",
-            display: "flex",
-            justifyContent: "flex-start",
-            alignContent: "center",
-            padding: "6px 12px",
-            backgroundColor: "var(--row-background-color)",
-            flexShrink: 0,
-            position: "relative",
-            borderRight:
-              ((isPinned === "start" && !isLastPinned) || !isPinned) &&
-              !isLast &&
-              !(isLastCenter && isSomeColumnsPinnedRight)
-                ? (theme) => `1px solid ${theme.palette.divider}`
-                : undefined,
-            borderLeft:
-              isPinned === "end" && !isLastPinned
-                ? (theme) => `1px solid ${theme.palette.divider}`
-                : undefined,
-            ".table-row:hover &": {
-              backgroundColor: (theme) => {
-                // Always use solid background colors for all cells on hover
-                return theme.palette.mode === "dark"
-                  ? "#1e1e52" // Dark blue solid color
-                  : "#E3F2FD"; // Light blue solid color
-              },
-              zIndex: isPinned ? 2 : 0,
+          sx={[
+            {
+              height: "var(--row-height)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              zIndex: isPinned ? 5 : 0,
+              boxSizing: "border-box",
+              fontSize: "0.875rem",
+              color: "text.primary",
+              alignItems: "center",
+              gap: "8px",
+              display: "flex",
+              justifyContent: "flex-start",
+              alignContent: "center",
+              padding: "6px 12px",
+              backgroundColor: "var(--row-background-color)",
+              flexShrink: 0,
+              position: "relative",
+              borderRight:
+                ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+                !isLast &&
+                !(isLastCenter && isSomeColumnsPinnedRight)
+                  ? (theme) => `1px solid ${theme.palette.divider}`
+                  : undefined,
+              borderLeft:
+                isPinned === "end" && !isLastPinned
+                  ? (theme) => `1px solid ${theme.palette.divider}`
+                  : undefined,
+
+              borderBottom: "none",
+              borderTop: "none",
+              boxShadow: selectionBoxShadow,
             },
-            borderBottom: "none",
-            borderTop: "none",
-          }}
+            !isSelected
+              ? {
+                  ".table-row:hover &": {
+                    backgroundColor: (theme) => {
+                      // Always use solid background colors for all cells on hover
+                      return theme.palette.mode === "dark"
+                        ? "#1e1e52" // Dark blue solid color
+                        : "#E3F2FD"; // Light blue solid color
+                    },
+                    zIndex: isPinned ? 2 : 0,
+                  },
+                }
+              : {
+                  // backgroundColor: (theme) => theme.palette.primary.light,
+                },
+          ]}
         >
           {children}
         </TableCell>

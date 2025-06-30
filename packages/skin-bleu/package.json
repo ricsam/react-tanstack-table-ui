@@ -1,6 +1,6 @@
 {
   "name": "@rttui/skin-bleu",
-  "version": "1.0.55",
+  "version": "1.0.56",
   "main": "./src/index.ts",
   "dependencies": {
     "@rttui/core": "workspace:^"

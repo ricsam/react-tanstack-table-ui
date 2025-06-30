@@ -62,13 +62,13 @@ export const defaultSkin: Skin = {
       </div>
     );
   },
-  OuterContainer: ({ children }) => {
-    const { tableContainerRef } = useTableContext();
+  ScrollContainer: ({ children }) => {
+    const { scrollContainerRef } = useTableContext();
     const { width, height } = widthHeightSelector.useTableProps();
 
     return (
       <div
-        ref={tableContainerRef}
+        ref={scrollContainerRef}
         className="outer-container"
         style={{
           overflow: "auto",

@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.50
+
+### Patch Changes
+
+- add support for selections
+
 ## 1.0.49
 
 ### Patch Changes

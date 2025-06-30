@@ -42,7 +42,8 @@
     "ignoreDependencies": [
       "prettier",
       "react-icons",
-      "tailwindcss"
+      "tailwindcss",
+      "@storybook/blocks"
     ],
     "ignoreBinaries": [
       "vite"

@@ -1,5 +1,13 @@
 # @rttui/skin-bleu
 
+## 1.0.56
+
+### Patch Changes
+
+- add support for selections
+- Updated dependencies
+  - @rttui/core@1.0.50
+
 ## 1.0.55
 
 ### Patch Changes

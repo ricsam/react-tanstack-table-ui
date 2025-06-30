@@ -113,11 +113,11 @@ export const Skin: RttuiSkin = {
       </Card>
     );
   },
-  OuterContainer: ({ children }) => {
-    const { tableContainerRef } = useTableContext();
+  ScrollContainer: ({ children }) => {
+    const { scrollContainerRef } = useTableContext();
     return (
       <div
-        ref={tableContainerRef}
+        ref={scrollContainerRef}
         className="outer-container relative overflow-auto text-foreground bg-background"
         style={{
           width: "var(--table-container-width)",

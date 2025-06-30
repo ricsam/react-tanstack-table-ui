@@ -1,5 +1,13 @@
 # nextjs-test
 
+## 0.1.6
+
+### Patch Changes
+
+- add support for selections
+- Updated dependencies
+  - @rttui/core@1.0.50
+
 ## 0.1.5
 
 ### Patch Changes

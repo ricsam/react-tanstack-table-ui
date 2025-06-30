@@ -41,6 +41,7 @@ export const TablePropsProvider = ({
       row_visible_range: getSet("row_visible_range"),
       is_scrolling: getSet("is_scrolling"),
       is_resizing_column: getSet("is_resizing_column"),
+      selection: getSet("selection"),
     };
 
     const getTable = () => {

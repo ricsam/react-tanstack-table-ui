@@ -6,7 +6,7 @@ export type Skin = {
   rowHeight: number;
   headerRowHeight: number;
   footerRowHeight: number;
-  OuterContainer: React.FC<{ children: React.ReactNode }>;
+  ScrollContainer: React.FC<{ children: React.ReactNode }>; 
   TableScroller: React.FC;
 
   HeaderCell: React.ForwardRefExoticComponent<

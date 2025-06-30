@@ -6,7 +6,7 @@ import { shallowEqual } from "../utils";
 import { HeaderGroup } from "./cols/header_group";
 import { MeasureContext, MeasureContextType } from "./contexts/measure_context";
 import { useMeasureContext } from "./hooks/use_measure_context";
-import { useTableProps } from "./hooks/use_table_props";
+import { useListenToTableProps, useTableProps } from "./hooks/use_table_props";
 import { MeasureProvider } from "./providers/measure_provider";
 import { TablePropsProvider } from "./providers/table_props_provider";
 import { TableBody } from "./table_body";
@@ -51,6 +51,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
       size: { width: props.width, height: props.height },
     });
   }
+  const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
   return (
     <MeasureProvider
       width={width}
@@ -65,7 +66,10 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
       autoCrushNumCols={props.autoCrushNumCols ?? 50}
       autoCrushMaxSize={props.autoCrushMaxSize}
     >
-      <MeasureSwitch debug={props.debug?.measureInstance}>
+      <MeasureSwitch
+        debug={props.debug?.measureInstance}
+        tableContainerRef={tableContainerRef}
+      >
         <TablePropsProvider>
           <TablePropsUpdater
             {...props}
@@ -75,6 +79,7 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
             initialHeight={
               props.initialHeight ?? autoSizerContext?.initialHeight
             }
+            tableContainerRef={tableContainerRef}
           />
         </TablePropsProvider>
       </MeasureSwitch>
@@ -82,7 +87,11 @@ export const ReactTanstackTableUi = function ReactTanstackTableUi<T>(
   );
 };
 
-function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
+function MeasureSwitch(props: {
+  children: React.ReactNode;
+  debug?: boolean;
+  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const context = useMeasureContext();
 
   const nonMeasuringContext = React.useMemo(
@@ -168,6 +177,7 @@ function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
         height: context.height + "px",
         position: "relative",
       }}
+      ref={props.tableContainerRef}
     >
       {measuringInstance}
       {!measuringInstance && props.debug && debugInstance.current}
@@ -178,8 +188,12 @@ function MeasureSwitch(props: { children: React.ReactNode; debug?: boolean }) {
   );
 }
 
-function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
-  const { table } = props;
+function TablePropsUpdater(
+  props: ReactTanstackTableUiProps<any> & {
+    tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  },
+) {
+  const { table, tableContainerRef } = props;
   const measureContext = useMeasureContext();
 
   //#region validate props
@@ -266,16 +280,17 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
     scrollbarWidth: props.scrollbarWidth ?? 16,
     tableRef: props.tableRef,
     shouldUpdate: props.shouldUpdate,
+    spreadsheetMode: props.spreadsheetMode,
   };
 
-  const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement | null>(null);
 
   const skin = props.skin ?? defaultSkin;
 
   const rttuiRef = useRttuiTable({
     table: props.table,
     uiProps,
-    tableContainerRef,
+    scrollContainerRef,
     skin,
   });
 
@@ -292,7 +307,7 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
     <TableContext.Provider
       value={React.useMemo((): TableContextType => {
         return {
-          tableContainerRef,
+          scrollContainerRef,
           loading: Boolean(measureContext.isMeasuringInstanceLoading),
           skin,
           tableRef: rttuiRef,
@@ -308,27 +323,97 @@ function TablePropsUpdater(props: ReactTanstackTableUiProps<any>) {
         };
       }, [measureContext.isMeasuringInstanceLoading, skin, rttuiRef])}
     >
-      <Body />
+      <Body
+        tableContainerRef={
+          !measureContext.isMeasuring ? tableContainerRef : undefined
+        }
+      />
     </TableContext.Provider>
   );
 }
 
-const Body = React.memo(function Body() {
+const Body = React.memo(function Body({
+  tableContainerRef,
+}: {
+  tableContainerRef: React.RefObject<HTMLDivElement | null> | undefined;
+}) {
   const { skin } = useTableContext();
 
-  const { pinColsRelativeTo, underlay } = useTableProps({
+  const { pinColsRelativeTo, underlay, selection } = useTableProps({
     callback: (props) => {
       return {
         pinColsRelativeTo: props.uiProps.pinColsRelativeTo,
         underlay: props.uiProps.underlay,
+        selection: props.selection,
       };
     },
     dependencies: [{ type: "ui_props" }],
   });
 
+  const { listenTo } = useListenToTableProps();
+  React.useEffect(() => {
+    if (!tableContainerRef) {
+      return;
+    }
+    const ref = tableContainerRef.current;
+    if (ref) {
+      const preventDefault = (e: Event) => {
+        e.preventDefault();
+        document.getSelection()?.empty();
+      };
+      const cleanups = [
+        listenTo([{ type: "selection" }], (table) => {
+          if (table.selection.isSelecting) {
+            ref.addEventListener("selectstart", preventDefault);
+            ref.addEventListener("selectionchange", preventDefault);
+            return () => {
+              ref.removeEventListener("selectstart", preventDefault);
+              ref.removeEventListener("selectionchange", preventDefault);
+            };
+          }
+        }),
+        listenTo([{ type: "selection" }], (table) => {
+          if (!table.selection.hasFocus()) {
+            return;
+          }
+          const handler = (ev: KeyboardEvent) => {
+            table.selection.handleKeyDown(ev);
+          };
+          window.addEventListener("keydown", handler);
+          return () => {
+            window.removeEventListener("keydown", handler);
+          };
+        }),
+      ];
+      return () => {
+        cleanups.forEach((cleanup) => cleanup());
+      };
+    }
+  }, [listenTo, tableContainerRef]);
+
+  React.useEffect(() => {
+    if (!tableContainerRef) {
+      return;
+    }
+    const ref = tableContainerRef.current;
+    if (ref) {
+      const clickAwayListener = (e: MouseEvent) => {
+        if (!ref.contains(e.target as Node)) {
+          selection.blur();
+        } else {
+          selection.focus();
+        }
+      };
+      document.addEventListener("click", clickAwayListener);
+      return () => {
+        document.removeEventListener("click", clickAwayListener);
+      };
+    }
+  }, [tableContainerRef, selection]);
+
   return (
     <skin.OverlayContainer>
-      <skin.OuterContainer>
+      <skin.ScrollContainer>
         {underlay}
 
         <skin.TableScroller />
@@ -359,7 +444,7 @@ const Body = React.memo(function Body() {
             <skin.PinnedColsOverlay position="right" />
           </div>
         )}
-      </skin.OuterContainer>
+      </skin.ScrollContainer>
     </skin.OverlayContainer>
   );
 });

@@ -22,12 +22,14 @@ import {
   RttuiHeader,
   RttuiHeaderGroup,
   RttuiHeaderGroups,
+  RttuiRef,
   RttuiRow,
   RttuiTable,
   UiProps,
   VirtualHeaderCellState,
 } from "./types";
 import { useMeasureContext } from "./hooks/use_measure_context";
+import { SelectionManager } from "./selection_manager";
 type ObserveElementOffset = typeof libObserveElementOffset;
 type ObserveOffsetCallBack = Parameters<ObserveElementOffset>[1];
 // const useIsomorphicLayoutEffect =
@@ -78,10 +80,12 @@ function _slow_updateRttuiTable({
   virtualizers,
   table,
   uiProps,
+  selections,
 }: {
   virtualizers: ReturnType<typeof useVirtualizers>;
   table: Table<any>;
   uiProps: UiProps;
+  selections: SelectionManager;
 }): RttuiTable {
   const _slow_allRows = table.getRowModel().rows;
 
@@ -253,6 +257,7 @@ function _slow_updateRttuiTable({
       header: getRttuiHeaderGroups("header"),
       footer: getRttuiHeaderGroups("footer"),
     },
+    selection: selections,
   };
   return rttuiTable;
 }
@@ -260,12 +265,12 @@ function _slow_updateRttuiTable({
 export const useRttuiTable = ({
   table,
   uiProps,
-  tableContainerRef,
+  scrollContainerRef,
   skin,
 }: {
   table: Table<any>;
   uiProps: UiProps;
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   skin: Skin;
 }) => {
   const context = useTablePropsContext();
@@ -279,17 +284,43 @@ export const useRttuiTable = ({
 
   const virtualizers = useVirtualizers({
     table,
-    tableContainerRef,
+    scrollContainerRef,
     uiProps,
     skin,
     updateRttuiTable,
   });
+
+  const selectionsRef = React.useRef<SelectionManager | null>(null);
+  if (!selectionsRef.current) {
+    selectionsRef.current = new SelectionManager(
+      () => {
+        context.triggerUpdate([{ type: "selection" }], {
+          type: "from_dom_event",
+          sync: false,
+          initial: false,
+        });
+      },
+      () => table.getRowCount(),
+      () => table.getAllColumns().length,
+      (row, col) => table.getRowModel().rows[row].getAllCells()[col],
+    );
+  }
+  
+  if (uiProps.tableRef) {
+    if (!uiProps.tableRef.current) {
+      uiProps.tableRef.current = {} as RttuiRef;
+    }
+    uiProps.tableRef.current.selection = selectionsRef.current;
+  }
+
+  const selections = selectionsRef.current;
 
   function getNewInstance() {
     return _slow_updateRttuiTable({
       virtualizers,
       table,
       uiProps,
+      selections,
     });
   }
 
@@ -701,13 +732,13 @@ function getRowOffsets({
 
 function useVirtualizers({
   table,
-  tableContainerRef,
+  scrollContainerRef,
   uiProps,
   skin,
   updateRttuiTable,
 }: {
   table: Table<any>;
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   uiProps: UiProps;
   skin: Skin;
   updateRttuiTable: (sync: boolean) => void;
@@ -812,7 +843,7 @@ function useVirtualizers({
     return createColVirtualizer({
       initialRect,
       _slow_allHeaders: _slow_leafHeaders,
-      tableContainerRef,
+      scrollContainerRef,
       columnOverscan: getColOverscan(),
       initialOffset: getColScrollOffset(),
       observeElementOffset: horObserveElementOffset("header", 0),
@@ -839,11 +870,11 @@ function useVirtualizers({
       rowVirtualizer: new Virtualizer({
         initialRect,
         count: _slow_allRows.length,
-        getScrollElement: () => tableContainerRef.current,
+        getScrollElement: () => scrollContainerRef.current,
         overscan: getRowOverscan(),
         initialOffset: getRowScrollOffset(),
         scrollToFn: (offset) => {
-          tableContainerRef.current?.scrollTo({
+          scrollContainerRef.current?.scrollTo({
             top: offset,
           });
         },
@@ -946,7 +977,7 @@ function useVirtualizers({
         virtualizer: createColVirtualizer({
           initialRect,
           _slow_allHeaders: group._slow_headers,
-          tableContainerRef,
+          scrollContainerRef,
           columnOverscan: getColOverscan(),
           initialOffset: getColScrollOffset(),
           observeElementOffset: horObserveElementOffset(type, groupIndex),
@@ -1106,7 +1137,7 @@ function useVirtualizers({
       return { verCb, horCbs };
     };
 
-    const element = tableContainerRef.current;
+    const element = scrollContainerRef.current;
 
     if (!element) {
       return;
@@ -1155,7 +1186,7 @@ function useVirtualizers({
         element.removeEventListener("scrollend", endHandler);
       }
     };
-  }, [onChange, tableContainerRef]);
+  }, [onChange, scrollContainerRef]);
 
   return virtualizers;
 }
@@ -1197,7 +1228,7 @@ function getNewColVirtualizerOptions(
 }
 function createColVirtualizer({
   _slow_allHeaders,
-  tableContainerRef,
+  scrollContainerRef,
   columnOverscan,
   initialOffset,
   observeElementOffset,
@@ -1205,7 +1236,7 @@ function createColVirtualizer({
   initialRect,
 }: {
   _slow_allHeaders: Header<any, unknown>[];
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   columnOverscan: number;
   initialOffset: number | undefined;
   onChange: (sync: boolean) => void;
@@ -1218,7 +1249,7 @@ function createColVirtualizer({
     | undefined;
 }) {
   return new Virtualizer({
-    getScrollElement: () => tableContainerRef.current,
+    getScrollElement: () => scrollContainerRef.current,
     initialRect,
     horizontal: true,
     overscan: columnOverscan,
@@ -1226,7 +1257,7 @@ function createColVirtualizer({
     observeElementRect,
     observeElementOffset,
     scrollToFn: (offset) => {
-      tableContainerRef.current?.scrollTo({
+      scrollContainerRef.current?.scrollTo({
         left: offset,
       });
     },

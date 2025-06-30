@@ -4,7 +4,7 @@ import { iterateOverColumns } from "./iterate_over_columns";
 import type { Skin } from "./skin";
 import { useTableContext } from "./table/table_context";
 import { useColVirtualizer } from "./table/hooks/use_col_virtualizer";
-import type { VirtualHeaderCell } from "./table/types";
+import type { RttuiSelection, VirtualHeaderCell } from "./table/types";
 import { useTableCssVars } from "./skin";
 import {
   defaultSkin,
@@ -120,4 +120,5 @@ export type {
   CellProps,
   CellLinkProps,
   CellPercentProps,
+  RttuiSelection,
 };

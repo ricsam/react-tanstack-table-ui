@@ -1,6 +1,6 @@
 {
   "name": "@rttui/skin-mui",
-  "version": "1.0.50",
+  "version": "1.0.51",
   "main": "./src/index.tsx",
   "dependencies": {
     "@rttui/core": "workspace:^"

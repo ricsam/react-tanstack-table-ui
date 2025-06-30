@@ -5,7 +5,7 @@ import { Skin } from "../skin";
 import { RttuiTable } from "./types";
 
 export type TableContextType = {
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
   skin: Skin;
   loading: boolean;
   tableRef: React.RefObject<RttuiTable>;

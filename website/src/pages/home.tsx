@@ -80,7 +80,7 @@ export function HomePage() {
   const [columnCount, setColumnCount] = useState(40);
 
   // Measure the table container size
-  const [tableContainerRef, tableContainerBounds] = useMeasure({
+  const [scrollContainerRef, tableContainerBounds] = useMeasure({
     debounce: 50,
     scroll: false,
   });
@@ -596,7 +596,7 @@ export function HomePage() {
             className="w-full relative border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden aspect-[1/1.25] md:aspect-video"
             style={{ ...themeVars }}
           >
-            <div ref={tableContainerRef} className="absolute inset-0">
+            <div ref={scrollContainerRef} className="absolute inset-0">
               {tableContainerBounds.width && tableContainerBounds.height ? (
                 <ReactTanstackTableUi
                   shouldUpdate={{

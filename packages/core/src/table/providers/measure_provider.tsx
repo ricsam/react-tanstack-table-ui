@@ -347,9 +347,10 @@ export const MeasureProvider = (props: {
   }, [autoSizeColumns, refs.current.autoCrushColumns]);
 
   if (props.tableRef) {
-    props.tableRef.current = {
-      autoSizeColumns,
-    };
+    if (!props.tableRef.current) {
+      props.tableRef.current = {} as RttuiRef;
+    }
+    props.tableRef.current.autoSizeColumns = autoSizeColumns;
   }
 
   const autoSizeColumnsRef = React.useRef(autoSizeColumns);

@@ -139,3 +139,45 @@ export const useTableProps = <T, U = RttuiTable>({
 
   return value.current;
 };
+
+export function useListenToTableProps() {
+  const context = useTablePropsContext();
+  return {
+    listenTo: React.useCallback((
+      events: Dependency[],
+      callback: (table: RttuiTable, updateType: UpdateType) => void | (() => void),
+    ) => {
+      const teardowns: (() => void)[] = [];
+      events.forEach((event) => {
+        const callbackCleanups: (() => void)[] = [];
+        const listenerArtifact: UpdateListenerEntry = {
+          callback: (table, updateType) => {
+            callbackCleanups.forEach((cleanup) => {
+              cleanup();
+            });
+            callbackCleanups.length = 0;
+            const cleanup = callback(table, updateType);
+            if (cleanup) {
+              callbackCleanups.push(cleanup);
+            }
+          },
+          dependency: event,
+        };
+        context.updateListeners[event.type].add(listenerArtifact);
+        const teardown = () => {
+          context.updateListeners[event.type].delete(listenerArtifact);
+          callbackCleanups.forEach((cleanup) => {
+            cleanup();
+          });
+          callbackCleanups.length = 0;
+        };
+        teardowns.push(teardown);
+      });
+      return () => {
+        teardowns.forEach((teardown) => {
+          teardown();
+        });
+      };
+    }, [context.updateListeners]),
+  };
+}

@@ -1,4 +1,4 @@
-import type { Skin  } from "@rttui/core";
+import type { Skin } from "@rttui/core";
 
 import { cn } from "@/lib/utils";
 import { Card } from "@/registry/new-york/ui/card";
@@ -113,11 +113,11 @@ export const RttuiChadcnSkin: Skin = {
       </Card>
     );
   },
-  OuterContainer: ({ children }) => {
-    const { tableContainerRef } = useTableContext();
+  ScrollContainer: ({ children }) => {
+    const { scrollContainerRef } = useTableContext();
     return (
       <div
-        ref={tableContainerRef}
+        ref={scrollContainerRef}
         className="outer-container relative overflow-auto text-foreground bg-background"
         style={{
           width: "var(--table-container-width)",

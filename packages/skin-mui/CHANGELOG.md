@@ -1,5 +1,13 @@
 # @rttui/skin-mui
 
+## 1.0.51
+
+### Patch Changes
+
+- add support for selections
+- Updated dependencies
+  - @rttui/core@1.0.50
+
 ## 1.0.50
 
 ### Patch Changes

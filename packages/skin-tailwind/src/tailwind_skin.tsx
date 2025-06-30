@@ -42,11 +42,11 @@ export const TailwindSkin: Skin = {
       </div>
     );
   },
-  OuterContainer: ({ children }) => {
-    const { tableContainerRef } = useTableContext();
+  ScrollContainer: ({ children }) => {
+    const { scrollContainerRef } = useTableContext();
     return (
       <div
-        ref={tableContainerRef}
+        ref={scrollContainerRef}
         className="outer-container relative overflow-auto"
         style={{
           width: "var(--table-container-width)",

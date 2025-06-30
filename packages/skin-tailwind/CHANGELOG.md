@@ -1,5 +1,13 @@
 # @rttui/skin-tailwind
 
+## 0.0.45
+
+### Patch Changes
+
+- add support for selections
+- Updated dependencies
+  - @rttui/core@1.0.50
+
 ## 0.0.44
 
 ### Patch Changes
