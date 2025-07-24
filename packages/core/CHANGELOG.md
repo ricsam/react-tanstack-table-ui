@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.51
+
+### Patch Changes
+
+- cd21a12: add true selection-manager support
+
 ## 1.0.50
 
 ### Patch Changes

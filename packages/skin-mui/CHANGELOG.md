@@ -1,5 +1,13 @@
 # @rttui/skin-mui
 
+## 1.0.52
+
+### Patch Changes
+
+- cd21a12: add true selection-manager support
+- Updated dependencies [cd21a12]
+  - @rttui/core@1.0.51
+
 ## 1.0.51
 
 ### Patch Changes
