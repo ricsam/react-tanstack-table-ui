@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@tanstack/react-table": "8.20.6",
-    "@rttui/core": "1.0.47",
+    "@rttui/core": "1.0.50",
     "@rttui/fixtures": "1.0.8",
-    "@rttui/skin-bleu": "1.0.51",
+    "@rttui/skin-bleu": "1.0.56",
     "@types/node": "^22.13.12",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.4",
@@ -24,6 +24,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "typescript": "^5.8.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "@ricsam/selection-manager": "^0.0.3"
   }
 }

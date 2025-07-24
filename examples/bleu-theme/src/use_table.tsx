@@ -1,6 +1,12 @@
 import { decorateColumnHelper } from "@rttui/core";
 import { User, generateTableData } from "@rttui/fixtures";
-import { Cell, Filter, Header } from "@rttui/skin-bleu";
+import {
+  Cell,
+  Filter,
+  Header,
+  SpreadsheetColHeader,
+  SpreadsheetRowHeader,
+} from "@rttui/skin-bleu";
 import {
   ColumnDef,
   createColumnHelper,
@@ -24,19 +30,44 @@ const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
     </Header>
   ),
   filter: () => <Filter resizer />,
-  cell: (original, context) => (
-    <Cell
-      {...(context.column.id.endsWith("full-name")
-        ? { checkbox: true, expandButton: true, pinButtons: true }
-        : {})}
-      resizer
-    >
-      {original}
-    </Cell>
-  ),
+  extraHeaders: [
+    {
+      id: "spreadsheet-col-header",
+      header: (props) => {
+        return <SpreadsheetColHeader index={props.column.getIndex()} />;
+      },
+      meta: {
+        disablePadding: true,
+      }
+    },
+  ],
+  cell: (original, context) => {
+    if (context.column.id.endsWith("spreadsheet-row-header")) {
+      return original;
+    }
+    return (
+      <Cell
+        {...(context.column.id.endsWith("full-name")
+          ? { checkbox: true, expandButton: true, pinButtons: true }
+          : {})}
+        resizer
+      >
+        {original}
+      </Cell>
+    );
+  },
 });
 
 const columns: ColumnDef<User, any>[] = [
+  columnHelper.display({
+    id: "spreadsheet-row-header",
+    cell: (info) => <SpreadsheetRowHeader index={info.row.index} />,
+    enablePinning: true,
+    meta: {
+      isSpreadsheetRowHeader: true,
+    },
+  }),
+
   // Combined column with all controls
   columnHelper.accessor("fullName", {
     header: "Full Name",
@@ -271,6 +302,13 @@ export const useTable = () => {
     keepPinnedRows: true,
     enableSorting: true,
     getSortedRowModel: getSortedRowModel(),
+    initialState: {
+      columnPinning: {
+        left: [
+          "_decorator_extra_header_0__decorator_filter_spreadsheet-row-header",
+        ],
+      },
+    },
   });
   return table;
 };

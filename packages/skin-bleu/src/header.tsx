@@ -15,6 +15,8 @@ import { ColumnOptions } from "./column_options";
 import { HeaderPinButtons } from "./header_pin_buttons";
 import { HeaderResizer } from "./header_resizer";
 import { Resizer } from "./resizer";
+import { useSelectionManagerCls } from "./selection_manager_context";
+import { useCallback } from "react";
 
 export function Header({
   children,
@@ -24,6 +26,7 @@ export function Header({
   sorting,
   options,
   accessibleResizer,
+  spreadsheetHeader,
 }: {
   children?: React.ReactNode;
   checkbox?: boolean;
@@ -32,6 +35,9 @@ export function Header({
   sorting?: boolean;
   options?: boolean;
   accessibleResizer?: boolean;
+  spreadsheetHeader?: {
+    index: number;
+  };
 }) {
   const tableRef = useTableContext().tableRef;
   const colRef = useColRef();
@@ -45,8 +51,26 @@ export function Header({
     areCallbackOutputEqual: shallowEqual,
     dependencies: [{ type: "tanstack_table" }],
   });
+  const selectionManager = useSelectionManagerCls();
+  const spreadsheetHeaderIndex = spreadsheetHeader?.index;
+  const headerRef = useCallback(
+    (el: HTMLElement | null) => {
+      if (typeof spreadsheetHeaderIndex !== "number") {
+        return;
+      }
+      if (el) {
+        return selectionManager.setupHeaderElement(
+          el,
+          spreadsheetHeaderIndex,
+          "col",
+        );
+      }
+    },
+    [selectionManager, spreadsheetHeaderIndex],
+  );
   return (
     <div
+      ref={headerRef}
       style={{
         display: "flex",
         alignItems: "center",

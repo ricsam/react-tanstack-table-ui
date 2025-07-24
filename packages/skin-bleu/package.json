@@ -3,7 +3,8 @@
   "version": "1.0.56",
   "main": "./src/index.ts",
   "dependencies": {
-    "@rttui/core": "workspace:^"
+    "@rttui/core": "workspace:^",
+    "@ricsam/selection-manager": "^0.0.3"
   },
   "devDependencies": {
     "@emotion/react": "^11.14.0",
@@ -14,7 +15,8 @@
     "@types/react-dom": "19.0.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "@tanstack/react-table": "8.20.6"
   },
   "description": "Bleu skin for React TanStack Table UI",
   "keywords": [

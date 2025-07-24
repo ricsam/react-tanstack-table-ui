@@ -141,30 +141,12 @@ export const TableCell = React.memo(function TableCell({
         ref={React.useCallback(
           (ref: HTMLDivElement) => {
             storeMeasuringRef(ref);
-            if (tableRef.current.uiProps.spreadsheetMode?.canSelect) {
-              const selection = tableRef.current.selection;
-
-              const onMouseDown = (e: MouseEvent) => {
-                selection.startSelection(rowIndex, columnIndex, {
-                  shiftKey: e.shiftKey,
-                  ctrlKey: e.ctrlKey || e.metaKey,
-                });
-              };
-              const onMouseUp = () => {
-                selection.endSelection(rowIndex, columnIndex);
-              };
-              const onMouseEnter = () => {
-                selection.expandSelection(rowIndex, columnIndex);
-              };
-
-              ref.addEventListener("mousedown", onMouseDown);
-              ref.addEventListener("mouseup", onMouseUp);
-              ref.addEventListener("mouseenter", onMouseEnter);
-              return () => {
-                ref.removeEventListener("mousedown", onMouseDown);
-                ref.removeEventListener("mouseup", onMouseUp);
-                ref.removeEventListener("mouseenter", onMouseEnter);
-              };
+            if (tableRef.current.uiProps.spreadsheetManager?.canSelect) {
+              const selectionManager = tableRef.current.selectionManager;
+              return selectionManager.setupCellElement(ref, {
+                row: rowIndex,
+                col: columnIndex,
+              });
             }
           },
           [columnIndex, rowIndex, storeMeasuringRef, tableRef],

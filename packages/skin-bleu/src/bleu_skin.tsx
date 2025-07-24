@@ -11,6 +11,11 @@ import {
   useTheme,
 } from "@mui/material";
 import {
+  SelectionManager,
+  useSelectionManager,
+  writeToClipboard,
+} from "@ricsam/selection-manager";
+import {
   shallowEqual,
   Skin,
   strictEqual,
@@ -22,70 +27,175 @@ import {
   useTableCssVars,
   useTableProps,
 } from "@rttui/core";
-import React, { CSSProperties } from "react";
+import { RowData } from "@tanstack/react-table";
+import React, {
+  CSSProperties,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+} from "react";
+import { SelectionManagerProvider } from "./selection_manager_context";
 import { TableHeaderRow } from "./table_header_row";
 
-const BleuSkin: Skin = {
-  rowHeight: 32,
-  headerRowHeight: 32,
-  footerRowHeight: 32,
-  OverlayContainer: React.memo(function OverlayContainer({ children }) {
-    const { width, height, hasFocus } = useTableProps({
-      callback: (props) => {
-        return {
-          width: props.uiProps.width,
-          height: props.uiProps.height,
-          hasFocus: props.selection.tableHasFocus,
-        };
-      },
-      dependencies: [{ type: "ui_props" }, { type: "selection" }],
-      areCallbackOutputEqual: shallowEqual,
-    });
-    const cssVars = useTableCssVars();
-    return (
-      <Paper
-        className="rttui-overlay-container"
-        elevation={2}
-        sx={{
-          position: "relative",
-          "*": {
-            boxSizing: "border-box",
-          },
-          overflow: "hidden",
-        }}
-        style={{
-          width: width + "px",
-          height: height + "px",
-          boxShadow: hasFocus ? "0 0 0 2px #2196f3" : "none",
-          ...cssVars,
-        }}
-      >
-        {children}
-      </Paper>
-    );
-  }),
-  ScrollContainer: ({ children }) => {
-    const { scrollContainerRef } = useTableContext();
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    disablePadding?: boolean;
+    isSpreadsheetRowHeader?: boolean;
+  }
+}
 
-    return (
-      <Box
-        ref={scrollContainerRef}
-        className="outer-container"
-        sx={{
-          overflow: "auto",
-          width: "var(--table-container-width)",
-          height: "var(--table-container-height)",
-          position: "relative",
-          contain: "strict",
-          willChange: "scroll-position",
-          borderRadius: 1,
-        }}
-      >
-        {children}
-      </Box>
-    );
-  },
-  TableScroller: () => {
+export class BleuSkin implements Skin {
+  rowHeight = 32;
+  headerRowHeight = 32;
+  footerRowHeight = 32;
+
+  constructor(private readonly selectionManager: SelectionManager) {}
+
+  OverlayContainer = React.memo(
+    ({ children }: { children: React.ReactNode }) => {
+      const tableRef = useTableContext().tableRef;
+      const { width, height } = useTableProps({
+        callback: (props) => {
+          return {
+            width: props.uiProps.width,
+            height: props.uiProps.height,
+          };
+        },
+        dependencies: [{ type: "ui_props" }],
+        areCallbackOutputEqual: shallowEqual,
+      });
+      const cssVars = useTableCssVars();
+      const [containerRef, setContainerRef] =
+        React.useState<HTMLDivElement | null>(null);
+
+      useEffect(() => {
+        if (containerRef) {
+          const cleanup =
+            this.selectionManager.setupContainerElement(containerRef);
+          return cleanup;
+        }
+      }, [containerRef]);
+
+      useEffect(() => {
+        return this.selectionManager.listenToCopy(() => {
+          const boundingRect =
+            this.selectionManager.getSelectionsBoundingRect();
+          if (!boundingRect) return;
+
+          const table = tableRef.current.tanstackTable;
+          const allSelections =
+            this.selectionManager.getNonOverlappingSelections();
+
+          if (allSelections.length === 0) return;
+
+          const rows = table.getRowModel().rows;
+
+          // Create a 2D grid covering the entire bounding rectangle
+          const gridHeight = boundingRect.end.row - boundingRect.start.row + 1;
+          const gridWidth = boundingRect.end.col - boundingRect.start.col + 1;
+
+          // Initialize grid with empty strings
+          const grid: string[][] = Array(gridHeight)
+            .fill(null)
+            .map(() => Array(gridWidth).fill(""));
+
+          // Fill in the grid with values from selected cells only
+          for (const selection of allSelections) {
+            for (
+              let rowIdx = selection.start.row;
+              rowIdx <= selection.end.row;
+              rowIdx++
+            ) {
+              const row = rows[rowIdx];
+              if (!row) continue;
+
+              const cells = row.getVisibleCells();
+
+              for (
+                let colIdx = selection.start.col;
+                colIdx <= selection.end.col;
+                colIdx++
+              ) {
+                const cell = cells[colIdx];
+
+                // Calculate position in the grid relative to bounding rect
+                const gridRow = rowIdx - boundingRect.start.row;
+                const gridCol = colIdx - boundingRect.start.col;
+
+                if (cell) {
+                  const value = cell.getValue();
+                  // Convert value to string, handling null/undefined
+                  const stringValue =
+                    value === null || value === undefined ? "" : String(value);
+                  // Escape tabs and newlines for TSV format
+                  const escapedValue = stringValue
+                    .replace(/\t/g, "    ")
+                    .replace(/\n/g, " ")
+                    .replace(/\r/g, "");
+                  grid[gridRow][gridCol] = escapedValue;
+                }
+                // If no cell exists, grid[gridRow][gridCol] remains empty string
+              }
+            }
+          }
+
+          // Convert grid to TSV format
+          const tsvString = grid.map((row) => row.join("\t")).join("\n");
+
+          // Write to clipboard
+          writeToClipboard(tsvString);
+        });
+      }, [tableRef]);
+
+      return (
+        <SelectionManagerProvider selectionManager={this.selectionManager}>
+          <Paper
+            className="rttui-overlay-container"
+            elevation={2}
+            ref={setContainerRef}
+            sx={{
+              position: "relative",
+              "*": {
+                boxSizing: "border-box",
+              },
+              overflow: "hidden",
+            }}
+            style={{
+              width: width + "px",
+              height: height + "px",
+              ...cssVars,
+            }}
+          >
+            {children}
+          </Paper>
+        </SelectionManagerProvider>
+      );
+    },
+  );
+  ScrollContainer = React.memo(
+    ({ children }: { children: React.ReactNode }) => {
+      const { scrollContainerRef } = useTableContext();
+
+      return (
+        <Box
+          ref={scrollContainerRef}
+          className="outer-container"
+          sx={{
+            overflow: "auto",
+            width: "var(--table-container-width)",
+            height: "var(--table-container-height)",
+            position: "relative",
+            contain: "strict",
+            willChange: "scroll-position",
+            borderRadius: 1,
+          }}
+        >
+          {children}
+        </Box>
+      );
+    },
+  );
+  TableScroller = () => {
     return (
       <div
         className="table-scroller"
@@ -97,8 +207,8 @@ const BleuSkin: Skin = {
         }}
       ></div>
     );
-  },
-  TableHeader: ({ children }) => {
+  };
+  TableHeader = ({ children }: { children: React.ReactNode }) => {
     return (
       <TableHead
         component="div"
@@ -118,8 +228,8 @@ const BleuSkin: Skin = {
         {children}
       </TableHead>
     );
-  },
-  TableFooter: ({ children }) => {
+  };
+  TableFooter = ({ children }: { children: React.ReactNode }) => {
     return (
       <TableFooter
         component="div"
@@ -135,14 +245,16 @@ const BleuSkin: Skin = {
         {children}
       </TableFooter>
     );
-  },
-  HeaderRow: TableHeaderRow,
-  HeaderCell: React.memo(
-    React.forwardRef((props, ref) => {
-      return <TableHeaderCell {...props} ref={ref} />;
-    }),
-  ),
-  TableBody: ({ children }) => {
+  };
+  HeaderRow = TableHeaderRow;
+  HeaderCell = React.memo(
+    React.forwardRef<HTMLDivElement, React.ComponentProps<Skin["HeaderCell"]>>(
+      (props, ref) => {
+        return <TableHeaderCell {...props} ref={ref} />;
+      },
+    ),
+  );
+  TableBody = ({ children }: { children: React.ReactNode }) => {
     return (
       <TableBody
         component="div"
@@ -161,8 +273,14 @@ const BleuSkin: Skin = {
         {children}
       </TableBody>
     );
-  },
-  PinnedRows: ({ children, position }) => {
+  };
+  PinnedRows = ({
+    children,
+    position,
+  }: {
+    children: React.ReactNode;
+    position: "top" | "bottom";
+  }) => {
     const style: SxProps<Theme> = {
       position: "sticky",
       zIndex: 3,
@@ -190,29 +308,40 @@ const BleuSkin: Skin = {
         {children}
       </Component>
     );
-  },
-  PinnedCols: React.memo(({ children, position }) => {
-    const style: SxProps<Theme> = {
-      position: "sticky",
-      zIndex: 3,
-      display: "flex",
-    };
+  };
+  PinnedCols = React.memo(
+    ({
+      children,
+      position,
+    }: {
+      children: React.ReactNode;
+      position: "left" | "right";
+    }) => {
+      const style: SxProps<Theme> = {
+        position: "sticky",
+        zIndex: 3,
+        display: "flex",
+      };
 
-    if (position === "left") {
-      style.left = 0;
-    } else if (position === "right") {
-      style.right = 0;
-    }
+      if (position === "left") {
+        style.left = 0;
+      } else if (position === "right") {
+        style.right = 0;
+      }
 
-    return (
-      <Box component="div" className={`sticky-${position}-cols`} sx={style}>
-        {children}
-      </Box>
-    );
-  }),
+      return (
+        <Box component="div" className={`sticky-${position}-cols`} sx={style}>
+          {children}
+        </Box>
+      );
+    },
+  );
 
-  TableRowWrapper: React.memo(
-    React.forwardRef(({ children }, ref) => {
+  TableRowWrapper = React.memo(
+    React.forwardRef<
+      HTMLDivElement,
+      React.ComponentProps<Skin["TableRowWrapper"]>
+    >(({ children }, ref) => {
       const theme = useTheme();
       const { relativeIndex, rowIndex } = useRowProps({
         callback: (row) => {
@@ -252,8 +381,8 @@ const BleuSkin: Skin = {
         </Box>
       );
     }),
-  ),
-  TableRow: React.memo(({ children }) => {
+  );
+  TableRow = React.memo(({ children }: { children: React.ReactNode }) => {
     const { canSelect } = useRowProps({
       callback: (row) => {
         return {
@@ -298,213 +427,201 @@ const BleuSkin: Skin = {
         {children}
       </TableRow>
     );
-  }),
-  TableRowExpandedContent: React.memo(({ children }) => {
-    const { leafColLength } = useTableProps({
-      callback: (table) => {
-        return {
-          leafColLength: table.tanstackTable.getAllLeafColumns().length,
-        };
-      },
-      dependencies: [{ type: "tanstack_table" }],
-      areCallbackOutputEqual: strictEqual,
-    });
-    return (
-      <TableRow
-        component="div"
-        className="expanded-row"
-        sx={{
-          backgroundColor: (theme) => theme.palette.background.default,
-        }}
-      >
-        <TableCell
-          component="div"
-          className="expanded-cell"
-          colSpan={leafColLength}
-          sx={{
-            p: 0,
-          }}
-        >
-          {children}
-        </TableCell>
-      </TableRow>
-    );
-  }),
-  Cell: React.memo(
-    React.forwardRef(function Cell({ isMeasureInstance, children }, ref) {
-      const {
-        isPinned,
-        isLastPinned,
-        isLast,
-        isLastCenter,
-        width,
-        isSomeColumnsPinnedRight,
-        isSelected,
-        selectionBorders,
-        currentSelectionBorders,
-      } = useCellProps({
-        callback: (cell, table) => {
-          const state = cell.header.state;
-          const sc = {
-            row: cell.rowIndex,
-            col: cell.columnIndex,
-          };
-          const isSelected = table.selection.isSelected(sc);
+  });
+  TableRowExpandedContent = React.memo(
+    ({ children }: { children: React.ReactNode }) => {
+      const { leafColLength } = useTableProps({
+        callback: (table) => {
           return {
-            isPinned: state.isPinned,
-            isLastPinned: state.isLastPinned,
-            isLast: state.isLast,
-            isLastCenter: state.isLastCenter,
-            width: state.width,
-            isSomeColumnsPinnedRight:
-              table.tanstackTable.getIsSomeColumnsPinned("right"),
-            isSelected,
-            selectionBorders: table.selection.selectionBorders(sc),
-            inNegativeSelection: table.selection.inNegativeSelection(sc),
-            currentSelectionBorders:
-              table.selection.currentSelectionBorders(sc),
+            leafColLength: table.tanstackTable.getAllLeafColumns().length,
           };
         },
-        areCallbackOutputEqual: shallowEqual,
-        dependencies: [{ type: "tanstack_table" }, { type: "selection" }],
+        dependencies: [{ type: "tanstack_table" }],
+        areCallbackOutputEqual: strictEqual,
       });
-
-      const selectionShadows: string[] = [];
-      selectionBorders.forEach((border) => {
-        switch (border) {
-          case "top":
-            selectionShadows.push(`inset 0 2px 0 0 #2196F3`);
-            break;
-          case "right":
-            selectionShadows.push(`inset -2px 0 0 0 #2196F3`);
-            break;
-          case "bottom":
-            selectionShadows.push(`inset 0 -2px 0 0 #2196F3`);
-            break;
-          case "left":
-            selectionShadows.push(`inset 2px 0 0 0 #2196F3`);
-            break;
-        }
-      });
-
-      currentSelectionBorders.forEach((border) => {
-        switch (border) {
-          case "top":
-            selectionShadows.push(`inset 0 2px 0 0#c5b4b3`);
-            break;
-          case "right":
-            selectionShadows.push(`inset -2px 0 0 0 #c5b4b3`);
-            break;
-          case "bottom":
-            selectionShadows.push(`inset 0 -2px 0 0 #c5b4b3`);
-            break;
-          case "left":
-            selectionShadows.push(`inset 2px 0 0 0 #c5b4b3`);
-            break;
-        }
-      });
-
-      const selectionBoxShadow =
-        selectionShadows.length > 0 ? selectionShadows.join(", ") : undefined;
-
       return (
-        <TableCell
-          className="td"
+        <TableRow
           component="div"
-          ref={ref}
-          style={{ width: isMeasureInstance ? "auto" : width }}
-          sx={[
-            {
-              height: "var(--row-height)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              zIndex: isPinned ? 5 : 0,
-              boxSizing: "border-box",
-              fontSize: "0.875rem",
-              color: "text.primary",
-              alignItems: "center",
-              gap: "8px",
-              display: "flex",
-              justifyContent: "flex-start",
-              alignContent: "center",
-              padding: "6px 12px",
-              backgroundColor: "var(--row-background-color)",
-              flexShrink: 0,
-              position: "relative",
-              borderRight:
-                ((isPinned === "start" && !isLastPinned) || !isPinned) &&
-                !isLast &&
-                !(isLastCenter && isSomeColumnsPinnedRight)
-                  ? (theme) => `1px solid ${theme.palette.divider}`
-                  : undefined,
-              borderLeft:
-                isPinned === "end" && !isLastPinned
-                  ? (theme) => `1px solid ${theme.palette.divider}`
-                  : undefined,
-
-              borderBottom: "none",
-              borderTop: "none",
-              boxShadow: selectionBoxShadow,
-            },
-            !isSelected
-              ? {
-                  ".table-row:hover &": {
-                    backgroundColor: (theme) => {
-                      // Always use solid background colors for all cells on hover
-                      return theme.palette.mode === "dark"
-                        ? "#1e1e52" // Dark blue solid color
-                        : "#E3F2FD"; // Light blue solid color
-                    },
-                    zIndex: isPinned ? 2 : 0,
-                  },
-                }
-              : {
-                  // backgroundColor: (theme) => theme.palette.primary.light,
-                },
-          ]}
+          className="expanded-row"
+          sx={{
+            backgroundColor: (theme) => theme.palette.background.default,
+          }}
         >
-          {children}
-        </TableCell>
+          <TableCell
+            component="div"
+            className="expanded-cell"
+            colSpan={leafColLength}
+            sx={{
+              p: 0,
+            }}
+          >
+            {children}
+          </TableCell>
+        </TableRow>
       );
-    }),
-  ),
-  PinnedColsOverlay: ({ position }) => {
-    const width = useTableProps({
-      callback: (table) => {
-        if (!table.tanstackTable.getIsSomeColumnsPinned(position)) {
-          return undefined;
-        }
-        return position === "left"
-          ? table.tanstackTable.getLeftTotalSize()
-          : table.tanstackTable.getRightTotalSize();
+    },
+  );
+  Cell = React.memo(
+    React.forwardRef<HTMLDivElement, React.ComponentProps<Skin["Cell"]>>(
+      ({ isMeasureInstance, children }, ref) => {
+        const {
+          isPinned,
+          isLastPinned,
+          isLast,
+          isLastCenter,
+          width,
+          isSomeColumnsPinnedRight,
+          row,
+          col,
+          isSpreadsheetRowHeader,
+        } = useCellProps({
+          callback: (cell, table) => {
+            const state = cell.header.state;
+            const isSpreadsheetRowHeader = cell.cell.column.columnDef.meta?.isSpreadsheetRowHeader;
+
+            return {
+              row: cell.rowIndex,
+              col: cell.columnIndex,
+
+              isPinned: state.isPinned,
+              isLastPinned: state.isLastPinned,
+              isLast: state.isLast,
+              isLastCenter: state.isLastCenter,
+              width: state.width,
+              isSomeColumnsPinnedRight:
+                table.tanstackTable.getIsSomeColumnsPinned("right"),
+              isSpreadsheetRowHeader,
+            };
+          },
+          areCallbackOutputEqual: shallowEqual,
+          dependencies: [{ type: "tanstack_table" }],
+        });
+
+        const [refEl, setRefEl] = React.useState<HTMLDivElement | null>(null);
+
+        useImperativeHandle(ref, () => {
+          return refEl!;
+        }, [refEl]);
+
+        const cellRef = useCallback(
+          (el: HTMLDivElement | null) => {
+            setRefEl(el);
+            if (el) {
+              if (isSpreadsheetRowHeader) {
+                return this.selectionManager.setupHeaderElement(el, row, "row");
+              }
+              return this.selectionManager.setupCellElement(el, { row, col });
+            }
+          },
+          [row, col, isSpreadsheetRowHeader],
+        );
+
+        const isSelected = useSelectionManager(this.selectionManager, () =>
+          this.selectionManager.isSelected({ row, col }),
+        );
+
+        return (
+          <TableCell
+            className="td"
+            component="div"
+            ref={cellRef}
+            style={{ width: isMeasureInstance ? "auto" : width }}
+            sx={[
+              {
+                height: "var(--row-height)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                zIndex: isPinned ? 5 : 0,
+                boxSizing: "border-box",
+                fontSize: "0.875rem",
+                color: "text.primary",
+                alignItems: "center",
+                gap: "8px",
+                display: "flex",
+                justifyContent: "flex-start",
+                alignContent: "center",
+                padding: "6px 12px",
+                backgroundColor: "var(--row-background-color)",
+                flexShrink: 0,
+                position: "relative",
+                borderRight:
+                  ((isPinned === "start" && !isLastPinned) || !isPinned) &&
+                  !isLast &&
+                  !(isLastCenter && isSomeColumnsPinnedRight)
+                    ? (theme) => `1px solid ${theme.palette.divider}`
+                    : undefined,
+                borderLeft:
+                  isPinned === "end" && !isLastPinned
+                    ? (theme) => `1px solid ${theme.palette.divider}`
+                    : undefined,
+
+                borderBottom: "none",
+                borderTop: "none",
+              },
+              !isSelected
+                ? {
+                    ".table-row:hover &": {
+                      backgroundColor: (theme) => {
+                        // Always use solid background colors for all cells on hover
+                        return theme.palette.mode === "dark"
+                          ? "#1e1e52" // Dark blue solid color
+                          : "#E3F2FD"; // Light blue solid color
+                      },
+                      zIndex: isPinned ? 2 : 0,
+                    },
+                  }
+                : {
+                    // backgroundColor: (theme) => theme.palette.primary.light,
+                  },
+            ]}
+          >
+            {children}
+          </TableCell>
+        );
       },
-    });
+    ),
+  );
+  PinnedColsOverlay = React.memo(
+    ({ position }: { position: "left" | "right" }) => {
+      const width = useTableProps({
+        callback: (table) => {
+          if (!table.tanstackTable.getIsSomeColumnsPinned(position)) {
+            return undefined;
+          }
+          return position === "left"
+            ? table.tanstackTable.getLeftTotalSize()
+            : table.tanstackTable.getRightTotalSize();
+        },
+        dependencies: [{ type: "tanstack_table" }],
+        areCallbackOutputEqual: strictEqual,
+      });
 
-    if (width === undefined) {
-      return null;
-    }
+      if (width === undefined) {
+        return null;
+      }
 
-    const style: CSSProperties = {
-      width,
-      [position]: 0,
-      position: "sticky",
-      top: 0,
-      bottom: 0,
-      zIndex: 20,
-      pointerEvents: "none",
-    };
+      const style: CSSProperties = {
+        width,
+        [position]: 0,
+        position: "sticky",
+        top: 0,
+        bottom: 0,
+        zIndex: 20,
+        pointerEvents: "none",
+      };
 
-    if (position === "left") {
-      style.boxShadow =
-        "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
-    } else if (position === "right") {
-      style.boxShadow =
-        "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
-    }
-    return <div className={`pinned-${position}-overlay`} style={style} />;
-  },
-};
+      if (position === "left") {
+        style.boxShadow =
+          "4px 0 8px -4px rgba(0, 0, 0, 0.15), 6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+      } else if (position === "right") {
+        style.boxShadow =
+          "-4px 0 8px -4px rgba(0, 0, 0, 0.15), -6px 0 12px -6px rgba(0, 0, 0, 0.1)";
+      }
+      return <div className={`pinned-${position}-overlay`} style={style} />;
+    },
+  );
+}
 
 const TableHeaderCell = React.memo(
   React.forwardRef<
@@ -523,6 +640,7 @@ const TableHeaderCell = React.memo(
       isLast,
       isLastPinned,
       isLastCenter,
+      disablePadding,
     } = useColProps({
       callback: ({ vheader, selectorValue }) => {
         const state = vheader.state;
@@ -535,6 +653,7 @@ const TableHeaderCell = React.memo(
           isLast: state.isLast,
           isLastPinned: state.isLastPinned,
           isLastCenter: state.isLastCenter,
+          disablePadding: vheader.header.column.columnDef.meta?.disablePadding,
         };
       },
       areCallbackOutputEqual: shallowEqual,
@@ -590,7 +709,7 @@ const TableHeaderCell = React.memo(
             justifyContent: "flex-start",
             height: "100%",
             width: "100%",
-            padding: "0 12px",
+            padding: disablePadding ? "0" : "0 12px",
           }}
         >
           {children}
@@ -599,5 +718,3 @@ const TableHeaderCell = React.memo(
     );
   }),
 );
-
-export { BleuSkin };

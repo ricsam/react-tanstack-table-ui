@@ -20,3 +20,5 @@ export { HeaderResizer } from "./header_resizer";
 export { Header } from "./header";
 export { Filter } from "./filter";
 export { ColumnOptions } from "./column_options";
+export { SpreadsheetColHeader } from "./spreadsheet_col_header";
+export { SpreadsheetRowHeader } from "./spreadsheet_row_header";

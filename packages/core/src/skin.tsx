@@ -2,7 +2,7 @@ import React from "react";
 import { useTableContext } from "./table/table_context";
 import { createTablePropsSelector, shallowEqual } from "./utils";
 
-export type Skin = {
+export interface Skin {
   rowHeight: number;
   headerRowHeight: number;
   footerRowHeight: number;

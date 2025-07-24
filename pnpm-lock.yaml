@@ -224,6 +224,9 @@ importers:
 
   packages/skin-bleu:
     dependencies:
+      '@ricsam/selection-manager':
+        specifier: ^0.0.3
+        version: 0.0.3(typescript@5.8.2)
       '@rttui/core':
         specifier: workspace:^
         version: link:../core
@@ -237,6 +240,9 @@ importers:
       '@mui/material':
         specifier: ^6.4.8
         version: 6.4.8(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@tanstack/react-table':
+        specifier: 8.20.6
+        version: 8.20.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@types/react':
         specifier: 19.0.7
         version: 19.0.7
@@ -2126,6 +2132,11 @@ packages:
 
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
+
+  '@ricsam/selection-manager@0.0.3':
+    resolution: {integrity: sha512-viNazuQ1j2+uZgGEKdKuhlqu5mBTYwK25/aNfWUDWXd+IHA8UbIf/WCvhwxS1Yq+6vgG75HDz4Gbk1VSgihatg==}
+    peerDependencies:
+      typescript: ^5
 
   '@rollup/pluginutils@5.1.4':
     resolution: {integrity: sha512-USm05zrsFxYLPdWWq+K3STlWiT/3ELn3RcV5hJMghpeAIhxfsUIg6mt12CBJBInWMV4VneoV7SfGv8xIwo2qNQ==}
@@ -7999,6 +8010,10 @@ snapshots:
       '@types/react': 19.0.7
 
   '@radix-ui/rect@1.1.1': {}
+
+  '@ricsam/selection-manager@0.0.3(typescript@5.8.2)':
+    dependencies:
+      typescript: 5.8.2
 
   '@rollup/pluginutils@5.1.4(rollup@4.37.0)':
     dependencies:

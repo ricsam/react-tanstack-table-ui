@@ -13,7 +13,6 @@ import { RowDndHandler } from "../dnd_handler";
 import { ColDndHandler } from "../dnd_handler";
 import { HorOffsets } from "./cols/col_virtualizer_type";
 import { Skin } from "../skin";
-import { SelectionManager } from "./selection_manager";
 
 export type CrushBy = "header" | "cell" | "both";
 
@@ -143,13 +142,6 @@ export type ReactTanstackTableUiProps<T> = {
     headerDef: undefined | ColumnDefTemplate<HeaderContext<any, any>>,
     headerContext: HeaderContext<any, any>,
   ) => React.ReactNode;
-
-  spreadsheetMode?: {
-    canSelect?: boolean;
-    canEdit?: (cell: Cell<any, any>) => boolean;
-    selections?: RttuiSelection[];
-    onSelectionChange?: (selections: RttuiSelection[]) => void;
-  };
 };
 
 export type UiProps = Omit<
@@ -279,12 +271,6 @@ export type RttuiTable = {
       };
     };
   };
-  selection: SelectionManager;
-};
-
-export type RttuiSelection = {
-  start: { row: number; col: number };
-  end: { row: number; col: number };
 };
 
 export type PinPos = false | "start" | "end";
@@ -307,7 +293,6 @@ export type MeasureData = {
 
 export type RttuiRef = {
   autoSizeColumns: () => void;
-  selection: SelectionManager;
 };
 
 type UpdateProps<T extends CellContext<any, any> | HeaderContext<any, any>> = {

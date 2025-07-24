@@ -1,12 +1,14 @@
 import { Column, ColumnDef, RowData } from "@tanstack/react-table";
 import React from "react";
+import ReactDOM from "react-dom";
 import { defaultSkin } from "../default_skin/default_skin";
 import { MeasureCellProvider } from "../measure_cell_provider";
 import { shallowEqual } from "../utils";
 import { HeaderGroup } from "./cols/header_group";
+import { AutoSizerContext } from "./contexts/auto_sizer_context";
 import { MeasureContext, MeasureContextType } from "./contexts/measure_context";
 import { useMeasureContext } from "./hooks/use_measure_context";
-import { useListenToTableProps, useTableProps } from "./hooks/use_table_props";
+import { useTableProps } from "./hooks/use_table_props";
 import { MeasureProvider } from "./providers/measure_provider";
 import { TablePropsProvider } from "./providers/table_props_provider";
 import { TableBody } from "./table_body";
@@ -17,8 +19,6 @@ import {
 } from "./table_context";
 import { ReactTanstackTableUiProps, UiProps } from "./types";
 import { useRttuiTable } from "./use_rttui_table";
-import { AutoSizerContext } from "./contexts/auto_sizer_context";
-import ReactDOM from "react-dom";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -193,7 +193,7 @@ function TablePropsUpdater(
     tableContainerRef: React.RefObject<HTMLDivElement | null>;
   },
 ) {
-  const { table, tableContainerRef } = props;
+  const { table } = props;
   const measureContext = useMeasureContext();
 
   //#region validate props
@@ -280,7 +280,6 @@ function TablePropsUpdater(
     scrollbarWidth: props.scrollbarWidth ?? 16,
     tableRef: props.tableRef,
     shouldUpdate: props.shouldUpdate,
-    spreadsheetMode: props.spreadsheetMode,
   };
 
   const scrollContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -323,93 +322,23 @@ function TablePropsUpdater(
         };
       }, [measureContext.isMeasuringInstanceLoading, skin, rttuiRef])}
     >
-      <Body
-        tableContainerRef={
-          !measureContext.isMeasuring ? tableContainerRef : undefined
-        }
-      />
+      <Body />
     </TableContext.Provider>
   );
 }
 
-const Body = React.memo(function Body({
-  tableContainerRef,
-}: {
-  tableContainerRef: React.RefObject<HTMLDivElement | null> | undefined;
-}) {
+const Body = React.memo(function Body() {
   const { skin } = useTableContext();
 
-  const { pinColsRelativeTo, underlay, selection } = useTableProps({
+  const { pinColsRelativeTo, underlay } = useTableProps({
     callback: (props) => {
       return {
         pinColsRelativeTo: props.uiProps.pinColsRelativeTo,
         underlay: props.uiProps.underlay,
-        selection: props.selection,
       };
     },
     dependencies: [{ type: "ui_props" }],
   });
-
-  const { listenTo } = useListenToTableProps();
-  React.useEffect(() => {
-    if (!tableContainerRef) {
-      return;
-    }
-    const ref = tableContainerRef.current;
-    if (ref) {
-      const preventDefault = (e: Event) => {
-        e.preventDefault();
-        document.getSelection()?.empty();
-      };
-      const cleanups = [
-        listenTo([{ type: "selection" }], (table) => {
-          if (table.selection.isSelecting) {
-            ref.addEventListener("selectstart", preventDefault);
-            ref.addEventListener("selectionchange", preventDefault);
-            return () => {
-              ref.removeEventListener("selectstart", preventDefault);
-              ref.removeEventListener("selectionchange", preventDefault);
-            };
-          }
-        }),
-        listenTo([{ type: "selection" }], (table) => {
-          if (!table.selection.hasFocus()) {
-            return;
-          }
-          const handler = (ev: KeyboardEvent) => {
-            table.selection.handleKeyDown(ev);
-          };
-          window.addEventListener("keydown", handler);
-          return () => {
-            window.removeEventListener("keydown", handler);
-          };
-        }),
-      ];
-      return () => {
-        cleanups.forEach((cleanup) => cleanup());
-      };
-    }
-  }, [listenTo, tableContainerRef]);
-
-  React.useEffect(() => {
-    if (!tableContainerRef) {
-      return;
-    }
-    const ref = tableContainerRef.current;
-    if (ref) {
-      const clickAwayListener = (e: MouseEvent) => {
-        if (!ref.contains(e.target as Node)) {
-          selection.blur();
-        } else {
-          selection.focus();
-        }
-      };
-      document.addEventListener("click", clickAwayListener);
-      return () => {
-        document.removeEventListener("click", clickAwayListener);
-      };
-    }
-  }, [tableContainerRef, selection]);
 
   return (
     <skin.OverlayContainer>

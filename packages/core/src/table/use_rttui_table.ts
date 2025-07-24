@@ -29,7 +29,6 @@ import {
   VirtualHeaderCellState,
 } from "./types";
 import { useMeasureContext } from "./hooks/use_measure_context";
-import { SelectionManager } from "./selection_manager";
 type ObserveElementOffset = typeof libObserveElementOffset;
 type ObserveOffsetCallBack = Parameters<ObserveElementOffset>[1];
 // const useIsomorphicLayoutEffect =
@@ -80,12 +79,10 @@ function _slow_updateRttuiTable({
   virtualizers,
   table,
   uiProps,
-  selections,
 }: {
   virtualizers: ReturnType<typeof useVirtualizers>;
   table: Table<any>;
   uiProps: UiProps;
-  selections: SelectionManager;
 }): RttuiTable {
   const _slow_allRows = table.getRowModel().rows;
 
@@ -257,7 +254,6 @@ function _slow_updateRttuiTable({
       header: getRttuiHeaderGroups("header"),
       footer: getRttuiHeaderGroups("footer"),
     },
-    selection: selections,
   };
   return rttuiTable;
 }
@@ -290,37 +286,17 @@ export const useRttuiTable = ({
     updateRttuiTable,
   });
 
-  const selectionsRef = React.useRef<SelectionManager | null>(null);
-  if (!selectionsRef.current) {
-    selectionsRef.current = new SelectionManager(
-      () => {
-        context.triggerUpdate([{ type: "selection" }], {
-          type: "from_dom_event",
-          sync: false,
-          initial: false,
-        });
-      },
-      () => table.getRowCount(),
-      () => table.getAllColumns().length,
-      (row, col) => table.getRowModel().rows[row].getAllCells()[col],
-    );
-  }
-  
   if (uiProps.tableRef) {
     if (!uiProps.tableRef.current) {
       uiProps.tableRef.current = {} as RttuiRef;
     }
-    uiProps.tableRef.current.selection = selectionsRef.current;
   }
-
-  const selections = selectionsRef.current;
 
   function getNewInstance() {
     return _slow_updateRttuiTable({
       virtualizers,
       table,
       uiProps,
-      selections,
     });
   }
 

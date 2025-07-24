@@ -2,9 +2,20 @@ import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
 import { BleuSkin, Resizer } from "@rttui/skin-bleu";
 import { useTable } from "./use_table";
 import { Box } from "@mui/material";
+import { useInitializeSelectionManager } from "@ricsam/selection-manager";
+import { useMemo } from "react";
 
 export function App() {
   const table = useTable();
+  const selectionManager = useInitializeSelectionManager({
+    getNumRows: () => table.getRowCount(),
+    getNumCols: () => table.getAllLeafColumns().length,
+  });
+
+  const skin = useMemo(
+    () => new BleuSkin(selectionManager),
+    [selectionManager],
+  );
 
   return (
     <AutoSizer
@@ -20,7 +31,7 @@ export function App() {
     >
       <ReactTanstackTableUi
         table={table}
-        skin={BleuSkin}
+        skin={skin}
         renderHeaderPlaceholder={() => {
           return <Resizer />;
         }}

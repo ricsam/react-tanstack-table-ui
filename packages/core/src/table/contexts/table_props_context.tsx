@@ -21,7 +21,6 @@ export type Dependency =
       groupType?: "header" | "footer";
       groupIndex?: number;
     }
-  | { type: "selection" }
   | { type: "row_visible_range" };
 
 export type GetDependency<

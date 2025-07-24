@@ -3,6 +3,7 @@ import {
   CellContext,
   ColumnHelper,
   HeaderContext,
+  ColumnDef,
 } from "@tanstack/react-table";
 
 export type HeaderDecorator = (
@@ -21,6 +22,7 @@ export const decorateColumnHelper = <T,>(
     footer?: HeaderDecorator;
     cell?: CellDecorator;
     filter?: () => React.ReactNode;
+    extraHeaders?: ColumnDef<T, any>[];
   },
 ): ColumnHelper<T> => {
   const originalColumnHelper = columnHelper as ColumnHelper<any>;
@@ -36,7 +38,7 @@ export const decorateColumnHelper = <T,>(
     newColumnHelper[key] = (...args) => {
       const col = originalColumnHelper[key](...args);
       for (const [_key, _decorator] of Object.entries(decorators)) {
-        if (_key === "filter") {
+        if (_key === "filter" || _key === "spreadsheetHeader") {
           continue;
         }
         const key = _key as "cell"; // or "header" or "footer" or "cell"
@@ -58,8 +60,10 @@ export const decorateColumnHelper = <T,>(
         }
       }
 
+      let newCol: any = { ...col };
+
       if (hasFilter) {
-        const columnWithFilter: any = {
+        newCol = {
           ...col,
         };
         const leafColumns: any[] = [];
@@ -71,9 +75,9 @@ export const decorateColumnHelper = <T,>(
             iter(col);
           }
         };
-        iter(columnWithFilter);
+        iter(newCol);
         leafColumns.forEach((col) => {
-          if (col.id?.startsWith("_decorator_filter_")) {
+          if (col.id?.includes("_decorator_filter_")) {
             return;
           }
           const filterCol = {
@@ -84,10 +88,39 @@ export const decorateColumnHelper = <T,>(
           };
           col.columns = [filterCol];
         });
-        return columnWithFilter;
       }
 
-      return col;
+      if (decorators.extraHeaders) {
+        decorators.extraHeaders.forEach((extraHeader, index) => {
+          const leafColumns: any[] = [];
+          const iter = (parent: any) => {
+            if (!parent.columns) {
+              leafColumns.push(parent);
+            }
+            for (const col of parent?.columns ?? []) {
+              iter(col);
+            }
+          };
+          iter(newCol);
+          leafColumns.forEach((col) => {
+            if (col.id?.includes(`_decorator_extra_header_${index}_`)) {
+              return;
+            }
+            const extraHeaderCol: ColumnDef<T, any> = {
+              ...col,
+              ...extraHeader,
+              meta: {
+                ...col.meta,
+                ...extraHeader.meta,
+              },
+              id: `_decorator_extra_header_${index}_${col.id ?? "unknown_col"}`,
+            };
+            col.columns = [extraHeaderCol];
+          });
+        });
+      }
+
+      return newCol;
     };
   }
 

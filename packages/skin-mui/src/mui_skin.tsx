@@ -26,19 +26,18 @@ const MuiSkin: Skin = {
   headerRowHeight: 56,
   footerRowHeight: 52,
   OverlayContainer: ({ children }) => {
-    const { width, height, hasFocus } = useTableProps({
+    const { width, height } = useTableProps({
       callback: (props) => {
         return {
           width: props.uiProps.width,
           height: props.uiProps.height,
-          hasFocus: props.selection.tableHasFocus,
         };
       },
       areCallbackOutputEqual: shallowEqual,
-      dependencies: [{ type: "ui_props" }, { type: "selection" }],
+      dependencies: [{ type: "ui_props" }],
     });
     const cssVars = useTableCssVars();
-    console.log('@focus', hasFocus)
+
     return (
       <div
         className="rttui-overlay-container"
@@ -47,7 +46,6 @@ const MuiSkin: Skin = {
           overflow: "hidden",
           width: width + "px",
           height: height + "px",
-          boxShadow: hasFocus ? "0 0 0 2px #2196f3" : "none",
           ...cssVars,
         }}
       >
