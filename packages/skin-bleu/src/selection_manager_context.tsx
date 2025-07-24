@@ -2,7 +2,7 @@
 import { createContext, useContext } from "react";
 import { SelectionManager } from "@ricsam/selection-manager";
 
-export const SelectionManagerContext = createContext<SelectionManager | null>(
+const SelectionManagerContext = createContext<SelectionManager | null>(
   null,
 );
 export const useSelectionManagerCls = () => {

@@ -17,7 +17,6 @@ import {
   decorateColumnHelper,
   lightModeVars as defaultLightModeVars,
   ReactTanstackTableUiProps,
-  Skin,
   ReactTanstackTableUi as TableComponent,
   defaultSkin as theDefaultSkin,
 } from "@rttui/core";
@@ -30,7 +29,7 @@ import {
   TableOptions,
   useReactTable,
 } from "@tanstack/react-table";
-import React from "react";
+import React, { useMemo } from "react";
 import placeholderAvatar from "./placeholder_avatar.png";
 
 import "@fontsource/inter";
@@ -43,6 +42,7 @@ import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "@fontsource/inter/800.css";
 import "@fontsource/inter/900.css";
+import { useInitializeSelectionManager } from "@ricsam/selection-manager";
 import "./index.css";
 
 const defaultSkin = {
@@ -442,14 +442,22 @@ export const ReactTanstackTableUi = (
     columns,
   });
 
-  let skinOb: Skin | undefined;
-  if (skin === "mui") {
-    skinOb = muiSkin.MuiSkin;
-  } else if (skin === "tailwind") {
-    skinOb = twskin.TailwindSkin;
-  } else if (skin === "bleu") {
-    skinOb = bleuSkin.BleuSkin;
-  }
+  const selectionManager = useInitializeSelectionManager({
+    getNumRows: () => data.length,
+    getNumCols: () => columns.length,
+  });
+
+  const skinOb = useMemo(() => {
+    if (skin === "mui") {
+      return muiSkin.MuiSkin;
+    } else if (skin === "tailwind") {
+      return twskin.TailwindSkin;
+    } else if (skin === "bleu") {
+      return new bleuSkin.BleuSkin(selectionManager);
+    }
+    return defaultSkin.skin;
+  }, [selectionManager, skin]);
+
   let content = <TableComponent {...props} table={table} skin={skinOb} />;
   if (skin === "mui" || skin === "bleu") {
     content = (

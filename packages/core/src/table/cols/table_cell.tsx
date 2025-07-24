@@ -141,15 +141,8 @@ export const TableCell = React.memo(function TableCell({
         ref={React.useCallback(
           (ref: HTMLDivElement) => {
             storeMeasuringRef(ref);
-            if (tableRef.current.uiProps.spreadsheetManager?.canSelect) {
-              const selectionManager = tableRef.current.selectionManager;
-              return selectionManager.setupCellElement(ref, {
-                row: rowIndex,
-                col: columnIndex,
-              });
-            }
           },
-          [columnIndex, rowIndex, storeMeasuringRef, tableRef],
+          [storeMeasuringRef],
         )}
       >
         {content}

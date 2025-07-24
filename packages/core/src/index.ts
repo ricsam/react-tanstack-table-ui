@@ -5,7 +5,6 @@ import type { Skin } from "./skin";
 import { useTableContext } from "./table/table_context";
 import { useColVirtualizer } from "./table/hooks/use_col_virtualizer";
 import type { VirtualHeaderCell } from "./table/types";
-import type { SMSelection } from "@ricsam/selection-manager";
 import { useTableCssVars } from "./skin";
 import {
   defaultSkin,
@@ -51,7 +50,10 @@ import { decorateColumnHelper } from "./decorate_column_helper";
 import type { HeaderDecorator, CellDecorator } from "./decorate_column_helper";
 import type { RttuiRef } from "./table/types";
 import { createTablePropsSelector, shallowEqual, strictEqual } from "./utils";
-import { useTableProps } from "./table/hooks/use_table_props";
+import {
+  useListenToTableProps,
+  useTableProps,
+} from "./table/hooks/use_table_props";
 import type { CheckboxProps } from "./default_skin/checkbox";
 import type { CellAvatarProps } from "./default_skin/cell_avatar";
 import type { CellAvatarWithTextProps } from "./default_skin/cell_avatar_with_text";
@@ -62,6 +64,7 @@ import type { CrushBy } from "./table/types";
 import { useAutoSizer } from "./table/hooks/use_autosizer";
 
 export {
+  useListenToTableProps,
   ReactTanstackTableUi,
   useRowVirtualizer,
   iterateOverColumns,
@@ -121,5 +124,4 @@ export type {
   CellProps,
   CellLinkProps,
   CellPercentProps,
-  SMSelection,
 };
