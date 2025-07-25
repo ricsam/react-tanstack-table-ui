@@ -1,5 +1,6 @@
 import {
   Box,
+  Input,
   Paper,
   SxProps,
   TableBody,
@@ -41,6 +42,11 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     disablePadding?: boolean;
     isSpreadsheetRowHeader?: boolean;
+    renderInput?: (
+      value: TValue,
+      selectionManager: SelectionManager,
+      cell: { row: number; col: number },
+    ) => React.ReactNode;
   }
 }
 
@@ -474,15 +480,17 @@ export class BleuSkin implements Skin {
           row,
           col,
           isSpreadsheetRowHeader,
+          value,
+          renderInput,
         } = useCellProps({
           callback: (cell, table) => {
             const state = cell.header.state;
-            const isSpreadsheetRowHeader = cell.cell.column.columnDef.meta?.isSpreadsheetRowHeader;
+            const isSpreadsheetRowHeader =
+              cell.cell.column.columnDef.meta?.isSpreadsheetRowHeader;
 
             return {
               row: cell.rowIndex,
               col: cell.columnIndex,
-
               isPinned: state.isPinned,
               isLastPinned: state.isLastPinned,
               isLast: state.isLast,
@@ -491,6 +499,9 @@ export class BleuSkin implements Skin {
               isSomeColumnsPinnedRight:
                 table.tanstackTable.getIsSomeColumnsPinned("right"),
               isSpreadsheetRowHeader,
+
+              value: cell.cell.getValue(),
+              renderInput: cell.cell.column.columnDef.meta?.renderInput,
             };
           },
           areCallbackOutputEqual: shallowEqual,
@@ -520,6 +531,16 @@ export class BleuSkin implements Skin {
           this.selectionManager.isSelected({ row, col }),
         );
 
+        const isEditing = useSelectionManager(this.selectionManager, () =>
+          this.selectionManager.isEditingCell(row, col),
+        );
+
+        const inputRef = React.useCallback((el: HTMLInputElement | null) => {
+          if (el) {
+            el.select();
+          }
+        }, []);
+
         return (
           <TableCell
             className="td"
@@ -541,7 +562,7 @@ export class BleuSkin implements Skin {
                 display: "flex",
                 justifyContent: "flex-start",
                 alignContent: "center",
-                padding: "6px 12px",
+                padding: isEditing ? "0" : "6px 12px",
                 backgroundColor: "var(--row-background-color)",
                 flexShrink: 0,
                 position: "relative",
@@ -576,7 +597,42 @@ export class BleuSkin implements Skin {
                   },
             ]}
           >
-            {children}
+            {isEditing ? (
+              renderInput ? (
+                renderInput(value, this.selectionManager, { col, row })
+              ) : (
+                <Input
+                  type="text"
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    px: 1.5,
+                    fontSize: "inherit",
+                    color: "inherit",
+                    fontWeight: "inherit",
+                  }}
+                  autoFocus
+                  inputRef={inputRef}
+                  defaultValue={value}
+                  onBlur={() => {
+                    this.selectionManager.cancelEditing();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      this.selectionManager.saveCellValue(
+                        { rowIndex: row, colIndex: col },
+                        e.currentTarget.value,
+                      );
+                      this.selectionManager.cancelEditing();
+                    } else if (e.key === "Escape") {
+                      this.selectionManager.cancelEditing();
+                    }
+                  }}
+                />
+              )
+            ) : (
+              children
+            )}
           </TableCell>
         );
       },

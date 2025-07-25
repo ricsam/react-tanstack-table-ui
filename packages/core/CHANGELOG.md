@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.52
+
+### Patch Changes
+
+- add cell editing to example and fix row virtualizer pinning bugs
+
 ## 1.0.51
 
 ### Patch Changes

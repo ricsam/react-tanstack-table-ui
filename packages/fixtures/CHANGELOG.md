@@ -1,5 +1,11 @@
 # @rttui/fixtures
 
+## 1.0.9
+
+### Patch Changes
+
+- add cell editing to example and fix row virtualizer pinning bugs
+
 ## 1.0.8
 
 ### Patch Changes

@@ -233,7 +233,7 @@ export function generateTableData({
   let i = 0;
   for (; numRowsRef.val < maxRows && i < localRows; ) {
     const countryInfo = random.pickFrom(countries);
-    const id = `${parentId ? `${parentId}.` : ""}${i + 1}`;
+    const id = `${i}-${parentId ? `${parentId}.` : ""}${i + 1}`;
     i += 1;
     numRowsRef.val += 1;
     

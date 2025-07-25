@@ -4,13 +4,34 @@ import { useTable } from "./use_table";
 import { Box } from "@mui/material";
 import { useInitializeSelectionManager } from "@ricsam/selection-manager";
 import { useMemo } from "react";
+import React from "react";
 
 export function App() {
-  const table = useTable();
+  const { table, setData } = useTable();
   const selectionManager = useInitializeSelectionManager({
     getNumRows: () => table.getRowCount(),
     getNumCols: () => table.getAllLeafColumns().length,
   });
+
+  React.useEffect(() => {
+    return selectionManager.listenToInsertData((updates) => {
+      setData((prev) => {
+        const newData = [...prev];
+        updates.forEach((update) => {
+          const row = table.getRowModel().rows[update.rowIndex];
+          const rowIndex = row.index;
+          const col = table.getAllLeafColumns()[update.colIndex];
+          const accessorKey = col.columnDef.meta?.accessorKey;
+          const formatValue = col.columnDef.meta?.formatValue;
+          const value = formatValue ? formatValue(update.value) : update.value;
+          if (accessorKey) {
+            newData[rowIndex] = { ...row.original, [accessorKey]: value };
+          }
+        });
+        return newData;
+      });
+    });
+  }, [selectionManager, setData, table]);
 
   const skin = useMemo(
     () => new BleuSkin(selectionManager),

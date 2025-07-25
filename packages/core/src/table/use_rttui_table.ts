@@ -84,7 +84,11 @@ function _slow_updateRttuiTable({
   table: Table<any>;
   uiProps: UiProps;
 }): RttuiTable {
-  const _slow_allRows = table.getRowModel().rows;
+  const _slow_allRows = [
+    ...table.getTopRows(),
+    ...table.getCenterRows(),
+    ...table.getBottomRows(),
+  ];
 
   const virtRows = virtualizers.rowVirtualizer.getVirtualItems();
   const rows: Record<RowPos, RttuiRow[]> = {
@@ -694,7 +698,7 @@ function getRowOffsets({
       for (let i = rows.length - 1; i >= 0; i--) {
         const vc = rows[i];
         if (getProps(vc, i).isPinned && i > firstNonPinned) {
-          pinnedTotalSize = getProps(vc, i).height;
+          pinnedTotalSize += getProps(vc, i).height;
         }
       }
       offsetBottom =
@@ -776,7 +780,11 @@ function useVirtualizers({
       return undefined;
     };
 
-  const _slow_allRows = table.getRowModel().rows;
+  const _slow_allRows = [
+    ...table.getTopRows(),
+    ...table.getCenterRows(),
+    ...table.getBottomRows(),
+  ];
 
   const rowRefsOb = {
     skin,
@@ -829,16 +837,33 @@ function useVirtualizers({
 
   const rowRangeExtractor = (range: Range): number[] => {
     const defaultRange = defaultRangeExtractor(range);
-    const next = new Set(defaultRange);
+    const center = new Set(defaultRange);
+
+    const top = new Set<number>();
+    const bottom = new Set<number>();
 
     _slow_allRows.forEach((row, index) => {
-      if (row.getIsPinned()) {
-        next.add(index);
+      const pinned = row.getIsPinned();
+      if (pinned) {
+        if (pinned === "top") {
+          top.add(index);
+        } else {
+          bottom.add(index);
+        }
       }
     });
 
-    const n = [...next].sort((a, b) => a - b);
-    return n;
+    const n = new Set(
+      [
+        [...top],
+        [...center].filter((i) => !top.has(i) && !bottom.has(i)),
+        [...bottom],
+      ].flatMap((arr) => arr.sort((a, b) => a - b)),
+    );
+
+    const result = [...n];
+
+    return result;
   };
 
   if (!virtualizersRef.current) {

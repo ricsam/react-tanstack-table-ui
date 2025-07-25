@@ -8,10 +8,8 @@ import {
   Table,
 } from "@tanstack/react-table";
 import { Virtualizer } from "@tanstack/react-virtual";
+import { ColDndHandler, RowDndHandler } from "../dnd_handler";
 import { MeasuredCell } from "../measure_cell_context";
-import { RowDndHandler } from "../dnd_handler";
-import { ColDndHandler } from "../dnd_handler";
-import { HorOffsets } from "./cols/col_virtualizer_type";
 import { Skin } from "../skin";
 
 export type CrushBy = "header" | "cell" | "both";
@@ -309,21 +307,6 @@ export type ShouldUpdate = {
   header?: (props: UpdateProps<HeaderContext<any, any>>) => boolean;
 };
 
-type VirtualCell = {
-  id: string;
-  cell: () => Cell<any, any>;
-  vheader: VirtualHeaderCell;
-};
-
-export type VirtualRow = {
-  id: string;
-  row: () => Row<any>;
-  isPinned: () => PinPos;
-  flatIndex: number;
-  getCells: () => VirtualCell[];
-  rowVirtualizer: Virtualizer<any, any>;
-};
-
 export type VirtualHeaderCell = {
   id: string;
   type: "header" | "footer";
@@ -342,11 +325,4 @@ export type VirtualHeaderCellState = {
   isFirstCenter: boolean;
   isLastCenter: boolean;
   isPinned: PinPos;
-};
-export type VirtualHeaderGroup = {
-  id: string;
-  type: "header" | "footer";
-  getHeaders: () => VirtualHeaderCell[];
-  getOffsets: () => HorOffsets;
-  getVirtualizer: () => Virtualizer<any, any>;
 };

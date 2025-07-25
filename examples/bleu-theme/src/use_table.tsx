@@ -1,5 +1,5 @@
 import { decorateColumnHelper } from "@rttui/core";
-import { User, generateTableData } from "@rttui/fixtures";
+import { generateTableData, User } from "@rttui/fixtures";
 import {
   Cell,
   Filter,
@@ -14,8 +14,18 @@ import {
   getExpandedRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  RowData,
   useReactTable,
 } from "@tanstack/react-table";
+import React from "react";
+import { CountrySelect } from "./country_select";
+
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    accessorKey?: string;
+    formatValue?: (value: string) => any;
+  }
+}
 
 const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
   header: (original, context) => (
@@ -38,7 +48,7 @@ const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
       },
       meta: {
         disablePadding: true,
-      }
+      },
     },
   ],
   cell: (original, context) => {
@@ -74,6 +84,9 @@ const columns: ColumnDef<User, any>[] = [
     cell: (info) => info.getValue(),
     id: "full-name",
     size: 300, // Increased size to accommodate all controls
+    meta: {
+      accessorKey: "fullName",
+    },
   }),
 
   // Rest of the columns
@@ -82,6 +95,9 @@ const columns: ColumnDef<User, any>[] = [
     cell: (info) => info.getValue(),
     id: "email",
     size: 200,
+    meta: {
+      accessorKey: "email",
+    },
   }),
   columnHelper.accessor("experienceYears", {
     header: "Experience (Years)",
@@ -94,27 +110,47 @@ const columns: ColumnDef<User, any>[] = [
     },
     id: "experience-years",
     size: 150,
+    meta: {
+      accessorKey: "experienceYears",
+      formatValue: (value) => Number(value),
+    },
   }),
   columnHelper.group({
     id: "state",
     header: () => "State",
     columns: [
-      columnHelper.accessor("country", {
+      columnHelper.accessor<"country", string>("country", {
         header: "Country",
         cell: (info) => info.getValue(),
         id: "country",
+        meta: {
+          accessorKey: "country",
+          renderInput: (value, selectionManager, cell) => (
+            <CountrySelect
+              value={value}
+              selectionManager={selectionManager}
+              cell={cell}
+            />
+          ),
+        },
       }),
       columnHelper.accessor("continent", {
         header: "Continent",
         cell: (info) => info.getValue(),
         id: "continent",
         size: 200,
+        meta: {
+          accessorKey: "continent",
+        },
       }),
       columnHelper.accessor("countryCode", {
         header: "Country Code",
         cell: (info) => info.getValue(),
         id: "country-code",
         size: 200,
+        meta: {
+          accessorKey: "countryCode",
+        },
       }),
     ],
   }),
@@ -123,30 +159,45 @@ const columns: ColumnDef<User, any>[] = [
     cell: (info) => info.getValue(),
     id: "location",
     size: 200,
+    meta: {
+      accessorKey: "location",
+    },
   }),
   columnHelper.accessor("city", {
     header: "City",
     cell: (info) => info.getValue(),
     id: "city",
     size: 150,
+    meta: {
+      accessorKey: "city",
+    },
   }),
   columnHelper.accessor("address", {
     header: "Address",
     cell: (info) => info.getValue(),
     id: "address",
     size: 200,
+    meta: {
+      accessorKey: "address",
+    },
   }),
   columnHelper.accessor("language", {
     header: "Language",
     cell: (info) => info.getValue(),
     id: "language",
     size: 200,
+    meta: {
+      accessorKey: "language",
+    },
   }),
   columnHelper.accessor("favoriteGame", {
     header: "Favorite Game",
     cell: (info) => info.getValue(),
     id: "favorite-game",
     size: 200,
+    meta: {
+      accessorKey: "favoriteGame",
+    },
   }),
   columnHelper.group({
     header: "Birth Info",
@@ -157,12 +208,18 @@ const columns: ColumnDef<User, any>[] = [
         cell: (info) => info.getValue(),
         id: "birth-month",
         size: 120,
+        meta: {
+          accessorKey: "birthMonth",
+        },
       }),
       columnHelper.accessor("birthYear", {
         header: "Birth Year",
         cell: (info) => info.getValue(),
         id: "birth-year",
         size: 120,
+        meta: {
+          accessorKey: "birthYear",
+        },
       }),
     ],
   }),
@@ -171,6 +228,9 @@ const columns: ColumnDef<User, any>[] = [
     cell: (info) => (info.getValue() ? "Yes" : "No"),
     id: "is-active",
     size: 100,
+    meta: {
+      accessorKey: "isActive",
+    },
   }),
   columnHelper.group({
     header: "Winnings",
@@ -219,12 +279,18 @@ const columns: ColumnDef<User, any>[] = [
     cell: (info) => info.getValue().toFixed(1),
     id: "rating",
     size: 100,
+    meta: {
+      accessorKey: "rating",
+    },
   }),
   columnHelper.accessor("completedProjects", {
     header: "Completed Projects",
     cell: (info) => info.getValue(),
     id: "completed-projects",
     size: 150,
+    meta: {
+      accessorKey: "completedProjects",
+    },
   }),
   columnHelper.group({
     header: "Employment Info",
@@ -235,36 +301,54 @@ const columns: ColumnDef<User, any>[] = [
         cell: (info) => info.getValue(),
         id: "department",
         size: 150,
+        meta: {
+          accessorKey: "department",
+        },
       }),
       columnHelper.accessor("jobTitle", {
         header: "Job Title",
         cell: (info) => info.getValue(),
         id: "job-title",
         size: 200,
+        meta: {
+          accessorKey: "jobTitle",
+        },
       }),
       columnHelper.accessor("teamName", {
         header: "Team",
         cell: (info) => info.getValue(),
         id: "team-name",
         size: 120,
+        meta: {
+          accessorKey: "jobTitle",
+        },
       }),
       columnHelper.accessor("salary", {
         header: "Salary",
         cell: (info) => `$${info.getValue().toLocaleString()}`,
         id: "salary",
         size: 120,
+        meta: {
+          accessorKey: "salary",
+        },
       }),
       columnHelper.accessor("hireDate", {
         header: "Hire Date",
         cell: (info) => info.getValue(),
         id: "hire-date",
         size: 120,
+        meta: {
+          accessorKey: "hireDate",
+        },
       }),
       columnHelper.accessor("phoneNumber", {
         header: "Phone Number",
         cell: (info) => info.getValue(),
         id: "phone-number",
         size: 150,
+        meta: {
+          accessorKey: "phoneNumber",
+        },
       }),
       columnHelper.accessor("performanceScore", {
         header: "Performance",
@@ -275,20 +359,26 @@ const columns: ColumnDef<User, any>[] = [
         },
         id: "performance-score",
         size: 120,
+        meta: {
+          accessorKey: "performanceScore",
+        },
       }),
     ],
   }),
 ];
 
-const data = generateTableData({ maxRows: 5000, seed: 12345 });
 const getSubRows = (row: User) => {
   return row.otherCountries;
 };
 
 export const useTable = () => {
+  const [data, setData] = React.useState(() =>
+    generateTableData({ maxRows: 5000, seed: 12345 }),
+  );
   const table = useReactTable({
     data,
     columns,
+    getRowId: (row) => row.id,
     enableColumnFilters: true,
     getFilteredRowModel: getFilteredRowModel(),
     enableRowPinning: true,
@@ -310,5 +400,5 @@ export const useTable = () => {
       },
     },
   });
-  return table;
+  return { table, data, setData };
 };

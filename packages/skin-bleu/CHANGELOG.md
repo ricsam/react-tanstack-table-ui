@@ -1,5 +1,13 @@
 # @rttui/skin-bleu
 
+## 1.0.58
+
+### Patch Changes
+
+- add cell editing to example and fix row virtualizer pinning bugs
+- Updated dependencies
+  - @rttui/core@1.0.52
+
 ## 1.0.57
 
 ### Patch Changes
