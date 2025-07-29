@@ -224,9 +224,6 @@ importers:
 
   packages/skin-bleu:
     dependencies:
-      '@ricsam/selection-manager':
-        specifier: ^0.0.3
-        version: 0.0.3(typescript@5.8.2)
       '@rttui/core':
         specifier: workspace:^
         version: link:../core
@@ -240,6 +237,9 @@ importers:
       '@mui/material':
         specifier: ^6.4.8
         version: 6.4.8(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@ricsam/selection-manager':
+        specifier: ^0.0.4
+        version: 0.0.4(typescript@5.8.2)
       '@tanstack/react-table':
         specifier: 8.20.6
         version: 8.20.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -346,8 +346,8 @@ importers:
         specifier: ^6.4.8
         version: 6.4.8(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ricsam/selection-manager':
-        specifier: ^0.0.3
-        version: 0.0.3(typescript@5.8.2)
+        specifier: ^0.0.4
+        version: 0.0.4(typescript@5.8.2)
       '@storybook/addon-essentials':
         specifier: ^8.6.12
         version: 8.6.12(@types/react@19.0.7)(storybook@8.6.12(prettier@3.5.3))
@@ -2136,8 +2136,8 @@ packages:
   '@radix-ui/rect@1.1.1':
     resolution: {integrity: sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==}
 
-  '@ricsam/selection-manager@0.0.3':
-    resolution: {integrity: sha512-viNazuQ1j2+uZgGEKdKuhlqu5mBTYwK25/aNfWUDWXd+IHA8UbIf/WCvhwxS1Yq+6vgG75HDz4Gbk1VSgihatg==}
+  '@ricsam/selection-manager@0.0.4':
+    resolution: {integrity: sha512-IOt4EGlQEVPrFPmqJ6p0+sv177oWPz2h3TZnOdCM2AcEdO2ZfqKSr/Zk0TuUDdL+t3W8A4H5BorLQSoj/AzTMw==}
     peerDependencies:
       typescript: ^5
 
@@ -8014,7 +8014,7 @@ snapshots:
 
   '@radix-ui/rect@1.1.1': {}
 
-  '@ricsam/selection-manager@0.0.3(typescript@5.8.2)':
+  '@ricsam/selection-manager@0.0.4(typescript@5.8.2)':
     dependencies:
       typescript: 5.8.2
 
@@ -9960,7 +9960,7 @@ snapshots:
       eslint: 9.23.0(jiti@2.4.2)
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2)))(eslint@9.23.0(jiti@2.4.2))
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2)))(eslint@9.23.0(jiti@2.4.2)))(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint-import-resolver-typescript@3.10.1)(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-react: 7.37.5(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-react-hooks: 5.2.0(eslint@9.23.0(jiti@2.4.2))
@@ -9990,7 +9990,7 @@ snapshots:
       tinyglobby: 0.2.13
       unrs-resolver: 1.7.2
     optionalDependencies:
-      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2)))(eslint@9.23.0(jiti@2.4.2)))(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint-import-resolver-typescript@3.10.1)(eslint@9.23.0(jiti@2.4.2))
     transitivePeerDependencies:
       - supports-color
 
@@ -10010,7 +10010,7 @@ snapshots:
       eslint: 9.23.0(jiti@2.4.2)
       pluralize: 8.0.0
 
-  eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2)))(eslint@9.23.0(jiti@2.4.2)))(eslint@9.23.0(jiti@2.4.2)):
+  eslint-plugin-import@2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint-import-resolver-typescript@3.10.1)(eslint@9.23.0(jiti@2.4.2)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.8

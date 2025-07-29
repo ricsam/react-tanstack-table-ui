@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.59
+
+### Patch Changes
+
+- externalize the @ricsam/selection-manager
+
 ## 1.0.58
 
 ### Patch Changes
