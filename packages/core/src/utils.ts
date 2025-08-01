@@ -47,22 +47,22 @@ export const mapColumnPinningPositionToPinPos = (
   }
   return "end";
 };
-export const getSubHeaders = (header: Header<any, unknown>) => {
-  const subHeaders: Header<any, unknown>[] = [];
-  const appendSubHeaders = (header: Header<any, unknown>) => {
+export const getLeafHeaders = (header: Header<any, unknown>) => {
+  const leafHeaders: Header<any, unknown>[] = [];
+  const appendLeafHeaders = (header: Header<any, unknown>) => {
     if (header.subHeaders.length > 0) {
-      header.subHeaders.forEach(appendSubHeaders);
+      header.subHeaders.forEach(appendLeafHeaders);
     } else {
-      subHeaders.push(header);
+      leafHeaders.push(header);
     }
   };
-  appendSubHeaders(header);
-  return subHeaders;
+  appendLeafHeaders(header);
+  return leafHeaders;
 };
 
 export const getIsPinned = (header: Header<any, unknown>) => {
   // for pinned, let the subheaders decide how it should be pinned
-  const subHeaders = getSubHeaders(header);
+  const subHeaders = getLeafHeaders(header);
   const allVals = subHeaders.map((h) => h.column.getIsPinned());
   const uniqueVals = [...new Set(allVals)];
   return uniqueVals[uniqueVals.length - 1] ?? false;
@@ -177,7 +177,11 @@ export function memoize<T, U>(fn: (arg: U) => T) {
   };
 }
 
-export const createTablePropsSelector = <D extends unknown[], T, U = RttuiTable>(
+export const createTablePropsSelector = <
+  D extends unknown[],
+  T,
+  U = RttuiTable,
+>(
   callback: (...props: D) => UseTablePropsOptions<T, U>,
 ) => {
   return {

@@ -1,6 +1,8 @@
 import { Box, Typography } from "@mui/material";
-import { useSelectionManagerCls } from "./selection_manager_context";
 import { useCallback } from "react";
+import { useSelectionManagerCls } from "./selection_manager_context";
+import { useSpreadsheetColIndex } from "./use_spreadsheet_col_index";
+import { Resizer } from "./resizer";
 
 const indexToColumn = (index: number): string => {
   let result = "";
@@ -15,47 +17,74 @@ const indexToColumn = (index: number): string => {
   return result;
 };
 
-export const SpreadsheetColHeader = ({ index }: { index: number }) => {
+export const SpreadsheetColHeader = ({
+  tableColIndex,
+  resizer,
+}: {
+  tableColIndex: number;
+  resizer?: boolean;
+}) => {
+  const spreadsheetColIndex = useSpreadsheetColIndex(tableColIndex);
+
   const selectionManager = useSelectionManagerCls();
   const headerRef = useCallback(
     (el: HTMLElement | null) => {
-      if (el) {
-        return selectionManager.setupHeaderElement(el, index, "col");
+      if (el && spreadsheetColIndex !== null) {
+        return selectionManager.setupHeaderElement(
+          el,
+          spreadsheetColIndex,
+          "col",
+        );
       }
     },
-    [index, selectionManager],
+    [spreadsheetColIndex, selectionManager],
   );
-  if (index === 0) {
+
+  if (spreadsheetColIndex === null) {
     return null;
   }
+
   return (
     <Box
-      className="spreadsheet-col-header"
-      ref={headerRef}
       sx={{
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        position: "relative",
         flex: 1,
-        cursor: "pointer",
+        height: "100%",
+        width: "100%",
       }}
     >
-      <Typography
-        variant="body2"
-        color="text.primary"
-        fontWeight="bold"
-        textAlign="center"
+      <Box
+        className="spreadsheet-col-header"
+        ref={headerRef}
         sx={{
-          width: "100%",
-          height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flex: 1,
+          cursor: "pointer",
+          height: "100%",
+          width: "100%",
         }}
       >
-        {indexToColumn(index - 1)}
-      </Typography>
+        <Typography
+          variant="body2"
+          color="text.primary"
+          fontWeight="bold"
+          textAlign="center"
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flex: 1,
+          }}
+        >
+          {indexToColumn(spreadsheetColIndex)}
+        </Typography>
+      </Box>
+      {resizer && <Resizer />}
     </Box>
   );
 };

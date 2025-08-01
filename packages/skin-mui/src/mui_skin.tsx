@@ -246,7 +246,7 @@ const MuiSkin: Skin = {
   TableRowExpandedContent: ({ children }) => {
     const leafColLength = useTableProps({
       callback: (table) => {
-        return table.tanstackTable.getAllLeafColumns().length;
+        return table.tanstackTable.getVisibleLeafColumns().length;
       },
       areCallbackOutputEqual: strictEqual,
       dependencies: [{ type: "tanstack_table" }],

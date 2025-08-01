@@ -22,3 +22,4 @@ export { Filter } from "./filter";
 export { ColumnOptions } from "./column_options";
 export { SpreadsheetColHeader } from "./spreadsheet_col_header";
 export { SpreadsheetRowHeader } from "./spreadsheet_row_header";
+export { getTableColIndex } from "./get_table_col_index";

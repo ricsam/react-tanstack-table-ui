@@ -37,6 +37,7 @@ import React, {
 } from "react";
 import { SelectionManagerProvider } from "./selection_manager_context";
 import { TableHeaderRow } from "./table_header_row";
+import { useSpreadsheetColIndex } from "./use_spreadsheet_col_index";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -47,6 +48,7 @@ declare module "@tanstack/react-table" {
       selectionManager: SelectionManager,
       cell: { row: number; col: number },
     ) => React.ReactNode;
+    valueToString?: (value: TValue) => string;
   }
 }
 
@@ -129,10 +131,24 @@ export class BleuSkin implements Skin {
                 const gridCol = colIdx - boundingRect.start.col;
 
                 if (cell) {
-                  const value = cell.getValue();
+                  const valueToString =
+                    cell.column.columnDef.meta?.valueToString;
+                  const tblValue = cell.getValue();
+                  const value = valueToString
+                    ? valueToString(tblValue)
+                    : tblValue;
                   // Convert value to string, handling null/undefined
-                  const stringValue =
-                    value === null || value === undefined ? "" : String(value);
+                  let stringValue = "";
+                  if (typeof value === "string") {
+                    stringValue = value;
+                  } else if (typeof value === "number") {
+                    stringValue = value.toString();
+                  } else if (typeof value === "boolean") {
+                    stringValue = value.toString();
+                  } else if (!value) {
+                    stringValue = "";
+                  }
+
                   // Escape tabs and newlines for TSV format
                   const escapedValue = stringValue
                     .replace(/\t/g, "    ")
@@ -439,7 +455,7 @@ export class BleuSkin implements Skin {
       const { leafColLength } = useTableProps({
         callback: (table) => {
           return {
-            leafColLength: table.tanstackTable.getAllLeafColumns().length,
+            leafColLength: table.tanstackTable.getVisibleLeafColumns().length,
           };
         },
         dependencies: [{ type: "tanstack_table" }],
@@ -478,19 +494,20 @@ export class BleuSkin implements Skin {
           width,
           isSomeColumnsPinnedRight,
           row,
-          col,
           isSpreadsheetRowHeader,
           value,
           renderInput,
+          tanstackColIndex,
         } = useCellProps({
           callback: (cell, table) => {
             const state = cell.header.state;
             const isSpreadsheetRowHeader =
               cell.cell.column.columnDef.meta?.isSpreadsheetRowHeader;
-
+            const valueToString =
+              cell.cell.column.columnDef.meta?.valueToString;
             return {
               row: cell.rowIndex,
-              col: cell.columnIndex,
+              tanstackColIndex: cell.cell.column.getIndex(),
               isPinned: state.isPinned,
               isLastPinned: state.isLastPinned,
               isLast: state.isLast,
@@ -499,8 +516,9 @@ export class BleuSkin implements Skin {
               isSomeColumnsPinnedRight:
                 table.tanstackTable.getIsSomeColumnsPinned("right"),
               isSpreadsheetRowHeader,
-
-              value: cell.cell.getValue(),
+              value: valueToString
+                ? valueToString(cell.cell.getValue())
+                : cell.cell.getValue(),
               renderInput: cell.cell.column.columnDef.meta?.renderInput,
             };
           },
@@ -514,6 +532,8 @@ export class BleuSkin implements Skin {
           return refEl!;
         }, [refEl]);
 
+        const spreadsheetColIndex = useSpreadsheetColIndex(tanstackColIndex);
+
         const cellRef = useCallback(
           (el: HTMLDivElement | null) => {
             setRefEl(el);
@@ -521,19 +541,33 @@ export class BleuSkin implements Skin {
               if (isSpreadsheetRowHeader) {
                 return this.selectionManager.setupHeaderElement(el, row, "row");
               }
-              return this.selectionManager.setupCellElement(el, { row, col });
+              if (spreadsheetColIndex !== null) {
+                return this.selectionManager.setupCellElement(el, {
+                  row,
+                  col: spreadsheetColIndex,
+                });
+              }
             }
           },
-          [row, col, isSpreadsheetRowHeader],
+          [row, isSpreadsheetRowHeader, spreadsheetColIndex],
         );
 
-        const isSelected = useSelectionManager(this.selectionManager, () =>
-          this.selectionManager.isSelected({ row, col }),
-        );
+        const isSelected = useSelectionManager(this.selectionManager, () => {
+          if (spreadsheetColIndex === null) {
+            return false;
+          }
+          return this.selectionManager.isSelected({
+            row,
+            col: spreadsheetColIndex,
+          });
+        });
 
-        const isEditing = useSelectionManager(this.selectionManager, () =>
-          this.selectionManager.isEditingCell(row, col),
-        );
+        const isEditing = useSelectionManager(this.selectionManager, () => {
+          if (spreadsheetColIndex === null) {
+            return false;
+          }
+          return this.selectionManager.isEditingCell(row, spreadsheetColIndex);
+        });
 
         const inputRef = React.useCallback((el: HTMLInputElement | null) => {
           if (el) {
@@ -597,9 +631,12 @@ export class BleuSkin implements Skin {
                   },
             ]}
           >
-            {isEditing ? (
+            {spreadsheetColIndex !== null && isEditing ? (
               renderInput ? (
-                renderInput(value, this.selectionManager, { col, row })
+                renderInput(value, this.selectionManager, {
+                  col: spreadsheetColIndex,
+                  row,
+                })
               ) : (
                 <Input
                   type="text"
@@ -620,7 +657,7 @@ export class BleuSkin implements Skin {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       this.selectionManager.saveCellValue(
-                        { rowIndex: row, colIndex: col },
+                        { rowIndex: row, colIndex: spreadsheetColIndex },
                         e.currentTarget.value,
                       );
                       this.selectionManager.cancelEditing();

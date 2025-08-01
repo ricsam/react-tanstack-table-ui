@@ -10,17 +10,20 @@ export function App() {
   const { table, setData } = useTable();
   const selectionManager = useInitializeSelectionManager({
     getNumRows: () => table.getRowCount(),
-    getNumCols: () => table.getAllLeafColumns().length,
+    getNumCols: () =>
+      table
+        .getVisibleLeafColumns()
+        .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader).length,
   });
 
   React.useEffect(() => {
-    return selectionManager.listenToInsertData((updates) => {
+    return selectionManager.listenToUpdateData((updates) => {
       setData((prev) => {
         const newData = [...prev];
         updates.forEach((update) => {
           const row = table.getRowModel().rows[update.rowIndex];
           const rowIndex = row.index;
-          const col = table.getAllLeafColumns()[update.colIndex];
+          const col = table.getVisibleLeafColumns()[update.colIndex];
           const accessorKey = col.columnDef.meta?.accessorKey;
           const formatValue = col.columnDef.meta?.formatValue;
           const value = formatValue ? formatValue(update.value) : update.value;

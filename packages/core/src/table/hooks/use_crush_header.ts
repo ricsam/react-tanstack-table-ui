@@ -1,7 +1,7 @@
 import { Header } from "@tanstack/react-table";
 import { useMeasureContext } from "./use_measure_context";
 import { useTableContext } from "../table_context";
-import { getSubHeaders } from "../../utils";
+import { getLeafHeaders } from "../../utils";
 import { CrushBy } from "../types";
 
 export const useCrushHeader = () => {
@@ -40,7 +40,7 @@ export const useCrushHeader = () => {
           }
 
           let leafTotal = 0;
-          const leafs = getSubHeaders(header);
+          const leafs = getLeafHeaders(header);
           leafs.forEach((h) => {
             const measuredCol = cols.get(h.id);
             if (!measuredCol) {

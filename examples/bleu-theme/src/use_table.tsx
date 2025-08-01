@@ -44,7 +44,8 @@ const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
     {
       id: "spreadsheet-col-header",
       header: (props) => {
-        return <SpreadsheetColHeader index={props.column.getIndex()} />;
+        const tableColIndex = props.column.getIndex();
+        return <SpreadsheetColHeader tableColIndex={tableColIndex} />;
       },
       meta: {
         disablePadding: true,
@@ -52,7 +53,7 @@ const columnHelper = decorateColumnHelper(createColumnHelper<User>(), {
     },
   ],
   cell: (original, context) => {
-    if (context.column.id.endsWith("spreadsheet-row-header")) {
+    if (context.column.columnDef.meta?.isSpreadsheetRowHeader) {
       return original;
     }
     return (
@@ -99,6 +100,7 @@ const columns: ColumnDef<User, any>[] = [
       accessorKey: "email",
     },
   }),
+
   columnHelper.accessor("experienceYears", {
     header: "Experience (Years)",
     cell: (info) => info.getValue(),

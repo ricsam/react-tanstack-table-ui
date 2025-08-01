@@ -5,7 +5,7 @@ import React, { useCallback, useState } from "react";
 import { defaultSkin } from "../../default_skin/default_skin";
 import { Skin } from "../../skin";
 import { MeasureData, CellRefs, RttuiRef, CrushBy } from "../types";
-import { getSubHeaders } from "../../utils";
+import { getLeafHeaders } from "../../utils";
 import { IsMeasuring, MeasureContext } from "../contexts/measure_context";
 
 export const MeasureProvider = (props: {
@@ -186,7 +186,7 @@ export const MeasureProvider = (props: {
                   headerInstance.column,
                 );
                 let leafTotal = 0;
-                const leafs = getSubHeaders(headerInstance);
+                const leafs = getLeafHeaders(headerInstance);
                 leafs.forEach((h) => {
                   leafTotal += contrainSize(
                     newSizing[h.column.id] ?? h.column.getSize(),
@@ -215,13 +215,29 @@ export const MeasureProvider = (props: {
                     }
                   });
                 }
-                if (leafTotal < totalWhenColsAreConstrained) {
-                  const diff = totalWhenColsAreConstrained - leafTotal;
-                  const perCol = diff / nonConstrainedCols.size;
-                  nonConstrainedCols.forEach((colId) => {
-                    newSizing[colId] += perCol;
-                  });
-                }
+
+                // in a scenario where each column had one child col that was smaller than the parent, leaf would be e.g. 50 and totalWhenColsAreConstrained would be e.g. 250
+                // but the nonConstranedCols would just be a list of the parent col, and the resulting width for the column would become 300 incorrectly. Not sure
+                // what scenario we want the following code to do, but it is disabled for now.
+                // if (leafTotal < totalWhenColsAreConstrained) {
+                //   const diff = totalWhenColsAreConstrained - leafTotal;
+                //   const perCol = diff / nonConstrainedCols.size;
+                //   nonConstrainedCols.forEach((colId) => {
+                //     newSizing[colId] += perCol;
+                //     if (colId === '_decorator_extra_header_0_cell-concentration') {
+                //       console.log('@metrics /4', {
+                //         colId,
+                //         perCol,
+                //         newSizing: structuredClone(newSizing),
+                //         result: newSizing[colId],
+                //         leafTotal,
+                //         totalWhenColsAreConstrained,
+                //         diff,
+                //         nonConstrainedCols
+                //       });
+                //     }
+                //   });
+                // }
               }
             }
           });

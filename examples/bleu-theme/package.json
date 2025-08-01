@@ -25,6 +25,6 @@
     "react-dom": "19.0.0",
     "typescript": "^5.8.2",
     "vite": "^6.0.5",
-    "@ricsam/selection-manager": "^0.0.4"
+    "@ricsam/selection-manager": "^0.0.6"
   }
 }

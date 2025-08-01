@@ -1,5 +1,13 @@
 # @rttui/skin-bleu
 
+## 1.0.60
+
+### Patch Changes
+
+- add some utility functions and fix a potential bug with the column auto crushing
+- Updated dependencies
+  - @rttui/core@1.0.53
+
 ## 1.0.59
 
 ### Patch Changes

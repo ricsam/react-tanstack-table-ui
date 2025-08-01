@@ -35,9 +35,10 @@ export const MeasureCellProvider = ({
       if (elRefs.current[measuredCell.id]) {
         return;
       }
+      const width = el.getBoundingClientRect().width;
       elRefs.current[measuredCell.id] = {
         ...measuredCell,
-        width: el.getBoundingClientRect().width,
+        width,
       };
       const currentCol = colRefs.current.get(measuredCell.columnId);
       if (!currentCol) {

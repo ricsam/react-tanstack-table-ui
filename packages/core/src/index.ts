@@ -40,7 +40,10 @@ import type { VirtualHeaderCell } from "./table/types";
 import type { AutoSizerProps } from "./auto_sizer";
 import { AutoSizer } from "./auto_sizer";
 import type { CellDecorator, HeaderDecorator } from "./decorate_column_helper";
-import { decorateColumnHelper } from "./decorate_column_helper";
+import {
+  decorateColumnHelper,
+  getColumnDefIds,
+} from "./decorate_column_helper";
 import type { CellAvatarProps } from "./default_skin/cell_avatar";
 import type { CellAvatarWithTextProps } from "./default_skin/cell_avatar_with_text";
 import type { CheckboxProps } from "./default_skin/checkbox";
@@ -80,6 +83,7 @@ export {
   createTablePropsSelector,
   darkModeVars,
   decorateColumnHelper,
+  getColumnDefIds,
   defaultSkin,
   ExpandButton,
   Header,

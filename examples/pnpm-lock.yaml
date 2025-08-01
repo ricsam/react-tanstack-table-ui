@@ -20,8 +20,8 @@ importers:
         specifier: ^6.4.8
         version: 6.4.11(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ricsam/selection-manager':
-        specifier: ^0.0.4
-        version: 0.0.4(typescript@5.8.2)
+        specifier: ^0.0.6
+        version: 0.0.6(typescript@5.8.2)
       '@rttui/core':
         specifier: 1.0.51
         version: 1.0.51(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -497,8 +497,8 @@ packages:
     peerDependencies:
       typescript: ^5
 
-  '@ricsam/selection-manager@0.0.4':
-    resolution: {integrity: sha512-IOt4EGlQEVPrFPmqJ6p0+sv177oWPz2h3TZnOdCM2AcEdO2ZfqKSr/Zk0TuUDdL+t3W8A4H5BorLQSoj/AzTMw==}
+  '@ricsam/selection-manager@0.0.6':
+    resolution: {integrity: sha512-p76BRXHUS1ylM8sH0qyoOgLMacp1B37GU4PtKvzopcv0nMNpjgNLccjLaiFN1nWypklQkwIU3R2OKeuM5utXgw==}
     peerDependencies:
       typescript: ^5
 
@@ -1422,7 +1422,7 @@ snapshots:
     dependencies:
       typescript: 5.8.2
 
-  '@ricsam/selection-manager@0.0.4(typescript@5.8.2)':
+  '@ricsam/selection-manager@0.0.6(typescript@5.8.2)':
     dependencies:
       typescript: 5.8.2
 

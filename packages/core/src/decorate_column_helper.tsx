@@ -126,3 +126,14 @@ export const decorateColumnHelper = <T,>(
 
   return newColumnHelper;
 };
+
+export const getColumnDefIds = (col: ColumnDef<any>): string[] => {
+  let childIds: string[] = [];
+  if ('columns' in col && col.columns) {
+    childIds = col.columns.flatMap((col) => getColumnDefIds(col));
+  }
+  if (col.id) {
+    return [col.id, ...childIds];
+  }
+  return childIds;
+};

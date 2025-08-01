@@ -1,5 +1,6 @@
 import {
   Badge,
+  Box,
   Divider,
   Fade,
   IconButton,
@@ -8,6 +9,7 @@ import {
   MenuList,
   Paper,
   Popper,
+  Typography,
 } from "@mui/material";
 import {
   shallowEqual,
@@ -15,6 +17,7 @@ import {
   useColRef,
   useCrushAllCols,
   useCrushHeader,
+  useTableContext,
 } from "@rttui/core";
 import { MouseEvent, useEffect, useRef, useState } from "react";
 import { FiMoreHorizontal as MoreHorizontal } from "react-icons/fi";
@@ -23,6 +26,8 @@ import {
   LuArrowUp as ArrowUp,
   LuCheck as Check,
   LuChevronRight as ChevronRight,
+  LuArrowLeft,
+  LuArrowRight,
 } from "react-icons/lu";
 
 interface AutosizeSubmenuItemsProps {
@@ -74,11 +79,13 @@ export function ColumnOptions({
   const crushHeader = useCrushHeader();
   const crushAllColumns = useCrushAllCols();
   const colRef = useColRef();
+  const { tableRef } = useTableContext();
   const {
     isSorted: tsIsSorted,
     canSort,
     isPinned,
     canPin,
+    canHide,
   } = useColProps({
     callback: ({ column }) => {
       return {
@@ -86,6 +93,7 @@ export function ColumnOptions({
         canSort: column.getCanSort(),
         isPinned: column.getIsPinned(),
         canPin: column.getCanPin(),
+        canHide: column.getCanHide(),
       };
     },
     areCallbackOutputEqual: shallowEqual,
@@ -277,6 +285,91 @@ export function ColumnOptions({
           </MenuItem>,
           <Divider key="divider-2" />,
         ]}
+
+        {canHide && [
+          <MenuItem
+            key="hide"
+            onClick={() => {
+              colRef()
+                .column.getFlatColumns()
+                .forEach((col) => {
+                  col.toggleVisibility(false);
+                });
+              handleClose();
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            Hide
+          </MenuItem>,
+          <MenuItem
+            key="show"
+            onClick={() => {
+              tableRef.current?.tanstackTable.resetColumnVisibility();
+              handleClose();
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            Show all columns
+          </MenuItem>,
+          <Divider key="divider-3" />,
+        ]}
+
+        {["left", "right"].map((direction) => (
+          <MenuItem
+            key={direction}
+            onClick={() => {
+              const newOrder = tableRef.current?.tanstackTable
+                .getVisibleLeafColumns()
+                .map((col) => col.id);
+              const currentLeafColumns = colRef()
+                .column.getLeafColumns()
+                .filter((col) => col.getIndex() > -1);
+
+              // move current leaf columns to the left or right
+              for (let i = 0; i < currentLeafColumns.length; i++) {
+                const col = currentLeafColumns[i];
+                const index = newOrder.indexOf(col.id);
+                if (index > -1) {
+                  newOrder.splice(index, 1);
+                  newOrder.splice(
+                    index + (direction === "left" ? -1 : 1),
+                    0,
+                    col.id,
+                  );
+                }
+              }
+              tableRef.current?.tanstackTable.setColumnOrder(newOrder);
+              handleClose();
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+              }}
+            >
+              <Typography variant="body1">Move {direction}</Typography>
+              {direction === "left" ? <LuArrowLeft /> : <LuArrowRight />}
+            </Box>
+          </MenuItem>
+        ))}
+        <Divider />
+
         <MenuItem
           onClick={() => {
             crushHeader(colRef().header, "default");

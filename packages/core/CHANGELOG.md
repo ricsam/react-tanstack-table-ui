@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.53
+
+### Patch Changes
+
+- add some utility functions and fix a potential bug with the column auto crushing
+
 ## 1.0.52
 
 ### Patch Changes

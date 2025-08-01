@@ -1,6 +1,6 @@
 {
   "name": "@rttui/skin-bleu",
-  "version": "1.0.59",
+  "version": "1.0.60",
   "main": "./src/index.ts",
   "dependencies": {
     "@rttui/core": "workspace:^"
@@ -16,7 +16,7 @@
     "react-dom": "19.0.0",
     "typescript": "^5.8.2",
     "@tanstack/react-table": "8.20.6",
-    "@ricsam/selection-manager": "^0.0.4"
+    "@ricsam/selection-manager": "^0.0.6"
   },
   "description": "Bleu skin for React TanStack Table UI",
   "keywords": [
