@@ -35,6 +35,7 @@ import React, {
   useEffect,
   useImperativeHandle,
 } from "react";
+import { getTableColIndex } from "./get_table_col_index";
 import { SelectionManagerProvider } from "./selection_manager_context";
 import { TableHeaderRow } from "./table_header_row";
 import { useSpreadsheetColIndex } from "./use_spreadsheet_col_index";
@@ -164,7 +165,9 @@ export class BleuSkin implements Skin {
               if (!row) return;
 
               const cells = row.getVisibleCells();
-              const cell = cells[absolute.col];
+              // Convert spreadsheet column index to table column index
+              const tableColIndex = getTableColIndex(absolute.col, table);
+              const cell = cells[tableColIndex];
 
               if (cell && relative.row < height && relative.col < width) {
                 const valueToString =
@@ -201,7 +204,9 @@ export class BleuSkin implements Skin {
               if (!row) return;
 
               const cells = row.getVisibleCells();
-              const cell = cells[absolute.col];
+              // Convert spreadsheet column index to table column index
+              const tableColIndex = getTableColIndex(absolute.col, table);
+              const cell = cells[tableColIndex];
 
               if (cell) {
                 const valueToString =

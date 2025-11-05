@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.64
+
+### Patch Changes
+
+- fix off by one issue
+
 ## 1.0.63
 
 ### Patch Changes
