@@ -99,67 +99,138 @@ export class BleuSkin implements Skin {
 
           const rows = table.getRowModel().rows;
 
-          // Create a 2D grid covering the entire bounding rectangle
-          const gridHeight = boundingRect.end.row - boundingRect.start.row + 1;
-          const gridWidth = boundingRect.end.col - boundingRect.start.col + 1;
+          // Extract start/end coordinates
+          const startRow = boundingRect.start.row;
+          const startCol = boundingRect.start.col;
+          const endRow = boundingRect.end.row;
+          const endCol = boundingRect.end.col;
 
-          // Initialize grid with empty strings
-          const grid: string[][] = Array(gridHeight)
-            .fill(null)
-            .map(() => Array(gridWidth).fill(""));
+          // Calculate grid dimensions
+          let height: number;
+          let width: number;
 
-          // Fill in the grid with values from selected cells only
-          for (const selection of allSelections) {
-            for (
-              let rowIdx = selection.start.row;
-              rowIdx <= selection.end.row;
-              rowIdx++
-            ) {
-              const row = rows[rowIdx];
-              if (!row) continue;
+          // Handle infinity cases - read all data and determine bounds
+          if (endRow.type === "infinity" || endCol.type === "infinity") {
+            // Get table boundaries
+            const maxTableRow = rows.length - 1;
+            const maxTableCol = (rows[0]?.getVisibleCells().length ?? 1) - 1;
 
-              const cells = row.getVisibleCells();
+            // Find the actual bounds from the selections
+            let maxRow = startRow;
+            let maxCol = startCol;
 
-              for (
-                let colIdx = selection.start.col;
-                colIdx <= selection.end.col;
-                colIdx++
-              ) {
-                const cell = cells[colIdx];
+            for (const selection of allSelections) {
+              // Determine actual end bounds for this selection
+              const selEndRow =
+                selection.end.row.type === "infinity"
+                  ? maxTableRow
+                  : Math.min(selection.end.row.value, maxTableRow);
+              const selEndCol =
+                selection.end.col.type === "infinity"
+                  ? maxTableCol
+                  : Math.min(selection.end.col.value, maxTableCol);
 
-                // Calculate position in the grid relative to bounding rect
-                const gridRow = rowIdx - boundingRect.start.row;
-                const gridCol = colIdx - boundingRect.start.col;
-
-                if (cell) {
-                  const valueToString =
-                    cell.column.columnDef.meta?.valueToString;
-                  const tblValue = cell.getValue();
-                  const value = valueToString
-                    ? valueToString(tblValue)
-                    : tblValue;
-                  // Convert value to string, handling null/undefined
-                  let stringValue = "";
-                  if (typeof value === "string") {
-                    stringValue = value;
-                  } else if (typeof value === "number") {
-                    stringValue = value.toString();
-                  } else if (typeof value === "boolean") {
-                    stringValue = value.toString();
-                  } else if (!value) {
-                    stringValue = "";
-                  }
-
-                  // Escape tabs and newlines for TSV format
-                  const escapedValue = stringValue
-                    .replace(/\t/g, "    ")
-                    .replace(/\n/g, " ")
-                    .replace(/\r/g, "");
-                  grid[gridRow][gridCol] = escapedValue;
-                }
-                // If no cell exists, grid[gridRow][gridCol] remains empty string
+              // Only consider cells within the starting bounds
+              if (selection.start.row >= startRow && selection.start.col >= startCol) {
+                maxRow = Math.max(maxRow, selEndRow);
+                maxCol = Math.max(maxCol, selEndCol);
               }
             }
+
+            // If no data found, create minimal grid
+            if (maxRow === startRow && maxCol === startCol) {
+              height = 1;
+              width = 1;
+            } else {
+              height = maxRow - startRow + 1;
+              width = maxCol - startCol + 1;
+            }
+          } else {
+            // Both finite - use original logic
+            height = endRow.value - startRow + 1;
+            width = endCol.value - startCol + 1;
+          }
+
+          // Initialize grid with empty strings
+          const grid: string[][] = Array(height)
+            .fill(null)
+            .map(() => Array(width).fill(""));
+
+          // Fill the grid with data
+          if (endRow.type === "infinity" || endCol.type === "infinity") {
+            // For infinity cases, use forEachSelectedCell
+            this.selectionManager.forEachSelectedCell(({ absolute, relative }) => {
+              const row = rows[absolute.row];
+              if (!row) return;
+
+              const cells = row.getVisibleCells();
+              const cell = cells[absolute.col];
+
+              if (cell && relative.row < height && relative.col < width) {
+                const valueToString =
+                  cell.column.columnDef.meta?.valueToString;
+                const tblValue = cell.getValue();
+                const value = valueToString
+                  ? valueToString(tblValue)
+                  : tblValue;
+                
+                // Convert value to string, handling null/undefined
+                let stringValue = "";
+                if (typeof value === "string") {
+                  stringValue = value;
+                } else if (typeof value === "number") {
+                  stringValue = value.toString();
+                } else if (typeof value === "boolean") {
+                  stringValue = value.toString();
+                } else if (!value) {
+                  stringValue = "";
+                }
+
+                // Escape tabs and newlines for TSV format
+                const escapedValue = stringValue
+                  .replace(/\t/g, "    ")
+                  .replace(/\n/g, " ")
+                  .replace(/\r/g, "");
+                grid[relative.row][relative.col] = escapedValue;
+              }
+            });
+          } else {
+            // For finite cases, use forEachSelectedCell
+            this.selectionManager.forEachSelectedCell(({ absolute, relative }) => {
+              const row = rows[absolute.row];
+              if (!row) return;
+
+              const cells = row.getVisibleCells();
+              const cell = cells[absolute.col];
+
+              if (cell) {
+                const valueToString =
+                  cell.column.columnDef.meta?.valueToString;
+                const tblValue = cell.getValue();
+                const value = valueToString
+                  ? valueToString(tblValue)
+                  : tblValue;
+                
+                // Convert value to string, handling null/undefined
+                let stringValue = "";
+                if (typeof value === "string") {
+                  stringValue = value;
+                } else if (typeof value === "number") {
+                  stringValue = value.toString();
+                } else if (typeof value === "boolean") {
+                  stringValue = value.toString();
+                } else if (!value) {
+                  stringValue = "";
+                }
+
+                // Escape tabs and newlines for TSV format
+                const escapedValue = stringValue
+                  .replace(/\t/g, "    ")
+                  .replace(/\n/g, " ")
+                  .replace(/\r/g, "");
+                grid[relative.row][relative.col] = escapedValue;
+              }
+            });
           }
 
           // Convert grid to TSV format

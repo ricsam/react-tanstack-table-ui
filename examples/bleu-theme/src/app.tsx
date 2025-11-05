@@ -9,11 +9,13 @@ import React from "react";
 export function App() {
   const { table, setData } = useTable();
   const selectionManager = useInitializeSelectionManager({
-    getNumRows: () => table.getRowCount(),
-    getNumCols: () =>
-      table
+    getNumRows: () => ({ type: "number", value: table.getRowCount() }),
+    getNumCols: () => ({
+      type: "number",
+      value: table
         .getVisibleLeafColumns()
         .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader).length,
+    }),
   });
 
   React.useEffect(() => {

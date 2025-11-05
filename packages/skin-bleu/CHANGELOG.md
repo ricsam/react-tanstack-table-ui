@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.63
+
+### Patch Changes
+
+- allow open ended selections
+
 ## 1.0.62
 
 ### Patch Changes

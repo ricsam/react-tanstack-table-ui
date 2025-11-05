@@ -20,8 +20,8 @@ importers:
         specifier: ^6.4.8
         version: 6.4.11(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react@19.0.0))(@types/react@19.0.7)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@ricsam/selection-manager':
-        specifier: ^0.0.6
-        version: 0.0.6(typescript@5.8.2)
+        specifier: ^0.0.18
+        version: 0.0.18(typescript@5.8.2)
       '@rttui/core':
         specifier: 1.0.51
         version: 1.0.51(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -492,13 +492,13 @@ packages:
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
 
-  '@ricsam/selection-manager@0.0.3':
-    resolution: {integrity: sha512-viNazuQ1j2+uZgGEKdKuhlqu5mBTYwK25/aNfWUDWXd+IHA8UbIf/WCvhwxS1Yq+6vgG75HDz4Gbk1VSgihatg==}
+  '@ricsam/selection-manager@0.0.18':
+    resolution: {integrity: sha512-N6n60eVAEUk/Hcvqv2JCFVEhXeGGYHhSGkNr5We/v9oawMpIhlxY7utxDKI9JCZlW9dLosn+EJSMIpxL3fv9Fg==}
     peerDependencies:
       typescript: ^5
 
-  '@ricsam/selection-manager@0.0.6':
-    resolution: {integrity: sha512-p76BRXHUS1ylM8sH0qyoOgLMacp1B37GU4PtKvzopcv0nMNpjgNLccjLaiFN1nWypklQkwIU3R2OKeuM5utXgw==}
+  '@ricsam/selection-manager@0.0.3':
+    resolution: {integrity: sha512-viNazuQ1j2+uZgGEKdKuhlqu5mBTYwK25/aNfWUDWXd+IHA8UbIf/WCvhwxS1Yq+6vgG75HDz4Gbk1VSgihatg==}
     peerDependencies:
       typescript: ^5
 
@@ -1418,11 +1418,11 @@ snapshots:
 
   '@popperjs/core@2.11.8': {}
 
-  '@ricsam/selection-manager@0.0.3(typescript@5.8.2)':
+  '@ricsam/selection-manager@0.0.18(typescript@5.8.2)':
     dependencies:
       typescript: 5.8.2
 
-  '@ricsam/selection-manager@0.0.6(typescript@5.8.2)':
+  '@ricsam/selection-manager@0.0.3(typescript@5.8.2)':
     dependencies:
       typescript: 5.8.2
 
