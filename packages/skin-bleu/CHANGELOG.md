@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.61
+
+### Patch Changes
+
+- export useSpreadsheetColIndex
+
 ## 1.0.60
 
 ### Patch Changes

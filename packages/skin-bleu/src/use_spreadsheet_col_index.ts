@@ -5,7 +5,10 @@ export const useSpreadsheetColIndex = (tableColIndex: number) => {
     callback(props) {
       const rowHeaders = props.tanstackTable
         .getVisibleLeafColumns()
-        .filter((col) => col.columnDef.meta?.isSpreadsheetRowHeader && col.getIndex() > -1)
+        .filter(
+          (col) =>
+            col.columnDef.meta?.isSpreadsheetRowHeader && col.getIndex() > -1,
+        )
         .map((col) => col.getIndex());
       let spreadsheetColIndex = tableColIndex;
       for (const rowHeader of rowHeaders) {
