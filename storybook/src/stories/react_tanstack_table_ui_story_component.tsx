@@ -443,11 +443,11 @@ export const ReactTanstackTableUi = (
   });
 
   const selectionManager = useInitializeSelectionManager({
-    getNumRows: () => table.getRowCount(),
-    getNumCols: () =>
-      table
-        .getVisibleLeafColumns()
-        .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader).length,
+    getNumRows: () => ({ type: "number", value: table.getRowCount() }),
+    getNumCols: () => ({ type: "number", value: table
+      .getVisibleLeafColumns()
+      .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader).length,
+  }),
   });
 
   const skinOb = useMemo(() => {
