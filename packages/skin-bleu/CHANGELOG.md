@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.62
+
+### Patch Changes
+
+- add manual index to column for the selection manager setup
+
 ## 1.0.61
 
 ### Patch Changes

@@ -49,6 +49,7 @@ declare module "@tanstack/react-table" {
       cell: { row: number; col: number },
     ) => React.ReactNode;
     valueToString?: (value: TValue) => string;
+    index?: number;
   }
 }
 
@@ -498,6 +499,7 @@ export class BleuSkin implements Skin {
           value,
           renderInput,
           tanstackColIndex,
+          metaIndex,
         } = useCellProps({
           callback: (cell, table) => {
             const state = cell.header.state;
@@ -520,6 +522,7 @@ export class BleuSkin implements Skin {
                 ? valueToString(cell.cell.getValue())
                 : cell.cell.getValue(),
               renderInput: cell.cell.column.columnDef.meta?.renderInput,
+              metaIndex: cell.cell.column.columnDef.meta?.index,
             };
           },
           areCallbackOutputEqual: shallowEqual,
@@ -532,7 +535,8 @@ export class BleuSkin implements Skin {
           return refEl!;
         }, [refEl]);
 
-        const spreadsheetColIndex = useSpreadsheetColIndex(tanstackColIndex);
+        const _spreadsheetColIndex = useSpreadsheetColIndex(tanstackColIndex);
+        const spreadsheetColIndex = metaIndex ?? _spreadsheetColIndex
 
         const cellRef = useCallback(
           (el: HTMLDivElement | null) => {
