@@ -23,14 +23,14 @@ importers:
         specifier: ^0.0.18
         version: 0.0.18(typescript@5.8.2)
       '@rttui/core':
-        specifier: 1.0.53
-        version: 1.0.53(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.54
+        version: 1.0.54(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@rttui/fixtures':
         specifier: 1.0.9
         version: 1.0.9
       '@rttui/skin-bleu':
-        specifier: 1.0.63
-        version: 1.0.63(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.65
+        version: 1.0.65(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@tanstack/react-table':
         specifier: 8.20.6
         version: 8.20.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -65,8 +65,8 @@ importers:
   minimal:
     dependencies:
       '@rttui/core':
-        specifier: 1.0.53
-        version: 1.0.53(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.54
+        version: 1.0.54(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@rttui/fixtures':
         specifier: 1.0.9
         version: 1.0.9
@@ -122,14 +122,14 @@ importers:
         specifier: ^0.0.19
         version: 0.0.19(typescript@5.8.2)
       '@rttui/core':
-        specifier: 1.0.53
-        version: 1.0.53(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.54
+        version: 1.0.54(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@rttui/fixtures':
         specifier: 1.0.9
         version: 1.0.9
       '@rttui/skin-bleu':
-        specifier: 1.0.63
-        version: 1.0.63(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.65
+        version: 1.0.65(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@tanstack/react-table':
         specifier: 8.20.6
         version: 8.20.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -694,14 +694,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rttui/core@1.0.53':
-    resolution: {integrity: sha512-xRfQc1rO/4iRyNOKbilHJXWMoUq4KyExvRgijwDAbuYWFUaiZITZ7FhQEQhbygMuTozmqfwxgnuap42JNNXf2Q==}
+  '@rttui/core@1.0.54':
+    resolution: {integrity: sha512-gWp0BUg9KewAGpuDb1Rmo3zWZeyqcGKUbBybtKir2qWcC5j5O++ZQUZUbh0AN5Ce+sNEL4B3k5hvPnZ6Wr3hIQ==}
 
   '@rttui/fixtures@1.0.9':
     resolution: {integrity: sha512-72V7qzZR6gUuOw945NQiu68pIpd2Y3SPs8htjotCSwc1ndAgd6ojXBOwrcgH1f7b8fRXsO+qBkaVZ6O40AI4gg==}
 
-  '@rttui/skin-bleu@1.0.63':
-    resolution: {integrity: sha512-SK4Pzp6quiTm24VePPFm9vRATDdD2NTIfMqliDObv+MtV6V8VQxvc9nSYHz4IZbZGET7VcziJRL44zmqcpOvzg==}
+  '@rttui/skin-bleu@1.0.65':
+    resolution: {integrity: sha512-lLTk7kfCRQF4X1eoN8co2MHRC5yqNpi6iPSAirS2MePZfWT+wfwP1YHJqfJFlfnhnr4LKPE8SVbwiyo6QHj8tA==}
 
   '@tanstack/react-table@8.20.6':
     resolution: {integrity: sha512-w0jluT718MrOKthRcr2xsjqzx+oEM7B7s/XXyfs19ll++hlId3fjTm+B2zrR3ijpANpkzBAr15j1XGVOMxpggQ==}
@@ -1600,7 +1600,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.38.0':
     optional: true
 
-  '@rttui/core@1.0.53(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@rttui/core@1.0.54(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@tanstack/react-virtual': 3.13.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
@@ -1609,9 +1609,9 @@ snapshots:
 
   '@rttui/fixtures@1.0.9': {}
 
-  '@rttui/skin-bleu@1.0.63(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@rttui/skin-bleu@1.0.65(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
-      '@rttui/core': 1.0.53(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@rttui/core': 1.0.54(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:
       - react
       - react-dom
