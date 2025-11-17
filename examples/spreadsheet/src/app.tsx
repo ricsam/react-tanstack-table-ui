@@ -4,8 +4,11 @@ import {
   AccordionDetails,
   Box,
   Typography,
+  TextField,
+  IconButton,
+  Button,
 } from "@mui/material";
-import { MdExpandMore } from "react-icons/md";
+import { MdExpandMore, MdUndo, MdRedo, MdSave } from "react-icons/md";
 import {
   columnToIndex,
   getCellReference,
@@ -27,7 +30,6 @@ import React, { useMemo } from "react";
 
 import { FormulaEngine, indexToColumn } from "@ricsam/formula-engine";
 import { decorateColumnHelper } from "@rttui/core";
-import { User } from "@rttui/fixtures";
 import {
   Cell,
   Filter,
@@ -50,51 +52,6 @@ import { useState } from "react";
 
 const numRows = 30;
 
-function isNumber(
-  value: string,
-): { isNumber: true; value: number } | { isNumber: false } {
-  // Empty string should not be treated as a number
-  if (value === "") {
-    return { isNumber: false };
-  }
-
-  // Handle comma as decimal separator (European style)
-  const normalizedValue = value.replace(",", ".");
-
-  // Check if it's a valid number
-  const parsed = parseFloat(normalizedValue);
-
-  // Make sure the entire string was consumed (no trailing characters)
-  // and that it's a valid number
-  if (
-    !isNaN(parsed) &&
-    isFinite(parsed) &&
-    normalizedValue === String(parsed)
-  ) {
-    return { isNumber: true, value: parsed };
-  }
-
-  return { isNumber: false };
-}
-
-function isBoolean(
-  value: string,
-): { isBoolean: true; value: boolean } | { isBoolean: false } {
-  const lowerValue = value.toLowerCase().trim();
-
-  // True values
-  if (lowerValue === "true" || lowerValue === "yes" || lowerValue === "1") {
-    return { isBoolean: true, value: true };
-  }
-
-  // False values
-  if (lowerValue === "false" || lowerValue === "no" || lowerValue === "0") {
-    return { isBoolean: true, value: false };
-  }
-
-  return { isBoolean: false };
-}
-
 function useEngine(
   engine: FormulaEngine,
 ): ReturnType<typeof FormulaEngine.prototype.getState> {
@@ -111,6 +68,83 @@ function useEngine(
   return state;
 }
 
+function useHistoryManager(engine: FormulaEngine) {
+  const [history, setHistory] = useState<any[]>(() => [
+    engine.serializeEngine(),
+  ]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const isUndoingRef = React.useRef(false);
+  const engineRef = React.useRef(engine);
+  engineRef.current = engine;
+
+  const pushState = React.useCallback(
+    (serialized: any) => {
+      if (isUndoingRef.current) {
+        return;
+      }
+      setHistory((prev) => {
+        const newHistory = prev.slice(0, currentIndex + 1);
+        newHistory.push(serialized);
+        return newHistory;
+      });
+      setCurrentIndex((prev) => prev + 1);
+      setHasUnsavedChanges(true);
+    },
+    [currentIndex],
+  );
+
+  const pushStateRef = React.useRef(pushState);
+  pushStateRef.current = pushState;
+
+  React.useEffect(() => {
+    const cleanup = engineRef.current.onUpdate(() => {
+      if (isUndoingRef.current) {
+        return;
+      }
+      const serialized = engineRef.current.serializeEngine();
+      pushStateRef.current(serialized);
+    });
+
+    return () => {
+      cleanup();
+    };
+  }, []);
+
+  const undo = React.useCallback(() => {
+    if (currentIndex > 0) {
+      isUndoingRef.current = true;
+      const newIndex = currentIndex - 1;
+      setCurrentIndex(newIndex);
+      engineRef.current.resetToSerializedEngine(history[newIndex]);
+      setHasUnsavedChanges(true);
+      isUndoingRef.current = false;
+    }
+  }, [currentIndex, history]);
+
+  const redo = React.useCallback(() => {
+    if (currentIndex < history.length - 1) {
+      isUndoingRef.current = true;
+      const newIndex = currentIndex + 1;
+      setCurrentIndex(newIndex);
+      engineRef.current.resetToSerializedEngine(history[newIndex]);
+      setHasUnsavedChanges(true);
+      isUndoingRef.current = false;
+    }
+  }, [currentIndex, history]);
+
+  const save = React.useCallback(() => {
+    const serialized = engineRef.current.serializeEngine();
+    localStorage.setItem("spreadsheet-state", JSON.stringify(serialized));
+    setHasUnsavedChanges(false);
+  }, []);
+
+  const canUndo = currentIndex > 0;
+  const canRedo = currentIndex < history.length - 1;
+
+  return { undo, redo, save, canUndo, canRedo, hasUnsavedChanges };
+}
+
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     spreadsheetCol?: string;
@@ -121,8 +155,24 @@ declare module "@tanstack/react-table" {
 const formulaEngine = new FormulaEngine();
 export const workbookName = "workbook1";
 export const sheetName = "sheet1";
-formulaEngine.addWorkbook(workbookName);
-formulaEngine.addSheet({ sheetName, workbookName });
+
+// Try to load saved state from localStorage
+const savedState = localStorage.getItem("spreadsheet-state");
+if (savedState) {
+  try {
+    const parsed = JSON.parse(savedState);
+    formulaEngine.resetToSerializedEngine(parsed);
+  } catch (error) {
+    console.error("Failed to load saved state:", error);
+    // If loading fails, initialize normally
+    formulaEngine.addWorkbook(workbookName);
+    formulaEngine.addSheet({ sheetName, workbookName });
+  }
+} else {
+  formulaEngine.addWorkbook(workbookName);
+  formulaEngine.addSheet({ sheetName, workbookName });
+}
+
 const workbookSelectionManager = new WorkbookSelectionManager();
 
 const columnHelper = decorateColumnHelper(createColumnHelper<any>(), {
@@ -196,11 +246,6 @@ const columns: ColumnDef<any, any>[] = [
 
   columnHelper.accessor("A", {
     header: "First column",
-    cell: (info) =>
-      formulaEngine.getCellValue(
-        { workbookName, sheetName, colIndex: 0, rowIndex: info.row.index },
-        true,
-      ),
     id: "A",
     size: 300, // Increased size to accommodate all controls
     meta: {
@@ -209,11 +254,6 @@ const columns: ColumnDef<any, any>[] = [
   }),
   columnHelper.accessor("B", {
     header: "Second column",
-    cell: (info) =>
-      formulaEngine.getCellValue(
-        { workbookName, sheetName, colIndex: 1, rowIndex: info.row.index },
-        true,
-      ),
     id: "B",
     size: 300,
     meta: {
@@ -222,11 +262,6 @@ const columns: ColumnDef<any, any>[] = [
   }),
   columnHelper.accessor("C", {
     header: "Third column",
-    cell: (info) =>
-      formulaEngine.getCellValue(
-        { workbookName, sheetName, colIndex: 2, rowIndex: info.row.index },
-        true,
-      ),
     id: "C",
     size: 300,
     meta: {
@@ -235,11 +270,6 @@ const columns: ColumnDef<any, any>[] = [
   }),
   columnHelper.accessor("D", {
     header: "Fourth column",
-    cell: (info) =>
-      formulaEngine.getCellValue(
-        { workbookName, sheetName, colIndex: 3, rowIndex: info.row.index },
-        true,
-      ),
     id: "D",
     size: 300,
     meta: {
@@ -248,11 +278,6 @@ const columns: ColumnDef<any, any>[] = [
   }),
   columnHelper.accessor("E", {
     header: "Fifth column",
-    cell: (info) =>
-      formulaEngine.getCellValue(
-        { workbookName, sheetName, colIndex: 4, rowIndex: info.row.index },
-        true,
-      ),
     id: "E",
     size: 300,
     meta: {
@@ -261,7 +286,7 @@ const columns: ColumnDef<any, any>[] = [
   }),
 ];
 
-const getSubRows = (row: User) => {
+const getSubRows = (row: any) => {
   return row.otherCountries;
 };
 
@@ -269,25 +294,20 @@ const useTable = () => {
   const state = useEngine(formulaEngine);
 
   const data = React.useMemo(() => {
-    const spreadsheetData = state.workbooks
-      .get(workbookName)
-      ?.sheets.get(sheetName)?.content;
     const data: any = [];
     for (let j = 0; j < numRows; j += 1) {
-      const row: any = {};
-      let hasData = false;
+      const row: any = { id: j };
       for (let i = 0; i < columns.slice(1).length; i += 1) {
-        const data = spreadsheetData?.get(
-          getCellReference({ rowIndex: j, colIndex: i }),
+        const value = formulaEngine.getCellValue(
+          { workbookName, sheetName, colIndex: i, rowIndex: j },
+          true,
         );
-        set(row, indexToColumn(i), data);
-        hasData = true;
+        set(row, indexToColumn(i), value);
       }
-      if (hasData) {
-        data[j] = row;
-      }
+      data.push(row);
     }
     return data;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   const table = useReactTable({
@@ -329,6 +349,12 @@ export function App() {
         .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader).length,
     }),
   });
+
+  const history = useHistoryManager(formulaEngine);
+  const [currentCell, setCurrentCell] = useState<string | null>(null);
+  const [formulaBarValue, setFormulaBarValue] = useState("");
+  const currentCellRef = React.useRef<string | null>(null);
+  currentCellRef.current = currentCell;
 
   React.useEffect(() => {
     return selectionManager.listenToUpdateData((updates) => {
@@ -466,6 +492,38 @@ export function App() {
           workbookSelectionManager.setSelections(rangeAddresses);
         },
       ),
+      // Track current cell for formula bar
+      selectionManager.observeStateChange(
+        (state) => {
+          return JSON.stringify(state.selections);
+        },
+        (selectionsJson) => {
+          const selections = JSON.parse(selectionsJson);
+          if (!selections || selections.length === 0) {
+            setCurrentCell(null);
+            setFormulaBarValue("");
+            return;
+          }
+
+          // Get first cell of first selection
+          const firstSelection = selections[0] as SMArea;
+          const cellRef = getCellReference({
+            rowIndex: firstSelection.start.row,
+            colIndex: firstSelection.start.col,
+          });
+          setCurrentCell(cellRef);
+
+          // Get raw value from formula engine
+          const sheetContent = formulaEngine.getSheet({
+            workbookName,
+            sheetName,
+          })?.content;
+          const rawValue = sheetContent?.get(cellRef);
+          setFormulaBarValue(
+            rawValue !== undefined && rawValue !== null ? String(rawValue) : "",
+          );
+        },
+      ),
     ];
 
     return () => {
@@ -473,8 +531,102 @@ export function App() {
     };
   }, [formulaEngine, selectionManager]);
 
+  const handleFormulaBarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormulaBarValue(e.target.value);
+  };
+
+  const handleFormulaBarBlur = () => {
+    if (!currentCell) return;
+
+    const newData = new Map(
+      formulaEngine.getSheet({ workbookName, sheetName })?.content ?? [],
+    );
+
+    let value: any = formulaBarValue;
+    if (typeof value === "string") {
+      const numberResult = isNumber(value);
+      if (numberResult.isNumber) {
+        value = numberResult.value;
+      } else {
+        const booleanResult = isBoolean(value);
+        if (booleanResult.isBoolean) {
+          value = booleanResult.value;
+        }
+      }
+    }
+
+    newData.set(currentCell, value);
+    formulaEngine.setSheetContent({ workbookName, sheetName }, newData);
+  };
+
+  const handleFormulaBarKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === "Enter") {
+      handleFormulaBarBlur();
+    }
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1, flex: 1 }}>
+      {/* Toolbar with formula bar and action buttons */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          padding: 1,
+          backgroundColor: "background.paper",
+          borderRadius: 1,
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{ minWidth: "60px", fontWeight: "medium" }}
+        >
+          {currentCell || ""}
+        </Typography>
+        <TextField
+          size="small"
+          fullWidth
+          value={formulaBarValue}
+          onChange={handleFormulaBarChange}
+          onBlur={handleFormulaBarBlur}
+          onKeyDown={handleFormulaBarKeyDown}
+          onFocus={() => {
+            selectionManager.blur();
+          }}
+          placeholder="Enter formula or value"
+          sx={{ flex: 1 }}
+        />
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <IconButton
+            size="small"
+            onClick={history.undo}
+            disabled={!history.canUndo}
+            title="Undo"
+          >
+            <MdUndo />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={history.redo}
+            disabled={!history.canRedo}
+            title="Redo"
+          >
+            <MdRedo />
+          </IconButton>
+          <Button
+            size="small"
+            variant={history.hasUnsavedChanges ? "contained" : "outlined"}
+            startIcon={<MdSave />}
+            onClick={history.save}
+            disabled={!history.hasUnsavedChanges}
+          >
+            Save
+          </Button>
+        </Box>
+      </Box>
       <Accordion>
         <AccordionSummary
           expandIcon={<MdExpandMore />}
@@ -483,7 +635,9 @@ export function App() {
         >
           <Typography>Formula Toolbar</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ maxHeight: 400, overflow: "auto" }}>
+        <AccordionDetails
+          sx={{ maxHeight: 400, overflow: "auto", fontFamily: "system-ui" }}
+        >
           <FormulaToolbar
             selectionManager={workbookSelectionManager}
             engine={formulaEngine}
@@ -531,4 +685,49 @@ export function App() {
       </Box>
     </Box>
   );
+}
+
+function isNumber(
+  value: string,
+): { isNumber: true; value: number } | { isNumber: false } {
+  // Empty string should not be treated as a number
+  if (value === "") {
+    return { isNumber: false };
+  }
+
+  // Handle comma as decimal separator (European style)
+  const normalizedValue = value.replace(",", ".");
+
+  // Check if it's a valid number
+  const parsed = parseFloat(normalizedValue);
+
+  // Make sure the entire string was consumed (no trailing characters)
+  // and that it's a valid number
+  if (
+    !isNaN(parsed) &&
+    isFinite(parsed) &&
+    normalizedValue === String(parsed)
+  ) {
+    return { isNumber: true, value: parsed };
+  }
+
+  return { isNumber: false };
+}
+
+function isBoolean(
+  value: string,
+): { isBoolean: true; value: boolean } | { isBoolean: false } {
+  const lowerValue = value.toLowerCase().trim();
+
+  // True values
+  if (lowerValue === "true" || lowerValue === "yes" || lowerValue === "1") {
+    return { isBoolean: true, value: true };
+  }
+
+  // False values
+  if (lowerValue === "false" || lowerValue === "no" || lowerValue === "0") {
+    return { isBoolean: true, value: false };
+  }
+
+  return { isBoolean: false };
 }
