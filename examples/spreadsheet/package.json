@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
     "@anocca-pub/components": "^0.0.46",
@@ -30,6 +31,7 @@
     "react-dom": "19.0.0",
     "react-icons": "^5.5.0",
     "typescript": "^5.8.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8"
   }
 }

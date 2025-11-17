@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.66
+
+### Patch Changes
+
+- working selection mapping
+
 ## 1.0.65
 
 ### Patch Changes

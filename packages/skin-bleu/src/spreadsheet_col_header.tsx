@@ -1,7 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useSelectionManagerCls } from "./selection_manager_context";
-import { useSpreadsheetColIndex } from "./use_spreadsheet_col_index";
 import { Resizer } from "./resizer";
 
 const indexToColumn = (index: number): string => {
@@ -24,7 +23,7 @@ export const SpreadsheetColHeader = ({
   tableColIndex: number;
   resizer?: boolean;
 }) => {
-  const spreadsheetColIndex = useSpreadsheetColIndex(tableColIndex);
+  const spreadsheetColIndex = tableColIndex;
 
   const selectionManager = useSelectionManagerCls();
   const headerRef = useCallback(

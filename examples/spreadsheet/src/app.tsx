@@ -10,7 +10,6 @@ import {
 } from "@mui/material";
 import { MdExpandMore, MdUndo, MdRedo, MdSave } from "react-icons/md";
 import {
-  columnToIndex,
   getCellReference,
   RangeAddress,
   SpreadsheetRange,
@@ -49,6 +48,7 @@ import {
 } from "@tanstack/react-table";
 import { set } from "lodash";
 import { useState } from "react";
+import { mapSmAreaToSourceRanges, areRowsConsecutive } from "./map_selections";
 
 const numRows = 30;
 
@@ -147,7 +147,6 @@ function useHistoryManager(engine: FormulaEngine) {
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
-    spreadsheetCol?: string;
     formatValue?: (value: string) => any;
   }
 }
@@ -192,7 +191,10 @@ const columnHelper = decorateColumnHelper(createColumnHelper<any>(), {
     {
       id: "spreadsheet-col-header",
       header: (props) => {
-        const tableColIndex = props.column.getIndex();
+        const tableColIndex = props.column.columnDef.meta?.index;
+        if (tableColIndex === undefined) {
+          return null;
+        }
         return <SpreadsheetColHeader tableColIndex={tableColIndex} />;
       },
       meta: {
@@ -204,18 +206,17 @@ const columnHelper = decorateColumnHelper(createColumnHelper<any>(), {
     if (context.column.columnDef.meta?.isSpreadsheetRowHeader) {
       return original;
     }
-    const spreadsheetCol = context.column.columnDef.meta?.spreadsheetCol;
-    if (!spreadsheetCol) {
+    const spreadsheetCol = context.column.columnDef.meta?.index;
+    if (spreadsheetCol === undefined) {
       return original;
     }
-    const colIndex = columnToIndex(spreadsheetCol);
     return (
       <Box
         sx={{
           ...formulaEngine.getCellStyle({
             workbookName,
             sheetName,
-            colIndex,
+            colIndex: spreadsheetCol,
             rowIndex: context.row.index,
           }),
           flex: 1,
@@ -249,7 +250,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "A",
     size: 300, // Increased size to accommodate all controls
     meta: {
-      spreadsheetCol: "A",
+      index: 0
     },
   }),
   columnHelper.accessor("B", {
@@ -257,7 +258,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "B",
     size: 300,
     meta: {
-      spreadsheetCol: "B",
+      index: 1
     },
   }),
   columnHelper.accessor("C", {
@@ -265,7 +266,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "C",
     size: 300,
     meta: {
-      spreadsheetCol: "C",
+      index: 2
     },
   }),
   columnHelper.accessor("D", {
@@ -273,7 +274,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "D",
     size: 300,
     meta: {
-      spreadsheetCol: "D",
+      index: 3
     },
   }),
   columnHelper.accessor("E", {
@@ -281,7 +282,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "E",
     size: 300,
     meta: {
-      spreadsheetCol: "E",
+      index: 4
     },
   }),
 ];
@@ -327,13 +328,6 @@ const useTable = () => {
     keepPinnedRows: true,
     enableSorting: true,
     getSortedRowModel: getSortedRowModel(),
-    initialState: {
-      columnPinning: {
-        left: [
-          "_decorator_extra_header_0__decorator_filter_spreadsheet-row-header",
-        ],
-      },
-    },
   });
   return { table, data, formulaEngine };
 };
@@ -355,6 +349,8 @@ export function App() {
   const [formulaBarValue, setFormulaBarValue] = useState("");
   const currentCellRef = React.useRef<string | null>(null);
   currentCellRef.current = currentCell;
+  const tableRef = React.useRef(table);
+  tableRef.current = table;
 
   React.useEffect(() => {
     return selectionManager.listenToUpdateData((updates) => {
@@ -366,12 +362,13 @@ export function App() {
         .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader);
       updates.forEach((update) => {
         const column = columns[update.colIndex];
-        const spreadsheetCol = column.columnDef.meta?.spreadsheetCol;
-        if (!spreadsheetCol) {
+        const spreadsheetCol = column.columnDef.meta?.index;
+        if (spreadsheetCol === undefined) {
           return;
         }
         let value: any = update.value;
-        const colIndex = columnToIndex(spreadsheetCol);
+        const rowIndex = table.getRowModel().rows[update.rowIndex].index;
+
         if (typeof value === "string") {
           const numberResult = isNumber(value);
           if (numberResult.isNumber) {
@@ -385,8 +382,8 @@ export function App() {
         }
         newData.set(
           getCellReference({
-            rowIndex: update.rowIndex,
-            colIndex,
+            rowIndex,
+            colIndex: spreadsheetCol,
           }),
           value,
         );
@@ -443,7 +440,35 @@ export function App() {
 
     const cleanups = [
       selectionManager.listenToFill((ev) => {
+        // Create mapper function for row validation
+        const tableRows = tableRef.current.getRowModel().rows;
+        const visualToSourceRow = (visualRow: number): number => {
+          if (visualRow >= tableRows.length) {
+            throw new Error(`Visual row ${visualRow} out of bounds`);
+          }
+          return tableRows[visualRow].index;
+        };
+
         if (ev.type === "extend") {
+          // Validate that both seedRange and fillRange have consecutive source rows
+          const seedConsecutive = areRowsConsecutive(
+            ev.seedRange,
+            visualToSourceRow,
+            numRows,
+          );
+          const fillConsecutive = areRowsConsecutive(
+            ev.fillRange,
+            visualToSourceRow,
+            numRows,
+          );
+
+          if (!seedConsecutive || !fillConsecutive) {
+            console.warn(
+              "Fill operation blocked: rows are non-consecutive due to sorting/filtering",
+            );
+            return; // Block the fill operation
+          }
+
           formulaEngine.autoFill(
             { sheetName, workbookName },
             convertSmAreaToSpreadsheetRange(ev.seedRange),
@@ -451,6 +476,20 @@ export function App() {
             ev.direction,
           );
         } else {
+          // Validate rangeToClear has consecutive rows
+          const clearConsecutive = areRowsConsecutive(
+            ev.rangeToClear,
+            visualToSourceRow,
+            numRows,
+          );
+
+          if (!clearConsecutive) {
+            console.warn(
+              "Clear operation blocked: rows are non-consecutive due to sorting/filtering",
+            );
+            return; // Block the clear operation
+          }
+
           formulaEngine.clearSpreadsheetRange({
             sheetName,
             workbookName,
@@ -476,18 +515,68 @@ export function App() {
             return;
           }
 
-          // Convert SMArea[] to RangeAddress[]
-          const rangeAddresses: RangeAddress[] = selections.map(
-            (smArea: SMArea) => {
-              const range: SpreadsheetRange =
-                convertSmAreaToSpreadsheetRange(smArea);
-              return {
-                workbookName,
-                sheetName,
-                range,
-              };
-            },
-          );
+          // Create mapper functions for visual to source coordinate conversion
+          const tableRows = tableRef.current.getRowModel().rows;
+          const columns = tableRef.current
+            .getVisibleLeafColumns()
+            .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader);
+
+          const visualToSourceRow = (visualRow: number): number => {
+            if (visualRow >= tableRows.length) {
+              throw new Error(`Visual row ${visualRow} out of bounds`);
+            }
+            return tableRows[visualRow].index;
+          };
+
+          const visualToSourceCol = (visualCol: number): number => {
+            if (visualCol >= columns.length) {
+              throw new Error(`Visual column ${visualCol} out of bounds`);
+            }
+            const column = columns[visualCol];
+            const spreadsheetCol = column.columnDef.meta?.index;
+            if (spreadsheetCol === undefined) {
+              throw new Error(
+                `Column at visual index ${visualCol} has no spreadsheetCol metadata`,
+              );
+            }
+            return spreadsheetCol;
+          };
+
+          // Convert SMArea[] to RangeAddress[] using proper source coordinate mapping
+          const rangeAddresses: RangeAddress[] = [];
+
+          for (const smArea of selections) {
+            try {
+              const sourceRanges = mapSmAreaToSourceRanges(
+                smArea,
+                visualToSourceRow,
+                visualToSourceCol,
+                numRows,
+                columns.length,
+              );
+
+              // Convert each source range to a RangeAddress
+              for (const sourceRange of sourceRanges) {
+                const range: SpreadsheetRange = {
+                  start: {
+                    row: sourceRange.start.row,
+                    col: sourceRange.start.col,
+                  },
+                  end: {
+                    row: { type: "number", value: sourceRange.end.row },
+                    col: { type: "number", value: sourceRange.end.col },
+                  },
+                };
+                rangeAddresses.push({
+                  workbookName,
+                  sheetName,
+                  range,
+                });
+              }
+            } catch (error) {
+              console.error("Error mapping selection:", error);
+            }
+          }
 
           workbookSelectionManager.setSelections(rangeAddresses);
         },
@@ -507,21 +596,58 @@ export function App() {
 
           // Get first cell of first selection
           const firstSelection = selections[0] as SMArea;
-          const cellRef = getCellReference({
-            rowIndex: firstSelection.start.row,
-            colIndex: firstSelection.start.col,
-          });
-          setCurrentCell(cellRef);
 
-          // Get raw value from formula engine
-          const sheetContent = formulaEngine.getSheet({
-            workbookName,
-            sheetName,
-          })?.content;
-          const rawValue = sheetContent?.get(cellRef);
-          setFormulaBarValue(
-            rawValue !== undefined && rawValue !== null ? String(rawValue) : "",
-          );
+          // Create mapper functions for visual to source coordinate conversion
+          const tableRows = tableRef.current.getRowModel().rows;
+          const columns = tableRef.current
+            .getVisibleLeafColumns()
+            .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader);
+
+          try {
+            // Map visual row to source row
+            if (firstSelection.start.row >= tableRows.length) {
+              setCurrentCell(null);
+              setFormulaBarValue("");
+              return;
+            }
+            const sourceRowIndex = tableRows[firstSelection.start.row].index;
+
+            // Map visual column to source column
+            if (firstSelection.start.col >= columns.length) {
+              setCurrentCell(null);
+              setFormulaBarValue("");
+              return;
+            }
+            const column = columns[firstSelection.start.col];
+            const spreadsheetCol = column.columnDef.meta?.index;
+            if (spreadsheetCol === undefined) {
+              setCurrentCell(null);
+              setFormulaBarValue("");
+              return;
+            }
+
+            const cellRef = getCellReference({
+              rowIndex: sourceRowIndex,
+              colIndex: spreadsheetCol,
+            });
+            setCurrentCell(cellRef);
+
+            // Get raw value from formula engine
+            const sheetContent = formulaEngine.getSheet({
+              workbookName,
+              sheetName,
+            })?.content;
+            const rawValue = sheetContent?.get(cellRef);
+            setFormulaBarValue(
+              rawValue !== undefined && rawValue !== null
+                ? String(rawValue)
+                : "",
+            );
+          } catch (error) {
+            console.error("Error mapping formula bar cell:", error);
+            setCurrentCell(null);
+            setFormulaBarValue("");
+          }
         },
       ),
     ];
@@ -665,21 +791,6 @@ export function App() {
               return <Resizer />;
             }}
             pinRowsRelativeTo="table"
-            renderSubComponent={(row) => {
-              return (
-                <Box
-                  component="pre"
-                  sx={{
-                    fontSize: "10px",
-                    textAlign: "left",
-                    px: 1,
-                    py: 0,
-                  }}
-                >
-                  <code>{JSON.stringify(row.original, null, 2)}</code>
-                </Box>
-              );
-            }}
           />
         </AutoSizer>
       </Box>
