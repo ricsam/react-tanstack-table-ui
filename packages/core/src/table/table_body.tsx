@@ -7,24 +7,15 @@ import { shallowEqual } from "../utils";
 export const TableBody = React.memo(function TableBody() {
   const { skin } = useTableContext();
 
-  const { hasRows, pinRowsRelativeTo } = useTableProps({
+  const { pinRowsRelativeTo } = useTableProps({
     callback: (props) => {
       return {
-        hasRows: props.virtualData.body.hasRows,
         pinRowsRelativeTo: props.uiProps.pinRowsRelativeTo,
       };
     },
     areCallbackOutputEqual: shallowEqual,
-    dependencies: [
-      { type: "ui_props" },
-      { type: "tanstack_table" },
-      { type: "row_visible_range" },
-    ],
+    dependencies: [{ type: "ui_props" }],
   });
-
-  if (!hasRows) {
-    return null;
-  }
 
   return (
     <skin.TableBody>

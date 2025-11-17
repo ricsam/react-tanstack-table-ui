@@ -1,5 +1,13 @@
 # @rttui/skin-bleu
 
+## 1.0.65
+
+### Patch Changes
+
+- add better spreadsheet capabilities + new example
+- Updated dependencies
+  - @rttui/core@1.0.54
+
 ## 1.0.64
 
 ### Patch Changes

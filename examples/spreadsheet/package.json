@@ -1,0 +1,35 @@
+{
+  "name": "@rttui/example-spreadsheet",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@anocca-pub/components": "^0.0.46",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^6.4.8",
+    "@ricsam/formula-engine": "^0.0.7",
+    "@ricsam/selection-manager": "^0.0.19",
+    "@rttui/core": "1.0.53",
+    "@rttui/fixtures": "1.0.9",
+    "@rttui/skin-bleu": "1.0.63",
+    "@tanstack/react-table": "8.20.6",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^22.13.12",
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "lodash": "^4.17.21",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-icons": "^5.5.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.0.5"
+  }
+}

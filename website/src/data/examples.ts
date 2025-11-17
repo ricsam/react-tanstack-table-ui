@@ -18,6 +18,14 @@ export const examples: Record<string, Example> = {
     dirName: "minimal",
     mainFile: "src/app.tsx",
   },
+  spreadsheet: {
+    id: "spreadsheet",
+    title: "Spreadsheet Example",
+    description: "A spreadsheet example of how to use the library.",
+    path: "/examples/spreadsheet",
+    dirName: "spreadsheet",
+    mainFile: "src/app.tsx",
+  },
   bleu: {
     id: "bleu",
     title: "Bleu Theme",

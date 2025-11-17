@@ -24,6 +24,32 @@ A minimal setup demonstrating the core functionality with minimal configuration:
 - Essential features only
 - Good starting point for beginners
 
+### Spreadsheet Example (`examples/spreadsheet`)
+
+The **Spreadsheet Example** (`examples/spreadsheet`) demonstrates a feature-rich spreadsheet interface powered by React TanStack Table UI, with realtime selection, formula evaluation, and advanced editing.
+
+#### Key Features
+
+- Spreadsheet-like grid with editable cells
+- Multi-range selection, copy/paste, and fill handle support
+- Formula parsing and live calculation (try typing `=A1+B1` in a cell)
+- Row and column pinning, resizing, and sorting
+- Seamless Material-UI and Bleu skin integration
+- Efficient performance with virtualized rendering
+
+#### Try It Live
+Interact with the full spreadsheet UI:  
+[Open Spreadsheet Example on StackBlitz](https://stackblitz.com/github/ricsam/react-tanstack-table-ui/tree/main/examples/spreadsheet?embed=1&theme=dark&preset=node&file=src/app.tsx)
+
+#### Notable Implementation Highlights
+- Uses `@ricsam/formula-engine` for formula logic and cell dependencies.
+- Utilizes `@ricsam/selection-manager` for robust selection and cell-editing UX.
+- Integrates custom toolbar, row/column headers, and keyboard navigation.
+- Demo data, custom cell rendering, and hooks are all in `src/app.tsx`.
+
+Feel free to explore and adapt the example for your own spreadsheet/editor use cases!
+
+
 ### Skins Example (`examples/skins`)
 
 Examples demonstrating the various skin options:

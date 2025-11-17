@@ -59,7 +59,10 @@ export class BleuSkin implements Skin {
   headerRowHeight = 32;
   footerRowHeight = 32;
 
-  constructor(private readonly selectionManager: SelectionManager) {}
+  constructor(
+    private readonly selectionManager: SelectionManager,
+    private readonly cellStyleOverrides?: CSSProperties,
+  ) {}
 
   OverlayContainer = React.memo(
     ({ children }: { children: React.ReactNode }) => {
@@ -132,7 +135,10 @@ export class BleuSkin implements Skin {
                   : Math.min(selection.end.col.value, maxTableCol);
 
               // Only consider cells within the starting bounds
-              if (selection.start.row >= startRow && selection.start.col >= startCol) {
+              if (
+                selection.start.row >= startRow &&
+                selection.start.col >= startCol
+              ) {
                 maxRow = Math.max(maxRow, selEndRow);
                 maxCol = Math.max(maxCol, selEndCol);
               }
@@ -160,82 +166,86 @@ export class BleuSkin implements Skin {
           // Fill the grid with data
           if (endRow.type === "infinity" || endCol.type === "infinity") {
             // For infinity cases, use forEachSelectedCell
-            this.selectionManager.forEachSelectedCell(({ absolute, relative }) => {
-              const row = rows[absolute.row];
-              if (!row) return;
+            this.selectionManager.forEachSelectedCell(
+              ({ absolute, relative }) => {
+                const row = rows[absolute.row];
+                if (!row) return;
 
-              const cells = row.getVisibleCells();
-              // Convert spreadsheet column index to table column index
-              const tableColIndex = getTableColIndex(absolute.col, table);
-              const cell = cells[tableColIndex];
+                const cells = row.getVisibleCells();
+                // Convert spreadsheet column index to table column index
+                const tableColIndex = getTableColIndex(absolute.col, table);
+                const cell = cells[tableColIndex];
 
-              if (cell && relative.row < height && relative.col < width) {
-                const valueToString =
-                  cell.column.columnDef.meta?.valueToString;
-                const tblValue = cell.getValue();
-                const value = valueToString
-                  ? valueToString(tblValue)
-                  : tblValue;
-                
-                // Convert value to string, handling null/undefined
-                let stringValue = "";
-                if (typeof value === "string") {
-                  stringValue = value;
-                } else if (typeof value === "number") {
-                  stringValue = value.toString();
-                } else if (typeof value === "boolean") {
-                  stringValue = value.toString();
-                } else if (!value) {
-                  stringValue = "";
+                if (cell && relative.row < height && relative.col < width) {
+                  const valueToString =
+                    cell.column.columnDef.meta?.valueToString;
+                  const tblValue = cell.getValue();
+                  const value = valueToString
+                    ? valueToString(tblValue)
+                    : tblValue;
+
+                  // Convert value to string, handling null/undefined
+                  let stringValue = "";
+                  if (typeof value === "string") {
+                    stringValue = value;
+                  } else if (typeof value === "number") {
+                    stringValue = value.toString();
+                  } else if (typeof value === "boolean") {
+                    stringValue = value.toString();
+                  } else if (!value) {
+                    stringValue = "";
+                  }
+
+                  // Escape tabs and newlines for TSV format
+                  const escapedValue = stringValue
+                    .replace(/\t/g, "    ")
+                    .replace(/\n/g, " ")
+                    .replace(/\r/g, "");
+                  grid[relative.row][relative.col] = escapedValue;
                 }
-
-                // Escape tabs and newlines for TSV format
-                const escapedValue = stringValue
-                  .replace(/\t/g, "    ")
-                  .replace(/\n/g, " ")
-                  .replace(/\r/g, "");
-                grid[relative.row][relative.col] = escapedValue;
-              }
-            });
+              },
+            );
           } else {
             // For finite cases, use forEachSelectedCell
-            this.selectionManager.forEachSelectedCell(({ absolute, relative }) => {
-              const row = rows[absolute.row];
-              if (!row) return;
+            this.selectionManager.forEachSelectedCell(
+              ({ absolute, relative }) => {
+                const row = rows[absolute.row];
+                if (!row) return;
 
-              const cells = row.getVisibleCells();
-              // Convert spreadsheet column index to table column index
-              const tableColIndex = getTableColIndex(absolute.col, table);
-              const cell = cells[tableColIndex];
+                const cells = row.getVisibleCells();
+                // Convert spreadsheet column index to table column index
+                const tableColIndex = getTableColIndex(absolute.col, table);
+                const cell = cells[tableColIndex];
 
-              if (cell) {
-                const valueToString =
-                  cell.column.columnDef.meta?.valueToString;
-                const tblValue = cell.getValue();
-                const value = valueToString
-                  ? valueToString(tblValue)
-                  : tblValue;
-                
-                // Convert value to string, handling null/undefined
-                let stringValue = "";
-                if (typeof value === "string") {
-                  stringValue = value;
-                } else if (typeof value === "number") {
-                  stringValue = value.toString();
-                } else if (typeof value === "boolean") {
-                  stringValue = value.toString();
-                } else if (!value) {
-                  stringValue = "";
+                if (cell) {
+                  const valueToString =
+                    cell.column.columnDef.meta?.valueToString;
+                  const tblValue = cell.getValue();
+                  const value = valueToString
+                    ? valueToString(tblValue)
+                    : tblValue;
+
+                  // Convert value to string, handling null/undefined
+                  let stringValue = "";
+                  if (typeof value === "string") {
+                    stringValue = value;
+                  } else if (typeof value === "number") {
+                    stringValue = value.toString();
+                  } else if (typeof value === "boolean") {
+                    stringValue = value.toString();
+                  } else if (!value) {
+                    stringValue = "";
+                  }
+
+                  // Escape tabs and newlines for TSV format
+                  const escapedValue = stringValue
+                    .replace(/\t/g, "    ")
+                    .replace(/\n/g, " ")
+                    .replace(/\r/g, "");
+                  grid[relative.row][relative.col] = escapedValue;
                 }
-
-                // Escape tabs and newlines for TSV format
-                const escapedValue = stringValue
-                  .replace(/\t/g, "    ")
-                  .replace(/\n/g, " ")
-                  .replace(/\r/g, "");
-                grid[relative.row][relative.col] = escapedValue;
-              }
-            });
+              },
+            );
           }
 
           // Convert grid to TSV format
@@ -612,7 +622,7 @@ export class BleuSkin implements Skin {
         }, [refEl]);
 
         const _spreadsheetColIndex = useSpreadsheetColIndex(tanstackColIndex);
-        const spreadsheetColIndex = metaIndex ?? _spreadsheetColIndex
+        const spreadsheetColIndex = metaIndex ?? _spreadsheetColIndex;
 
         const cellRef = useCallback(
           (el: HTMLDivElement | null) => {
@@ -646,14 +656,27 @@ export class BleuSkin implements Skin {
           if (spreadsheetColIndex === null) {
             return false;
           }
-          return this.selectionManager.isEditingCell(row, spreadsheetColIndex);
+          if (this.selectionManager.isEditing.type !== "cell") {
+            return false;
+          }
+          return (
+            this.selectionManager.isEditingCell(row, spreadsheetColIndex) &&
+            this.selectionManager.isEditing
+          );
         });
 
-        const inputRef = React.useCallback((el: HTMLInputElement | null) => {
-          if (el) {
-            el.select();
-          }
-        }, []);
+        const canHaveFillHandle = useSelectionManager(
+          this.selectionManager,
+          () => {
+            if (spreadsheetColIndex === null) {
+              return false;
+            }
+            return this.selectionManager.canCellHaveFillHandle({
+              row,
+              col: spreadsheetColIndex,
+            });
+          },
+        );
 
         return (
           <TableCell
@@ -709,14 +732,19 @@ export class BleuSkin implements Skin {
                 : {
                     // backgroundColor: (theme) => theme.palette.primary.light,
                   },
+              ...(this.cellStyleOverrides ? [this.cellStyleOverrides] : []),
             ]}
           >
             {spreadsheetColIndex !== null && isEditing ? (
               renderInput ? (
-                renderInput(value, this.selectionManager, {
-                  col: spreadsheetColIndex,
-                  row,
-                })
+                renderInput(
+                  isEditing.initialValue ?? value,
+                  this.selectionManager,
+                  {
+                    col: spreadsheetColIndex,
+                    row,
+                  },
+                )
               ) : (
                 <Input
                   type="text"
@@ -729,12 +757,22 @@ export class BleuSkin implements Skin {
                     fontWeight: "inherit",
                   }}
                   autoFocus
-                  inputRef={inputRef}
-                  defaultValue={value}
-                  onBlur={() => {
+                  defaultValue={isEditing.initialValue ?? value}
+                  onBlur={(e) => {
+                    this.selectionManager.saveCellValue(
+                      { rowIndex: row, colIndex: spreadsheetColIndex },
+                      e.currentTarget.value,
+                    );
                     this.selectionManager.cancelEditing();
                   }}
                   onKeyDown={(e) => {
+                    if (e.key === "Tab") {
+                      this.selectionManager.saveCellValue(
+                        { rowIndex: row, colIndex: spreadsheetColIndex },
+                        e.currentTarget.value,
+                      );
+                      this.selectionManager.cancelEditing();
+                    }
                     if (e.key === "Enter") {
                       this.selectionManager.saveCellValue(
                         { rowIndex: row, colIndex: spreadsheetColIndex },
@@ -749,6 +787,20 @@ export class BleuSkin implements Skin {
               )
             ) : (
               children
+            )}
+            {canHaveFillHandle && (
+              <div
+                data-fill-handle={true}
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  width: 8,
+                  height: 8,
+                  backgroundColor: "blue",
+                  cursor: "crosshair",
+                }}
+              ></div>
             )}
           </TableCell>
         );

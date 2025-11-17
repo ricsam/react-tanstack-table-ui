@@ -1,5 +1,11 @@
 # @rttui/core
 
+## 1.0.54
+
+### Patch Changes
+
+- add better spreadsheet capabilities + new example
+
 ## 1.0.53
 
 ### Patch Changes
