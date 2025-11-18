@@ -333,9 +333,33 @@ const getSubRows = (row: any) => {
 // Global ref to store fixed row order for custom sorting function
 let fixedRowOrderForSorting: number[] = [];
 
-const useTable = () => {
+const useTable = (fixedRowOrder: number[], onClearFixedOrder: () => void) => {
   const state = useEngine(formulaEngine);
-  const [sorting, setSorting] = React.useState<any[]>([]);
+  const [userSorting, setUserSorting] = React.useState<any[]>([]);
+
+  // Wrapper that clears fixed order when user manually sorts
+  const handleSortingChange = React.useCallback(
+    (updater: any) => {
+      setUserSorting(updater);
+      onClearFixedOrder();
+    },
+    [onClearFixedOrder],
+  );
+
+  // Compute actual sorting based on fixed order
+  const actualSorting = React.useMemo(() => {
+    if (fixedRowOrder.length > 0) {
+      // Fixed order is active - override with sort by id
+      return [
+        {
+          id: "_decorator_extra_header_0__decorator_filter_spreadsheet-row-header",
+          desc: false,
+        },
+      ];
+    }
+    // No fixed order - use user's manual sorting
+    return userSorting;
+  }, [fixedRowOrder, userSorting]);
 
   const data = React.useMemo(() => {
     const data: any = [];
@@ -372,9 +396,9 @@ const useTable = () => {
     enableSorting: true,
     getSortedRowModel: getSortedRowModel(),
     state: {
-      sorting,
+      sorting: actualSorting,
     },
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     initialState: {
       columnPinning: {
         left: [
@@ -388,7 +412,13 @@ const useTable = () => {
 
 export function App() {
   const [fixedRowOrder, setFixedRowOrder] = useState<number[]>([]);
-  const { table, formulaEngine } = useTable();
+  
+  const handleClearFixedOrder = React.useCallback(() => {
+    setFixedRowOrder([]);
+    fixedRowOrderForSorting = [];
+  }, []);
+
+  const { table, formulaEngine } = useTable(fixedRowOrder, handleClearFixedOrder);
   const selectionManager = useInitializeSelectionManager({
     getNumRows: () => ({ type: "number", value: numRows }),
     getNumCols: () => ({
@@ -417,34 +447,10 @@ export function App() {
   const handleToggleFixedSort = (enabled: boolean) => {
     setIsFixedSortEnabled(enabled);
     if (!enabled) {
-      setFixedRowOrder([]); // Clear captured order when disabling
+      handleClearFixedOrder();
     }
     // Don't capture order here - wait for first edit
   };
-
-  // Clear fixed order when user manually sorts (but keep toggle ON)
-  const prevSortingRef = React.useRef(table.getState().sorting);
-  const tableSortingState = table.getState().sorting;
-  const isApplyingFixedSortRef = React.useRef(false);
-
-  React.useEffect(() => {
-    const currentSorting = tableSortingState;
-    const prevSorting = prevSortingRef.current;
-
-    // Detect manual sort change (user clicked column header)
-    // But ignore if we're the ones applying the fixed sort
-    if (
-      !isApplyingFixedSortRef.current &&
-      JSON.stringify(currentSorting) !== JSON.stringify(prevSorting)
-    ) {
-      // Clear the captured order (but keep toggle ON if it was ON)
-      setFixedRowOrder([]);
-      fixedRowOrderForSorting = [];
-    }
-
-    prevSortingRef.current = currentSorting;
-    isApplyingFixedSortRef.current = false;
-  }, [tableSortingState]);
 
   // Keyboard shortcuts for undo/redo
   const historyRef = React.useRef(history);
@@ -538,20 +544,12 @@ export function App() {
 
       formulaEngine.setSheetContent({ workbookName, sheetName }, newData);
 
-      // Apply fixed sort if enabled
+      // Capture fixed sort order if enabled
       if (isFixedSortEnabledRef.current) {
         const currentRows = tableRef.current.getRowModel().rows;
         const order = currentRows.map((row) => row.original.id);
         setFixedRowOrder(order);
         fixedRowOrderForSorting = order;
-        // Apply sorting by id column
-        isApplyingFixedSortRef.current = true;
-        tableRef.current.setSorting([
-          {
-            id: "_decorator_extra_header_0__decorator_filter_spreadsheet-row-header",
-            desc: false,
-          },
-        ]);
       }
     });
   }, [selectionManager, formulaEngine]);
