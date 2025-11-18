@@ -8,8 +8,10 @@ import {
   IconButton,
   Button,
   Tooltip,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
-import { MdExpandMore, MdUndo, MdRedo, MdSave } from "react-icons/md";
+import { MdExpandMore, MdUndo, MdRedo, MdSave, MdLock } from "react-icons/md";
 import {
   getCellReference,
   RangeAddress,
@@ -53,6 +55,11 @@ import { mapSmAreaToSourceRanges, areRowsConsecutive } from "./map_selections";
 
 const numRows = 30;
 
+// Context for fixed sort lock icon
+const FixedSortContext = React.createContext<{ showLockIcon: boolean }>({
+  showLockIcon: false,
+});
+
 function useEngine(
   engine: FormulaEngine,
 ): ReturnType<typeof FormulaEngine.prototype.getState> {
@@ -74,10 +81,12 @@ function useHistoryManager(engine: FormulaEngine) {
     engine.serializeEngine(),
   ]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [savedSerializedEngine, setSavedSerializedEngine] = useState<any>(() => {
-    const saved = localStorage.getItem("spreadsheet-state");
-    return saved ? JSON.parse(saved) : engine.serializeEngine();
-  });
+  const [savedSerializedEngine, setSavedSerializedEngine] = useState<any>(
+    () => {
+      const saved = localStorage.getItem("spreadsheet-state");
+      return saved ? JSON.parse(saved) : engine.serializeEngine();
+    },
+  );
   const isUndoingRef = React.useRef(false);
   const engineRef = React.useRef(engine);
   engineRef.current = engine;
@@ -146,7 +155,8 @@ function useHistoryManager(engine: FormulaEngine) {
   // Calculate hasUnsavedChanges by comparing current state with saved state
   const currentSerializedEngine = history[currentIndex];
   const hasUnsavedChanges =
-    JSON.stringify(currentSerializedEngine) !== JSON.stringify(savedSerializedEngine);
+    JSON.stringify(currentSerializedEngine) !==
+    JSON.stringify(savedSerializedEngine);
 
   return { undo, redo, save, canUndo, canRedo, hasUnsavedChanges };
 }
@@ -183,7 +193,7 @@ const workbookSelectionManager = new WorkbookSelectionManager();
 const columnHelper = decorateColumnHelper(createColumnHelper<any>(), {
   header: (original, context) => (
     <Header
-      options
+      options={!context.column.id.includes("spreadsheet-row-header")}
       accessibleResizer
       sorting
       checkbox={context.column.id.endsWith("full-name")}
@@ -238,13 +248,39 @@ const columnHelper = decorateColumnHelper(createColumnHelper<any>(), {
   },
 });
 
+const RowHeaderWithLockIcon = () => {
+  const { showLockIcon } = React.useContext(FixedSortContext);
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      Row index
+      {showLockIcon && <MdLock fontSize="small" style={{ fontSize: 14 }} />}
+    </Box>
+  );
+};
+
 const columns: ColumnDef<any, any>[] = [
-  columnHelper.display({
+  columnHelper.accessor("id", {
     id: "spreadsheet-row-header",
     cell: (info) => <SpreadsheetRowHeader index={info.row.index} />,
+    header: () => <RowHeaderWithLockIcon />,
+    enableSorting: true,
     enablePinning: true,
+    sortingFn: (rowA, rowB) => {
+      if (fixedRowOrderForSorting.length === 0) {
+        // No fixed order, use default
+        return rowA.original.id - rowB.original.id;
+      }
+      const indexA = fixedRowOrderForSorting.indexOf(rowA.original.id);
+      const indexB = fixedRowOrderForSorting.indexOf(rowB.original.id);
+      if (indexA === -1 || indexB === -1) {
+        // Fallback for rows not in fixed order
+        return rowA.original.id - rowB.original.id;
+      }
+      return indexA - indexB;
+    },
     meta: {
       isSpreadsheetRowHeader: true,
+      autoCrushMaxSize: 160,
     },
   }),
 
@@ -294,8 +330,12 @@ const getSubRows = (row: any) => {
   return row.otherCountries;
 };
 
+// Global ref to store fixed row order for custom sorting function
+let fixedRowOrderForSorting: number[] = [];
+
 const useTable = () => {
   const state = useEngine(formulaEngine);
+  const [sorting, setSorting] = React.useState<any[]>([]);
 
   const data = React.useMemo(() => {
     const data: any = [];
@@ -331,6 +371,10 @@ const useTable = () => {
     keepPinnedRows: true,
     enableSorting: true,
     getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     initialState: {
       columnPinning: {
         left: [
@@ -343,6 +387,7 @@ const useTable = () => {
 };
 
 export function App() {
+  const [fixedRowOrder, setFixedRowOrder] = useState<number[]>([]);
   const { table, formulaEngine } = useTable();
   const selectionManager = useInitializeSelectionManager({
     getNumRows: () => ({ type: "number", value: numRows }),
@@ -357,10 +402,49 @@ export function App() {
   const history = useHistoryManager(formulaEngine);
   const [currentCell, setCurrentCell] = useState<string | null>(null);
   const [formulaBarValue, setFormulaBarValue] = useState("");
+  const [isFixedSortEnabled, setIsFixedSortEnabled] = useState(false);
+
   const currentCellRef = React.useRef<string | null>(null);
   currentCellRef.current = currentCell;
   const tableRef = React.useRef(table);
   tableRef.current = table;
+  const isFixedSortEnabledRef = React.useRef(isFixedSortEnabled);
+  isFixedSortEnabledRef.current = isFixedSortEnabled;
+  const fixedRowOrderRef = React.useRef(fixedRowOrder);
+  fixedRowOrderRef.current = fixedRowOrder;
+
+  // Toggle handler for fixed sort
+  const handleToggleFixedSort = (enabled: boolean) => {
+    setIsFixedSortEnabled(enabled);
+    if (!enabled) {
+      setFixedRowOrder([]); // Clear captured order when disabling
+    }
+    // Don't capture order here - wait for first edit
+  };
+
+  // Clear fixed order when user manually sorts (but keep toggle ON)
+  const prevSortingRef = React.useRef(table.getState().sorting);
+  const tableSortingState = table.getState().sorting;
+  const isApplyingFixedSortRef = React.useRef(false);
+
+  React.useEffect(() => {
+    const currentSorting = tableSortingState;
+    const prevSorting = prevSortingRef.current;
+
+    // Detect manual sort change (user clicked column header)
+    // But ignore if we're the ones applying the fixed sort
+    if (
+      !isApplyingFixedSortRef.current &&
+      JSON.stringify(currentSorting) !== JSON.stringify(prevSorting)
+    ) {
+      // Clear the captured order (but keep toggle ON if it was ON)
+      setFixedRowOrder([]);
+      fixedRowOrderForSorting = [];
+    }
+
+    prevSortingRef.current = currentSorting;
+    isApplyingFixedSortRef.current = false;
+  }, [tableSortingState]);
 
   // Keyboard shortcuts for undo/redo
   const historyRef = React.useRef(history);
@@ -421,9 +505,12 @@ export function App() {
           console.error(`Update column ${update.colIndex} out of bounds`);
           return;
         }
-        const sourceColIndex = visibleColumns[update.colIndex].columnDef.meta?.index;
+        const sourceColIndex =
+          visibleColumns[update.colIndex].columnDef.meta?.index;
         if (sourceColIndex === undefined) {
-          console.error(`Column at index ${update.colIndex} has no index metadata`);
+          console.error(
+            `Column at index ${update.colIndex} has no index metadata`,
+          );
           return;
         }
 
@@ -450,6 +537,22 @@ export function App() {
       });
 
       formulaEngine.setSheetContent({ workbookName, sheetName }, newData);
+
+      // Apply fixed sort if enabled
+      if (isFixedSortEnabledRef.current) {
+        const currentRows = tableRef.current.getRowModel().rows;
+        const order = currentRows.map((row) => row.original.id);
+        setFixedRowOrder(order);
+        fixedRowOrderForSorting = order;
+        // Apply sorting by id column
+        isApplyingFixedSortRef.current = true;
+        tableRef.current.setSorting([
+          {
+            id: "_decorator_extra_header_0__decorator_filter_spreadsheet-row-header",
+            desc: false,
+          },
+        ]);
+      }
     });
   }, [selectionManager, formulaEngine]);
 
@@ -758,9 +861,10 @@ export function App() {
   const modKey = isMac ? "⌘" : "Ctrl";
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, flex: 1 }}>
-      {/* Toolbar with formula bar and action buttons */}
-      <Box
+    <FixedSortContext.Provider value={{ showLockIcon: fixedRowOrder.length > 0 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, flex: 1 }}>
+        {/* Toolbar with formula bar and action buttons */}
+        <Box
         sx={{
           display: "flex",
           alignItems: "center",
@@ -788,6 +892,17 @@ export function App() {
           }}
           placeholder="Enter formula or value"
           sx={{ flex: 1 }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={isFixedSortEnabled}
+              onChange={(e) => handleToggleFixedSort(e.target.checked)}
+              size="small"
+            />
+          }
+          label="Fixed Sort"
+          sx={{ marginLeft: 1, marginRight: 1 }}
         />
         <Box sx={{ display: "flex", gap: 0.5 }}>
           <Tooltip title={`Undo (${modKey}+Z)`}>
@@ -869,6 +984,7 @@ export function App() {
         </AutoSizer>
       </Box>
     </Box>
+    </FixedSortContext.Provider>
   );
 }
 
