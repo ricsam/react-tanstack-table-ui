@@ -7,6 +7,7 @@ import {
   TextField,
   IconButton,
   Button,
+  Tooltip,
 } from "@mui/material";
 import { MdExpandMore, MdUndo, MdRedo, MdSave } from "react-icons/md";
 import {
@@ -73,7 +74,10 @@ function useHistoryManager(engine: FormulaEngine) {
     engine.serializeEngine(),
   ]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [savedSerializedEngine, setSavedSerializedEngine] = useState<any>(() => {
+    const saved = localStorage.getItem("spreadsheet-state");
+    return saved ? JSON.parse(saved) : engine.serializeEngine();
+  });
   const isUndoingRef = React.useRef(false);
   const engineRef = React.useRef(engine);
   engineRef.current = engine;
@@ -89,7 +93,6 @@ function useHistoryManager(engine: FormulaEngine) {
         return newHistory;
       });
       setCurrentIndex((prev) => prev + 1);
-      setHasUnsavedChanges(true);
     },
     [currentIndex],
   );
@@ -117,7 +120,6 @@ function useHistoryManager(engine: FormulaEngine) {
       const newIndex = currentIndex - 1;
       setCurrentIndex(newIndex);
       engineRef.current.resetToSerializedEngine(history[newIndex]);
-      setHasUnsavedChanges(true);
       isUndoingRef.current = false;
     }
   }, [currentIndex, history]);
@@ -128,7 +130,6 @@ function useHistoryManager(engine: FormulaEngine) {
       const newIndex = currentIndex + 1;
       setCurrentIndex(newIndex);
       engineRef.current.resetToSerializedEngine(history[newIndex]);
-      setHasUnsavedChanges(true);
       isUndoingRef.current = false;
     }
   }, [currentIndex, history]);
@@ -136,11 +137,16 @@ function useHistoryManager(engine: FormulaEngine) {
   const save = React.useCallback(() => {
     const serialized = engineRef.current.serializeEngine();
     localStorage.setItem("spreadsheet-state", JSON.stringify(serialized));
-    setHasUnsavedChanges(false);
+    setSavedSerializedEngine(serialized);
   }, []);
 
   const canUndo = currentIndex > 0;
   const canRedo = currentIndex < history.length - 1;
+
+  // Calculate hasUnsavedChanges by comparing current state with saved state
+  const currentSerializedEngine = history[currentIndex];
+  const hasUnsavedChanges =
+    JSON.stringify(currentSerializedEngine) !== JSON.stringify(savedSerializedEngine);
 
   return { undo, redo, save, canUndo, canRedo, hasUnsavedChanges };
 }
@@ -355,6 +361,42 @@ export function App() {
   currentCellRef.current = currentCell;
   const tableRef = React.useRef(table);
   tableRef.current = table;
+
+  // Keyboard shortcuts for undo/redo
+  const historyRef = React.useRef(history);
+  historyRef.current = history;
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      if (cmdOrCtrl && e.key === "z") {
+        if (e.shiftKey) {
+          // Cmd/Ctrl+Shift+Z = Redo
+          e.preventDefault();
+          historyRef.current.redo();
+        } else {
+          // Cmd/Ctrl+Z = Undo
+          e.preventDefault();
+          historyRef.current.undo();
+        }
+      } else if (cmdOrCtrl && e.key === "y") {
+        // Cmd/Ctrl+Y = Redo (alternative shortcut)
+        e.preventDefault();
+        historyRef.current.redo();
+      } else if (cmdOrCtrl && e.key === "s") {
+        // Cmd/Ctrl+S = Save
+        e.preventDefault();
+        historyRef.current.save();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   React.useEffect(() => {
     return selectionManager.listenToUpdateData((updates) => {
@@ -711,6 +753,10 @@ export function App() {
     }
   };
 
+  // Detect platform for keyboard shortcut labels
+  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+  const modKey = isMac ? "⌘" : "Ctrl";
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1, flex: 1 }}>
       {/* Toolbar with formula bar and action buttons */}
@@ -744,31 +790,41 @@ export function App() {
           sx={{ flex: 1 }}
         />
         <Box sx={{ display: "flex", gap: 0.5 }}>
-          <IconButton
-            size="small"
-            onClick={history.undo}
-            disabled={!history.canUndo}
-            title="Undo"
-          >
-            <MdUndo />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={history.redo}
-            disabled={!history.canRedo}
-            title="Redo"
-          >
-            <MdRedo />
-          </IconButton>
-          <Button
-            size="small"
-            variant={history.hasUnsavedChanges ? "contained" : "outlined"}
-            startIcon={<MdSave />}
-            onClick={history.save}
-            disabled={!history.hasUnsavedChanges}
-          >
-            Save
-          </Button>
+          <Tooltip title={`Undo (${modKey}+Z)`}>
+            <span>
+              <IconButton
+                size="small"
+                onClick={history.undo}
+                disabled={!history.canUndo}
+              >
+                <MdUndo />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title={`Redo (${modKey}+Shift+Z or ${modKey}+Y)`}>
+            <span>
+              <IconButton
+                size="small"
+                onClick={history.redo}
+                disabled={!history.canRedo}
+              >
+                <MdRedo />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title={`Save (${modKey}+S)`}>
+            <span>
+              <Button
+                size="small"
+                variant={history.hasUnsavedChanges ? "contained" : "outlined"}
+                startIcon={<MdSave />}
+                onClick={history.save}
+                disabled={!history.hasUnsavedChanges}
+              >
+                Save
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </Box>
       <Accordion>
