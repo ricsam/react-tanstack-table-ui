@@ -585,7 +585,6 @@ export class BleuSkin implements Skin {
           value,
           renderInput,
           tanstackColIndex,
-          metaIndex,
         } = useCellProps({
           callback: (cell, table) => {
             const state = cell.header.state;
@@ -608,7 +607,6 @@ export class BleuSkin implements Skin {
                 ? valueToString(cell.cell.getValue())
                 : cell.cell.getValue(),
               renderInput: cell.cell.column.columnDef.meta?.renderInput,
-              metaIndex: cell.cell.column.columnDef.meta?.index,
             };
           },
           areCallbackOutputEqual: shallowEqual,
@@ -621,8 +619,7 @@ export class BleuSkin implements Skin {
           return refEl!;
         }, [refEl]);
 
-        const _spreadsheetColIndex = useSpreadsheetColIndex(tanstackColIndex);
-        const spreadsheetColIndex = metaIndex ?? _spreadsheetColIndex;
+        const spreadsheetColIndex = useSpreadsheetColIndex(tanstackColIndex);
 
         const cellRef = useCallback(
           (el: HTMLDivElement | null) => {

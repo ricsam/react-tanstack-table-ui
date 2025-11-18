@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.67
+
+### Patch Changes
+
+- fix col index mapping
+
 ## 1.0.66
 
 ### Patch Changes

@@ -18,6 +18,7 @@ import {
 import {
   SMArea,
   useInitializeSelectionManager,
+  writeToClipboard,
 } from "@ricsam/selection-manager";
 import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
 import {
@@ -191,10 +192,7 @@ const columnHelper = decorateColumnHelper(createColumnHelper<any>(), {
     {
       id: "spreadsheet-col-header",
       header: (props) => {
-        const tableColIndex = props.column.columnDef.meta?.index;
-        if (tableColIndex === undefined) {
-          return null;
-        }
+        const tableColIndex = props.column.getIndex();
         return <SpreadsheetColHeader tableColIndex={tableColIndex} />;
       },
       meta: {
@@ -250,7 +248,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "A",
     size: 300, // Increased size to accommodate all controls
     meta: {
-      index: 0
+      index: 0,
     },
   }),
   columnHelper.accessor("B", {
@@ -258,7 +256,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "B",
     size: 300,
     meta: {
-      index: 1
+      index: 1,
     },
   }),
   columnHelper.accessor("C", {
@@ -266,7 +264,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "C",
     size: 300,
     meta: {
-      index: 2
+      index: 2,
     },
   }),
   columnHelper.accessor("D", {
@@ -274,7 +272,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "D",
     size: 300,
     meta: {
-      index: 3
+      index: 3,
     },
   }),
   columnHelper.accessor("E", {
@@ -282,7 +280,7 @@ const columns: ColumnDef<any, any>[] = [
     id: "E",
     size: 300,
     meta: {
-      index: 4
+      index: 4,
     },
   }),
 ];
@@ -328,6 +326,13 @@ const useTable = () => {
     keepPinnedRows: true,
     enableSorting: true,
     getSortedRowModel: getSortedRowModel(),
+    initialState: {
+      columnPinning: {
+        left: [
+          "_decorator_extra_header_0__decorator_filter_spreadsheet-row-header",
+        ],
+      },
+    },
   });
   return { table, data, formulaEngine };
 };
@@ -357,18 +362,31 @@ export function App() {
       const newData = new Map(
         formulaEngine.getSheet({ workbookName, sheetName })?.content ?? [],
       );
-      const columns = table
+      const tableRows = tableRef.current.getRowModel().rows;
+      const visibleColumns = tableRef.current
         .getVisibleLeafColumns()
         .filter((col) => !col.columnDef.meta?.isSpreadsheetRowHeader);
+
       updates.forEach((update) => {
-        const column = columns[update.colIndex];
-        const spreadsheetCol = column.columnDef.meta?.index;
-        if (spreadsheetCol === undefined) {
+        // Map visual row to source row
+        if (update.rowIndex >= tableRows.length) {
+          console.error(`Update row ${update.rowIndex} out of bounds`);
           return;
         }
-        let value: any = update.value;
-        const rowIndex = table.getRowModel().rows[update.rowIndex].index;
+        const sourceRowIndex = tableRows[update.rowIndex].index;
 
+        // Map visual column to source column
+        if (update.colIndex >= visibleColumns.length) {
+          console.error(`Update column ${update.colIndex} out of bounds`);
+          return;
+        }
+        const sourceColIndex = visibleColumns[update.colIndex].columnDef.meta?.index;
+        if (sourceColIndex === undefined) {
+          console.error(`Column at index ${update.colIndex} has no index metadata`);
+          return;
+        }
+
+        let value: any = update.value;
         if (typeof value === "string") {
           const numberResult = isNumber(value);
           if (numberResult.isNumber) {
@@ -380,10 +398,11 @@ export function App() {
             }
           }
         }
+
         newData.set(
           getCellReference({
-            rowIndex,
-            colIndex: spreadsheetCol,
+            rowIndex: sourceRowIndex,
+            colIndex: sourceColIndex,
           }),
           value,
         );
@@ -391,7 +410,7 @@ export function App() {
 
       formulaEngine.setSheetContent({ workbookName, sheetName }, newData);
     });
-  }, [selectionManager, formulaEngine, table]);
+  }, [selectionManager, formulaEngine]);
 
   const skin = useMemo(
     () =>
