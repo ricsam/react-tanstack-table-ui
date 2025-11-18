@@ -18,7 +18,6 @@ import {
 import {
   SMArea,
   useInitializeSelectionManager,
-  writeToClipboard,
 } from "@ricsam/selection-manager";
 import { AutoSizer, ReactTanstackTableUi } from "@rttui/core";
 import {
