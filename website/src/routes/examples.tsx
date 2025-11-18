@@ -27,6 +27,7 @@ const exampleRoutes = Object.values(examples).map((example) => {
     component: StaticExample,
     staticData: {
       example: {
+        id: example.id,
         title: example.title,
         description: example.description,
         dirName: example.dirName,
