@@ -29,8 +29,8 @@ importers:
         specifier: 1.0.9
         version: 1.0.9
       '@rttui/skin-bleu':
-        specifier: 1.0.66
-        version: 1.0.66(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.67
+        version: 1.0.67(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@tanstack/react-table':
         specifier: 8.20.6
         version: 8.20.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -128,8 +128,8 @@ importers:
         specifier: 1.0.9
         version: 1.0.9
       '@rttui/skin-bleu':
-        specifier: 1.0.66
-        version: 1.0.66(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.0.67
+        version: 1.0.67(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@tanstack/react-table':
         specifier: 8.20.6
         version: 8.20.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -844,8 +844,8 @@ packages:
   '@rttui/fixtures@1.0.9':
     resolution: {integrity: sha512-72V7qzZR6gUuOw945NQiu68pIpd2Y3SPs8htjotCSwc1ndAgd6ojXBOwrcgH1f7b8fRXsO+qBkaVZ6O40AI4gg==}
 
-  '@rttui/skin-bleu@1.0.66':
-    resolution: {integrity: sha512-ytszQnkwqXBaPLQOfjw599Ck0jkiDJZ63/3mvfKJrxFa/Kbui/cthNXxSoBZnZJnD9xgULWfxt+rZdz8HD2UoA==}
+  '@rttui/skin-bleu@1.0.67':
+    resolution: {integrity: sha512-tKIczMKVmbU3DK4zvdRq6WD8kAcjr5ZiHzBqbUoyfPC6L8NSl3PiI97+r+YrpSx0eQKa+i3Y9bVpTxJuRdU6SA==}
 
   '@tanstack/react-table@8.20.6':
     resolution: {integrity: sha512-w0jluT718MrOKthRcr2xsjqzx+oEM7B7s/XXyfs19ll++hlId3fjTm+B2zrR3ijpANpkzBAr15j1XGVOMxpggQ==}
@@ -1994,7 +1994,7 @@ snapshots:
 
   '@rttui/fixtures@1.0.9': {}
 
-  '@rttui/skin-bleu@1.0.66(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@rttui/skin-bleu@1.0.67(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@rttui/core': 1.0.54(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     transitivePeerDependencies:

@@ -19,7 +19,7 @@
     "@ricsam/selection-manager": "^0.0.19",
     "@rttui/core": "1.0.54",
     "@rttui/fixtures": "1.0.9",
-    "@rttui/skin-bleu": "1.0.66",
+    "@rttui/skin-bleu": "1.0.67",
     "@tanstack/react-table": "8.20.6",
     "@types/lodash": "^4.17.20",
     "@types/node": "^22.13.12",
