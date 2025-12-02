@@ -23,10 +23,9 @@ import {
   useCellProps,
   useColProps,
   useRowProps,
-  useRowRef,
   useTableContext,
   useTableCssVars,
-  useTableProps,
+  useTableProps
 } from "@rttui/core";
 import { RowData } from "@tanstack/react-table";
 import React, {
@@ -492,16 +491,6 @@ export class BleuSkin implements Skin {
     }),
   );
   TableRow = React.memo(({ children }: { children: React.ReactNode }) => {
-    const { canSelect } = useRowProps({
-      callback: (row) => {
-        return {
-          canSelect: row.row.getCanSelect(),
-        };
-      },
-      dependencies: [{ type: "tanstack_table" }],
-      areCallbackOutputEqual: shallowEqual,
-    });
-    const rowRef = useRowRef();
     return (
       <TableRow
         component="div"
@@ -523,15 +512,7 @@ export class BleuSkin implements Skin {
                 : "#E3F2FD"; // Light blue solid color
             },
           },
-          cursor: canSelect ? "pointer" : "default",
         }}
-        onClick={
-          !canSelect
-            ? undefined
-            : () => {
-                rowRef()?.row.toggleSelected();
-              }
-        }
       >
         {children}
       </TableRow>

@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.68
+
+### Patch Changes
+
+- remove row selection in favor of just clicking a select checkbox
+
 ## 1.0.67
 
 ### Patch Changes
