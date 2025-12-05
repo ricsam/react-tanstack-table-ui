@@ -1,22 +1,18 @@
+import { Box, BoxProps } from "@mui/material";
 import React from "react";
 
-type CellTextBoldProps = {
-  children: React.ReactNode;
-  className?: string;
-};
-
-export const CellTextBold: React.FC<CellTextBoldProps> = ({
-  children,
-  className,
-}) => {
-  const style: React.CSSProperties = {
-    fontSize: "0.875rem",
-    fontWeight: 500,
-  };
-
+export const CellTextBold: React.FC<BoxProps> = ({ children, ...props }) => {
   return (
-    <span style={style} className={className}>
+    <Box
+      component="span"
+      sx={{
+        color: "text.secondary",
+        fontWeight: "medium",
+        fontSize: (theme) => theme.typography.body1.fontSize,
+      }}
+      {...props}
+    >
       {children}
-    </span>
+    </Box>
   );
 };

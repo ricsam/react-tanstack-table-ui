@@ -36,7 +36,7 @@ export const Cell: React.FC<CellProps> = ({
     paddingLeft: expandButton ? `${depth * 20}px` : "0px",
   };
 
-  const useBold = highlightSelected && isSelected;
+  const applyBold = highlightSelected && isSelected;
 
   return (
     <div style={containerStyle}>
@@ -61,7 +61,7 @@ export const Cell: React.FC<CellProps> = ({
       )}
       {expandButton && <ExpandButton />}
       {pinButtons && <RowPinButtons />}
-      {useBold ? (
+      {applyBold ? (
         <CellTextBold className="bleu-selected-cell-text">
           {children}
         </CellTextBold>

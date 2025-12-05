@@ -1,10 +1,12 @@
 import { CellCurrencyProps } from "@rttui/core";
+import { Box, BoxProps } from "@mui/material";
 import React from "react";
 
 // Implement the CellCurrency component for the Bleu skin
-export const CellCurrency: React.FC<CellCurrencyProps> = ({
+export const CellCurrency: React.FC<CellCurrencyProps & BoxProps> = ({
   value,
   currency = "USD", // Default to USD if no currency is provided
+  ...props
 }) => {
   // Use Intl.NumberFormat for robust currency formatting
   // The locale ('en-US') can be adjusted if needed, or made dynamic
@@ -15,13 +17,17 @@ export const CellCurrency: React.FC<CellCurrencyProps> = ({
     maximumFractionDigits: 2,
   });
 
-  // Apply styling similar to CellNumber for consistency
-  const style: React.CSSProperties = {
-    fontSize: "0.875rem", // Equivalent to text-sm
-    color: "#6b7280", // Equivalent to text-gray-500 (Placeholder)
-    fontVariantNumeric: "tabular-nums", // Align numbers
-    // Bleu skin might specify different colors, alignment, etc.
-  };
-
-  return <span style={style}>{formatter.format(value)}</span>;
-}; 
+  return (
+    <Box
+      component="span"
+      sx={{
+        fontSize: (theme) => theme.typography.body1.fontSize,
+        color: "text.secondary",
+        fontVariantNumeric: "tabular-nums",
+      }}
+      {...props}
+    >
+      {formatter.format(value)}
+    </Box>
+  );
+};

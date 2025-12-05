@@ -1,5 +1,11 @@
 # @rttui/skin-bleu
 
+## 1.0.69
+
+### Patch Changes
+
+- make cell text component dark mode compatible and use mui components
+
 ## 1.0.68
 
 ### Patch Changes

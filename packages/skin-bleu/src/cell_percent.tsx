@@ -1,3 +1,4 @@
+import { Box, BoxProps } from "@mui/material";
 import { CellPercentProps } from "@rttui/core";
 import React from "react";
 
@@ -5,9 +6,10 @@ import React from "react";
  * CellPercent component for the Bleu skin.
  * Formats a number as a percentage.
  */
-export const CellPercent: React.FC<CellPercentProps> = ({
+export const CellPercent: React.FC<CellPercentProps & BoxProps> = ({
   value,
   fractionDigits = 2,
+  ...props
 }) => {
   const formatter = new Intl.NumberFormat("en-US", {
     style: "percent",
@@ -15,13 +17,17 @@ export const CellPercent: React.FC<CellPercentProps> = ({
     maximumFractionDigits: fractionDigits,
   });
 
-  const defaultStyle: React.CSSProperties = {
-    fontSize: "0.875rem", // text-sm
-    color: "rgb(107 114 128)", // text-gray-500
-    fontVariantNumeric: "tabular-nums",
-    // Bleu doesn't have dark mode built-in like Tailwind,
-    // so we only define the light mode color here.
-  };
-
-  return <span style={{ ...defaultStyle }}>{formatter.format(value)}</span>;
+  return (
+    <Box
+      component="span"
+      sx={{
+        fontSize: (theme) => theme.typography.body1.fontSize,
+        color: "text.secondary",
+        fontVariantNumeric: "tabular-nums",
+      }}
+      {...props}
+    >
+      {formatter.format(value)}
+    </Box>
+  );
 };
